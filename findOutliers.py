@@ -71,7 +71,8 @@ def visualize(fileFeatureDict, lof):
 
 def paramSweepPCA(folderName, paramRange, nComponents, fileFeatureDict=None):
     """
-    
+    Calculate Local Outlier Factor (LOF) for all files in the given folder by using a PCA of mean values of the 12 MFCC features and
+    sweep through different values of the minPts parameter
     @param folderName: Name of the folder in the "sound" folder, i.e. if you want to folder the folder ./sound/car give "car" a folderName
     @param paramRange: Range for the minPts parameter as list
     @param nComponents: Defines the number of components for the PCA
@@ -113,6 +114,7 @@ def paramSweep(folderName, paramRange):
     
     """ Build list of the mean values: """
     values = fileFeatureDict.values()
+    
     featureList = []
     for entry in values:
         featureList.append(tuple(entry))
@@ -189,16 +191,14 @@ def extractFeatures(folderName):
                     features = np.concatenate((means,stddev))
                     #features = np.concatenate((means,stddev,numZeroCrossings))
 
-
-
                     """ calculate mean over all MFCC features: """
                     #m1 = np.mean(means,0,dtype=np.float64)
                     #m2 = np.mean(stddev,0,dtype=np.float64)
                     #m3 = np.mean(numZeroCrossings,0,dtype=np.float64)
                     #features = np.array([m1,m2,m3])
-
-                    fileFeatureDict[file] = features
                     
+                    fileFeatureDict[file] = features
+             
     return fileFeatureDict
 
 from findOutliers import *

@@ -98,18 +98,10 @@ def k_distance(k, instance, instances, distance_function=distance_euclidean):
     """Computes the k-distance of instance as defined in paper. It also gathers the set of k-distance neighbors.
     Returns: (k-distance, k-distance neighbors)
     Signature: (int, (attr1, attr2, ...), ((attr_1_1, ...),(attr_2_1, ...), ...)) -> (float, ((attr_j_1, ...),(attr_k_1, ...), ...))"""
-    
-    #open('log', 'awb').write(str(instances) + "\n")
-
-    #instance same (different rounding)
-    #instances same (different rounding)
 
     distances = {}
     for instance2 in instances:
         distance_value = distance_function(instance, instance2)
-        #If not working: 1.0 for first 11 values
-        # If working: 0.428, 0.487, ... for first values
-        #open('log', 'awb').write(str(distance_value) + "\n")
         if distance_value in distances:
             distances[distance_value].append(instance2)
         else:
