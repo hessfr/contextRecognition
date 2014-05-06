@@ -6,6 +6,7 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
 from sklearn.mixture import GMM
 from sklearn import cross_validation
+from sklearn import preprocessing
 from featureExtraction import FX_Test
 from featureExtraction import FX_Folder
 import math
@@ -50,13 +51,13 @@ def trainGMM(featureData):
     @param featureData: Dictionary containing 'features' and 'labels' as numpy array and 'classesDict' for mapping of class names to numbers
     @return: Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
     """
-    X_train = featureData['features']
+    X_train = preprocessing.scale(featureData['features'])
     y_train = featureData['labels']
     
     n_classes = len(np.unique(y_train))
     
     print str(n_classes) + " different classes"
-    
+
     clfs = []
  
     for i in range(n_classes):
@@ -88,8 +89,8 @@ def incrTrainGMM(prevTrainedGMM, newClassName, newClassData=None):
     
     if newClassData == None:
         newClassData = FX_Folder(newClassName)
-    
-    X_train = newClassData
+
+    X_train = preprocessing.scale(newClassData)
 
     n_newClass = X_train.shape[0]
 
@@ -131,7 +132,7 @@ def k_FoldGMM(featureData,k):
     @param featureData: Dictionary containing 'features' and 'labels' as numpy array and 'classesDict' for mapping of class names to numbers
     @param k: Cross-validation parameter, defines in how many blocks the data should be divided
     """   
-    X = featureData['features']
+    X = preprocessing.scale(featureData['features'])
     Y = featureData['labels']
     
     kf = KFold(len(Y), n_folds=k, indices=True, shuffle=True)
@@ -172,7 +173,8 @@ def SVM(featureData):
     @param data: Input data containing 12 MFCC features in the first 12 columns and the class label in the last column
     @return: Scikit-Learn SVM classifier
     """
-    X_train = featureData['features']
+    X_train = preprocessing.scale(featureData['features'])
+    
     y_train = featureData['labels']
     
 #     clf = SVC(kernel='linear')
@@ -189,7 +191,7 @@ def randomSplitSVM(featureData):
     @param data: Input data containing 12 MFCC features in the first 13 columns and the class label in the last column
     @return: Scikit-Learn SVM classifier
     """
-    X_train, X_test, y_train, y_test = cross_validation.train_test_split(featureData['features'], featureData['labels'], test_size=0.33, random_state=43)
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(preprocessing.scale(featureData['features']), featureData['labels'], test_size=0.33, random_state=43)
      
     clf = LinearSVC()
  

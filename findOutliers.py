@@ -185,7 +185,7 @@ def extractFeatures(folderName):
                     numZeroCrossings = np.array(numZeroCrossingsList,dtype=np.float64)
                     
                     """ Combine the features into one array with one column for each MFCC: """
-                    features = means
+                    #features = means
                     features = np.concatenate((means,stddev))
                     #features = np.concatenate((means,stddev,numZeroCrossings))
 
