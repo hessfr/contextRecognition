@@ -13,10 +13,12 @@ import math
 from sklearn.cross_validation import KFold
 import ipdb as pdb #pdb.set_trace()
 
-def majorityVote(y_raw):
+def majorityVote(y_raw,fileIndexes=None):
     """
     Apply a "majority vote" of fixed window length to a sequence
-    @param y_raw: Input data as 1D numpy array
+    @param y_raw: Predicted labels as 1D numpy array
+    @param fileIndexes: List containing the indexes where each files ends. So we can avoid the problem of accidentially making
+    a majority vote over multiple files
     @return: Result of the same size as input
     """
     print "inputSize: " + str(y_raw.shape[0])
@@ -33,7 +35,7 @@ def majorityVote(y_raw):
     
     for i in range(n_frames):
         if ((i+1) * n_frames) < y_raw.shape[0]:
-            tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))] #y_raw[(i * frameLength):(((i+1) * frameLength) - 1)]
+            tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
             
             """ Get most frequent number in that frames and fill all elements in the frame with it: """
             count = np.bincount(tmpArray)
@@ -41,7 +43,7 @@ def majorityVote(y_raw):
             tmpArray.fill(tmpMostFrequent)
             """ Write it into our result array: """
             resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
-    
+
     return resArray
 
 def trainGMM(featureData):

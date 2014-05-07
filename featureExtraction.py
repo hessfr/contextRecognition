@@ -8,14 +8,17 @@ import essentia.streaming
 from essentia.standard import *
 import ipdb as pdb #pdb.set_trace()
 
-def FX_multiFolders(classesList=None):
+def FX_multiFolders(classesList=None,createFileIndexes=None):
     """
     Calculate 12 MFCC (1st coefficient is not considered) for all audio files in the list of classes
     (each one corresponds to a sub-folder of the sound/ folder) and return a dictionary containing the extracted features, corresponding labels and 
     mapping from class names to class number (classesDict)
     If no list if given, features will be extracted from all sub-folders
     @param classesDict: Dict containing the classes (corresponds to folders) and a mapping to numbers. If not provided, features will be extracted from all sub-folders
-    @return: Dictionary containing the extracted features as numpy array, corresponding labels (numbers) as numpy array and mapping from class names to class number as dict
+    @param createFileIndexes: If set to true, a array containing the indexes to entries that correspond to the last window of a file will be returned.
+    Necessary for using Cross-validation after a majority vote (that we don't set windows for the majority vote over multiple files)
+    @return: Dictionary containing the extracted features as numpy array, corresponding labels (numbers) as numpy array and mapping from class names to
+    class number as dict. In case createFileIndexes=True, the fileIndexes list can be found under the key 'fileIndexes'
     """
 
     dir = os.getcwd() + "/sound/"
@@ -31,36 +34,65 @@ def FX_multiFolders(classesList=None):
     featureList = []
     labelList = []
     
+    if createFileIndexes == True:
+        fileIndexes = []
+        overallIndex = 0 #indicate the starting index when adding a new folder
+    
     for folder in classesDict.keys():
-        tmpFeatures = FX_Folder(folder)
+        if createFileIndexes == True:
+            [tmpFeatures,fileIndexesFolder] = FX_Folder(folder,True)
+            
+            """ Start counting the index from where the last folder stopped: """
+            fileIndexesFolder = [x+overallIndex for x in fileIndexesFolder]
+            
+            """ Extend the fileIndexes list that we want to return later: """
+            fileIndexes.extend(fileIndexesFolder)
+            
+            """ Calculate where the last folder stopped: """
+            overallIndex = overallIndex + fileIndexesFolder[-1]
+            
+            pdb.set_trace()
+            
+        else:
+            tmpFeatures = FX_Folder(folder)
+        
         featureList.append(tmpFeatures)
         
         tmpLabels = np.empty([tmpFeatures.shape[0],1])
         tmpLabels.fill(classesDict.get(folder))
         labelList.append(tmpLabels)
         
-        
     allFeatures = np.concatenate(featureList, axis=0)
     allLabels = np.concatenate(labelList, axis=0)
     
-    
-    featureData = {'features': allFeatures, 'labels': allLabels, 'classesDict': classesDict}
+    pdb.set_trace()
+     
+    if createFileIndexes == True:
+        featureData = {'features': allFeatures, 'labels': allLabels, 'classesDict': classesDict, 'fileIndexes': fileIndexes}
+    else: 
+        featureData = {'features': allFeatures, 'labels': allLabels, 'classesDict': classesDict}
     
     return featureData
 
         
-def FX_Folder(folderName):
+def FX_Folder(folderName,createFileIndexes=None):
     """
     Calculate 12 MFCC (1st coefficient is not considered) for all audio files is the given folder and return one numpy array containing all features
     @param folderName: Name of the folder in the "sound" folder, i.e. if you want to use the folder ./sound/car give "car" a folderName
-    @return: Single numpy array containing 12 MFCC for all files in that folder
+    @param createFileIndexes: If set to true, a array containing the indexes to entries that correspond to the last window of a file will be returned.
+    Necessary for using Cross-validation after a majority vote (that we don't set windows for the majority vote over multiple files)
+    @return: If createFileIndexes=None: Single numpy array containing 12 MFCC for all files in that folder. If createFileIndexes=True: numpy array 
+    containing 12 MFCC for all files in that folder and fileIndexes list
     """
 
     dir = os.getcwd() + "/sound/" + folderName
     if not os.path.exists(dir):
         print "Folder " + folderName + " not found"
-        return None
+        return None       
     else:
+        if createFileIndexes == True:
+            fileIndexes = []
+            overallIndex = 0 #position of the current entry in the overall array
         fileList = listdir(dir)
         tmpFeatureList = []
         for file in fileList:
@@ -70,8 +102,16 @@ def FX_Folder(folderName):
                 tmp = FX_File(filePath)
                 if tmp.shape[0] != 0:
                     tmpFeatureList.append(tmp)
+                    if createFileIndexes == True:
+                        overallIndex = overallIndex + (len(tmp)-1)
+                        fileIndexes.append(overallIndex)
+        
         res = np.concatenate(tmpFeatureList, axis=0)
-    return res    
+        
+        if createFileIndexes == True:
+            return [res,fileIndexes]
+        else:
+            return res    
 
 def FX_File(file):
     """
