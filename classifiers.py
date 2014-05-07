@@ -29,20 +29,55 @@ def majorityVote(y_raw,fileIndexes=None):
     print "frameLength: " + str(frameLength)
     
     resArray = np.empty(y_raw.shape)
-
-    n_frames = int(math.ceil(y_raw.shape[0]/frameLength))
-    print "Number of Frames: " + str(n_frames)
     
-    for i in range(n_frames):
-        if ((i+1) * n_frames) < y_raw.shape[0]:
-            tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
+    if fileIndexes == None:
+    
+        n_frames = int(math.ceil(y_raw.shape[0]/frameLength))
+        print "Number of Frames: " + str(n_frames)
+        
+        for i in range(n_frames):
+            if ((i+1) * n_frames) < y_raw.shape[0]: """ Complete window fits on data """
+                
+                """ Create array with values of the current window"""
+                tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
+                
+                """ Get most frequent number in that frames and fill all elements in the frame with it: """
+                count = np.bincount(tmpArray)
+                tmpMostFrequent = np.argmax(count)
+                tmpArray.fill(tmpMostFrequent)
+                """ Write it into our result array: """
+                resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
+            else: """ Use smaller window for the remaining points: """
+                #TODO
+                pass
+    
+    else:
+        pass
+        """ TODO
+        prevEnd = 0 #index of end of the previous file
+         
+        for end in fileIndexes:
             
-            """ Get most frequent number in that frames and fill all elements in the frame with it: """
-            count = np.bincount(tmpArray)
-            tmpMostFrequent = np.argmax(count)
-            tmpArray.fill(tmpMostFrequent)
-            """ Write it into our result array: """
-            resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
+            n_frames = int(math.ceil((end - prevEnd)/frameLength))
+            
+            for i in range(n_frames):
+                if ((i+1) * n_frames) < (end - prevEnd): """ Complete window fits on data """
+                    
+                    tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
+                    
+                    """ Get most frequent number in that frames and fill all elements in the frame with it: """
+                    count = np.bincount(tmpArray)
+                    tmpMostFrequent = np.argmax(count)
+                    tmpArray.fill(tmpMostFrequent)
+                    """ Write it into our result array: """
+                    resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
+                    
+                else: """ Use smaller window for the remaining points: """
+                    #TODO
+                    pass
+                    
+            prevEnd = end
+        """
 
     return resArray
 
