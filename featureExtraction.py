@@ -50,9 +50,7 @@ def FX_multiFolders(classesList=None,createFileIndexes=None):
             
             """ Calculate where the last folder stopped: """
             overallIndex = overallIndex + fileIndexesFolder[-1]
-            
-            pdb.set_trace()
-            
+
         else:
             tmpFeatures = FX_Folder(folder)
         
@@ -64,9 +62,7 @@ def FX_multiFolders(classesList=None,createFileIndexes=None):
         
     allFeatures = np.concatenate(featureList, axis=0)
     allLabels = np.concatenate(labelList, axis=0)
-    
-    pdb.set_trace()
-     
+
     if createFileIndexes == True:
         featureData = {'features': allFeatures, 'labels': allLabels, 'classesDict': classesDict, 'fileIndexes': fileIndexes}
     else: 

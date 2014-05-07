@@ -21,25 +21,29 @@ def majorityVote(y_raw,fileIndexes=None):
     a majority vote over multiple files
     @return: Result of the same size as input
     """
-    print "inputSize: " + str(y_raw.shape[0])
+    input = y_raw.copy()
+    print "inputSize: " + str(input.shape[0])
     #TODO: implement properly with parameters:
     window_length = 2.0 #in seconds
     step_size = 0.016
     frameLength = math.ceil(window_length/step_size)
     print "frameLength: " + str(frameLength)
     
-    resArray = np.empty(y_raw.shape)
+    resArray = np.empty(input.shape)
     
     if fileIndexes == None:
+    #No indexes where files end given:
     
-        n_frames = int(math.ceil(y_raw.shape[0]/frameLength))
+        n_frames = int(math.ceil(input.shape[0]/frameLength))
         print "Number of Frames: " + str(n_frames)
         
         for i in range(n_frames):
-            if ((i+1) * n_frames) < y_raw.shape[0]: """ Complete window fits on data """
-                
-                """ Create array with values of the current window"""
-                tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
+            if ((i+1) * n_frames) < input.shape[0]:
+                """ Complete window fits on data """
+                              
+                """ Create array with values of the current window. For the last window this will just return
+                the correct length, because if a.shape = (10,), a[0:9999] will just return the whole array:"""
+                tmpArray = input[(i * frameLength):(((i+1) * frameLength))]
                 
                 """ Get most frequent number in that frames and fill all elements in the frame with it: """
                 count = np.bincount(tmpArray)
@@ -47,23 +51,23 @@ def majorityVote(y_raw,fileIndexes=None):
                 tmpArray.fill(tmpMostFrequent)
                 """ Write it into our result array: """
                 resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
-            else: """ Use smaller window for the remaining points: """
-                #TODO
-                pass
     
     else:
-        pass
-        """ TODO
         prevEnd = 0 #index of end of the previous file
          
         for end in fileIndexes:
             
+            """ Number of frames for the current file: """
             n_frames = int(math.ceil((end - prevEnd)/frameLength))
+            print "Number of Frames for current file: " + str(n_frames)
             
             for i in range(n_frames):
-                if ((i+1) * n_frames) < (end - prevEnd): """ Complete window fits on data """
+                
+                ##################### continue here:
+                pdb.set_trace()
+                if ((i+1) * n_frames) < (end - prevEnd): 
                     
-                    tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
+                    tmpArray = input[(i * frameLength):(((i+1) * frameLength))]
                     
                     """ Get most frequent number in that frames and fill all elements in the frame with it: """
                     count = np.bincount(tmpArray)
@@ -72,12 +76,12 @@ def majorityVote(y_raw,fileIndexes=None):
                     """ Write it into our result array: """
                     resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
                     
-                else: """ Use smaller window for the remaining points: """
+                else: 
+                #Use smaller window for the remaining points:
                     #TODO
                     pass
                     
             prevEnd = end
-        """
 
     return resArray
 
