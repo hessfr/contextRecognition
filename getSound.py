@@ -89,6 +89,7 @@ def getSoundBySingleTag(tag, maxNumber):
     
     @param tag: Tag that will be used for the freesound search
     @param maxNumber: Number of clips that should be downloaded
+    @return: returns true when download is finished
     """
     
     tagSearchString = "tag:" + tag + " "
@@ -99,6 +100,10 @@ def getSoundBySingleTag(tag, maxNumber):
                                  sounds_per_page=maxNumber)
     
     print "Total number of search results for '" + tag + "': " + str(searchResults["num_results"])
+
+    if searchResults["num_results"] < maxNumber:
+        print("Only " + str(searchResults["num_results"]) + " instead of " + str(maxNumber) +" results were found. No files will be downloaded")
+        return False
 
     dir = os.getcwd() + "/sound/" + tag
     if not os.path.exists(dir):
@@ -142,6 +147,8 @@ def getSoundBySingleTag(tag, maxNumber):
             
         else:
             print "File '"+ fileDir + "' was skipped, because it already exists in the current directory"
+
+    return True
     
     
 

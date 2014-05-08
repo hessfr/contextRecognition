@@ -14,6 +14,7 @@ def convertFolder(folderName):
     dir = os.getcwd() + "/sound/" + folderName
     if not os.path.exists(dir):
         print "Folder " + folderName + " not found"
+        return False
     else:        
         fileList = listdir(dir)
         for file in fileList:
@@ -55,6 +56,7 @@ def convertFolder(folderName):
                         commandString = str("rm " + "'" + file + "'")
                         p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         out, err = p.communicate()
+        return True
                         
 def isAudio(fileName):
     """

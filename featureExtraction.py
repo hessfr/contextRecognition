@@ -9,7 +9,7 @@ import essentia.streaming
 from essentia.standard import *
 import ipdb as pdb #pdb.set_trace()
 
-def FX_multiFolders(classesList=None):
+def FX_multiFolders(classesList=None, saveFeatures=False): #TODO: Set saveFeatures to True when finished testing
     """
     Calculate 12 MFCC (1st coefficient is not considered) for all audio files in the list of classes
     (each one corresponds to a sub-folder of the sound/ folder) and return a dictionary containing the extracted features, corresponding labels and 
@@ -17,6 +17,7 @@ def FX_multiFolders(classesList=None):
     If the features were extracted before and are saved in the extractedFeatures/ folder, these pickle files will be used instead of extracting the features again.
     If no list if given, features will be extracted from all sub-folders.
     @param classesDict: Dict containing the classes (corresponds to folders) and a mapping to numbers. If not provided, features will be extracted from all sub-folders
+    @param saveFeatures: If True, the extracted features will be saved, to save time. Default True
     @return: Dictionary containing the extracted features as numpy array, corresponding labels (numbers) as numpy array and mapping from class names to class number as dict
     """
 
@@ -44,13 +45,17 @@ def FX_multiFolders(classesList=None):
             """ If not extracted data available, extract features from sound files: """
             tmpFeatures = FX_Folder(folder)
 
+            if saveFeatures:
+                targetFile = str("extractedFeatures/" + folder + ".p")
+                pickle.dump(tmpFeatures,open(targetFile,"wb"))
+                print("Save extracted features for " + folder + " class")
+
         featureList.append(tmpFeatures)
         
         tmpLabels = np.empty([tmpFeatures.shape[0],1])
         tmpLabels.fill(classesDict.get(folder))
         labelList.append(tmpLabels)
-        
-        
+
     allFeatures = np.concatenate(featureList, axis=0)
     allLabels = np.concatenate(labelList, axis=0)
     
@@ -83,11 +88,11 @@ def FX_Folder_Pickle(folderName):
     name as the folder and a *.p file extension
     @param folderName: Name of the folder in the "sound" folder, i.e. if you want to use the folder ./sound/car give "car" a folderName
     """
-    data = FX_Folder(folderName)
+    featureData = FX_Folder(folderName)
 
     fileDir = str("extractedFeatures/" + folderName + ".p")
 
-    pickle.dump(data,open(fileDir,"wb"))
+    pickle.dump(featureData,open(fileDir,"wb"))
 
 
 def FX_Folder(folderName):
