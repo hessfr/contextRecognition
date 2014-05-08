@@ -2,6 +2,7 @@ import scipy.io.wavfile as wav
 import os
 from os import listdir
 import numpy as np
+import pickle
 import essentia
 import essentia.standard
 import essentia.streaming
@@ -12,27 +13,37 @@ def FX_multiFolders(classesList=None):
     """
     Calculate 12 MFCC (1st coefficient is not considered) for all audio files in the list of classes
     (each one corresponds to a sub-folder of the sound/ folder) and return a dictionary containing the extracted features, corresponding labels and 
-    mapping from class names to class number (classesDict)
-    If no list if given, features will be extracted from all sub-folders
+    mapping from class names to class number (classesDict).
+    If the features were extracted before and are saved in the extractedFeatures/ folder, these pickle files will be used instead of extracting the features again.
+    If no list if given, features will be extracted from all sub-folders.
     @param classesDict: Dict containing the classes (corresponds to folders) and a mapping to numbers. If not provided, features will be extracted from all sub-folders
     @return: Dictionary containing the extracted features as numpy array, corresponding labels (numbers) as numpy array and mapping from class names to class number as dict
     """
 
-    dir = os.getcwd() + "/sound/"
+    dirSound = os.getcwd() + "/sound/"
     
     if not classesList:
-        #folderList = [name for name in os.listdir(dir) if os.path.isdir(os.path.join(dir, name))]
-         
+        #folderList = [name for name in os.listdir(dirSound) if os.path.isdir(os.path.join(dirSound, name))]
+
         classesDict = fillClassesDict()
  
     else:
         classesDict = fillClassesDict(classesList)
-   
+
+
     featureList = []
     labelList = []
-    
+    pickleDir = os.getcwd() + "/extractedFeatures"
+
     for folder in classesDict.keys():
-        tmpFeatures = FX_Folder(folder)
+        if alreadyExtracted(folder):
+            """ Use already extracted data if available: """
+            fileDir = pickleDir + "/" + folder + ".p"
+            tmpFeatures = pickle.load(open(fileDir,"rb"))
+        else:
+            """ If not extracted data available, extract features from sound files: """
+            tmpFeatures = FX_Folder(folder)
+
         featureList.append(tmpFeatures)
         
         tmpLabels = np.empty([tmpFeatures.shape[0],1])
@@ -48,14 +59,43 @@ def FX_multiFolders(classesList=None):
     
     return featureData
 
-        
+
+def alreadyExtracted(className):
+    """
+    Check if features for this folder were already extracted and the data is stored in the /extractedFeatures folder
+    @param className: name of the class that should be checked
+    @return: True if it exists, False if it doesn't
+    """
+    rootDir = os.getcwd() + "/extractedFeatures"
+    fileDir = rootDir + "/" + className + ".p"
+
+    if os.path.exists(fileDir):
+        exists = True
+    else:
+        exists = False
+
+    return exists
+
+
+def FX_Folder_Pickle(folderName):
+    """
+    Extracts features from the given folder and dumps them into a pickle file in the extractedFeatures/ folder with the same
+    name as the folder and a *.p file extension
+    @param folderName: Name of the folder in the "sound" folder, i.e. if you want to use the folder ./sound/car give "car" a folderName
+    """
+    data = FX_Folder(folderName)
+
+    fileDir = str("extractedFeatures/" + folderName + ".p")
+
+    pickle.dump(data,open(fileDir,"wb"))
+
+
 def FX_Folder(folderName):
     """
     Calculate 12 MFCC (1st coefficient is not considered) for all audio files is the given folder and return one numpy array containing all features
     @param folderName: Name of the folder in the "sound" folder, i.e. if you want to use the folder ./sound/car give "car" a folderName
     @return: Single numpy array containing 12 MFCC for all files in that folder
     """
-
     dir = os.getcwd() + "/sound/" + folderName
     if not os.path.exists(dir):
         print "Folder " + folderName + " not found"
