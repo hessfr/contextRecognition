@@ -6,8 +6,8 @@ from lof import LOF
 from lof import outliers
 from featureExtraction import FX_File
 from pprint import pprint
-from sklearn.decomposition import PCA
-import pylab as pl
+import subprocess
+from subprocess import Popen, PIPE
 import ipdb as pdb #pdb.set_trace()
         
 def paramSweep(folderName, paramRange):
@@ -35,7 +35,46 @@ def paramSweep(folderName, paramRange):
                 print "File " + str(fileFeatureDict.keys()[outlier["index"]]) + " has LOF of " + str(outlier["lof"])
             
             print "Total number of outliers: " + str(len(lof))
- 
+
+
+def removeOutliers(folderName, minPts):
+    """
+    Move files that were detected as outliers to the outliers/ folder
+    @param folderName: Name of the folder in the "sound" folder, i.e. if you want to folder the folder ./sound/car give "car" a folderName
+    @param minPts: Parameter for LOF algorithm: number of nearest neighbors used in defining the local neighborhood of the object (see Breunig paper for details)
+    """
+    fileFeatureDict = extractFeatures(folderName)
+
+    if(fileFeatureDict is not None):
+
+        """ Build list of the mean values: """
+        values = fileFeatureDict.values()
+        featureList = []
+        for entry in values:
+            featureList.append(tuple(entry))
+
+        """ Calculate local outlier factors for each file: """
+        lof = outliers(minPts, featureList)
+
+        dir = str(os.getcwd()) + "/sound/" + folderName + "/"
+
+        for outlier in lof:
+
+            fileDir = dir + str(fileFeatureDict.keys()[outlier["index"]])
+            command = str("mv " + str(fileDir) + " ../../outliers/")
+
+            print(command)
+
+            p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) #TODO: fix this line
+            out, err = p.communicate()
+
+            #if str(err) != "":
+
+
+            pdb.set_trace()
+
+            print "File " + str(fileFeatureDict.keys()[outlier["index"]]) + " has LOF of " + str(outlier["lof"])
+
 def LOF_Folder(folderName, minPts):
     """
     Calculate Local Outlier Factor (LOF) for all files in the given folder by using the mean values of the 12 MFCC features
@@ -53,11 +92,12 @@ def LOF_Folder(folderName, minPts):
         featureList = []
         for entry in values:
             featureList.append(tuple(entry))
-         
+
+        """ Calulcate local outlier factors for each file: """
         lof = outliers(minPts, featureList)
-        
-        for outlier in lof:
-            print "File " + str(fileFeatureDict.keys()[outlier["index"]]) + " has LOF of " + str(outlier["lof"])
+
+        #for outlier in lof:
+            #print "File " + str(fileFeatureDict.keys()[outlier["index"]]) + " has LOF of " + str(outlier["lof"])
             
     return lof
             
@@ -96,18 +136,12 @@ def extractFeatures(folderName):
                     #features = means
                     features = np.concatenate((means,stddev))
                     #features = np.concatenate((means,stddev,numZeroCrossings))
-
-                    """ calculate mean over all MFCC features: """
-                    #m1 = np.mean(means,0,dtype=np.float64)
-                    #m2 = np.mean(stddev,0,dtype=np.float64)
-                    #m3 = np.mean(numZeroCrossings,0,dtype=np.float64)
-                    #features = np.array([m1,m2,m3])
                     
                     fileFeatureDict[file] = features
              
     return fileFeatureDict
 
-from findOutliers import *
+from outlierDetection import *
 
 
 

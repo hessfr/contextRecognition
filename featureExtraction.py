@@ -134,8 +134,8 @@ def FX_File(file):
     mfccList = []
     
     """frameSize = 512 corresponds to 32ms when sampling rate is 16kHz"""
-    """hopSize = 256 will lead to 50% overlap"""
-    for frame in FrameGenerator(audio, frameSize = 512, hopSize = 256):
+    """hopSize = 512 will lead to no overlap"""
+    for frame in FrameGenerator(audio, frameSize = 512, hopSize = 512):
         mfcc_bands, mfcc_coeffs = mfcc(spectrum(w(frame)))
         mfccList.append(mfcc_coeffs)
     
