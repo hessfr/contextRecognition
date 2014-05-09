@@ -118,24 +118,28 @@ def FX_Folder(folderName):
         res = np.concatenate(tmpFeatureList, axis=0)
     return res    
 
-def FX_File(file):
+def FX_File(file, sampleRate=16000, windowLength=0.032):
     """
-    Calculate 12 MFCC (1st coefficient is not considered) of a given file with 16kHz sample rate, 32ms frame size and 50% overlapping and return a numpy array
+    Calculate 12 MFCC (1st coefficient is not considered) of a given file with 16kHz sample rate with non-overlapping
+    frames.
     @param file: Name and location of the file you want to use
+    @param SampleRate: Sample rate of the file. Default is 16000
+    @param windowLength: Length of the window in seconds. Default is 0.032
     @return: Numpy array containing all 12 MFCC for the given file
     """
-    #TODO: adapt for changeable sample rate and overlapping
-    #TODO: additional check that sample rate is correct
-    loader = essentia.standard.MonoLoader(filename = file, sampleRate = 16000)
+    loader = essentia.standard.MonoLoader(filename = file, sampleRate = sampleRate)
     audio = loader()
     w = Windowing(type = 'square')
     spectrum = Spectrum()  # FFT() would give the complex FFT, here we just want the magnitude spectrum
     mfcc = MFCC()
     mfccList = []
     
-    """frameSize = 512 corresponds to 32ms when sampling rate is 16kHz"""
-    """hopSize = 512 will lead to no overlap"""
-    for frame in FrameGenerator(audio, frameSize = 512, hopSize = 512):
+    """frameSize = 512 corresponds to 32ms when sampling rate is 16kHz
+        hopSize = frameSize will lead to no overlap"""
+
+    frameSize = windowLength * sampleRate
+
+    for frame in FrameGenerator(audio, frameSize = int(frameSize), hopSize = 512):
         mfcc_bands, mfcc_coeffs = mfcc(spectrum(w(frame)))
         mfccList.append(mfcc_coeffs)
     
@@ -175,15 +179,17 @@ def fillClassesDict(classesList=None):
     
     return classesDict
 
-def FX_Test(file):
+def FX_Test(file, sampleRate=16000, windowLength=0.032):
     """
     Extract 12 MFCC features from a single file
     @param file: Name and location of the file you want to use
+    @param SampleRate: Sample rate of the file. Default is 16000
+    @param windowLength: Length of the window in seconds. Default is 0.032
     @return: Numpy array containing all 12 MFCC for the given file
     """
     #TODO check if we still need this
     filePath = str(os.getcwd() + "/" + file)
-    feat = FX_File(filePath)
+    feat = FX_File(filePath, sampleRate=16000, windowLength=0.032)
     return feat 
 
 from featureExtraction import *

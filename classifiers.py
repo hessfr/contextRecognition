@@ -1,6 +1,7 @@
 import os
 from os import listdir
 import numpy as np
+import csv
 from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
@@ -13,27 +14,27 @@ import math
 from sklearn.cross_validation import KFold
 import ipdb as pdb #pdb.set_trace()
 
-def majorityVote(y_raw):
+def majorityVote(y_Raw):
     """
     Apply a "majority vote" of fixed window length to a sequence
-    @param y_raw: Input data as 1D numpy array
+    @param y_Raw: Input data as 1D numpy array
     @return: Result of the same size as input
     """
-    print "inputSize: " + str(y_raw.shape[0])
+    y_raw = y_Raw.copy()
     #TODO: implement properly with parameters:
-    window_length = 2.0 #in seconds
-    step_size = 0.016
-    frameLength = math.ceil(window_length/step_size)
-    print "frameLength: " + str(frameLength)
-    
+    majVotWindowLength = 2.0 #in seconds
+    windowLength = 0.032
+    frameLengthFloat = math.ceil(majVotWindowLength/windowLength)
+
+    frameLength = int(frameLengthFloat)
+
     resArray = np.empty(y_raw.shape)
 
-    n_frames = int(math.ceil(y_raw.shape[0]/frameLength))
-    print "Number of Frames: " + str(n_frames)
+    n_frames = int(math.ceil(y_raw.shape[0]/frameLengthFloat))
     
     for i in range(n_frames):
-        if ((i+1) * n_frames) < y_raw.shape[0]:
-            tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))] #y_raw[(i * frameLength):(((i+1) * frameLength) - 1)]
+        if ((i+1) * frameLength) < y_raw.shape[0]:
+            tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
             
             """ Get most frequent number in that frames and fill all elements in the frame with it: """
             count = np.bincount(tmpArray)
@@ -41,7 +42,17 @@ def majorityVote(y_raw):
             tmpArray.fill(tmpMostFrequent)
             """ Write it into our result array: """
             resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
-    
+        else:
+            tmpArray = y_raw[(i * frameLength):y_raw.shape[0]]
+            """ Get most frequent number in that frames and fill all elements in the frame with it: """
+            count = np.bincount(tmpArray)
+            tmpMostFrequent = np.argmax(count)
+            tmpArray.fill(tmpMostFrequent)
+            """ Write it into our result array: """
+            resArray[(i * frameLength):y_raw.shape[0]] = tmpArray
+
+    pdb.set_trace()
+
     return resArray
 
 def trainGMM(featureData):
@@ -109,22 +120,104 @@ def incrTrainGMM(prevTrainedGMM, newClassName, newClassData=None):
     
     return updatedGMM
     
-def testGMM(clfs):
+def testGMM(trainedGMM,useMajorityVote=True):
     """
     To check only
-    @param clfs:
+    @param trainedGMM: already trained GMM
+    @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
     """
-    n_classes = len(clfs)
+    n_classes = len(trainedGMM['clfs'])
     
     X_test = FX_Test("test.wav")
     likelihood = np.zeros((n_classes, X_test.shape[0]))
     
     for i in range(n_classes):
-        likelihood[i] = clfs[i].score(X_test)
+        likelihood[i] = trainedGMM['clfs'][i].score(X_test)
     
     y_pred = np.argmax(likelihood, 0)
-    
-    return y_pred    
+
+    if useMajorityVote:
+        y_majVote = majorityVote(y_pred)
+        return y_majVote
+    else:
+        return y_pred
+
+
+def testVsGT(trainedGMM, groundTruthLabels='labelsTest.txt', useMajorityVote=True):
+    """
+
+    @param trainedGMM:
+    @param groundTruthLabels:
+    @param useMajorityVote:
+    """
+    """ Make predictions for the given test file: """
+    y_pred = testGMM(trainedGMM)
+
+    """ Preprocess ground truth labels: """
+    with open(groundTruthLabels) as f:
+        reader = csv.reader(f, delimiter="\t")
+        labelList = list(reader) #1st column = start time, 2nd column = end time, 3rd column = class label (string)
+
+    """ Create array containing label for sample point: """
+    y_GT = np.empty([y_pred.shape[0]])
+    y_GT.fill(-1) #-1 corresponds to no label given
+
+
+    for line in labelList:
+        """ Fill array from start to end of each ground truth label with the correct label: """
+        start = getIndex(float(line[0]))
+        end = getIndex(float(line[1])) #fill to the end of the frame
+
+        if end >= y_GT.shape[0]:
+            end = y_GT.shape[0] - 1 #TODO: add proper check here if values are feasible
+
+        """ Check if our classifier was trained with all labels of the test file, if not give warning: """
+        classesNotTrained = []
+        if line[2] not in trainedGMM['classesDict'].keys():
+            classesNotTrained.append(line[2])
+            y_GT[start:end+1].fill(-1)
+        else:
+            y_GT[start:end+1].fill(trainedGMM['classesDict'][line[2]])
+
+        if classesNotTrained:
+            print("The classifier wasn't trained with class '" + line[2] + "'. It will not be considered for testing.")
+
+
+    """ Compare predictions to ground truth: """
+    #print(y_pred)
+    #print(y_GT)
+
+    agreementCounter = 0
+    for j in range(y_pred.shape[0]):
+        if y_pred[j] == y_GT[j]:
+            #We don't have to consider invalid (=-1) entries, because y_pred never contains -1, so we will never count
+            #them
+            agreementCounter = agreementCounter + 1
+
+    #Ignore points were no GT label provided and ignore points of classes we didn't train our classifier with:
+    validEntries = (y_GT != -1).sum() #Gives the number of valid points
+
+    agreement = 100 * agreementCounter/validEntries
+    print(str(round(agreement,2)) + " % of all samples predicted correctly")
+
+    notConsidered = 100*(y_pred.shape[0]-validEntries)/float(y_pred.shape[0])
+    print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
+                                                                " or the classifier wasn't trained with all classes specified in the ground truth")
+
+
+def getIndex(timeStamp, windowLength=0.032):
+    """
+    Calculates index in the feature array of a given time given no overlapping of frames. Will return the beginning
+    of the frame
+    @param timeStamp: Position in the input file in seconds
+    @param windowLength: Length of the window in seconds. Default is 0.032
+    @return: Index of the window, to which the timestamp corresponds to as int
+    """
+
+    return int(timeStamp/windowLength)
+
+
+
 
 def k_FoldGMM(featureData,k):
     """
@@ -157,7 +250,8 @@ def k_FoldGMM(featureData,k):
     for i in range(n_classes):
         likelihood[i] = clfs[i].score(X_test)
         
-    y_pred = np.argmax(likelihood, 0)
+    y_pred = \
+        np.argmax(likelihood, 0)
     
     """ Compare predictions to ground truth: """
     agreementCounter = 0
