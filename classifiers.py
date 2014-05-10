@@ -51,7 +51,7 @@ def majorityVote(y_Raw):
             """ Write it into our result array: """
             resArray[(i * frameLength):y_raw.shape[0]] = tmpArray
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     return resArray
 
@@ -130,7 +130,7 @@ def testGMM(trainedGMM,useMajorityVote=True):
     
     X_test = FX_Test("test.wav")
     likelihood = np.zeros((n_classes, X_test.shape[0]))
-    
+
     for i in range(n_classes):
         likelihood[i] = trainedGMM['clfs'][i].score(X_test)
     
@@ -151,7 +151,7 @@ def testVsGT(trainedGMM, groundTruthLabels='labelsTest.txt', useMajorityVote=Tru
     @param useMajorityVote:
     """
     """ Make predictions for the given test file: """
-    y_pred = testGMM(trainedGMM)
+    y_pred = testGMM(trainedGMM,useMajorityVote)
 
     """ Preprocess ground truth labels: """
     with open(groundTruthLabels) as f:

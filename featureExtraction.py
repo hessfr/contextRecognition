@@ -187,7 +187,7 @@ def FX_Test(file, sampleRate=16000, windowLength=0.032):
     @param windowLength: Length of the window in seconds. Default is 0.032
     @return: Numpy array containing all 12 MFCC for the given file
     """
-    #TODO check if we still need this
+
     filePath = str(os.getcwd() + "/" + file)
     feat = FX_File(filePath, sampleRate=16000, windowLength=0.032)
     return feat 

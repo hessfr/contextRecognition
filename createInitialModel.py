@@ -5,6 +5,7 @@ from fileConversion import isAudio
 from getSound import getSoundBySingleTag
 from fileConversion import convertFolder
 from featureExtraction import FX_multiFolders
+from outlierDetection import removeOutliers
 from classifiers import trainGMM
 
 def createInitialModel(classesList):
@@ -17,17 +18,17 @@ def createInitialModel(classesList):
     for className in classesList:
         downloadedCompletely = False
         """ Check if sound files are already downloaded: """
-        if checkDownloaded(className,2): #TODO: change this back to a reasonable (30)
+        if checkDownloaded(className,2): #TODO: change this back to a reasonable (e.g. 12, because we remove outliers from the 30 downloaded files, so this number has to be smaller
             downloadedCompletely = True
         else:
             """ If not downloaded yet, get the sounds from freesound"""
-            downloadResult = getSoundBySingleTag(className,2) #TODO: change this back to a reasonable (30)
+            downloadResult = getSoundBySingleTag(className,12) #TODO: change this back to a reasonable (30)
             if not downloadResult:
                 print("Download problems occured, models cannot be build")
                 return False
 
             """ Verify that download was successful: """
-            if not checkDownloaded(className,2):
+            if not checkDownloaded(className,12):
                 print("Download problems occured, models cannot be build")
                 return False
 
@@ -39,7 +40,16 @@ def createInitialModel(classesList):
                 return False
 
             """ Remove Outliers """
-            #TODO: Outlier Removal
+            outlierDir = os.getcwd() + "/outliers/" + str(className)
+            if not os.path.exists(outlierDir):
+                os.makedirs(outlierDir)
+
+            outlierResult = removeOutliers(className)
+
+            if outlierResult == False:
+                print("Problems occurs during outlier removal. The resulting model might not show perfect performance.")
+
+
 
     """ Extract features for all classes: """
     featureData = FX_multiFolders(classesList)

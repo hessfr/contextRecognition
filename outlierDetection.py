@@ -37,11 +37,12 @@ def paramSweep(folderName, paramRange):
             print "Total number of outliers: " + str(len(lof))
 
 
-def removeOutliers(folderName, minPts):
+def removeOutliers(folderName, minPts=10):
     """
     Move files that were detected as outliers to the outliers/ folder
     @param folderName: Name of the folder in the "sound" folder, i.e. if you want to folder the folder ./sound/car give "car" a folderName
-    @param minPts: Parameter for LOF algorithm: number of nearest neighbors used in defining the local neighborhood of the object (see Breunig paper for details)
+    @param minPts: Parameter for LOF algorithm: number of nearest neighbors used in defining the local neighborhood of
+    the object (see Breunig paper for details). Default value is 10.
     """
     fileFeatureDict = extractFeatures(folderName)
 
@@ -58,22 +59,31 @@ def removeOutliers(folderName, minPts):
 
         dir = str(os.getcwd()) + "/sound/" + folderName + "/"
 
+        outlierDir = os.getcwd() + "/outliers/" + str(folderName)
+        if not os.path.exists(outlierDir):
+            os.makedirs(outlierDir)
+
+        print(str(len(lof)) + " outliers were found for the class " + str(folderName) + " and will be moved to the outliers folder")
+
+        successfullyMoved = 0
+
         for outlier in lof:
 
             fileDir = dir + str(fileFeatureDict.keys()[outlier["index"]])
-            command = str("mv " + str(fileDir) + " ../../outliers/")
+            command = str("mv '" + str(fileDir) + "' '" + str(outlierDir) + "/'")
 
-            print(command)
-
-            p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) #TODO: fix this line
+            p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = p.communicate()
 
-            #if str(err) != "":
+            if str(err) == "":
+                successfullyMoved = successfullyMoved + 1
 
-
-            pdb.set_trace()
-
-            print "File " + str(fileFeatureDict.keys()[outlier["index"]]) + " has LOF of " + str(outlier["lof"])
+        if len(lof) == successfullyMoved:
+            print("All outliers were successfully removed for the class " + str(folderName))
+            return True
+        else:
+            print("Problems occured, when removing outliers for the class " + str(folderName))
+            return False
 
 def LOF_Folder(folderName, minPts):
     """
