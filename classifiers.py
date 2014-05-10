@@ -8,10 +8,13 @@ from sklearn.svm import LinearSVC
 from sklearn.mixture import GMM
 from sklearn import cross_validation
 from sklearn import preprocessing
+from sklearn.metrics import confusion_matrix
+from sklearn.cross_validation import KFold
+import pylab as pl
 from featureExtraction import FX_Test
 from featureExtraction import FX_Folder
 import math
-from sklearn.cross_validation import KFold
+import operator
 import ipdb as pdb #pdb.set_trace()
 
 def majorityVote(y_Raw):
@@ -120,15 +123,20 @@ def incrTrainGMM(prevTrainedGMM, newClassName, newClassData=None):
     
     return updatedGMM
     
-def testGMM(trainedGMM,useMajorityVote=True):
+def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
     """
     To check only
     @param trainedGMM: already trained GMM
+    @param featureData:
     @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
     """
     n_classes = len(trainedGMM['clfs'])
-    
-    X_test = FX_Test("test.wav")
+
+    if featureData==None:
+        X_test = FX_Test("complete.wav")
+    else:
+        X_test = featureData
+
     likelihood = np.zeros((n_classes, X_test.shape[0]))
 
     for i in range(n_classes):
@@ -143,15 +151,17 @@ def testGMM(trainedGMM,useMajorityVote=True):
         return y_pred
 
 
-def testVsGT(trainedGMM, groundTruthLabels='labelsTest.txt', useMajorityVote=True):
+def testVsGT(trainedGMM, featureData=None, groundTruthLabels='labelsTest.txt', useMajorityVote=True):
     """
 
     @param trainedGMM:
+    @param featureData:
     @param groundTruthLabels:
     @param useMajorityVote:
+    @return:
     """
     """ Make predictions for the given test file: """
-    y_pred = testGMM(trainedGMM,useMajorityVote)
+    y_pred = testGMM(trainedGMM,featureData, useMajorityVote)
 
     """ Preprocess ground truth labels: """
     with open(groundTruthLabels) as f:
@@ -203,6 +213,53 @@ def testVsGT(trainedGMM, groundTruthLabels='labelsTest.txt', useMajorityVote=Tru
     notConsidered = 100*(y_pred.shape[0]-validEntries)/float(y_pred.shape[0])
     print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
                                                                 " or the classifier wasn't trained with all classes specified in the ground truth")
+
+    """ Delete invalid entries in y_GT and y_pred: """
+    idx = np.where(y_GT == -1)[0] #get indexes of invalid entries
+
+    y_pred = np.delete(y_pred,idx)
+    y_GT = np.delete(y_GT,idx)
+
+    resDict = {'predications': y_pred, 'groundTruth': y_GT}
+
+    print(trainedGMM["classesDict"])
+
+    confusionMatrix(y_GT,y_pred, trainedGMM["classesDict"])
+
+    return resDict
+
+
+def confusionMatrix(y_GT, y_pred, classesDict):
+    """
+
+    @param y_GT:
+    @param y_pred:
+    """
+    print(y_GT.mean())
+    print(y_pred.mean())
+
+    """ Sort classesDict to show labels in the CM: """
+    sortedTmp = sorted(classesDict.iteritems(), key=operator.itemgetter(1))
+    sortedLabels = []
+    for j in range(len(sortedTmp)):
+        sortedLabels.append(sortedTmp[j][0])
+
+    print(sortedLabels)
+
+    print(y_GT.mean())
+    print(y_pred.mean())
+
+    cm = confusion_matrix(y_GT, y_pred)
+
+    print(cm)
+
+    pl.matshow(cm)
+    pl.colorbar()
+    pl.ylabel('True label')
+    pl.xlabel('Predicted label')
+    pl.xticks(range(len(sortedLabels)), sortedLabels)
+    pl.yticks(range(len(sortedLabels)), sortedLabels)
+    pl.show()
 
 
 def getIndex(timeStamp, windowLength=0.032):
