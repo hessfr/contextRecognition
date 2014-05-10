@@ -7,6 +7,10 @@ import essentia
 import essentia.standard
 import essentia.streaming
 from essentia.standard import *
+import subprocess
+from subprocess import Popen, PIPE
+import wave
+import contextlib
 import ipdb as pdb #pdb.set_trace()
 
 def FX_multiFolders(classesList=None, saveFeatures=False): #TODO: Set saveFeatures to True when finished testing
@@ -48,7 +52,7 @@ def FX_multiFolders(classesList=None, saveFeatures=False): #TODO: Set saveFeatur
             if saveFeatures:
                 targetFile = str("extractedFeatures/" + folder + ".p")
                 pickle.dump(tmpFeatures,open(targetFile,"wb"))
-                print("Save extracted features for " + folder + " class")
+                print("Saved extracted features for " + folder + " class")
 
         featureList.append(tmpFeatures)
         
@@ -179,17 +183,67 @@ def fillClassesDict(classesList=None):
     
     return classesDict
 
-def FX_Test(file, sampleRate=16000, windowLength=0.032):
+def FX_Test(file, sampleRate=16000, windowLength=0.032, splitLength = 7200):
     """
-    Extract 12 MFCC features from a single file
+    Extract 12 MFCC features from a single file. If the file is too large, it will be split into smaller files, features will be
+    extracted and combined in the end.
     @param file: Name and location of the file you want to use
     @param SampleRate: Sample rate of the file. Default is 16000
     @param windowLength: Length of the window in seconds. Default is 0.032
+    @param splitSize: Threshold for splitting the file, if file is longer than this parameter it will be split into parts of this size. Default value is 7200.
     @return: Numpy array containing all 12 MFCC for the given file
     """
 
     filePath = str(os.getcwd() + "/" + file)
-    feat = FX_File(filePath, sampleRate=16000, windowLength=0.032)
-    return feat 
+
+    with contextlib.closing(wave.open(filePath,'r')) as f:  #TODO: check why this doesn't work for all files
+        frames = f.getnframes()
+        rate = f.getframerate()
+        duration = frames / float(rate)
+
+    if duration <= splitLength:
+        """ Do not split the file: """
+        feat = FX_File(filePath, sampleRate=16000, windowLength=0.032)
+        return feat
+    else:
+        """ Split file: """
+        splitName = "part"
+        allSplitNames = []
+        i = 0
+
+        while i*splitLength < duration:
+            start = i * splitLength #Sox allows a trim region to end later than the file ending and will return just the audio to the end of the file
+            #end = (i+1) * splitLength
+
+            tmpFileName = splitName + str(i) + ".wav"
+            allSplitNames.append(tmpFileName)
+
+            commandString = str("sox '" + str(filePath) + "' '" + str(tmpFileName) + "' -V1 trim " + str(int(start)) + " " + str(int(splitLength)))
+            print(commandString)
+            p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate()
+            if str(err) != "":
+                print "A problem occurred while splitting the file"
+
+            i=i+1
+
+
+
+        """ Extract features for each individual part: """
+        tup = () #define empty tuple and insert values later
+        for file in allSplitNames:
+            tmp = FX_File(file, sampleRate=16000, windowLength=0.032)
+            tup = tup + (tmp,)
+
+            """ Delete the split files again: """
+            commandString = str("rm '" + str(file) + "'")
+            p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate()
+            if str(err) != "":
+                print "A problem occurred while deleting temporary files"
+
+        feat = np.concatenate(tup)
+
+        return feat
 
 from featureExtraction import *
