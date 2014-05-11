@@ -316,15 +316,36 @@ def SVM(featureData):
     @return: Scikit-Learn SVM classifier
     """
     X_train = preprocessing.scale(featureData['features'])
+
     
-    y_train = featureData['labels']
-    
+    y_train = featureData['labels'][:,0]
+
 #     clf = SVC(kernel='linear')
     clf = LinearSVC() #OneVsRestClassifier(LinearSVC())
     
     clf.fit(X_train, y_train)
     
     return clf
+
+def testSVM(trainedSVM,featureData=None,useMajorityVote=True):
+    """
+    To check only
+    @param trainedSVM:
+    @param featureData: Numpy array of already extracted features of the test file
+    @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
+    """
+    if featureData==None:
+        X_test = FX_Test("test.wav")
+    else:
+        X_test = featureData
+
+    y_pred = trainedSVM.predict(X_test)
+
+    if useMajorityVote:
+        y_majVote = majorityVote(y_pred)
+        return y_majVote
+    else:
+        return y_pred
 
 def randomSplitSVM(featureData):
     """
