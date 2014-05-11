@@ -42,9 +42,9 @@ def convertFolder(folderName):
                     p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     out, err = p.communicate()
                     if str(err) != "":
-                        print "Could not move to 'conversionFailed' folder, maybe the folder does not exists?"
+                        print "Could not move file '" + str(file) + "' to 'conversionFailed' folder, maybe the folder does not exists?"
                     else:
-                        print "Moved the file to the conversionFailed folder"
+                        print "Moved the file '" + str(file) + "' to the conversionFailed folder"
                 
                 if os.path.exists(tmpFile):
                     """ move and delete the temporary file: """

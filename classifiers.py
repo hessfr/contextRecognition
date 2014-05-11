@@ -2,6 +2,7 @@ import os
 from os import listdir
 import numpy as np
 import csv
+import pickle
 from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
@@ -70,24 +71,21 @@ def trainGMM(featureData):
     
     n_classes = len(np.unique(y_train))
     
-    print str(n_classes) + " different classes"
+    print(str(n_classes) + " different classes")
 
     clfs = []
  
     for i in range(n_classes):
         tmpClf = GMM(n_components = 16)
         iTmp = (y_train[:,0] == i)
-        """ use expecation-maximization to fit the Gaussians: """ 
-        t = X_train[iTmp]        
+
+        #tmpClf.means_ = np.array([X_train[iTmp].mean(axis=0) for i in xrange(n_classes)])
+
+        """ use expectation-maximization to fit the Gaussians: """
         tmpClf.fit(X_train[iTmp])
         clfs.append(tmpClf)
         
     trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict']}
-
-    """ trainedGMM contains:
-    @param clfs: Array of classifiers, containing one classifier for each class
-    @param classesDict: Dict containing mapping of class names to numbers
-    """
     
     return trainedGMM
 
@@ -127,13 +125,13 @@ def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
     """
     To check only
     @param trainedGMM: already trained GMM
-    @param featureData:
+    @param featureData: Numpy array of already extracted features of the test file
     @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
     """
     n_classes = len(trainedGMM['clfs'])
 
     if featureData==None:
-        X_test = FX_Test("complete.wav")
+        X_test = FX_Test("test.wav")
     else:
         X_test = featureData
 
@@ -141,7 +139,7 @@ def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
 
     for i in range(n_classes):
         likelihood[i] = trainedGMM['clfs'][i].score(X_test)
-    
+
     y_pred = np.argmax(likelihood, 0)
 
     if useMajorityVote:
@@ -151,11 +149,11 @@ def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
         return y_pred
 
 
-def testVsGT(trainedGMM, featureData=None, groundTruthLabels='labelsTest.txt', useMajorityVote=True):
+def testVsGT(trainedGMM, featureData=None, groundTruthLabels='labelsAdapted.txt', useMajorityVote=True):
     """
 
     @param trainedGMM:
-    @param featureData:
+    @param featureData: Numpy array of already extracted features of the test file
     @param groundTruthLabels:
     @param useMajorityVote:
     @return:
@@ -235,19 +233,12 @@ def confusionMatrix(y_GT, y_pred, classesDict):
     @param y_GT:
     @param y_pred:
     """
-    print(y_GT.mean())
-    print(y_pred.mean())
 
     """ Sort classesDict to show labels in the CM: """
     sortedTmp = sorted(classesDict.iteritems(), key=operator.itemgetter(1))
     sortedLabels = []
     for j in range(len(sortedTmp)):
         sortedLabels.append(sortedTmp[j][0])
-
-    print(sortedLabels)
-
-    print(y_GT.mean())
-    print(y_pred.mean())
 
     cm = confusion_matrix(y_GT, y_pred)
 

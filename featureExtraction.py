@@ -183,7 +183,7 @@ def fillClassesDict(classesList=None):
     
     return classesDict
 
-def FX_Test(file, sampleRate=16000, windowLength=0.032, splitLength = 7200):
+def FX_Test(file, sampleRate = 16000, windowLength = 0.032, splitLength = 7200, noSplitting = True):
     """
     Extract 12 MFCC features from a single file. If the file is too large, it will be split into smaller files, features will be
     extracted and combined in the end.
@@ -191,10 +191,16 @@ def FX_Test(file, sampleRate=16000, windowLength=0.032, splitLength = 7200):
     @param SampleRate: Sample rate of the file. Default is 16000
     @param windowLength: Length of the window in seconds. Default is 0.032
     @param splitSize: Threshold for splitting the file, if file is longer than this parameter it will be split into parts of this size. Default value is 7200.
+    @param noSplitting: When set to True, the file will never be split, no matter how large it is #TODO: remove this again later
     @return: Numpy array containing all 12 MFCC for the given file
     """
 
     filePath = str(os.getcwd() + "/" + file)
+
+    if noSplitting == True: #TODO: remove this again later
+        """ Do not split the file: """
+        feat = FX_File(filePath, sampleRate=16000, windowLength=0.032)
+        return feat
 
     with contextlib.closing(wave.open(filePath,'r')) as f:  #TODO: check why this doesn't work for all files
         frames = f.getnframes()
@@ -219,7 +225,6 @@ def FX_Test(file, sampleRate=16000, windowLength=0.032, splitLength = 7200):
             allSplitNames.append(tmpFileName)
 
             commandString = str("sox '" + str(filePath) + "' '" + str(tmpFileName) + "' -V1 trim " + str(int(start)) + " " + str(int(splitLength)))
-            print(commandString)
             p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = p.communicate()
             if str(err) != "":
