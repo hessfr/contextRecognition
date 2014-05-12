@@ -10,6 +10,7 @@ from sklearn.mixture import GMM
 from sklearn import cross_validation
 from sklearn import preprocessing
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 from sklearn.cross_validation import KFold
 import pylab as pl
 from featureExtraction import FX_Test
@@ -55,8 +56,6 @@ def majorityVote(y_Raw):
             """ Write it into our result array: """
             resArray[(i * frameLength):y_raw.shape[0]] = tmpArray
 
-    #pdb.set_trace()
-
     return resArray
 
 def trainGMM(featureData):
@@ -66,7 +65,7 @@ def trainGMM(featureData):
     @param featureData: Dictionary containing 'features' and 'labels' as numpy array and 'classesDict' for mapping of class names to numbers
     @return: Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
     """
-    X_train = preprocessing.scale(featureData['features'])
+    X_train = featureData['features'] #preprocessing.scale(featureData['features'])
     y_train = featureData['labels']
     
     n_classes = len(np.unique(y_train))
@@ -76,50 +75,18 @@ def trainGMM(featureData):
     clfs = []
  
     for i in range(n_classes):
-        tmpClf = GMM(n_components = 16)
-        iTmp = (y_train[:,0] == i)
+        tmpClf = GMM(n_components=16)
+        iTmp = (y_train == i) #iTmp = (y_train[:,0] == i)
 
-        #tmpClf.means_ = np.array([X_train[iTmp].mean(axis=0) for i in xrange(n_classes)])
+        tmpTrain = X_train[iTmp]
 
         """ use expectation-maximization to fit the Gaussians: """
-        tmpClf.fit(X_train[iTmp])
+        tmpClf.fit(preprocessing.scale(tmpTrain))
         clfs.append(tmpClf)
-        
+
     trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict']}
-    
+
     return trainedGMM
-
-def incrTrainGMM(prevTrainedGMM, newClassName, newClassData=None):
-    """
-    Incorporate a new class into an existing GMM model
-    @param prevTrainedGMM: Dictionary containing results of previously trained GMM. Must contain classifiers in 'clfs' and mapping of
-    class names to numbers in 'classesDict' 
-    @param newClassName: Name of the new class. Has to match the name of the folder where the sound files are located
-    @param newClassData: Already extracted MFCC Features for the given newClassName. If not provided, a feature extraction will be performed
-    @return:  Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
-    """
-    
-    if newClassData == None:
-        newClassData = FX_Folder(newClassName)
-
-    X_train = preprocessing.scale(newClassData)
-
-    n_newClass = X_train.shape[0]
-
-    newClf = GMM(n_components = 16)
-    newClf.fit(X_train)
-    
-    """ Update the dict containing mapping of class names: """
-    newClassDict = dict(prevTrainedGMM['classesDict'])
-    newClassDict[newClassName] = len(newClassDict.values())
-    
-    allClfs = list(prevTrainedGMM['clfs'])
-    allClfs.append(newClf)
-
-    """ create new dictionary: """
-    updatedGMM = {'clfs': allClfs, 'classesDict': newClassDict}
-    
-    return updatedGMM
     
 def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
     """
@@ -131,15 +98,17 @@ def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
     n_classes = len(trainedGMM['clfs'])
 
     if featureData==None:
-        X_test = FX_Test("test.wav")
+        X_test = preprocessing.scale(FX_Test("complete.wav"))
     else:
-        X_test = featureData
+        X_test = preprocessing.scale(featureData)
 
     likelihood = np.zeros((n_classes, X_test.shape[0]))
 
+    """ Compute log-probability for each class for all points: """
     for i in range(n_classes):
         likelihood[i] = trainedGMM['clfs'][i].score(X_test)
 
+    """ Select the class with the highest log-probability: """
     y_pred = np.argmax(likelihood, 0)
 
     if useMajorityVote:
@@ -232,6 +201,7 @@ def confusionMatrix(y_GT, y_pred, classesDict):
 
     @param y_GT:
     @param y_pred:
+    @param classesDict:
     """
 
     """ Sort classesDict to show labels in the CM: """
@@ -244,12 +214,37 @@ def confusionMatrix(y_GT, y_pred, classesDict):
 
     print(cm)
 
+    width = len(cm)
+    height = len(cm[0])
+
     pl.matshow(cm)
-    pl.colorbar()
     pl.ylabel('True label')
     pl.xlabel('Predicted label')
     pl.xticks(range(len(sortedLabels)), sortedLabels)
     pl.yticks(range(len(sortedLabels)), sortedLabels)
+
+    for x in xrange(width):
+        for y in xrange(height):
+            pl.annotate(str(cm[x][y]), xy=(y, x),
+                        horizontalalignment='center',
+                        verticalalignment='center')
+
+    # norm_conf = []
+    # for i in cm:
+    #     a = 0
+    #     tmp_arr = []
+    #     a = sum(i, 0)
+    #     for j in i:
+    #         tmp_arr.append(float(j)/float(a))
+    #     norm_conf.append(tmp_arr)
+    #
+    # res = pl.imshow(np.array(norm_conf), cmap=pl.cm.jet,
+    #             interpolation='nearest')
+    #
+    # pl.colorbar(cm)
+
+    pl.colorbar()
+
     pl.show()
 
 
@@ -263,9 +258,6 @@ def getIndex(timeStamp, windowLength=0.032):
     """
 
     return int(timeStamp/windowLength)
-
-
-
 
 def k_FoldGMM(featureData,k):
     """
@@ -288,7 +280,7 @@ def k_FoldGMM(featureData,k):
 
     for i in range(n_classes):
         tmpClf = GMM(n_components = 16)
-        iTmp = (y_train[:,0] == i)
+        iTmp = (y_train == i) #iTmp = (y_train[:,0] == i)
         tmpClf.fit(X_train[iTmp])
         clfs.append(tmpClf)
         
@@ -371,6 +363,38 @@ def randomSplitSVM(featureData):
     print str(100 * agreementCounter/y_test.shape[0]) + " % of all samples predicted correctly (without majority vote...)"
      
     return clf
+
+def incrTrainGMM(prevTrainedGMM, newClassName, newClassData=None):
+    """
+    Incorporate a new class into an existing GMM model
+    @param prevTrainedGMM: Dictionary containing results of previously trained GMM. Must contain classifiers in 'clfs' and mapping of
+    class names to numbers in 'classesDict'
+    @param newClassName: Name of the new class. Has to match the name of the folder where the sound files are located
+    @param newClassData: Already extracted MFCC Features for the given newClassName. If not provided, a feature extraction will be performed
+    @return: Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
+    """
+
+    if newClassData == None:
+        newClassData = FX_Folder(newClassName)
+
+    X_train = preprocessing.scale(newClassData)
+
+    n_newClass = X_train.shape[0]
+
+    newClf = GMM(n_components = 16)
+    newClf.fit(X_train)
+
+    """ Update the dict containing mapping of class names: """
+    newClassDict = dict(prevTrainedGMM['classesDict'])
+    newClassDict[newClassName] = len(newClassDict.values())
+
+    allClfs = list(prevTrainedGMM['clfs'])
+    allClfs.append(newClf)
+
+    """ create new dictionary: """
+    updatedGMM = {'clfs': allClfs, 'classesDict': newClassDict}
+
+    return updatedGMM
 
 from classifiers import *
 

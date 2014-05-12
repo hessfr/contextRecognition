@@ -56,14 +56,13 @@ def FX_multiFolders(classesList=None, saveFeatures=False): #TODO: Set saveFeatur
 
         featureList.append(tmpFeatures)
         
-        tmpLabels = np.empty([tmpFeatures.shape[0],1])
+        tmpLabels = np.empty([tmpFeatures.shape[0]])
         tmpLabels.fill(classesDict.get(folder))
         labelList.append(tmpLabels)
 
     allFeatures = np.concatenate(featureList, axis=0)
     allLabels = np.concatenate(labelList, axis=0)
-    
-    
+
     featureData = {'features': allFeatures, 'labels': allLabels, 'classesDict': classesDict}
     
     return featureData
@@ -143,7 +142,7 @@ def FX_File(file, sampleRate=16000, windowLength=0.032):
 
     frameSize = windowLength * sampleRate
 
-    for frame in FrameGenerator(audio, frameSize = int(frameSize), hopSize = 512):
+    for frame in FrameGenerator(audio, frameSize = int(frameSize), hopSize = int(frameSize)):
         mfcc_bands, mfcc_coeffs = mfcc(spectrum(w(frame)))
         mfccList.append(mfcc_coeffs)
     
@@ -173,7 +172,7 @@ def fillClassesDict(classesList=None):
             if os.path.isdir(os.path.join(dir, name)):
                 folderList.append(name)
             else:
-                print "No folder was found for class " + name + ". It has to be downloaded before it can be used."
+                print("No folder was found for class " + name + ". It has to be downloaded before it can be used.")
         
     """ Fill the dictionary: """
     i = 0
@@ -183,7 +182,7 @@ def fillClassesDict(classesList=None):
     
     return classesDict
 
-def FX_Test(file, sampleRate = 16000, windowLength = 0.032, splitLength = 7200, noSplitting = True):
+def FX_Test(file, sampleRate = 16000, windowLength = 0.032, splitLength = 7200, noSplitting=False):
     """
     Extract 12 MFCC features from a single file. If the file is too large, it will be split into smaller files, features will be
     extracted and combined in the end.
