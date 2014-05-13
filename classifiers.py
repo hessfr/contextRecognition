@@ -17,6 +17,7 @@ from featureExtraction import FX_Test
 from featureExtraction import FX_Folder
 import math
 import operator
+from scipy.stats import itemfreq
 import ipdb as pdb #pdb.set_trace()
 
 def majorityVote(y_Raw):
@@ -165,14 +166,16 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
         if classesNotTrained:
             print("The classifier wasn't trained with class '" + line[2] + "'. It will not be considered for testing.")
 
+    n_classes = len(trainedGMM["classesDict"])
     agreementCounter = 0
     validCounter = 0
     delIdx = [] #list of indexes of the rows that should be deleted
+    correctlyPredicted = [0] * n_classes #list to count how often each class is predicted correctly
     for j in range(y_pred.shape[0]):
 
         if y_pred[j] in y_GT[j,:]:
             #We don't have to consider invalid (=-1) entries, because y_pred never contains -1, so we will never count them
-            agreementCounter = agreementCounter + 1
+            correctlyPredicted[int(y_pred[j])] = correctlyPredicted[int(y_pred[j])] + 1 #count correctly predicted for the individual class
 
         if y_GT[j,:].sum() != -3:
             #Ignore points were no GT label provided and ignore points of classes we didn't train our classifier with:
@@ -180,7 +183,7 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
         else:
             delIdx.append(j)
 
-    agreement = 100 * agreementCounter/validCounter
+    agreement = 100 * sum(correctlyPredicted)/validCounter
     print(str(round(agreement,2)) + " % of all valid samples predicted correctly")
 
     notConsidered = 100*(y_pred.shape[0]-validCounter)/float(y_pred.shape[0])
@@ -190,6 +193,21 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     """ Delete invalid entries in y_GT and y_pred: """
     y_pred = np.delete(y_pred,delIdx)
     y_GT = np.delete(y_GT,delIdx,axis=0)
+
+    """ Count how often each class was predicted: """
+    allPredicted = [0] * n_classes
+    items = itemfreq(y_pred)
+    for item in items:
+        allPredicted[int(item[0])] = int(item[1])
+
+    for cl in trainedGMM["classesDict"]:
+        clNum = trainedGMM["classesDict"][cl]
+
+        if allPredicted[clNum] != 0:
+            precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
+            print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
+        else:
+            print("Class '" + cl + "' wasn't predicted at all")
 
     resDict = {'predictions': y_pred, 'groundTruth': y_GT}
 
