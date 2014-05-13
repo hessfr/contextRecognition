@@ -132,7 +132,7 @@ def FX_File(file, sampleRate=16000, windowLength=0.032):
     """
     loader = essentia.standard.MonoLoader(filename = file, sampleRate = sampleRate)
     audio = loader()
-    w = Windowing(type = 'square')
+    w = Windowing(type = 'square')  #'hann', 'square'
     spectrum = Spectrum()  # FFT() would give the complex FFT, here we just want the magnitude spectrum
     mfcc = MFCC()
     mfccList = []

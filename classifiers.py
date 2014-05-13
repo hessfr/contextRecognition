@@ -118,7 +118,7 @@ def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
         return y_pred
 
 
-def testVsGT(trainedGMM, featureData=None, groundTruthLabels='labelsAdapted.txt', useMajorityVote=True):
+def testVsGT(trainedGMM, featureData=None, groundTruthLabels='labels.txt', useMajorityVote=True):
     """
 
     @param trainedGMM:
@@ -136,9 +136,9 @@ def testVsGT(trainedGMM, featureData=None, groundTruthLabels='labelsAdapted.txt'
         labelList = list(reader) #1st column = start time, 2nd column = end time, 3rd column = class label (string)
 
     """ Create array containing label for sample point: """
-    y_GT = np.empty([y_pred.shape[0]])
+    n_maxLabels = 3 #maximum number of labels that can be assign to one point
+    y_GT = np.empty([y_pred.shape[0],n_maxLabels])
     y_GT.fill(-1) #-1 corresponds to no label given
-
 
     for line in labelList:
         """ Fill array from start to end of each ground truth label with the correct label: """
@@ -148,50 +148,54 @@ def testVsGT(trainedGMM, featureData=None, groundTruthLabels='labelsAdapted.txt'
         if end >= y_GT.shape[0]:
             end = y_GT.shape[0] - 1 #TODO: add proper check here if values are feasible
 
-        """ Check if our classifier was trained with all labels of the test file, if not give warning: """
+        """ Fill ground truth array, and check if our classifier was trained with all labels of the test file, if not give warning: """
         classesNotTrained = []
         if line[2] not in trainedGMM['classesDict'].keys():
             classesNotTrained.append(line[2])
-            y_GT[start:end+1].fill(-1)
         else:
-            y_GT[start:end+1].fill(trainedGMM['classesDict'][line[2]])
+            if (len(np.unique(y_GT[start:end+1,0])) == 1) and (np.unique(y_GT[start:end+1,0])[0] == -1):
+                y_GT[start:end+1,0].fill(trainedGMM['classesDict'][line[2]])
+            elif (len(np.unique(y_GT[start:end+1,1])) == 1) and (np.unique(y_GT[start:end+1,1])[0] == -1):
+                y_GT[start:end+1,1].fill(trainedGMM['classesDict'][line[2]])
+            elif (len(np.unique(y_GT[start:end+1,2])) == 1) and (np.unique(y_GT[start:end+1,2])[0] == -1):
+                y_GT[start:end+1,2].fill(trainedGMM['classesDict'][line[2]])
+            else:
+                print("Problem occurred when filling ground truth array. Maybe you are using more than 3 simultaneous context classes?")
 
         if classesNotTrained:
             print("The classifier wasn't trained with class '" + line[2] + "'. It will not be considered for testing.")
 
-
-    """ Compare predictions to ground truth: """
-    #print(y_pred)
-    #print(y_GT)
+    #TODO: CONTINUE HERE........!!!!!!
 
     agreementCounter = 0
+    validCounter = 0
+    delIdx = [] #list of indexes of the rows that should be deleted
     for j in range(y_pred.shape[0]):
-        if y_pred[j] == y_GT[j]:
-            #We don't have to consider invalid (=-1) entries, because y_pred never contains -1, so we will never count
-            #them
+
+        if y_pred[j] in y_GT[j,:]:
+            #We don't have to consider invalid (=-1) entries, because y_pred never contains -1, so we will never count them
             agreementCounter = agreementCounter + 1
 
-    #Ignore points were no GT label provided and ignore points of classes we didn't train our classifier with:
-    validEntries = (y_GT != -1).sum() #Gives the number of valid points
+        if y_GT[j,:].sum() != -3:
+            #Ignore points were no GT label provided and ignore points of classes we didn't train our classifier with:
+            validCounter = validCounter + 1
+        else:
+            delIdx.append(j)
 
-    agreement = 100 * agreementCounter/validEntries
-    print(str(round(agreement,2)) + " % of all samples predicted correctly")
+    agreement = 100 * agreementCounter/validCounter
+    print(str(round(agreement,2)) + " % of all valid samples predicted correctly")
 
-    notConsidered = 100*(y_pred.shape[0]-validEntries)/float(y_pred.shape[0])
+    notConsidered = 100*(y_pred.shape[0]-validCounter)/float(y_pred.shape[0])
     print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
                                                                 " or the classifier wasn't trained with all classes specified in the ground truth")
 
     """ Delete invalid entries in y_GT and y_pred: """
-    idx = np.where(y_GT == -1)[0] #get indexes of invalid entries
+    y_pred = np.delete(y_pred,delIdx)
+    y_GT = np.delete(y_GT,delIdx,axis=0)
 
-    y_pred = np.delete(y_pred,idx)
-    y_GT = np.delete(y_GT,idx)
-
-    resDict = {'predications': y_pred, 'groundTruth': y_GT}
+    resDict = {'predictions': y_pred, 'groundTruth': y_GT}
 
     print(trainedGMM["classesDict"])
-
-    confusionMatrix(y_GT,y_pred, trainedGMM["classesDict"])
 
     return resDict
 
