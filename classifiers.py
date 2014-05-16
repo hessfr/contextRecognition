@@ -89,28 +89,75 @@ def trainGMM(featureData):
 
     return trainedGMM
     
-def testGMM(trainedGMM,featureData=None,useMajorityVote=True):
+def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
     """
     To check only
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of already extracted features of the test file
     @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
+    @param showPlots:
     """
     n_classes = len(trainedGMM['clfs'])
 
     if featureData==None:
-        X_test = preprocessing.scale(FX_Test("complete.wav"))
+        X_test = preprocessing.scale(FX_Test("test.wav"))
     else:
         X_test = preprocessing.scale(featureData)
 
-    likelihood = np.zeros((n_classes, X_test.shape[0]))
+    logLikelihood = np.zeros((n_classes, X_test.shape[0]))
 
     """ Compute log-probability for each class for all points: """
     for i in range(n_classes):
-        likelihood[i] = trainedGMM['clfs'][i].score(X_test)
+        logLikelihood[i] = trainedGMM['clfs'][i].score(X_test)
 
     """ Select the class with the highest log-probability: """
-    y_pred = np.argmax(likelihood, 0)
+    y_pred = np.argmax(logLikelihood, 0)
+
+    if showPlots == True:
+
+        likelihood = np.zeros((n_classes, X_test.shape[0]))
+        likelihoodSorted = np.zeros((n_classes, X_test.shape[0]))
+
+        tmpProduct = np.zeros((n_classes, X_test.shape[0]))
+        entropy = np.zeros((X_test.shape[0]))
+
+        percentDiff = np.zeros((X_test.shape[0])) #Percentage-difference between two most likely classes
+
+        margin = np.zeros((X_test.shape[0])) #Difference between two most likely classes
+
+        maxMin = np.zeros((X_test.shape[0])) #Difference between most likely and least likely class
+
+        likelihood = np.exp(logLikelihood)
+
+        for i in range(n_classes):
+            tmpProduct[i,:] = likelihood[i,:] * logLikelihood[i,:]
+
+        entropy = tmpProduct.sum(axis=0) * -1
+
+        likelihoodSorted = np.sort(likelihood, axis=0)
+
+        percentDiff = (likelihoodSorted[-1,:] - likelihoodSorted[-2,:]) / likelihoodSorted[-1,:]
+
+        margin = (likelihoodSorted[-1,:] - likelihoodSorted[-2,:])
+
+        maxMin = likelihoodSorted[-1,:] - likelihoodSorted[0,:]
+
+        timestamps = np.array(range(X_test.shape[0])) * 0.032
+
+        pl.hist(entropy, 500, histtype='bar')
+
+        f, ax = pl.subplots(2, sharex=True)
+
+        ax[0].plot(timestamps,majorityVote(y_pred), 'r+')
+        ax[0].text(0, 0.5, str(trainedGMM["classesDict"]))
+
+        ax[1].plot(timestamps, entropy, 'bo')
+        pl.xlabel('time (s)')
+
+        pl.show()
+
+        #pdb.set_trace()
+
 
     if useMajorityVote:
         y_majVote = majorityVote(y_pred)
