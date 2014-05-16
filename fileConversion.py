@@ -30,7 +30,7 @@ def convertFolder(folderName):
                 
                 """ convert into temporary file first: """
                 tmpFile = str(dir + "/tmp.wav")
-                commandString = str("sox '" + file + "' -V1 -c 1 -r 16000 '" + tmpFile + "'") #TODO: implement later that files without ending are also considered
+                commandString = str("sox '" + file + "' -V1 -b 16 -c 1 -r 16000 '" + tmpFile + "'") #TODO: implement later that files without ending are also considered
                 p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 out, err = p.communicate()
                 if str(err) != "":

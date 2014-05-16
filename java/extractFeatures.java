@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.lang.Double;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.AudioInputStream;
 import java.io.FileWriter;
@@ -42,8 +43,10 @@ public class extractFeatures {
         File fileIn = new File(fileName);
         
         try {
-          AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(fileIn);
-          int bytesPerFrame = audioInputStream.getFormat().getFrameSize();
+        	System.out.println("Converting " + fileName);	
+        	
+        	AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(fileIn);
+        	int bytesPerFrame = audioInputStream.getFormat().getFrameSize();
     
             if (bytesPerFrame == AudioSystem.NOT_SPECIFIED) {
             bytesPerFrame = 1;
@@ -51,10 +54,13 @@ public class extractFeatures {
     
           int numBytes = frameSize * bytesPerFrame; 
           byte[] audioBytes = new byte[numBytes]; //actual data will be written to this array later
-    
+
+		  int numBytesRead = 0;
+		  int numSamplesRead = 0;
+          
+          boolean isValid = true;
+          
           try {
-            int numBytesRead = 0;
-            int numSamplesRead = 0;
             // Try to read numBytes bytes from the file.
             while ((numBytesRead = audioInputStream.read(audioBytes)) != -1) {
             	
@@ -81,9 +87,19 @@ public class extractFeatures {
 				// Get MFCCs
 				featureCepstrum = featureMFCC.cepstrum(fftBufferR, fftBufferI);	           
 				
-				features.add(featureCepstrum);
+				isValid = true;
 				
-				//System.out.println(String.valueOf(featureCepstrum[0]));
+				for (int j = 0; j <= MFCCS_VALUE-1; j++) {
+					//featureCepstrum[0] = Double.POSITIVE_INFINITY;
+					if (java.lang.Double.isInfinite(featureCepstrum[j])) {
+						System.out.println("Problems occurred when reading file " + fileName + " parts of the file were skipped.");
+						isValid = false;
+					}
+				}
+				
+				if (isValid == true) {
+					features.add(featureCepstrum);
+				}
             }
           } catch (Exception e) { 
           	  e.printStackTrace();
@@ -92,10 +108,9 @@ public class extractFeatures {
         	e.printStackTrace();
         }
         
-        System.out.println(String.valueOf(features.size()));
-        
-        System.out.println("totalSamplesRead: " + String.valueOf(totalSamplesRead));
-        System.out.println("numFrame: " + String.valueOf(numFrame));
+        //System.out.println(String.valueOf(features.size()));
+        //System.out.println("totalSamplesRead: " + String.valueOf(totalSamplesRead));
+        //System.out.println("numFrame: " + String.valueOf(numFrame));
         
         return features;
         
@@ -135,8 +150,12 @@ public class extractFeatures {
 					String fileName = listOfFiles[i].getName();
 					ArrayList<double[]> currentFeatures = new ArrayList<double[]>();
 					
+					String filePath = folderName + "/" + fileName;
+					
+					System.out.println("Extracting " + fileName);
+					
 					//Extract features for current file:
-					currentFeatures = extractFile(fileName);
+					currentFeatures = extractFile(filePath);
 					
 					//Add extracted features to arrayList of all features of the class (=folder):
 					allFeatures.addAll(currentFeatures);
@@ -148,18 +167,44 @@ public class extractFeatures {
 	}
 	
     public static void main(String[] args) { 
-    	if(args.length > 0) {
+    	if(args.length > 0) { //TODO: change to correct number
     		
-    		extractFeatures extractor = new extractFeatures();
+    		if (args[0].equals("--folder")) {
+    			
+    			String className = args[1];
+    			
+    			//TODO: define paths properly at a single points in the code later
+    			//System.getProperty("user.dir")
+    			
+    			String folderPath =  "../sound/" + className;
+    			String jsonPath = "../extractedFeatures/" + className;
+    			
+				extractFeatures extractor = new extractFeatures();
+				
+				ArrayList<double[]> arrComplete = new ArrayList<double[]>();
+				
+				arrComplete = extractor.extractFolder(folderPath);
+				
+				extractor.saveGson(arrComplete,jsonPath);
+				
+    		} else if (args[0].equals("--file")) {
+    			
+    			extractFeatures extractor = new extractFeatures();
+    			
+    			ArrayList<double[]> arr = new ArrayList<double[]>();
+    			
+    			arr = extractor.extractFile(args[1]);
+    			
+    			extractor.saveGson(arr,args[1]);
+    			
+    		} else {
+    			System.out.println("The first argument has to be either --file or --folder");
+    		}
     		
-    		ArrayList<double[]> arrComplete = new ArrayList<double[]>();
-    		
-    		arrComplete = extractor.extractFolder(System.getProperty("user.dir"));
-    		
-    		extractor.saveGson(arrComplete,"outfile");
+
     		
     	} else {
-    		System.out.println("Please provide wav-file as parameter");
+    		System.out.println("XXX wring parameters XXX");
     	}
 
     }
