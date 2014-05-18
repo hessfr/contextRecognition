@@ -66,7 +66,10 @@ def trainGMM(featureData):
     @param featureData: Dictionary containing 'features' and 'labels' as numpy array and 'classesDict' for mapping of class names to numbers
     @return: Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
     """
-    X_train = featureData['features'] #preprocessing.scale(featureData['features'])
+    X_train = featureData['features']
+    scaler = preprocessing.StandardScaler().fit(X_train)
+    X_train = scaler.transform(X_train)
+
     y_train = featureData['labels']
     
     n_classes = len(np.unique(y_train))
@@ -82,10 +85,10 @@ def trainGMM(featureData):
         tmpTrain = X_train[iTmp]
 
         """ use expectation-maximization to fit the Gaussians: """
-        tmpClf.fit(preprocessing.scale(tmpTrain))
+        tmpClf.fit(tmpTrain)
         clfs.append(tmpClf)
 
-    trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict']}
+    trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'scaler': scaler}
 
     return trainedGMM
     
@@ -100,9 +103,9 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
     n_classes = len(trainedGMM['clfs'])
 
     if featureData==None:
-        X_test = preprocessing.scale(FX_Test("test.wav"))
+        X_test = trainedGMM['scaler'].transform(FX_Test("test.wav"))
     else:
-        X_test = preprocessing.scale(featureData)
+        X_test = trainedGMM['scaler'].transform(featureData)
 
     logLikelihood = np.zeros((n_classes, X_test.shape[0]))
 
@@ -144,14 +147,19 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         timestamps = np.array(range(X_test.shape[0])) * 0.032
 
-        pl.hist(entropy, 500, histtype='bar')
+        #pl.hist(entropy, 500, histtype='bar')
 
         f, ax = pl.subplots(2, sharex=True)
 
         ax[0].plot(timestamps,majorityVote(y_pred), 'r+')
         ax[0].text(0, 0.5, str(trainedGMM["classesDict"]))
+        ax[0].set_title("Predicted classes")
 
         ax[1].plot(timestamps, entropy, 'bo')
+        #ax[1].set_title("Different between most likely and most unlikely class")
+        #ax[1].set_title("Percentage difference between two most likely classes")
+        ax[1].set_title("Entropy")
+        #ax[1].set_title("Margin (between two most likely classes)")
         pl.xlabel('time (s)')
 
         pl.show()
@@ -176,7 +184,7 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     @return:
     """
     """ Make predictions for the given test file: """
-    y_pred = testGMM(trainedGMM,featureData, useMajorityVote)
+    y_pred = testGMM(trainedGMM,featureData, useMajorityVote=True)
 
     """ Preprocess ground truth labels: """
     with open(groundTruthLabels) as f:
@@ -272,7 +280,7 @@ def compareGTUnique(trainedGMM, featureData=None, groundTruthLabels='labelsAdapt
     @return:
     """
     """ Make predictions for the given test file: """
-    y_pred = testGMM(trainedGMM,featureData, useMajorityVote)
+    y_pred = testGMM(trainedGMM,featureData, useMajorityVote=True, showPlots=False)
 
     """ Preprocess ground truth labels: """
     with open(groundTruthLabels) as f:
@@ -304,9 +312,6 @@ def compareGTUnique(trainedGMM, featureData=None, groundTruthLabels='labelsAdapt
 
 
     """ Compare predictions to ground truth: """
-    #print(y_pred)
-    #print(y_GT)
-
     agreementCounter = 0
     for j in range(y_pred.shape[0]):
         if y_pred[j] == y_GT[j]:
@@ -407,7 +412,9 @@ def k_FoldGMM(featureData,k):
     @param featureData: Dictionary containing 'features' and 'labels' as numpy array and 'classesDict' for mapping of class names to numbers
     @param k: Cross-validation parameter, defines in how many blocks the data should be divided
     """   
-    X = preprocessing.scale(featureData['features'])
+    X = featureData['features']
+    scaler = preprocessing.StandardScaler().fit(X)
+    X = scaler.transform(X)
     Y = featureData['labels']
     
     kf = KFold(len(Y), n_folds=k, indices=True, shuffle=True)
@@ -449,9 +456,10 @@ def SVM(featureData):
     @param data: Input data containing 12 MFCC features in the first 12 columns and the class label in the last column
     @return: Scikit-Learn SVM classifier
     """
-    X_train = preprocessing.scale(featureData['features'])
+    X_train = featureData['features'] #preprocessing.scale(featureData['features'])
+    scaler = preprocessing.StandardScaler().fit(X_train)
+    X_train = scaler.transform(X_train)
 
-    
     y_train = featureData['labels'][:,0]
 
 #     clf = SVC(kernel='linear')
@@ -488,6 +496,7 @@ def randomSplitSVM(featureData):
     @param data: Input data containing 12 MFCC features in the first 13 columns and the class label in the last column
     @return: Scikit-Learn SVM classifier
     """
+    #TODO: change to using scaler:
     X_train, X_test, y_train, y_test = cross_validation.train_test_split(preprocessing.scale(featureData['features']), featureData['labels'], test_size=0.33, random_state=43)
      
     clf = LinearSVC()
@@ -519,7 +528,7 @@ def addNewClassGMM(prevTrainedGMM, newClassName, newClassData=None):
     if newClassData == None:
         newClassData = FX_Folder(newClassName)
 
-    X_train = preprocessing.scale(newClassData)
+    X_train = prevTrainedGMM['scaler'].transform(newClassData)
 
     n_newClass = X_train.shape[0]
 
@@ -532,6 +541,8 @@ def addNewClassGMM(prevTrainedGMM, newClassName, newClassData=None):
 
     allClfs = list(prevTrainedGMM['clfs'])
     allClfs.append(newClf)
+
+    #TODO: calculate new scaler and add it to result dictionary
 
     """ create new dictionary: """
     updatedGMM = {'clfs': allClfs, 'classesDict': newClassDict}

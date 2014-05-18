@@ -1,12 +1,13 @@
 import numpy as np
 import pickle
+import json
 import csv
 import pylab as pl
 from classifiers import getIndex
 import ipdb as pdb #pdb.set_trace()
 
-tGMM = pickle.load(open("GMM_funf.p","rb"))
-realWorldFeatures = pickle.load(open("realWorldFeatures.p","rb"))
+tGMM = pickle.load(open("GMM.p","rb"))
+realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 
 def simulateAL(trainedGMM, featureData, groundTruthLabels='labelsAdapted.txt'):
     """

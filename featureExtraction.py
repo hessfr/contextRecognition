@@ -14,7 +14,7 @@ import contextlib
 import json
 import ipdb as pdb #pdb.set_trace()
 
-def FX_multiFolders(classesList=None, saveFeatures=False, useJSON=False): #TODO: Set saveFeatures to True when finished testing
+def FX_multiFolders(classesList=None, saveFeatures=False, useJSON=True): #TODO: Set saveFeatures to True when finished testing
     """
     Calculate 12 MFCC (1st coefficient is not considered) for all audio files in the list of classes
     (each one corresponds to a sub-folder of the sound/ folder) and return a dictionary containing the extracted features, corresponding labels and 
