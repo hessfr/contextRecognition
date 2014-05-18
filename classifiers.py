@@ -91,7 +91,7 @@ def trainGMM(featureData):
     
 def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
     """
-    To check only
+
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of already extracted features of the test file
     @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
@@ -283,7 +283,6 @@ def compareGTUnique(trainedGMM, featureData=None, groundTruthLabels='labelsAdapt
     y_GT = np.empty([y_pred.shape[0]])
     y_GT.fill(-1) #-1 corresponds to no label given
 
-
     for line in labelList:
         """ Fill array from start to end of each ground truth label with the correct label: """
         start = getIndex(float(line[0]))
@@ -331,7 +330,7 @@ def compareGTUnique(trainedGMM, featureData=None, groundTruthLabels='labelsAdapt
     y_pred = np.delete(y_pred,idx)
     y_GT = np.delete(y_GT,idx)
 
-    resDict = {'predications': y_pred, 'groundTruth': y_GT}
+    resDict = {'predictions': y_pred, 'groundTruth': y_GT}
 
     print(trainedGMM["classesDict"])
 
@@ -507,7 +506,7 @@ def randomSplitSVM(featureData):
      
     return clf
 
-def incrTrainGMM(prevTrainedGMM, newClassName, newClassData=None):
+def addNewClassGMM(prevTrainedGMM, newClassName, newClassData=None):
     """
     Incorporate a new class into an existing GMM model
     @param prevTrainedGMM: Dictionary containing results of previously trained GMM. Must contain classifiers in 'clfs' and mapping of
