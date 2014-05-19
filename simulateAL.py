@@ -3,33 +3,38 @@ import pickle
 import json
 import csv
 import pylab as pl
+from scipy.stats import itemfreq
 from sklearn.mixture import GMM
 from sklearn import preprocessing
 from classifiers import getIndex
+from classifiers import testGMM
 from featureExtraction import FX_multiFolders
 import ipdb as pdb #pdb.set_trace()
 
 tGMM = pickle.load(open("GMM.p","rb"))
 realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 
-def simulateAL(trainedGMM, featureData, groundTruthLabels='labelsAdapted.txt'):
+def simulateAL(trainedGMM, featureData):
     """
 
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of already extracted features of the test file
-    @param groundTruthLabels:
     """
-    y_GT = createGTUnique(trainedGMM['classesDict'], featureData.shape[0], groundTruthLabels)
+    y_GT = createGTUnique(trainedGMM['classesDict'], featureData.shape[0], 'labelsAdapted.txt')
+    y_GTMulti = createGTMulti(trainedGMM["classesDict"],featureData.shape[0], 'labels.txt')
 
     """ Create index arrays to define which elements are used to evaluate performance and which for simulation of the AL
     behavior: """
     [evalIdx, simIdx] = splitData(y_GT)
 
     evalFeatures = featureData[evalIdx == 1]
-    evalLabels = y_GT[evalIdx == 1]
+    evalLabels = y_GTMulti[evalIdx == 1] #Contains multiple labels for each point
 
     simFeatures = featureData[simIdx == 1]
     simLabels = y_GT[simIdx == 1]
+    """ simLabels contains unique label for each point that will be used to update the model later,
+    e.g. if a point has the labels office and conversation, it will be trained with conversation (accoring to the provided
+    groundTruthLabels """
 
     currentGMM = dict(trainedGMM)
 
@@ -56,8 +61,9 @@ def simulateAL(trainedGMM, featureData, groundTruthLabels='labelsAdapted.txt'):
             #allGMM.append(currentGMM)
 
     """ Evaluate performance of all GMMs: """
+    #print("Evaluating performance of classifiers:")
     #for GMM in allGMM:
-    #    evaluateGMM(GMM, evalFeatures, evalLabels)
+        #evaluateGMM(tGMM, evalFeatures, evalLabels)
 
 def queryCriteria(trainedGMM, featurePoint, criteria="entropy"):
     """
@@ -104,8 +110,6 @@ def adaptGMM(trainedGMM, featurePoints, label):
     y_new.fill(label)
 
     """ Add the new data points: """
-
-
     X_train = np.concatenate((scaled, featurePoints), axis=0)
     y_train = np.concatenate((featureData["labels"], y_new), axis=0)
 
@@ -129,19 +133,63 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
 
     @param trainedGMM:
     @param evalFeatures:
-    @param evalLabels:
+    @param evalLabels: Ground truth label array with multiple labels per data points
     @return:
     """
 
-    #TODO: call compareGTUnique / compareGTMulti here
+    """ Calculate the predictions on the evaluation features: """
+    y_pred = testGMM(trainedGMM, evalFeatures, useMajorityVote=True, showPlots=False)
 
-    pass
+    n_classes = len(trainedGMM["classesDict"])
+    agreementCounter = 0
+    validCounter = 0
+    delIdx = [] #list of indexes of the rows that should be deleted
+    correctlyPredicted = [0] * n_classes #list to count how often each class is predicted correctly
+    for j in range(y_pred.shape[0]):
+
+        if y_pred[j] in evalLabels[j,:]:
+            #We don't have to consider invalid (=-1) entries, because y_pred never contains -1, so we will never count them
+            correctlyPredicted[int(y_pred[j])] = correctlyPredicted[int(y_pred[j])] + 1 #count correctly predicted for the individual class
+
+        if evalLabels[j,:].sum() != -3:
+            #Ignore points were no GT label provided and ignore points of classes we didn't train our classifier with:
+            validCounter = validCounter + 1
+        else:
+            delIdx.append(j)
+
+    agreement = 100 * sum(correctlyPredicted)/validCounter
+    print(str(round(agreement,2)) + " % of all valid samples predicted correctly")
+
+    notConsidered = 100*(y_pred.shape[0]-validCounter)/float(y_pred.shape[0])
+    print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
+                                                                " or the classifier wasn't trained with all classes specified in the ground truth")
+
+    """ Delete invalid entries in y_GT and y_pred: """
+    y_pred = np.delete(y_pred,delIdx)
+    y_GT = np.delete(evalLabels,delIdx,axis=0)
+
+    """ Count how often each class was predicted: """
+    allPredicted = [0] * n_classes
+    items = itemfreq(y_pred)
+    for item in items:
+        allPredicted[int(item[0])] = int(item[1])
+
+    for cl in trainedGMM["classesDict"]:
+        clNum = trainedGMM["classesDict"][cl]
+
+        if allPredicted[clNum] != 0:
+            precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
+            print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
+        else:
+            print("Class '" + cl + "' wasn't predicted at all")
+
+    print(trainedGMM["classesDict"])
 
 def splitData(y_GT):
     """
     Creates index arrays to define which elements are used to evaluate performance and which for simulation of the AL
     behavior
-    @param y_GT: Numpy
+    @param y_GT: Numpy array containing the ground truth with one unique label per point
     @return:
     """
     prevTransition = 0 #index of the previous transition from one value to another
