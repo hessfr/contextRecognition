@@ -41,6 +41,10 @@ def simulateAL(trainedGMM, featureData):
     allGMM = []
     allGMM.append(currentGMM)
 
+    evaluateGMM(currentGMM, evalFeatures, evalLabels)
+
+    pdb.set_trace()
+
     """ Simulate actual behavior by reading in points one by one: """
     for i in range(simFeatures.shape[0]):
         currentPoint = trainedGMM['scaler'].transform(simFeatures[i,:]) #apply the features scaling from training phase
@@ -63,7 +67,7 @@ def simulateAL(trainedGMM, featureData):
     """ Evaluate performance of all GMMs: """
     #print("Evaluating performance of classifiers:")
     #for GMM in allGMM:
-        #evaluateGMM(tGMM, evalFeatures, evalLabels)
+        #evaluateGMM(GMM, evalFeatures, evalLabels)
 
 def queryCriteria(trainedGMM, featurePoint, criteria="entropy"):
     """
@@ -136,6 +140,7 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     @param evalLabels: Ground truth label array with multiple labels per data points
     @return:
     """
+    #TODO: move this method in classifiers.py and use it there as well to avoid redundancy!
 
     """ Calculate the predictions on the evaluation features: """
     y_pred = testGMM(trainedGMM, evalFeatures, useMajorityVote=True, showPlots=False)
@@ -164,9 +169,9 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
                                                                 " or the classifier wasn't trained with all classes specified in the ground truth")
 
-    """ Delete invalid entries in y_GT and y_pred: """
+    """ Delete invalid entries in evalLabels and y_pred: """
     y_pred = np.delete(y_pred,delIdx)
-    y_GT = np.delete(evalLabels,delIdx,axis=0)
+    evalLabels = np.delete(evalLabels,delIdx,axis=0)
 
     """ Count how often each class was predicted: """
     allPredicted = [0] * n_classes
