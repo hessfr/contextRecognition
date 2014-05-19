@@ -147,7 +147,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         timestamps = np.array(range(X_test.shape[0])) * 0.032
 
-        #pl.hist(entropy, 500, histtype='bar')
+        pl.hist(percentDiff, 500, histtype='bar')
 
         f, ax = pl.subplots(2, sharex=True)
 
@@ -164,7 +164,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         pl.show()
 
-        #pdb.set_trace()
+        pdb.set_trace()
 
 
     if useMajorityVote:
