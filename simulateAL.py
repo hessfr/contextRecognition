@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 import json
 import csv
+import copy
 import pylab as pl
 from scipy.stats import itemfreq
 from sklearn.mixture import GMM
@@ -41,17 +42,15 @@ def simulateAL(trainedGMM, featureData):
     allGMM = []
     allGMM.append(currentGMM)
 
-    evaluateGMM(currentGMM, evalFeatures, evalLabels)
-
-    pdb.set_trace()
+    start = 468750 #Start at the train class TODO: remove this later
 
     """ Simulate actual behavior by reading in points one by one: """
-    for i in range(simFeatures.shape[0]):
+    for i in range(start,simFeatures.shape[0]):
         currentPoint = trainedGMM['scaler'].transform(simFeatures[i,:]) #apply the features scaling from training phase
         if queryCriteria(currentGMM, currentPoint):
             print("sending query")
             currentLabel = simLabels[i]
-            #set the current label for the last N points = x seconds:
+            #set the current label for the last N points = xxx seconds:
             N = 3000
             if i > N:
                 updatePoints = simFeatures[i-N:i,:]
@@ -59,8 +58,6 @@ def simulateAL(trainedGMM, featureData):
                 updatePoints = simFeatures[0:i,:]
 
             currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel)
-
-            pdb.set_trace()
 
             #allGMM.append(currentGMM)
 
@@ -107,8 +104,12 @@ def adaptGMM(trainedGMM, featurePoints, label):
     param label: Class label of the given feature point.
     @return: adapted GMM model
     """
-    featureData = FX_multiFolders(["Conversation","Office","Train"]) #TODO: implement this properly
+    featureData = FX_multiFolders(["Conversation","Office","Train"]) #TODO: implement this properly!!!
     scaled = trainedGMM['scaler'].transform(featureData["features"])
+
+    #These dicts have to match: !!
+    print(featureData["classesDict"])
+    print(trainedGMM["classesDict"])
 
     y_new = np.zeros(featurePoints.shape[0])
     y_new.fill(label)
@@ -125,10 +126,9 @@ def adaptGMM(trainedGMM, featurePoints, label):
     """ use expectation-maximization to fit the Gaussians: """
     clf.fit(tmpTrain)
 
-    newGMM = dict(trainedGMM)
-    newGMM["clfs"][int(label)] = clf
+    newGMM = copy.deepcopy(trainedGMM)
 
-    pdb.set_trace()
+    newGMM["clfs"][int(label)] = clf
 
     return newGMM
 
