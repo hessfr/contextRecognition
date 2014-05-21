@@ -184,7 +184,7 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     @return:
     """
     """ Make predictions for the given test file: """
-    y_pred = testGMM(trainedGMM,featureData, useMajorityVote=True)
+    y_pred = testGMM(trainedGMM,featureData, useMajorityVote=True, showPlots=False)
 
     """ Preprocess ground truth labels: """
     with open(groundTruthLabels) as f:
@@ -249,6 +249,10 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     y_pred = np.delete(y_pred,delIdx)
     y_GT = np.delete(y_GT,delIdx,axis=0)
 
+
+    confusionMatrixMulti(y_GT, y_pred, trainedGMM["classesDict"])
+
+
     """ Count how often each class was predicted: """
     allPredicted = [0] * n_classes
     items = itemfreq(y_pred)
@@ -269,6 +273,66 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     print(trainedGMM["classesDict"])
 
     return resDict
+
+def confusionMatrixMulti(y_GT, y_pred, classesDict):
+    """
+
+    @param y_GT: Ground truth array that can contain multiple labels for each data point
+    @param y_pred:
+    @param classesDict:
+    """
+    #TODO: Merge with other confusionMatrix method depending on the size of the input
+
+    """ Sort classesDict to show labels in the CM: """
+    sortedTmp = sorted(classesDict.iteritems(), key=operator.itemgetter(1))
+    sortedLabels = []
+    for j in range(len(sortedTmp)):
+        sortedLabels.append(sortedTmp[j][0])
+
+    n_classes = len(classesDict)
+    n_maxLabels = y_GT.shape[1]
+
+    cm = np.zeros((n_classes,n_classes))
+
+    for i in range(y_pred.shape[0]):
+        if y_pred[i] in y_GT[i,:]:
+            """ If correct prediction made, add one on the corresponding diagonal element in the confusion matrix: """
+            cm[int(y_pred[i]),int(y_pred[i])] += 1
+        else:
+            """ If not predicted correctly, divide by the number of ground truth labels for that point and split
+            between corresponding non-diagonal elements: """
+            gtLabels = y_GT[i,:]
+            labels = gtLabels[gtLabels != -1] #ground truth labels assigned to that point (only valid ones)
+            n_labels = len(labels) #number of valid labels assigned
+            weight = 1/float(n_labels) #value that will be added to each assigned (incorrect) label
+
+            for label in labels:
+                cm[int(label), int(y_pred[i])] += weight
+
+    normalized = []
+
+    for row in cm:
+        rowSum = sum(row)
+        normalized.append([round(x/float(rowSum),2) for x in row])
+
+    width = len(cm)
+    height = len(cm[0])
+
+    pl.matshow(normalized)
+    pl.ylabel('True label')
+    pl.xlabel('Predicted label')
+    pl.xticks(range(len(sortedLabels)), sortedLabels)
+    pl.yticks(range(len(sortedLabels)), sortedLabels)
+
+    for x in xrange(width):
+        for y in xrange(height):
+            pl.annotate(str(normalized[x][y]), xy=(y, x),
+                        horizontalalignment='center',
+                        verticalalignment='center')
+
+    pl.colorbar()
+
+    pl.show()
 
 def compareGTUnique(trainedGMM, featureData=None, groundTruthLabels='labelsAdapted.txt', useMajorityVote=True):
     """
@@ -346,10 +410,11 @@ def compareGTUnique(trainedGMM, featureData=None, groundTruthLabels='labelsAdapt
 def confusionMatrix(y_GT, y_pred, classesDict):
     """
 
-    @param y_GT:
+    @param y_GT: Ground truth array containing exactly one label per data point
     @param y_pred:
     @param classesDict:
     """
+    #TODO: Merge with other confusionMatrix method depending on the size of the input
 
     """ Sort classesDict to show labels in the CM: """
     sortedTmp = sorted(classesDict.iteritems(), key=operator.itemgetter(1))
