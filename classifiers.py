@@ -79,7 +79,7 @@ def trainGMM(featureData):
     clfs = []
  
     for i in range(n_classes):
-        tmpClf = GMM(n_components=16)
+        tmpClf = GMM(n_components=16, n_iter=1000)
         iTmp = (y_train == i) #iTmp = (y_train[:,0] == i)
 
         tmpTrain = X_train[iTmp]
@@ -164,9 +164,6 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         pl.show()
 
-        #pdb.set_trace()
-
-
     if useMajorityVote:
         y_majVote = majorityVote(y_pred)
         return y_majVote
@@ -249,28 +246,45 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     y_pred = np.delete(y_pred,delIdx)
     y_GT = np.delete(y_GT,delIdx,axis=0)
 
-
-    confusionMatrixMulti(y_GT, y_pred, trainedGMM["classesDict"])
-
+    """ Count how often the class actually occurred in the ground truth array: """
+    allActual = [0] * n_classes
+    actualItems = itemfreq(y_GT.ravel())
+    for item in actualItems:
+        allActual[int(item[0])] = int(item[1])
 
     """ Count how often each class was predicted: """
     allPredicted = [0] * n_classes
-    items = itemfreq(y_pred)
-    for item in items:
+    predictedItems = itemfreq(y_pred)
+    for item in predictedItems:
         allPredicted[int(item[0])] = int(item[1])
 
     for cl in trainedGMM["classesDict"]:
         clNum = trainedGMM["classesDict"][cl]
 
+        """ Compute precision: """
         if allPredicted[clNum] != 0:
             precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
             print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
         else:
             print("Class '" + cl + "' wasn't predicted at all")
 
+        """ Compute recall: """
+        if allActual[clNum] != 0:
+            recall = 100 * correctlyPredicted[clNum]/float(allActual[clNum])
+            print("Class '" + cl + "' achieved a recall of " + str(round(recall,2)) + "%")
+        else:
+            print("Class '" + cl + "' did not occur in the ground truth")
+
+        """ Compute F1 score: """
+        if ((allPredicted[clNum] != 0) and (allActual[clNum] != 0)):
+            F1 = 2 * (precision * recall) / float(precision + recall)
+            print("Class '" + cl + "' achieved a F1-score of " + str(round(F1,2)) + "%")
+
     resDict = {'predictions': y_pred, 'groundTruth': y_GT}
 
     print(trainedGMM["classesDict"])
+
+    confusionMatrixMulti(y_GT, y_pred, trainedGMM["classesDict"])
 
     return resDict
 
