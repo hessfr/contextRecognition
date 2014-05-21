@@ -41,30 +41,42 @@ def simulateAL(trainedGMM, featureData):
 
     allGMM = []
     allGMM.append(currentGMM)
-
-    start = 468750 #Start at the train class TODO: remove this later
+    givenLabels = []
+    givenLabels.append(-1) #because first classifiers is without active learning yet
 
     """ Simulate actual behavior by reading in points one by one: """
-    for i in range(start,simFeatures.shape[0]):
+    for i in range(simFeatures.shape[0]):
         currentPoint = trainedGMM['scaler'].transform(simFeatures[i,:]) #apply the features scaling from training phase
         if queryCriteria(currentGMM, currentPoint):
             print("sending query")
             currentLabel = simLabels[i]
-            #set the current label for the last N points = xxx seconds:
-            N = 3000
+            #set the current label for the last N points:
+            N = 1800 # = 30 seconds
             if i > N:
                 updatePoints = simFeatures[i-N:i,:]
             else:
                 updatePoints = simFeatures[0:i,:]
 
+            givenLabels.append(currentLabel)
             currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel)
+            allGMM.append(currentGMM)
 
-            #allGMM.append(currentGMM)
+        #for testing:
+        if len(allGMM) == 8:
+            print("Stopped loop for testing")
+            break
 
     """ Evaluate performance of all GMMs: """
-    #print("Evaluating performance of classifiers:")
-    #for GMM in allGMM:
-        #evaluateGMM(GMM, evalFeatures, evalLabels)
+    print("Evaluating performance of classifiers:")
+    results = []
+    i=0
+    for GMM in allGMM:
+        resultDict = evaluateGMM(GMM, evalFeatures, evalLabels)
+        resultDict["label"] = givenLabels[i]
+        results.append(resultDict)
+        i=i+1
+
+    return results
 
 def queryCriteria(trainedGMM, featurePoint, criteria="entropy"):
     """
@@ -108,8 +120,8 @@ def adaptGMM(trainedGMM, featurePoints, label):
     scaled = trainedGMM['scaler'].transform(featureData["features"])
 
     #These dicts have to match: !!
-    print(featureData["classesDict"])
-    print(trainedGMM["classesDict"])
+    #print(featureData["classesDict"])
+    #print(trainedGMM["classesDict"])
 
     y_new = np.zeros(featurePoints.shape[0])
     y_new.fill(label)
@@ -162,7 +174,7 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
         else:
             delIdx.append(j)
 
-    agreement = 100 * sum(correctlyPredicted)/validCounter
+    agreement = 100 * sum(correctlyPredicted)/float(validCounter)
     print(str(round(agreement,2)) + " % of all valid samples predicted correctly")
 
     notConsidered = 100*(y_pred.shape[0]-validCounter)/float(y_pred.shape[0])
@@ -179,16 +191,21 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     for item in items:
         allPredicted[int(item[0])] = int(item[1])
 
+    precisionsDict = {}
+
     for cl in trainedGMM["classesDict"]:
         clNum = trainedGMM["classesDict"][cl]
 
         if allPredicted[clNum] != 0:
             precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
             print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
+            precisionsDict[cl] = precision
         else:
             print("Class '" + cl + "' wasn't predicted at all")
 
-    print(trainedGMM["classesDict"])
+    resDict = {"accuracy": agreement, "precisions": precisionsDict}
+
+    return resDict
 
 def splitData(y_GT):
     """

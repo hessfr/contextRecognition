@@ -164,7 +164,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         pl.show()
 
-        pdb.set_trace()
+        #pdb.set_trace()
 
 
     if useMajorityVote:
@@ -361,10 +361,16 @@ def confusionMatrix(y_GT, y_pred, classesDict):
 
     print(cm)
 
+    normalized = []
+
+    for row in cm:
+        rowSum = sum(row)
+        normalized.append([round(x/float(rowSum),2) for x in row])
+
     width = len(cm)
     height = len(cm[0])
 
-    pl.matshow(cm)
+    pl.matshow(normalized)
     pl.ylabel('True label')
     pl.xlabel('Predicted label')
     pl.xticks(range(len(sortedLabels)), sortedLabels)
@@ -372,23 +378,9 @@ def confusionMatrix(y_GT, y_pred, classesDict):
 
     for x in xrange(width):
         for y in xrange(height):
-            pl.annotate(str(cm[x][y]), xy=(y, x),
+            pl.annotate(str(normalized[x][y]), xy=(y, x),
                         horizontalalignment='center',
                         verticalalignment='center')
-
-    # norm_conf = []
-    # for i in cm:
-    #     a = 0
-    #     tmp_arr = []
-    #     a = sum(i, 0)
-    #     for j in i:
-    #         tmp_arr.append(float(j)/float(a))
-    #     norm_conf.append(tmp_arr)
-    #
-    # res = pl.imshow(np.array(norm_conf), cmap=pl.cm.jet,
-    #             interpolation='nearest')
-    #
-    # pl.colorbar(cm)
 
     pl.colorbar()
 

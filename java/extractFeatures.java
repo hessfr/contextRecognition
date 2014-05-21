@@ -16,7 +16,7 @@ public class extractFeatures {
 	private static int SAMPLERATE = 16000;
 	private static double WINDOW_LENGTH = 0.032;
 	
-	private static int FFT_SIZE = 8192; 	//need to change this????
+	private static int FFT_SIZE = 8192;
 	private static int MFCCS_VALUE = 12;
 	private static int MEL_BANDS = 20;
 	
@@ -31,7 +31,7 @@ public class extractFeatures {
         int numFrame = 0;
         
 		featureFFT = new FFT(FFT_SIZE);
-	    featureWin = new Window(frameSize); //correct????????
+	    featureWin = new Window(frameSize);
 	    featureMFCC = new MFCC(FFT_SIZE, MFCCS_VALUE, MEL_BANDS, SAMPLERATE);
         
 		double fftBufferR[] = new double[FFT_SIZE];
@@ -204,7 +204,7 @@ public class extractFeatures {
 
     		
     	} else {
-    		System.out.println("XXX wring parameters XXX");
+    		System.out.println("Please provide correct number of parameters");
     	}
 
     }
