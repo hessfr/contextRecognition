@@ -12,9 +12,10 @@ from classifiers import testGMM
 from featureExtraction import FX_multiFolders
 import ipdb as pdb #pdb.set_trace()
 
-tGMM = pickle.load(open("GMM.p","rb"))
-realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 _thresholdDict = {}
+
+#tGMM = pickle.load(open("GMM.p","rb"))
+#realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 
 def defineThresholdDict():
 
@@ -22,6 +23,7 @@ def defineThresholdDict():
     _thresholdDict["Train"] = {}
     _thresholdDict["Office"] = {}
 
+    """
     #values for top 10 threshold for each class:
     _thresholdDict["Conversation"]["entropy"] = 1.09847
     _thresholdDict["Conversation"]["margin"] = 2e-05
@@ -32,6 +34,18 @@ def defineThresholdDict():
     _thresholdDict["Office"]["entropy"] = 1.098328
     _thresholdDict["Office"]["margin"] = 4.3e-05
     _thresholdDict["Office"]["percentDiff"] = 8.6e-05
+    """
+
+    #values for top 20 threshold for each class:
+    _thresholdDict["Conversation"]["entropy"] = 1.098204
+    _thresholdDict["Conversation"]["margin"] = 4.1e-05
+    _thresholdDict["Conversation"]["percentDiff"] = 8.4e-05
+    _thresholdDict["Train"]["entropy"] = 1.098159
+    _thresholdDict["Train"]["margin"] = 3.4e-05
+    _thresholdDict["Train"]["percentDiff"] = 7.5e-05
+    _thresholdDict["Office"]["entropy"] = 1.098258
+    _thresholdDict["Office"]["margin"] = 0.000156
+    _thresholdDict["Office"]["percentDiff"] = 0.000329
 
 def simulateAL(trainedGMM, featureData):
     """
@@ -65,27 +79,29 @@ def simulateAL(trainedGMM, featureData):
     timestamps.append(0)
 
     revClassesDict = reverseDict(trainedGMM["classesDict"])
-    print(revClassesDict)
 
     """ Simulate actual behavior by reading in points one by one: """
     defineThresholdDict()
+    waitingTime = 900 #minimum wating time between two queries in seconds, equals 15min
     for i in range(simFeatures.shape[0]):
         currentPoint = trainedGMM['scaler'].transform(simFeatures[i,:]) #apply the features scaling from training phase
         currentLabel = simLabels[i]
-        if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel]):
-            print("sending query")
 
-            #set the current label for the last N points:
-            N = 1800 # = 30 seconds
-            if i > N:
-                updatePoints = simFeatures[i-N:i,:]
-            else:
-                updatePoints = simFeatures[0:i,:]
+        if ((i*0.032) - timestamps[-1]) > waitingTime: #wait the minimum time between two queries
+            if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="percentDiff"):
+                print("sending query")
 
-            givenLabels.append(currentLabel)
-            currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel)
-            allGMM.append(currentGMM)
-            timestamps.append(i*0.032)
+                #set the current label for the last N points:
+                N = 1800 # = 30 seconds
+                if i > N:
+                    updatePoints = simFeatures[i-N:i,:]
+                else:
+                    updatePoints = simFeatures[0:i,:]
+
+                givenLabels.append(currentLabel)
+                currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel)
+                allGMM.append(currentGMM)
+                timestamps.append(i*0.032)
 
         #for testing:
         if len(allGMM) == 20:
@@ -144,11 +160,22 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
             return False
 
     if criteria == "margin":
-        pass
+        threshold = _thresholdDict[className]["margin"]
+        likelihoodSorted = np.sort(likelihoodNormed, axis=0)
+        margin = (likelihoodSorted[-1] - likelihoodSorted[-2])
+        if margin < threshold:
+            return True
+        else:
+            return False
 
     if criteria == "percentDiff":
-        pass
-
+        threshold = _thresholdDict[className]["percentDiff"]
+        likelihoodSorted = np.sort(likelihoodNormed, axis=0)
+        percentDiff = (likelihoodSorted[-1] - likelihoodSorted[-2]) / likelihoodSorted[-1]
+        if percentDiff < threshold:
+            return True
+        else:
+            return False
 
 def adaptGMM(trainedGMM, featurePoints, label):
     """
