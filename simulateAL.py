@@ -14,6 +14,24 @@ import ipdb as pdb #pdb.set_trace()
 
 tGMM = pickle.load(open("GMM.p","rb"))
 realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
+_thresholdDict = {}
+
+def defineThresholdDict():
+
+    _thresholdDict["Conversation"] = {}
+    _thresholdDict["Train"] = {}
+    _thresholdDict["Office"] = {}
+
+    #values for top 10 threshold for each class:
+    _thresholdDict["Conversation"]["entropy"] = 1.09847
+    _thresholdDict["Conversation"]["margin"] = 2e-05
+    _thresholdDict["Conversation"]["percentDiff"] = 4.2e-05
+    _thresholdDict["Train"]["entropy"] = 1.098394
+    _thresholdDict["Train"]["margin"] = 1.9e-05
+    _thresholdDict["Train"]["percentDiff"] = 4.3e-05
+    _thresholdDict["Office"]["entropy"] = 1.098328
+    _thresholdDict["Office"]["margin"] = 4.3e-05
+    _thresholdDict["Office"]["percentDiff"] = 8.6e-05
 
 def simulateAL(trainedGMM, featureData):
     """
@@ -43,13 +61,20 @@ def simulateAL(trainedGMM, featureData):
     allGMM.append(currentGMM)
     givenLabels = []
     givenLabels.append(-1) #because first classifiers is without active learning yet
+    timestamps = [] #time when the query was sent on the simulation data set -> only half the length of the complete data set
+    timestamps.append(0)
+
+    revClassesDict = reverseDict(trainedGMM["classesDict"])
+    print(revClassesDict)
 
     """ Simulate actual behavior by reading in points one by one: """
+    defineThresholdDict()
     for i in range(simFeatures.shape[0]):
         currentPoint = trainedGMM['scaler'].transform(simFeatures[i,:]) #apply the features scaling from training phase
-        if queryCriteria(currentGMM, currentPoint):
+        currentLabel = simLabels[i]
+        if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel]):
             print("sending query")
-            currentLabel = simLabels[i]
+
             #set the current label for the last N points:
             N = 1800 # = 30 seconds
             if i > N:
@@ -60,9 +85,10 @@ def simulateAL(trainedGMM, featureData):
             givenLabels.append(currentLabel)
             currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel)
             allGMM.append(currentGMM)
+            timestamps.append(i*0.032)
 
         #for testing:
-        if len(allGMM) == 8:
+        if len(allGMM) == 20:
             print("Stopped loop for testing")
             break
 
@@ -73,16 +99,20 @@ def simulateAL(trainedGMM, featureData):
     for GMM in allGMM:
         resultDict = evaluateGMM(GMM, evalFeatures, evalLabels)
         resultDict["label"] = givenLabels[i]
+        resultDict["timestamp"] = timestamps[i]
+        resultDict["classesDict"] = GMM["classesDict"]
+        resultDict["duration"] = simFeatures.shape[0] * 0.032 #length in seconds
         results.append(resultDict)
-        i=i+1
+        i += 1
 
     return results
 
-def queryCriteria(trainedGMM, featurePoint, criteria="entropy"):
+def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
     """
 
     @param trainedGMM:
     @param featurePoint:
+    @param className:
     @return: True is query should be send, False if not
     """
     point = np.reshape(featurePoint, (1,12)) #reshape into 2D array that it is compatible with all methods
@@ -91,22 +121,34 @@ def queryCriteria(trainedGMM, featurePoint, criteria="entropy"):
     """ Compute (log-)probability for each class for the current point: """
     for i in range(n_classes):
         logLikelihood[i] = trainedGMM['clfs'][i].score(point)
+
     likelihood = np.exp(logLikelihood)
+    tmpSum = np.array(likelihood.sum(axis=0), dtype=np.float64)
+    likelihoodNormed = likelihood/tmpSum
+    logLikelihoodNormed = np.log(likelihoodNormed)
 
     """ Select the class with the highest log-probability: """
     predictedClass = np.argmax(logLikelihood, 0)
 
     if criteria == "entropy":
-        threshold = 0.6
+
+        threshold = _thresholdDict[className]["entropy"]
         tmpProduct = np.zeros(n_classes)
         for i in range(n_classes):
-            tmpProduct[i] = likelihood[i] * logLikelihood[i]
+            tmpProduct[i] = likelihoodNormed[i] * logLikelihoodNormed[i]
         entropy = tmpProduct.sum(axis=0) * -1
 
         if entropy > threshold:
             return True
         else:
             return False
+
+    if criteria == "margin":
+        pass
+
+    if criteria == "percentDiff":
+        pass
+
 
 def adaptGMM(trainedGMM, featurePoints, label):
     """
@@ -136,6 +178,7 @@ def adaptGMM(trainedGMM, featurePoints, label):
     tmpTrain = X_train[iTmp]
 
     """ use expectation-maximization to fit the Gaussians: """
+    print("adapting GMM")
     clf.fit(tmpTrain)
 
     newGMM = copy.deepcopy(trainedGMM)
@@ -336,6 +379,18 @@ def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
             print("The classifier wasn't trained with class '" + line[2] + "'. It will not be considered for testing.")
 
     return y_GT
+
+def reverseDict(oldDict):
+    """
+    Return new array were keys are the values of the old array and the other way around
+    @param oldDict:
+    @return:
+    """
+    newDict = {}
+    for i, j in zip(oldDict.keys(), oldDict.values()):
+        newDict[j] = i
+
+    return newDict
 
 from simulateAL import *
 

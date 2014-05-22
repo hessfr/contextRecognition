@@ -80,7 +80,7 @@ def trainGMM(featureData):
  
     for i in range(n_classes):
         tmpClf = GMM(n_components=16, n_iter=1000)
-        iTmp = (y_train == i) #iTmp = (y_train[:,0] == i)
+        iTmp = (y_train == i)
 
         tmpTrain = X_train[iTmp]
 
@@ -128,48 +128,84 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         margin = np.zeros((X_test.shape[0])) #Difference between two most likely classes
 
-        maxMin = np.zeros((X_test.shape[0])) #Difference between most likely and least likely class
-
         likelihood = np.exp(logLikelihood)
 
+        tmpSum = np.array(likelihood.sum(axis=0), dtype=np.float64)
+        likelihoodNormed = likelihood/tmpSum
+
+        logLikelihoodNormed = np.log(likelihoodNormed)
+
         for i in range(n_classes):
-            tmpProduct[i,:] = likelihood[i,:] * logLikelihood[i,:]
+            tmpProduct[i,:] = likelihoodNormed[i,:] * logLikelihoodNormed[i,:]
+            #tmpProduct[i,:] = likelihood[i,:] * logLikelihood[i,:]
 
         entropy = tmpProduct.sum(axis=0) * -1
 
-        likelihoodSorted = np.sort(likelihood, axis=0)
+        likelihoodSorted = np.sort(likelihoodNormed, axis=0)
+        #likelihoodSorted = np.sort(likelihood, axis=0)
 
         percentDiff = (likelihoodSorted[-1,:] - likelihoodSorted[-2,:]) / likelihoodSorted[-1,:]
 
         margin = (likelihoodSorted[-1,:] - likelihoodSorted[-2,:])
 
-        maxMin = likelihoodSorted[-1,:] - likelihoodSorted[0,:]
-
         timestamps = np.array(range(X_test.shape[0])) * 0.032
 
-        pl.hist(percentDiff, 500, histtype='bar')
+        """ Calculate threshold values that that divides array with all query criteria value (e.g. entropy) Top x percent: """
+        percentile = 0.00005 #threshold that separates top percentile % of the entries from the rest
+        topK = 10 #threshold that separated to K entries from the rest
+        for key in trainedGMM["classesDict"]:
+            tmp = entropy[y_pred == trainedGMM["classesDict"][key]]
+            sorted = np.sort(tmp)
+            #threshold = sorted[int(sorted.shape[0]*(1-percentile))]
+            threshold = sorted[-topK]
+            print("Entropy threshold for class " + str(key) + " is " + str(round(threshold,6)))
 
+
+            tmp = margin[y_pred == trainedGMM["classesDict"][key]]
+            sorted = np.sort(tmp)
+            #threshold = sorted[int(sorted.shape[0]*percentile)]
+            threshold = sorted[topK]
+            print("Margin threshold for class " + str(key) + " is " + str(round(threshold,6)))
+
+            tmp = percentDiff[y_pred == trainedGMM["classesDict"][key]]
+            sorted = np.sort(tmp)
+            #threshold = sorted[int(sorted.shape[0]*percentile)]
+            threshold = sorted[topK]
+            print("percentDiff threshold for class " + str(key) + " is " + str(round(threshold,6)))
+
+        """ Plot histogram(s): """
+        """variableToPlot = margin
+
+        for key in trainedGMM["classesDict"]:
+            pl.hist(variableToPlot[y_pred == trainedGMM["classesDict"][key]], 500, histtype='bar')
+            #pl.title("Entropy - " + str(key))
+            pl.title("Margin (between two most likely classes) - " + str(key))
+            #pl.title("Percentage difference between two most likely classes  - " + str(key))
+            pl.show()
+        """
+
+        """ Plot values over time: """
+        """
         f, ax = pl.subplots(2, sharex=True)
 
         ax[0].plot(timestamps,majorityVote(y_pred), 'r+')
         ax[0].text(0, 0.5, str(trainedGMM["classesDict"]))
         ax[0].set_title("Predicted classes")
 
-        ax[1].plot(timestamps, entropy, 'bo')
-        #ax[1].set_title("Different between most likely and most unlikely class")
+        ax[1].plot(timestamps, margin, 'bo')
         #ax[1].set_title("Percentage difference between two most likely classes")
-        ax[1].set_title("Entropy")
-        #ax[1].set_title("Margin (between two most likely classes)")
+        #ax[1].set_title("Entropy")
+        ax[1].set_title("Margin (between two most likely classes)")
         pl.xlabel('time (s)')
 
         pl.show()
+        """
 
     if useMajorityVote:
         y_majVote = majorityVote(y_pred)
         return y_majVote
     else:
         return y_pred
-
 
 def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt', useMajorityVote=True):
     """
