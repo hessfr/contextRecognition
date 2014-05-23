@@ -16,6 +16,7 @@ _thresholdDict = {}
 
 #tGMM = pickle.load(open("GMM.p","rb"))
 #realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
+#featurePoints = pickle.load(open("adaptModelTmp/featurePoints.p","rb"))
 
 def defineThresholdDict():
 
@@ -180,9 +181,9 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
 def adaptGMM(trainedGMM, featurePoints, label):
     """
     Incorporate new data point into the GMM model
-    @param trainedGMM: already scaled
-    @param featurePoints:
-    param label: Class label of the given feature point.
+    @param trainedGMM:
+    @param featurePoints: already scaled
+    param label: Class ground truth label of the given feature point (simulating the label provided by the user)
     @return: adapted GMM model
     """
     featureData = FX_multiFolders(["Conversation","Office","Train"]) #TODO: implement this properly!!!
@@ -199,7 +200,7 @@ def adaptGMM(trainedGMM, featurePoints, label):
     X_train = np.concatenate((scaled, featurePoints), axis=0)
     y_train = np.concatenate((featureData["labels"], y_new), axis=0)
 
-    clf = GMM(n_components=16)
+    clf = GMM(n_components=16, n_iter=100)
     iTmp = (y_train == label)
 
     tmpTrain = X_train[iTmp]
@@ -211,6 +212,8 @@ def adaptGMM(trainedGMM, featurePoints, label):
     newGMM = copy.deepcopy(trainedGMM)
 
     newGMM["clfs"][int(label)] = clf
+
+    pdb.set_trace()
 
     return newGMM
 
