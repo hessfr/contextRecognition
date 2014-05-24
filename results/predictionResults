@@ -1,0 +1,10 @@
+Accuracy: 91.0%
+Precision Conversation: 0.589655226185
+Precision Office: 1.0
+Precision Train: 0.653125
+Recall Conversation: 0.98
+Recall Office: 0.94
+Recall Train: 0.27
+F1 Conversation: 0.736291781815
+F1 Office: 0.969072164948
+F1 Train: 0.382058226134

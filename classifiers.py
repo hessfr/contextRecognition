@@ -79,7 +79,7 @@ def trainGMM(featureData):
     clfs = []
  
     for i in range(n_classes):
-        tmpClf = GMM(n_components=16, n_iter=1000)
+        tmpClf = GMM(n_components=16, covariance_type='full', n_iter=1000)
         iTmp = (y_train == i)
 
         tmpTrain = X_train[iTmp]
@@ -282,40 +282,6 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     y_pred = np.delete(y_pred,delIdx)
     y_GT = np.delete(y_GT,delIdx,axis=0)
 
-    """ Count how often the class actually occurred in the ground truth array: """
-    allActual = [0] * n_classes
-    actualItems = itemfreq(y_GT.ravel())
-    for item in actualItems:
-        allActual[int(item[0])] = int(item[1])
-
-    """ Count how often each class was predicted: """
-    allPredicted = [0] * n_classes
-    predictedItems = itemfreq(y_pred)
-    for item in predictedItems:
-        allPredicted[int(item[0])] = int(item[1])
-
-    for cl in trainedGMM["classesDict"]:
-        clNum = trainedGMM["classesDict"][cl]
-
-        """ Compute precision: """
-        if allPredicted[clNum] != 0:
-            precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
-            print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
-        else:
-            print("Class '" + cl + "' wasn't predicted at all")
-
-        """ Compute recall: """
-        if allActual[clNum] != 0:
-            recall = 100 * correctlyPredicted[clNum]/float(allActual[clNum])
-            print("Class '" + cl + "' achieved a recall of " + str(round(recall,2)) + "%")
-        else:
-            print("Class '" + cl + "' did not occur in the ground truth")
-
-        """ Compute F1 score: """
-        if ((allPredicted[clNum] != 0) and (allActual[clNum] != 0)):
-            F1 = 2 * (precision * recall) / float(precision + recall)
-            print("Class '" + cl + "' achieved a F1-score of " + str(round(F1,2)) + "%")
-
     resDict = {'predictions': y_pred, 'groundTruth': y_GT}
 
     print(trainedGMM["classesDict"])
@@ -364,6 +330,27 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     for row in cm:
         rowSum = sum(row)
         normalized.append([round(x/float(rowSum),2) for x in row])
+
+    """ Calculate precision: """
+    colSum = np.sum(cm, axis=0)
+    precisions = []
+    for i in range(n_classes):
+        tmpPrecision = cm[i,i] / float(colSum[i])
+        print("Precision " + str(sortedLabels[i]) + ": " + str(tmpPrecision))
+        precisions.append(tmpPrecision)
+
+    """ Calculate recall: """
+    recalls = []
+    for i in range(n_classes):
+        recalls.append(normalized[i][i])
+        print("Recall " + str(sortedLabels[i]) + ": " + str(normalized[i][i]))
+
+    """ Calculate F1-score: """
+    F1s = []
+    for i in range(n_classes):
+        tmpF1 = 2 * (precisions[i] * recalls[i]) / float(precisions[i] + recalls[i])
+        print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
+
 
     width = len(cm)
     height = len(cm[0])

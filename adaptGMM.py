@@ -19,8 +19,8 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
     @return: adapted GMM model
     """
     X = featurePoints
-
-
+    n_features = X.shape[1]
+    n_components = trainedGMM["clfs"][0].n_components
 
     min_covar=1e-3
 
@@ -37,18 +37,19 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
     weights_old = n_train_old * trainedGMM["clfs"][int(label)].weights_
     weighted_X_sum_old = trainedGMM["clfs"][int(label)].means_ * weights_old[:, np.newaxis]
 
-
     for i in range(nSteps):
         # xxx_old and xxx_new refer to the old data where the algorithm was previously trained with and
         # the new data with which it should be adapted
         """ E-Step: """
         # calculate the membership weights (stored in the responsibilities matrix)
+
         curr_log_likelihood, responsibilities = newGMM["clfs"][int(label)].score_samples(X)
         log_likelihood.append(curr_log_likelihood.sum()) #only needed to check for convergence...
 
         """ M-Step: """
 
         weights_new = responsibilities.sum(axis=0)
+        inverse_weights_new = 1.0 / (weights_new[:, np.newaxis] + 10 * EPS)
 
         weights = weights_old + weights_new
 
@@ -63,13 +64,28 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
         newGMM["clfs"][int(label)].means_ = weighted_X_sum * inverse_weights
 
         # update covariance matrix:
-        inverse_weights_new = 1.0 / (weights_new[:, np.newaxis] + 10 * EPS)
 
-        covars_old = trainedGMM["clfs"][int(label)].covars_ * (weights_old / weights)[:, np.newaxis] #trainedGMM
+        oldCovars = np.zeros((n_components, n_features, n_features)) #oder besser als empty initialisieren??
 
-        covars_new = covar_mstep_diag(newGMM["clfs"][int(label)].means_, X, responsibilities, weighted_X_sum_new, inverse_weights_new, min_covar) * (weights_new / weights)[:, np.newaxis]
+        for c in range(n_components):
 
-        newGMM["clfs"][int(label)].covars_ = covars_old + covars_new
+            oldCovars[c,:,:] = inverse_weights[c] * weights_old[c] * trainedGMM["clfs"][int(label)].covars_[c,:,:]
+
+            pdb.set_trace()
+
+            posteriors = responsibilities[:, c]
+            # Underflow Errors in doing post * X.T are  not important
+            np.seterr(under='ignore')
+
+            avg_cv = np.dot(posteriors * X.T, X) / (posteriors.sum() + 10 * EPS)
+
+            mu = newGMM["clfs"][int(label)].means_[c][np.newaxis]
+
+            newCovars = (avg_cv - np.dot(mu.T, mu) + min_covar * np.eye(n_features))
+
+        print(i)
+
+
 
 
 
@@ -84,10 +100,11 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
 
     pdb.set_trace()
 
-    batchClf = GMM(n_components=16, n_iter=100)
+    batchClf = GMM(n_components=16, covariance_type='full', n_iter=100)
     iTmp = (y_all == label)
     tmpTrain = X_all[iTmp]
     batchClf.fit(tmpTrain)
+
 
     pdb.set_trace()
 
@@ -98,6 +115,22 @@ def covar_mstep_diag(means, X, responsibilities, weighted_X_sum, norm,
     avg_means2 = means ** 2
     avg_X_means = means * weighted_X_sum * norm
     return avg_X2 - 2 * avg_X_means + avg_means2 + min_covar
+
+def _covar_mstep_full(gmm, X, responsibilities, weighted_X_sum, norm,
+                      min_covar):
+    """Performing the covariance M step for full cases"""
+    # Eq. 12 from K. Murphy, "Fitting a Conditional Linear Gaussian
+    # Distribution"
+    n_features = X.shape[1]
+    cv = np.empty((gmm.n_components, n_features, n_features))
+    for c in range(gmm.n_components):
+        post = responsibilities[:, c]
+        # Underflow Errors in doing post * X.T are  not important
+        np.seterr(under='ignore')
+        avg_cv = np.dot(post * X.T, X) / (post.sum() + 10 * EPS)
+        mu = gmm.means_[c][np.newaxis]
+        cv[c] = (avg_cv - np.dot(mu.T, mu) + min_covar * np.eye(n_features))
+    return cv
 
 def fit(self, X):
     """Estimate model parameters with the expectation-maximization
