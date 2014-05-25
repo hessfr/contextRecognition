@@ -3,6 +3,7 @@ import pickle
 import json
 import csv
 import copy
+import operator
 import pylab as pl
 from scipy.stats import itemfreq
 from sklearn.mixture import GMM
@@ -24,29 +25,29 @@ def defineThresholdDict():
     _thresholdDict["Train"] = {}
     _thresholdDict["Office"] = {}
 
-    """
-    #values for top 10 threshold for each class:
-    _thresholdDict["Conversation"]["entropy"] = 1.09847
-    _thresholdDict["Conversation"]["margin"] = 2e-05
-    _thresholdDict["Conversation"]["percentDiff"] = 4.2e-05
-    _thresholdDict["Train"]["entropy"] = 1.098394
-    _thresholdDict["Train"]["margin"] = 1.9e-05
-    _thresholdDict["Train"]["percentDiff"] = 4.3e-05
-    _thresholdDict["Office"]["entropy"] = 1.098328
-    _thresholdDict["Office"]["margin"] = 4.3e-05
-    _thresholdDict["Office"]["percentDiff"] = 8.6e-05
-    """
+
+    # #values for top 10 threshold for each class:
+    # _thresholdDict["Conversation"]["entropy"] = 1.098199
+    # _thresholdDict["Conversation"]["margin"] = 1.8e-05
+    # _thresholdDict["Conversation"]["percentDiff"] = 3.9e-05
+    # _thresholdDict["Train"]["entropy"] = 1.098379
+    # _thresholdDict["Train"]["margin"] = 3.6e-05
+    # _thresholdDict["Train"]["percentDiff"] = 7.5e-05
+    # _thresholdDict["Office"]["entropy"] = 1.098267
+    # _thresholdDict["Office"]["margin"] = 9e-05
+    # _thresholdDict["Office"]["percentDiff"] = 0.000187
 
     #values for top 20 threshold for each class:
-    _thresholdDict["Conversation"]["entropy"] = 1.098204
-    _thresholdDict["Conversation"]["margin"] = 4.1e-05
-    _thresholdDict["Conversation"]["percentDiff"] = 8.4e-05
-    _thresholdDict["Train"]["entropy"] = 1.098159
-    _thresholdDict["Train"]["margin"] = 3.4e-05
-    _thresholdDict["Train"]["percentDiff"] = 7.5e-05
-    _thresholdDict["Office"]["entropy"] = 1.098258
-    _thresholdDict["Office"]["margin"] = 0.000156
-    _thresholdDict["Office"]["percentDiff"] = 0.000329
+    _thresholdDict["Conversation"]["entropy"] = 1.0979
+    _thresholdDict["Conversation"]["margin"] = 3.6e-05
+    _thresholdDict["Conversation"]["percentDiff"] = 7.7e-05
+    _thresholdDict["Train"]["entropy"] = 1.098033
+    _thresholdDict["Train"]["margin"] = 6.3e-05
+    _thresholdDict["Train"]["percentDiff"] = 0.000142
+    _thresholdDict["Office"]["entropy"] = 1.097991
+    _thresholdDict["Office"]["margin"] = 0.000199
+    _thresholdDict["Office"]["percentDiff"] = 0.000418
+
 
 def simulateAL(trainedGMM, featureData):
     """
@@ -93,7 +94,7 @@ def simulateAL(trainedGMM, featureData):
                 print("sending query")
 
                 #set the current label for the last N points:
-                N = 1800 # = 30 seconds
+                N = 1875 # = 1 minute
                 if i > N:
                     updatePoints = simFeatures[i-N:i,:]
                 else:
@@ -213,8 +214,6 @@ def adaptGMM(trainedGMM, featurePoints, label):
 
     newGMM["clfs"][int(label)] = clf
 
-    pdb.set_trace()
-
     return newGMM
 
 def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
@@ -251,32 +250,85 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     print(str(round(agreement,2)) + " % of all valid samples predicted correctly")
 
     notConsidered = 100*(y_pred.shape[0]-validCounter)/float(y_pred.shape[0])
-    print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
+    if notConsidered != 0.0:
+        print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
                                                                 " or the classifier wasn't trained with all classes specified in the ground truth")
 
     """ Delete invalid entries in evalLabels and y_pred: """
     y_pred = np.delete(y_pred,delIdx)
     evalLabels = np.delete(evalLabels,delIdx,axis=0)
 
-    """ Count how often each class was predicted: """
-    allPredicted = [0] * n_classes
-    items = itemfreq(y_pred)
-    for item in items:
-        allPredicted[int(item[0])] = int(item[1])
+    """ Calculate confusion matrix: """
+    cm = np.zeros((n_classes,n_classes))
 
-    precisionsDict = {}
-
-    for cl in trainedGMM["classesDict"]:
-        clNum = trainedGMM["classesDict"][cl]
-
-        if allPredicted[clNum] != 0:
-            precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
-            print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
-            precisionsDict[cl] = precision
+    for i in range(y_pred.shape[0]):
+        if y_pred[i] in evalLabels[i,:]:
+            """ If correct prediction made, add one on the corresponding diagonal element in the confusion matrix: """
+            cm[int(y_pred[i]),int(y_pred[i])] += 1
         else:
-            print("Class '" + cl + "' wasn't predicted at all")
+            """ If not predicted correctly, divide by the number of ground truth labels for that point and split
+            between corresponding non-diagonal elements: """
+            gtLabels = evalLabels[i,:]
+            labels = gtLabels[gtLabels != -1] #ground truth labels assigned to that point (only valid ones)
+            n_labels = len(labels) #number of valid labels assigned
+            weight = 1/float(n_labels) #value that will be added to each assigned (incorrect) label
 
-    resDict = {"accuracy": agreement, "precisions": precisionsDict}
+            for label in labels:
+                cm[int(label), int(y_pred[i])] += weight
+
+    normCM = []
+
+    for row in cm:
+        rowSum = sum(row)
+        normCM.append([round(x/float(rowSum),2) for x in row])
+
+    """ Sort labels: """
+    sortedTmp = sorted(trainedGMM["classesDict"].iteritems(), key=operator.itemgetter(1))
+    sortedLabels = []
+    for j in range(len(sortedTmp)):
+        sortedLabels.append(sortedTmp[j][0])
+
+
+    """ Calculate precision: """
+    colSum = np.sum(cm, axis=0)
+    precisions = []
+    for i in range(n_classes):
+        tmpPrecision = cm[i,i] / float(colSum[i])
+        print("Precision " + str(sortedLabels[i]) + ": " + str(tmpPrecision))
+        precisions.append(tmpPrecision)
+
+    """ Calculate recall: """
+    recalls = []
+    for i in range(n_classes):
+        recalls.append(normCM[i][i])
+        print("Recall " + str(sortedLabels[i]) + ": " + str(normCM[i][i]))
+
+    """ Calculate F1-score: """
+    F1s = {}
+    for i in range(n_classes):
+        tmpF1 = 2 * (precisions[i] * recalls[i]) / float(precisions[i] + recalls[i])
+        print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
+        F1s[sortedLabels[i]] = tmpF1
+
+    # """ Count how often each class was predicted: """
+    # allPredicted = [0] * n_classes
+    # items = itemfreq(y_pred)
+    # for item in items:
+    #     allPredicted[int(item[0])] = int(item[1])
+    #
+    # precisionsDict = {}
+    #
+    # for cl in trainedGMM["classesDict"]:
+    #     clNum = trainedGMM["classesDict"][cl]
+    #
+    #     if allPredicted[clNum] != 0:
+    #         precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
+    #         print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
+    #         precisionsDict[cl] = precision
+    #     else:
+    #         print("Class '" + cl + "' wasn't predicted at all")
+
+    resDict = {"accuracy": agreement, "F1dict": F1s}
 
     return resDict
 

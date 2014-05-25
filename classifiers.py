@@ -152,7 +152,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         """ Calculate threshold values that that divides array with all query criteria value (e.g. entropy) Top x percent: """
         percentile = 0.00005 #threshold that separates top percentile % of the entries from the rest
-        topK = 20 #threshold that separated to K entries from the rest
+        topK = 10 #threshold that separated to K entries from the rest
         for key in trainedGMM["classesDict"]:
             tmp = entropy[y_pred == trainedGMM["classesDict"][key]]
             sorted = np.sort(tmp)
@@ -350,6 +350,7 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     for i in range(n_classes):
         tmpF1 = 2 * (precisions[i] * recalls[i]) / float(precisions[i] + recalls[i])
         print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
+        F1s.append(tmpF1)
 
 
     width = len(cm)

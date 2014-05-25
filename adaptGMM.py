@@ -24,18 +24,25 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
 
     min_covar=1e-3
 
-    #y_new = np.zeros(featurePoints.shape[0]) #-> check if needed
-    #y_new.fill(label)
-
     newGMM = copy.deepcopy(trainedGMM)
 
     log_likelihood = []
 
-    # variables that don't change during process:
-    n_train_old = 176668 # TODO: write this information in the GMM dict
-    n_train_new = n_train_old + X.shape[0]
-    weights_old = n_train_old * trainedGMM["clfs"][int(label)].weights_
-    weighted_X_sum_old = trainedGMM["clfs"][int(label)].means_ * weights_old[:, np.newaxis]
+
+    # TODO: write this information in the GMM dict when it is created:
+    allFeatureData = FX_multiFolders(["Conversation","Office","Train"])
+    allFeatureDataScaled = trainedGMM['scaler'].transform(allFeatureData["features"])
+    curr_log_likelihood, responsibilities = trainedGMM["clfs"][int(label)].score_samples(allFeatureDataScaled)
+    n_train_old = allFeatureDataScaled.shape[0]
+    posteriors_old = responsibilities.sum(axis=0) # shape = n_components
+    n_train_new = X.shape[0]
+    old_means = trainedGMM["clfs"][int(label)].means_
+    old_covars = trainedGMM["clfs"][int(label)].covars_
+
+    # weights_old = n_train_old * trainedGMM["clfs"][int(label)].weights_ #remove xxxxxxxxxx
+    # weighted_X_sum_old = trainedGMM["clfs"][int(label)].means_ * weights_old[:, np.newaxis] #remove xxxxxxxxxx
+
+
 
     for i in range(nSteps):
         # xxx_old and xxx_new refer to the old data where the algorithm was previously trained with and
@@ -43,47 +50,64 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
         """ E-Step: """
         # calculate the membership weights (stored in the responsibilities matrix)
 
-        curr_log_likelihood, responsibilities = newGMM["clfs"][int(label)].score_samples(X)
-        log_likelihood.append(curr_log_likelihood.sum()) #only needed to check for convergence...
+        curr_log_likelihood, responsibilities = newGMM["clfs"][int(label)].score_samples(X) # responsibilities.shape = (n_train_new x n_components)
+        #log_likelihood.append(curr_log_likelihood.sum()) #only needed to check for convergence...
+
+        posteriors_new = responsibilities.sum(axis=0) # shape = n_components
 
         """ M-Step: """
+        # implementation of algorithm similar to Calinon 2007
 
-        weights_new = responsibilities.sum(axis=0)
-        inverse_weights_new = 1.0 / (weights_new[:, np.newaxis] + 10 * EPS)
+        # update mixture weights for all components:
+        newGMM["clfs"][int(label)].weights_ = (posteriors_old + posteriors_new) / float(n_train_old + n_train_new) # shape = n_components
 
-        weights = weights_old + weights_new
+        # to delete:
+        # weights_new = responsibilities.sum(axis=0)
+        # inverse_weights_new = 1.0 / (weights_new[:, np.newaxis] + 10 * EPS)
+        # weights = weights_old + weights_new
+        # # update mixture weights:
+        # newGMM["clfs"][int(label)].weights_ = (weights / n_train_new) #TODO: check this again
 
-        # update mixture weights:
-        newGMM["clfs"][int(label)].weights_ = (weights / n_train_new) #TODO: check this again
 
         # update means:
-        weighted_X_sum_new = np.dot(responsibilities.T, X)
-        weighted_X_sum = weighted_X_sum_old + weighted_X_sum_new
-        inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
-
-        newGMM["clfs"][int(label)].means_ = weighted_X_sum * inverse_weights
-
-        # update covariance matrix:
-
-        oldCovars = np.zeros((n_components, n_features, n_features)) #oder besser als empty initialisieren??
-
         for c in range(n_components):
 
-            oldCovars[c,:,:] = inverse_weights[c] * weights_old[c] * trainedGMM["clfs"][int(label)].covars_[c,:,:]
+            t1 = (old_means[c,:] * posteriors_old[c])
+            t2 = np.dot(X.T, responsibilities[:,c][:, np.newaxis]).ravel()
 
-            pdb.set_trace()
+            newGMM["clfs"][int(label)].means_[c,:] = (t1 + t2) / (posteriors_old[c] + posteriors_new[c])
 
-            posteriors = responsibilities[:, c]
-            # Underflow Errors in doing post * X.T are  not important
-            np.seterr(under='ignore')
+        # # update means:
+        # weighted_X_sum_new = np.dot(responsibilities.T, X)
+        # weighted_X_sum = weighted_X_sum_old + weighted_X_sum_new
+        # inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
+        # newGMM["clfs"][int(label)].means_ = weighted_X_sum * inverse_weights
 
-            avg_cv = np.dot(posteriors * X.T, X) / (posteriors.sum() + 10 * EPS)
+        # update covariance matrix:
+        for c in range(n_components):
 
-            mu = newGMM["clfs"][int(label)].means_[c][np.newaxis]
+            # sum over all data points:
+            tmpCovar = np.zeros((n_features, n_features))
+            for j in range(n_train_new):
+                t3 = X[j,:] - newGMM["clfs"][int(label)].means_[c,:]
+                tmpCovar = tmpCovar + np.dot(t3,t3.T) * responsibilities[j,c]
 
-            newCovars = (avg_cv - np.dot(mu.T, mu) + min_covar * np.eye(n_features))
+            t4 = old_means[c,:] - newGMM["clfs"][int(label)].means_[c,:]
+            t5 = old_covars[c,:] + np.dot(t4,t4.T)
 
-        print(i)
+            newGMM["clfs"][int(label)].covars_[c] = (t5 * posteriors_old[c] + tmpCovar) / (posteriors_old[c] + posteriors_new[c])
+
+            #pdb.set_trace()
+
+            # posteriors_new = responsibilities[:, c]
+            # # Underflow Errors in doing post * X.T are  not important
+            # np.seterr(under='ignore')
+            #
+            # avg_cv = np.dot(posteriors_new * X.T, X) / (posteriors_new.sum() + 10 * EPS)
+            #
+            # mu = newGMM["clfs"][int(label)].means_[c][np.newaxis]
+            #
+            # newCovars = (avg_cv - np.dot(mu.T, mu) + min_covar * np.eye(n_features))
 
 
 
@@ -105,16 +129,7 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
     tmpTrain = X_all[iTmp]
     batchClf.fit(tmpTrain)
 
-
     pdb.set_trace()
-
-def covar_mstep_diag(means, X, responsibilities, weighted_X_sum, norm,
-                      min_covar):
-    """Performing the covariance M step for diagonal cases"""
-    avg_X2 = np.dot(responsibilities.T, X * X) * norm
-    avg_means2 = means ** 2
-    avg_X_means = means * weighted_X_sum * norm
-    return avg_X2 - 2 * avg_X_means + avg_means2 + min_covar
 
 def _covar_mstep_full(gmm, X, responsibilities, weighted_X_sum, norm,
                       min_covar):
