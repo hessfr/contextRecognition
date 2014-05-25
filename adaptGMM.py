@@ -18,7 +18,7 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
     @param nSteps: Number of EM iterations that should be performed. Default value is 100
     @return: adapted GMM model
     """
-    X = featurePoints
+    X = featurePoints[0:2,:]
     n_features = X.shape[1]
     n_components = trainedGMM["clfs"][0].n_components
 
@@ -32,17 +32,14 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
     # TODO: write this information in the GMM dict when it is created:
     allFeatureData = FX_multiFolders(["Conversation","Office","Train"])
     allFeatureDataScaled = trainedGMM['scaler'].transform(allFeatureData["features"])
-    curr_log_likelihood, responsibilities = trainedGMM["clfs"][int(label)].score_samples(allFeatureDataScaled)
-    n_train_old = allFeatureDataScaled.shape[0]
-    posteriors_old = responsibilities.sum(axis=0) # shape = n_components
+    curr_log_likelihood, responsibilitiesOld = trainedGMM["clfs"][int(label)].score_samples(allFeatureDataScaled)
+    posteriors_old = responsibilitiesOld.sum(axis=0) # shape = n_components
+    n_train_old = posteriors_old.sum()
     n_train_new = X.shape[0]
+
+
     old_means = trainedGMM["clfs"][int(label)].means_
     old_covars = trainedGMM["clfs"][int(label)].covars_
-
-    # weights_old = n_train_old * trainedGMM["clfs"][int(label)].weights_ #remove xxxxxxxxxx
-    # weighted_X_sum_old = trainedGMM["clfs"][int(label)].means_ * weights_old[:, np.newaxis] #remove xxxxxxxxxx
-
-
 
     for i in range(nSteps):
         # xxx_old and xxx_new refer to the old data where the algorithm was previously trained with and
@@ -59,15 +56,9 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
         # implementation of algorithm similar to Calinon 2007
 
         # update mixture weights for all components:
-        newGMM["clfs"][int(label)].weights_ = (posteriors_old + posteriors_new) / float(n_train_old + n_train_new) # shape = n_components
+        newGMM["clfs"][int(label)].weights_ = ((posteriors_old + posteriors_new) / float(n_train_old + n_train_new + 10 * EPS) + EPS)# shape = n_components
 
-        # to delete:
-        # weights_new = responsibilities.sum(axis=0)
-        # inverse_weights_new = 1.0 / (weights_new[:, np.newaxis] + 10 * EPS)
-        # weights = weights_old + weights_new
-        # # update mixture weights:
-        # newGMM["clfs"][int(label)].weights_ = (weights / n_train_new) #TODO: check this again
-
+        pdb.set_trace()
 
         # update means:
         for c in range(n_components):
@@ -76,12 +67,6 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
             t2 = np.dot(X.T, responsibilities[:,c][:, np.newaxis]).ravel()
 
             newGMM["clfs"][int(label)].means_[c,:] = (t1 + t2) / (posteriors_old[c] + posteriors_new[c])
-
-        # # update means:
-        # weighted_X_sum_new = np.dot(responsibilities.T, X)
-        # weighted_X_sum = weighted_X_sum_old + weighted_X_sum_new
-        # inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
-        # newGMM["clfs"][int(label)].means_ = weighted_X_sum * inverse_weights
 
         # update covariance matrix:
         for c in range(n_components):
@@ -97,19 +82,7 @@ def adaptGMM(trainedGMM, featurePoints, label, nSteps=100):
 
             newGMM["clfs"][int(label)].covars_[c] = (t5 * posteriors_old[c] + tmpCovar) / (posteriors_old[c] + posteriors_new[c])
 
-            #pdb.set_trace()
-
-            # posteriors_new = responsibilities[:, c]
-            # # Underflow Errors in doing post * X.T are  not important
-            # np.seterr(under='ignore')
-            #
-            # avg_cv = np.dot(posteriors_new * X.T, X) / (posteriors_new.sum() + 10 * EPS)
-            #
-            # mu = newGMM["clfs"][int(label)].means_[c][np.newaxis]
-            #
-            # newCovars = (avg_cv - np.dot(mu.T, mu) + min_covar * np.eye(n_features))
-
-
+        pdb.set_trace()
 
 
 
