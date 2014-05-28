@@ -11,6 +11,7 @@ from sklearn import preprocessing
 from classifiers import getIndex
 from classifiers import testGMM
 from featureExtraction import FX_multiFolders
+from adaptGMM import adaptGMM
 import ipdb as pdb #pdb.set_trace()
 
 _thresholdDict = {}
@@ -62,32 +63,24 @@ def simulateAL(trainedGMM, testFeatureData):
     y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0], 'labelsAdapted.txt')
     y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0], 'labels.txt')
 
-    """ Get all Features to retrain the GMM later (only tentitative, as incremental model update not implemented yet: """
-    featureDataFS = FX_multiFolders(["Conversation","Office","TrainInside"]) #TODO: implement this properly!!!
-
-    labelData = featureDataFS["labels"]
-
-    featureData = trainedGMM['scaler'].transform(featureDataFS["features"])
-
     print(trainedGMM["classesDict"])
-    print(featureDataFS["classesDict"])
 
     """ Create index arrays to define which elements are used to evaluate performance and which for simulation of the AL
     behavior: """
     [evalIdx, simIdx] = splitData(y_GT)
 
-    testFeatureData = trainedGMM['scaler'].transform(testFeatureData) # apply the feature scaling from the training phase
-
     evalFeatures = testFeatureData[evalIdx == 1]
     evalLabels = y_GTMulti[evalIdx == 1] # contains multiple labels for each point
 
     simFeatures = testFeatureData[simIdx == 1]
+    simFeatures = trainedGMM['scaler'].transform(simFeatures)
     simLabels = y_GT[simIdx == 1]
+
     """ simLabels contains unique label for each point that will be used to update the model later,
     e.g. if a point has the labels office and conversation, it will be trained with conversation (accoring to the provided
     groundTruthLabels """
 
-    currentGMM = dict(trainedGMM)
+    currentGMM = copy.deepcopy(trainedGMM)
 
     allGMM = []
     allGMM.append(currentGMM)
@@ -126,8 +119,6 @@ def simulateAL(trainedGMM, testFeatureData):
                     updatePoints = tmpFeatures[tmpLabels == currentLabel]
                     labelAccuracy.append(1)
 
-                    pdb.set_trace()
-
                 else:
                     # updatePoints = simFeatures[0:i,:]
                     # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
@@ -143,18 +134,14 @@ def simulateAL(trainedGMM, testFeatureData):
 
                 givenLabels.append(currentLabel)
 
-                print(featureData.shape)
-                print(labelData.shape)
-                print(updatePoints.shape)
-
-
-
-                currentGMM, featureData, labelData = adaptGMM(currentGMM, updatePoints, currentLabel, featureData, labelData)
+                currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel, nSteps=100)
                 allGMM.append(currentGMM)
                 timestamps.append(i*0.032)
 
+                y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
+
         #for testing:
-        if len(allGMM) == 3:
+        if len(allGMM) == 4:
             print("Stopped loop for testing")
             break
 
@@ -205,7 +192,7 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
             tmpProduct[i] = likelihoodNormed[i] * logLikelihoodNormed[i]
         entropy = tmpProduct.sum(axis=0) * -1
 
-        if entropy > threshold:
+        if entropy > 1.0: #threshold: #xxxx
             return True
         else:
             return False
@@ -228,7 +215,7 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
         else:
             return False
 
-def adaptGMM(trainedGMM, featurePoints, currentLabel, featureData, labelData):
+def adaptGMM_OUTDATED(trainedGMM, featurePoints, currentLabel, featureData, labelData):
     """
     Incorporate new data point into the GMM model
     @param trainedGMM:
@@ -258,8 +245,6 @@ def adaptGMM(trainedGMM, featurePoints, currentLabel, featureData, labelData):
 
     tmpTrain = X_train[iTmp]
 
-    #pdb.set_trace()
-
     """ Use expectation-maximization to fit the Gaussians: """
     print("adapting GMM")
     clf.fit(tmpTrain)
@@ -273,8 +258,6 @@ def adaptGMM(trainedGMM, featurePoints, currentLabel, featureData, labelData):
     labelData = y_train
 
     print("adapting GMM finished")
-
-    #pdb.set_trace()
 
     return newGMM, featureData, labelData
 
@@ -293,7 +276,7 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     """
 
     @param trainedGMM:
-    @param evalFeatures:
+    @param evalFeatures: not scaled, as scaling is done in testGMM method
     @param evalLabels: Ground truth label array with multiple labels per data points
     @return:
     """
@@ -303,7 +286,6 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     y_pred = testGMM(trainedGMM, evalFeatures, useMajorityVote=True, showPlots=False)
 
     n_classes = len(trainedGMM["classesDict"])
-    agreementCounter = 0
     validCounter = 0
     delIdx = [] #list of indexes of the rows that should be deleted
     correctlyPredicted = [0] * n_classes #list to count how often each class is predicted correctly

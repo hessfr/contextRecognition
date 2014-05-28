@@ -32,6 +32,8 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
 
     posteriors_old = newGMM["posteriors"][int(label)]
 
+    # print(newGMM["posteriors"][int(label)])
+
     n_train_old = math.ceil(posteriors_old.sum())
     n_train_new = X.shape[0]
 
@@ -42,6 +44,8 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
     means = copy.deepcopy(old_means)
     covars = copy.deepcopy(old_covars)
     weights = copy.deepcopy(old_weights)
+
+    converged = False
 
     #pdb.set_trace()
 
@@ -95,21 +99,40 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
         logLik = np.mean(np.log(F))
 
         if abs((logLik/float(prevLogLik)) - 1) < loglik_threshold:
-            newGMM["clfs"][int(label)].converged_ = True
-            print("EM converged")
+            converged = True
             break
 
         # pdb.set_trace()
 
         prevLogLik = logLik
 
-    print(str(i) + " loop cycles")
+    if converged == True:
+        print("EM algorithm converged after " + str(i) + " cycles")
+    else:
+        print("EM algorithm not converged after " + str(i) + " cycle. Increase nSteps parameter to fix this problem")
 
+    """ Calculate posterior probabilities for the adapted class and update them in the classifier dict: """
+    # calculate the probabilities:
+    proba = np.zeros((n_train_new, n_components))
+    for c in range(n_components):
+        proba[:,c] = pdf(X, means[c,:], covars[c])
+
+    # calculate the responsibilities:
+    responsibilities = np.zeros((n_train_new, n_components))
+    for j in range(n_train_new):
+        responsibilities[j,:] = (weights * proba[j,:]) / np.sum(weights * proba[j,:]) # Noch EPS addieren??????
+
+    posteriors = responsibilities.sum(axis=0) # shape = n_components
+
+    newGMM["posteriors"][int(label)] = posteriors
+
+    """ update all other model parameters in the classifier dict: """
     newGMM["clfs"][int(label)].weights_ = weights
     newGMM["clfs"][int(label)].means_ = means
     newGMM["clfs"][int(label)].covars_ = covars
+    newGMM["clfs"][int(label)].converged_ = converged
 
-    # pdb.set_trace()
+    # print(newGMM["posteriors"][int(label)])
 
     return newGMM
 

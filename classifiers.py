@@ -98,20 +98,16 @@ def trainGMM(featureData):
 
         """ Calculate posterior probabilities (for each component), as we need to know them to adapt the model later: """
         proba = np.zeros((int(n_tmp), n_comp))
-        # proba = np.zeros((int(X_train.shape[0]), n_comp)) # over completely all points, or only over all points of that class??
         for c in range(n_comp):
             proba[:,c] = pdf(tmpTrain, tmpClf.means_[c,:], tmpClf.covars_[c])
-            # proba[:,c] = pdf(X_train, tmpClf.means_[c,:], tmpClf.covars_[c]) # over completely all points, or only over all points of that class??
 
         # calculate the responsibilities:
         responsibilities = np.zeros((int(n_tmp), n_comp))
         for j in range(int(n_tmp)):
             responsibilities[j,:] = (tmpClf.weights_ * proba[j,:]) / np.sum(tmpClf.weights_ * proba[j,:])
 
-        """ Calculate posterior probabilities: """
+        # calculate the posterior probabilities:
         posteriors = responsibilities.sum(axis=0) # shape = n_components
-
-        print(posteriors)
 
         posteriorList.append(posteriors)
 
