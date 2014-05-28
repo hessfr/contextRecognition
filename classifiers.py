@@ -18,6 +18,7 @@ from featureExtraction import FX_Folder
 import math
 import operator
 from scipy.stats import itemfreq
+from adaptGMM import pdf
 import ipdb as pdb #pdb.set_trace()
 
 def majorityVote(y_Raw):
@@ -73,24 +74,50 @@ def trainGMM(featureData):
     y_train = featureData['labels']
     
     n_classes = len(np.unique(y_train))
-    
+
+    n_comp = 16 # number of components
+
     print(str(n_classes) + " different classes")
 
     clfs = []
+    posteriorList = []
  
     for i in range(n_classes):
-        tmpClf = GMM(n_components=16, covariance_type='full', n_iter=1000)
+        tmpClf = GMM(n_components=n_comp, covariance_type='full', n_iter=1000)
         iTmp = (y_train == i)
 
         tmpTrain = X_train[iTmp]
+
+        n_tmp = tmpTrain.shape[0]
+
+        #pdb.set_trace()
 
         """ use expectation-maximization to fit the Gaussians: """
         tmpClf.fit(tmpTrain)
         clfs.append(tmpClf)
 
+        """ Calculate posterior probabilities (for each component), as we need to know them to adapt the model later: """
+        proba = np.zeros((int(n_tmp), n_comp))
+        # proba = np.zeros((int(X_train.shape[0]), n_comp)) # over completely all points, or only over all points of that class??
+        for c in range(n_comp):
+            proba[:,c] = pdf(tmpTrain, tmpClf.means_[c,:], tmpClf.covars_[c])
+            # proba[:,c] = pdf(X_train, tmpClf.means_[c,:], tmpClf.covars_[c]) # over completely all points, or only over all points of that class??
 
+        # calculate the responsibilities:
+        responsibilities = np.zeros((int(n_tmp), n_comp))
+        for j in range(int(n_tmp)):
+            responsibilities[j,:] = (tmpClf.weights_ * proba[j,:]) / np.sum(tmpClf.weights_ * proba[j,:])
 
-    trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'scaler': scaler}
+        """ Calculate posterior probabilities: """
+        posteriors = responsibilities.sum(axis=0) # shape = n_components
+
+        print(posteriors)
+
+        posteriorList.append(posteriors)
+
+        #pdb.set_trace()
+
+    trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'posteriors': posteriorList, 'scaler': scaler}
 
     return trainedGMM
     
