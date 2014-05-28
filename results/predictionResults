@@ -1,10 +1,23 @@
+--- with Train Class: ---
 Accuracy: 91.0%
-Precision Conversation: 0.589655226185
+Precision Conversation: 0.59
 Precision Office: 1.0
-Precision Train: 0.653125
+Precision Train: 0.65
 Recall Conversation: 0.98
 Recall Office: 0.94
 Recall Train: 0.27
-F1 Conversation: 0.736291781815
-F1 Office: 0.969072164948
-F1 Train: 0.382058226134
+F1 Conversation: 0.74
+F1 Office: 0.97
+F1 Train: 0.38
+
+--- with TrainInside Class: ---
+Accuracy: 90.0%
+Precision Conversation: 0.53
+Precision Office: 0.99
+Precision TrainInside: 0.78
+Recall Conversation: 0.91
+Recall Office: 0.92
+Recall TrainInside: 0.83
+F1 Conversation: 0.67
+F1 Office: 0.96
+F1 TrainInside: 0.80

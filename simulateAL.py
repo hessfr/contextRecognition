@@ -17,55 +17,71 @@ _thresholdDict = {}
 
 #tGMM = pickle.load(open("GMM.p","rb"))
 #realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
-#featurePoints = pickle.load(open("adaptModelTmp/featurePoints.p","rb"))
+#updatePoints = pickle.load(open("updatePoints_label1.p","rb"))
 
 def defineThresholdDict():
 
     _thresholdDict["Conversation"] = {}
-    _thresholdDict["Train"] = {}
     _thresholdDict["Office"] = {}
+    _thresholdDict["TrainInside"] = {}
 
 
-    # #values for top 10 threshold for each class:
-    # _thresholdDict["Conversation"]["entropy"] = 1.098199
-    # _thresholdDict["Conversation"]["margin"] = 1.8e-05
-    # _thresholdDict["Conversation"]["percentDiff"] = 3.9e-05
-    # _thresholdDict["Train"]["entropy"] = 1.098379
-    # _thresholdDict["Train"]["margin"] = 3.6e-05
-    # _thresholdDict["Train"]["percentDiff"] = 7.5e-05
-    # _thresholdDict["Office"]["entropy"] = 1.098267
-    # _thresholdDict["Office"]["margin"] = 9e-05
-    # _thresholdDict["Office"]["percentDiff"] = 0.000187
+    #values for top 10 threshold for each class:
+    _thresholdDict["Conversation"]["entropy"] = 1.097975
+    _thresholdDict["Conversation"]["margin"] = 1.2e-05
+    _thresholdDict["Conversation"]["percentDiff"] = 2.8e-05
 
-    #values for top 20 threshold for each class:
-    _thresholdDict["Conversation"]["entropy"] = 1.0979
-    _thresholdDict["Conversation"]["margin"] = 3.6e-05
-    _thresholdDict["Conversation"]["percentDiff"] = 7.7e-05
-    _thresholdDict["Train"]["entropy"] = 1.098033
-    _thresholdDict["Train"]["margin"] = 6.3e-05
-    _thresholdDict["Train"]["percentDiff"] = 0.000142
-    _thresholdDict["Office"]["entropy"] = 1.097991
-    _thresholdDict["Office"]["margin"] = 0.000199
-    _thresholdDict["Office"]["percentDiff"] = 0.000418
+    _thresholdDict["Office"]["entropy"] = 1.097941
+    _thresholdDict["Office"]["margin"] = 4.5e-05
+    _thresholdDict["Office"]["percentDiff"] = 0.000108
+
+    _thresholdDict["TrainInside"]["entropy"] = 1.098202
+    _thresholdDict["TrainInside"]["margin"] = 1.9e-05
+    _thresholdDict["TrainInside"]["percentDiff"] = 4e-05
+
+    # #values for top 20 threshold for each class:
+    # _thresholdDict["Conversation"]["entropy"] = .097408
+    # _thresholdDict["Conversation"]["margin"] = 2.2e-05
+    # _thresholdDict["Conversation"]["percentDiff"] = 4.9e-05
+    #
+    # _thresholdDict["Office"]["entropy"] = 1.097515
+    # _thresholdDict["Office"]["margin"] = 0.000152
+    # _thresholdDict["Office"]["percentDiff"] = 0.000343
+    #
+    # _thresholdDict["TrainInside"]["entropy"] = 1.097816
+    # _thresholdDict["TrainInside"]["margin"] = 4.3e-05
+    # _thresholdDict["TrainInside"]["percentDiff"] = 9.4e-05
 
 
-def simulateAL(trainedGMM, featureData):
+def simulateAL(trainedGMM, testFeatureData):
     """
 
     @param trainedGMM: already trained GMM
-    @param featureData: Numpy array of already extracted features of the test file
+    @param testFeatureData: Numpy array of already extracted features of the test file
     """
-    y_GT = createGTUnique(trainedGMM['classesDict'], featureData.shape[0], 'labelsAdapted.txt')
-    y_GTMulti = createGTMulti(trainedGMM["classesDict"],featureData.shape[0], 'labels.txt')
+    y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0], 'labelsAdapted.txt')
+    y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0], 'labels.txt')
+
+    """ Get all Features to retrain the GMM later (only tentitative, as incremental model update not implemented yet: """
+    featureDataFS = FX_multiFolders(["Conversation","Office","TrainInside"]) #TODO: implement this properly!!!
+
+    labelData = featureDataFS["labels"]
+
+    featureData = trainedGMM['scaler'].transform(featureDataFS["features"])
+
+    print(trainedGMM["classesDict"])
+    print(featureDataFS["classesDict"])
 
     """ Create index arrays to define which elements are used to evaluate performance and which for simulation of the AL
     behavior: """
     [evalIdx, simIdx] = splitData(y_GT)
 
-    evalFeatures = featureData[evalIdx == 1]
-    evalLabels = y_GTMulti[evalIdx == 1] #Contains multiple labels for each point
+    testFeatureData = trainedGMM['scaler'].transform(testFeatureData) # apply the feature scaling from the training phase
 
-    simFeatures = featureData[simIdx == 1]
+    evalFeatures = testFeatureData[evalIdx == 1]
+    evalLabels = y_GTMulti[evalIdx == 1] # contains multiple labels for each point
+
+    simFeatures = testFeatureData[simIdx == 1]
     simLabels = y_GT[simIdx == 1]
     """ simLabels contains unique label for each point that will be used to update the model later,
     e.g. if a point has the labels office and conversation, it will be trained with conversation (accoring to the provided
@@ -77,8 +93,12 @@ def simulateAL(trainedGMM, featureData):
     allGMM.append(currentGMM)
     givenLabels = []
     givenLabels.append(-1) #because first classifiers is without active learning yet
+    labelAccuracy = []
+    labelAccuracy.append(-1)
     timestamps = [] #time when the query was sent on the simulation data set -> only half the length of the complete data set
     timestamps.append(0)
+
+    numQueriesPerClass = np.zeros(3)  #TODO: remove again later!!
 
     revClassesDict = reverseDict(trainedGMM["classesDict"])
 
@@ -86,27 +106,55 @@ def simulateAL(trainedGMM, featureData):
     defineThresholdDict()
     waitingTime = 900 #minimum wating time between two queries in seconds, equals 15min
     for i in range(simFeatures.shape[0]):
-        currentPoint = trainedGMM['scaler'].transform(simFeatures[i,:]) #apply the features scaling from training phase
+        currentPoint = simFeatures[i,:]
         currentLabel = simLabels[i]
 
-        if ((i*0.032) - timestamps[-1]) > waitingTime: #wait the minimum time between two queries
-            if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="percentDiff"):
-                print("sending query")
+        if numQueriesPerClass[int(currentLabel)] <= 5: # to test what happens if we allow only certain number of queries per class #TODO: remove again later!!
+        # if ((i*0.032) - timestamps[-1]) > waitingTime: # wait the minimum time between two queries
+            if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="entropy"):
+                print("sending query for " + str(revClassesDict[currentLabel]))
 
                 #set the current label for the last N points:
                 N = 1875 # = 1 minute
                 if i > N:
-                    updatePoints = simFeatures[i-N:i,:]
+                    # updatePoints = simFeatures[i-N:i,:]
+                    # labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
+
+                    """ to test when choosing only correct labels: """ #TODO: remove again later!!
+                    tmpFeatures = simFeatures[i-N:i,:]
+                    tmpLabels = simLabels[i-N:i]
+                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                    labelAccuracy.append(1)
+
+                    pdb.set_trace()
+
                 else:
-                    updatePoints = simFeatures[0:i,:]
+                    # updatePoints = simFeatures[0:i,:]
+                    # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
+
+                    """ to test when choosing only correct labels: """ #TODO: remove again later!!
+                    tmpFeatures = simFeatures[0:i,:]
+                    tmpLabels = simLabels[0:i]
+                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                    labelAccuracy.append(1)
+
+                """ to test what happens if we allow only certain number of queries per class: """  #TODO: remove again later!!
+                numQueriesPerClass[int(currentLabel)] += + 1
 
                 givenLabels.append(currentLabel)
-                currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel)
+
+                print(featureData.shape)
+                print(labelData.shape)
+                print(updatePoints.shape)
+
+
+
+                currentGMM, featureData, labelData = adaptGMM(currentGMM, updatePoints, currentLabel, featureData, labelData)
                 allGMM.append(currentGMM)
                 timestamps.append(i*0.032)
 
         #for testing:
-        if len(allGMM) == 20:
+        if len(allGMM) == 3:
             print("Stopped loop for testing")
             break
 
@@ -117,6 +165,7 @@ def simulateAL(trainedGMM, featureData):
     for GMM in allGMM:
         resultDict = evaluateGMM(GMM, evalFeatures, evalLabels)
         resultDict["label"] = givenLabels[i]
+        resultDict["labelAccuracy"] = labelAccuracy[i]
         resultDict["timestamp"] = timestamps[i]
         resultDict["classesDict"] = GMM["classesDict"]
         resultDict["duration"] = simFeatures.shape[0] * 0.032 #length in seconds
@@ -179,42 +228,66 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
         else:
             return False
 
-def adaptGMM(trainedGMM, featurePoints, label):
+def adaptGMM(trainedGMM, featurePoints, currentLabel, featureData, labelData):
     """
     Incorporate new data point into the GMM model
     @param trainedGMM:
     @param featurePoints: already scaled
-    param label: Class ground truth label of the given feature point (simulating the label provided by the user)
+    @param currentLabel: class ground truth label of the given feature point (simulating the label provided by the user)
+    @param featureData: array containing the scaled data that is used to retrain the model containing all FS data and all data
+    from previous queries. New data will be appended to this array
+    @param labelData: array containing the labels that are used to retrain the model containing all FS labels and all labels
+    from previous queries. New labels will be appended to this array
     @return: adapted GMM model
     """
-    featureData = FX_multiFolders(["Conversation","Office","Train"]) #TODO: implement this properly!!!
-    scaled = trainedGMM['scaler'].transform(featureData["features"])
 
-    #These dicts have to match: !!
-    #print(featureData["classesDict"])
-    #print(trainedGMM["classesDict"])
+
+    # #These dicts have to match: !!
+    # print(_featureData["classesDict"])
+    # print(trainedGMM["classesDict"])
 
     y_new = np.zeros(featurePoints.shape[0])
-    y_new.fill(label)
+    y_new.fill(currentLabel)
 
     """ Add the new data points: """
-    X_train = np.concatenate((scaled, featurePoints), axis=0)
-    y_train = np.concatenate((featureData["labels"], y_new), axis=0)
+    X_train = np.concatenate((featureData, featurePoints), axis=0)
+    y_train = np.concatenate((labelData, y_new), axis=0)
 
-    clf = GMM(n_components=16, n_iter=100)
-    iTmp = (y_train == label)
+    clf = GMM(n_components=16, covariance_type='full', n_iter=1000)
+    iTmp = (y_train == currentLabel)
 
     tmpTrain = X_train[iTmp]
 
-    """ use expectation-maximization to fit the Gaussians: """
+    #pdb.set_trace()
+
+    """ Use expectation-maximization to fit the Gaussians: """
     print("adapting GMM")
     clf.fit(tmpTrain)
 
     newGMM = copy.deepcopy(trainedGMM)
 
-    newGMM["clfs"][int(label)] = clf
+    newGMM["clfs"][int(currentLabel)] = clf
 
-    return newGMM
+    """ Append the new data points to the featureData (only tentative, as no model adaption implemented yet): """
+    featureData = X_train
+    labelData = y_train
+
+    print("adapting GMM finished")
+
+    #pdb.set_trace()
+
+    return newGMM, featureData, labelData
+
+def checkLabelAccuracy(actualLabels, label):
+    """
+    Calculate how many percent of the samples that are used to adapt the model, are actually of the correct class
+    @param actualLabels: Ground truth labels of all points with which the model will be adapted
+    @param label: The label of the class with which the model should be adapted
+    """
+    accuracy = len(actualLabels[actualLabels == label]) / float(len(actualLabels))
+    print(str(accuracy*100) + "% of the labels used to adapt the model were correct")
+
+    return accuracy
 
 def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     """

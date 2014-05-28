@@ -88,6 +88,8 @@ def trainGMM(featureData):
         tmpClf.fit(tmpTrain)
         clfs.append(tmpClf)
 
+
+
     trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'scaler': scaler}
 
     return trainedGMM
@@ -152,7 +154,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         """ Calculate threshold values that that divides array with all query criteria value (e.g. entropy) Top x percent: """
         percentile = 0.00005 #threshold that separates top percentile % of the entries from the rest
-        topK = 10 #threshold that separated to K entries from the rest
+        topK = 20 #threshold that separated to K entries from the rest
         for key in trainedGMM["classesDict"]:
             tmp = entropy[y_pred == trainedGMM["classesDict"][key]]
             sorted = np.sort(tmp)
@@ -256,7 +258,7 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
 
     n_classes = len(trainedGMM["classesDict"])
     agreementCounter = 0
-    validCounter = 0
+    validCounter = 0.0
     delIdx = [] #list of indexes of the rows that should be deleted
     correctlyPredicted = [0] * n_classes #list to count how often each class is predicted correctly
     for j in range(y_pred.shape[0]):
