@@ -28,7 +28,7 @@ def defineThresholdDict():
 
 
     #values for top 10 threshold for each class:
-    _thresholdDict["Conversation"]["entropy"] = 1.097975
+    _thresholdDict["Conversation"]["entropy"] = 1.097963
     _thresholdDict["Conversation"]["margin"] = 1.2e-05
     _thresholdDict["Conversation"]["percentDiff"] = 2.8e-05
 
@@ -41,7 +41,7 @@ def defineThresholdDict():
     _thresholdDict["TrainInside"]["percentDiff"] = 4e-05
 
     # #values for top 20 threshold for each class:
-    # _thresholdDict["Conversation"]["entropy"] = .097408
+    # _thresholdDict["Conversation"]["entropy"] = 1.097408
     # _thresholdDict["Conversation"]["margin"] = 2.2e-05
     # _thresholdDict["Conversation"]["percentDiff"] = 4.9e-05
     #
@@ -93,17 +93,18 @@ def simulateAL(trainedGMM, testFeatureData):
 
     numQueriesPerClass = np.zeros(3)  #TODO: remove again later!!
 
+    updatePointsList = []
+
     revClassesDict = reverseDict(trainedGMM["classesDict"])
 
     """ Simulate actual behavior by reading in points one by one: """
     defineThresholdDict()
-    waitingTime = 900 #minimum wating time between two queries in seconds, equals 15min
-    for i in range(simFeatures.shape[0]):
+
+    for i in range(468530, simFeatures.shape[0]): ###################################
         currentPoint = simFeatures[i,:]
         currentLabel = simLabels[i]
 
-        if numQueriesPerClass[int(currentLabel)] <= 5: # to test what happens if we allow only certain number of queries per class #TODO: remove again later!!
-        # if ((i*0.032) - timestamps[-1]) > waitingTime: # wait the minimum time between two queries
+        if numQueriesPerClass[int(currentLabel)] <= 3: # to test what happens if we allow only certain number of queries per class #TODO: remove again later!!
             if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="entropy"):
                 print("sending query for " + str(revClassesDict[currentLabel]))
 
@@ -113,7 +114,7 @@ def simulateAL(trainedGMM, testFeatureData):
                     # updatePoints = simFeatures[i-N:i,:]
                     # labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
 
-                    """ to test when choosing only correct labels: """ #TODO: remove again later!!
+                    """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
                     tmpFeatures = simFeatures[i-N:i,:]
                     tmpLabels = simLabels[i-N:i]
                     updatePoints = tmpFeatures[tmpLabels == currentLabel]
@@ -123,26 +124,30 @@ def simulateAL(trainedGMM, testFeatureData):
                     # updatePoints = simFeatures[0:i,:]
                     # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
 
-                    """ to test when choosing only correct labels: """ #TODO: remove again later!!
+                    """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
                     tmpFeatures = simFeatures[0:i,:]
                     tmpLabels = simLabels[0:i]
                     updatePoints = tmpFeatures[tmpLabels == currentLabel]
                     labelAccuracy.append(1)
 
                 """ to test what happens if we allow only certain number of queries per class: """  #TODO: remove again later!!
-                numQueriesPerClass[int(currentLabel)] += + 1
+                numQueriesPerClass[int(currentLabel)] += 1
 
+                updatePointsList.append(updatePoints)
                 givenLabels.append(currentLabel)
 
-                currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel, nSteps=100)
+                currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel, nSteps=500)
                 allGMM.append(currentGMM)
                 timestamps.append(i*0.032)
 
-                y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
+                #y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
 
         #for testing:
-        if len(allGMM) == 4:
-            print("Stopped loop for testing")
+        if len(allGMM) == 3:
+            print("Stopped loop (for testing)")
+
+            pdb.set_trace() # save updatePointsList, givenLabels and allGMM list
+
             break
 
     """ Evaluate performance of all GMMs: """
@@ -192,7 +197,7 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
             tmpProduct[i] = likelihoodNormed[i] * logLikelihoodNormed[i]
         entropy = tmpProduct.sum(axis=0) * -1
 
-        if entropy > 1.0: #threshold: #xxxx
+        if entropy > threshold:
             return True
         else:
             return False
@@ -214,52 +219,6 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
             return True
         else:
             return False
-
-def adaptGMM_OUTDATED(trainedGMM, featurePoints, currentLabel, featureData, labelData):
-    """
-    Incorporate new data point into the GMM model
-    @param trainedGMM:
-    @param featurePoints: already scaled
-    @param currentLabel: class ground truth label of the given feature point (simulating the label provided by the user)
-    @param featureData: array containing the scaled data that is used to retrain the model containing all FS data and all data
-    from previous queries. New data will be appended to this array
-    @param labelData: array containing the labels that are used to retrain the model containing all FS labels and all labels
-    from previous queries. New labels will be appended to this array
-    @return: adapted GMM model
-    """
-
-
-    # #These dicts have to match: !!
-    # print(_featureData["classesDict"])
-    # print(trainedGMM["classesDict"])
-
-    y_new = np.zeros(featurePoints.shape[0])
-    y_new.fill(currentLabel)
-
-    """ Add the new data points: """
-    X_train = np.concatenate((featureData, featurePoints), axis=0)
-    y_train = np.concatenate((labelData, y_new), axis=0)
-
-    clf = GMM(n_components=16, covariance_type='full', n_iter=1000)
-    iTmp = (y_train == currentLabel)
-
-    tmpTrain = X_train[iTmp]
-
-    """ Use expectation-maximization to fit the Gaussians: """
-    print("adapting GMM")
-    clf.fit(tmpTrain)
-
-    newGMM = copy.deepcopy(trainedGMM)
-
-    newGMM["clfs"][int(currentLabel)] = clf
-
-    """ Append the new data points to the featureData (only tentative, as no model adaption implemented yet): """
-    featureData = X_train
-    labelData = y_train
-
-    print("adapting GMM finished")
-
-    return newGMM, featureData, labelData
 
 def checkLabelAccuracy(actualLabels, label):
     """

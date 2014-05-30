@@ -1,6 +1,7 @@
 import os
 from os import listdir
 import numpy as np
+from numpy import linalg
 import csv
 import pickle
 from sklearn.svm import SVC
@@ -18,8 +19,9 @@ from featureExtraction import FX_Folder
 import math
 import operator
 from scipy.stats import itemfreq
-from adaptGMM import pdf
 import ipdb as pdb #pdb.set_trace()
+
+EPS = np.finfo(float).eps
 
 def majorityVote(y_Raw):
     """
@@ -104,7 +106,7 @@ def trainGMM(featureData):
         # calculate the responsibilities:
         responsibilities = np.zeros((int(n_tmp), n_comp))
         for j in range(int(n_tmp)):
-            responsibilities[j,:] = (tmpClf.weights_ * proba[j,:]) / np.sum(tmpClf.weights_ * proba[j,:])
+            responsibilities[j,:] = (tmpClf.weights_ * proba[j,:]) / (np.sum(tmpClf.weights_ * proba[j,:]) + EPS) + EPS
 
         # calculate the posterior probabilities:
         posteriors = responsibilities.sum(axis=0) # shape = n_components
@@ -668,6 +670,27 @@ def addNewClassGMM(prevTrainedGMM, newClassName, newClassData=None):
     updatedGMM = {'clfs': allClfs, 'classesDict': newClassDict}
 
     return updatedGMM
+
+def pdf(data, means, covars):
+    """
+    Calculate Probability Density Function of Gaussian in multiple dimensions. Call this function for each component
+    of the mixture individually
+    @param data:
+    @param means: Means of one component only, shape = n_features
+    @param covars: Covars of one component ony, shape = (n_feature, n_features)
+    @return:
+    """
+    n_features = data.shape[1]
+    n_samples = data.shape[0]
+
+    data = data - np.tile(means,(n_samples,1))
+    data = data.T
+
+    prob = np.sum(np.dot(data.T, linalg.inv(covars)).T * data, axis=0)
+
+    prob = np.exp(-0.5*prob) / float(np.sqrt((2*math.pi) ** n_features * (abs(np.linalg.det(covars)) + EPS)))
+
+    return prob
 
 from classifiers import *
 
