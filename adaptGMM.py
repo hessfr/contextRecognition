@@ -13,14 +13,13 @@ EPS = np.finfo(float).eps
 def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
     """
     Incorporate new (already scaled) data points of a single class into the already existing GMM model
-    @param trainedGMM:
-    @param updatePoints: already scaled
-    param label: Class label of the given feature point.
-    @param nSteps: Number of EM iterations that should be performed. Default value is 100
+    @param trainedGMM: Dictionary containing data of the GMM classifiers.
+    @param updatePoints: Numpy array of new points of the same class, with which the model should be updated. Have to be scaled already
+    param label: Class label of the updatePoints.
+    @param nSteps: Maximum number of EM iterations that should be performed. Default value is 100
     @return: adapted GMM model
     """
-    X = updatePoints[0:2000,:] #updatePoints[0:2,:]
-    print(X.shape)
+    X = updatePoints #updatePoints[0:2,:]
     n_features = X.shape[1]
     n_components = int(trainedGMM["clfs"][0].n_components)
 
@@ -45,11 +44,7 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
 
     converged = False
 
-    # pdb.set_trace()
-
     for i in range(nSteps):
-        # xxx_old and xxx_new refer to the old data where the algorithm was previously trained with and
-        # the new data with which it should be adapted
         """ E-Step: """
         # calculate the probabilities:
         proba = np.empty((n_train_new, n_components))
@@ -62,8 +57,6 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
             responsibilities[j,:] = (weights * proba[j,:]) / (np.sum(weights * proba[j,:]) + EPS) + EPS
 
         posteriors_new = responsibilities.sum(axis=0) # shape = n_components
-
-        # responsibilities_sklearn = newGMM["clfs"][int(label)].predict_proba(X)
 
         """ M-Step: """
         for c in range(n_components):
@@ -80,14 +73,12 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
             tmpCovar = np.zeros((n_features, n_features))
             for j in range(n_train_new):
                 t3 = X[j,:] - means[c,:]
-                tmpCovar = tmpCovar + (np.dot(t3,t3.T) * responsibilities[j,c]) # contains information about the new points
+                tmpCovar = tmpCovar + (np.dot(t3,t3.T) * responsibilities[j,c]) # contains the information about the new points
 
             t4 = old_means[c,:] - means[c,:]
-            t5 = old_covars[c,:] + np.dot(t4,t4.T) # contains information about the means
+            t5 = old_covars[c,:] + np.dot(t4,t4.T) # contains the information about the means
 
             covars[c] = (posteriors_old[c] * t5 + tmpCovar) / (posteriors_old[c] + posteriors_new[c])
-
-            # pdb.set_trace()
 
         """ Stopping criteria: """
         for c in range(n_components):
@@ -108,7 +99,7 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
     if converged == True:
         print("EM algorithm converged after " + str(i+1) + " iterations")
     else:
-        print("EM algorithm not converged after " + str(i+1) + " iterations. Increase nSteps parameter to fix this problem")
+        print("EM algorithm not converged after " + str(i+1) + " iterations. Increase nSteps parameter to fix it")
 
     """ Calculate posterior probabilities for the adapted class and update them in the classifier dict: """
     # calculate the probabilities:
@@ -131,8 +122,6 @@ def adaptGMM(trainedGMM, updatePoints, label, nSteps=100):
     newGMM["clfs"][int(label)].covars_ = covars
     newGMM["clfs"][int(label)].converged_ = converged
 
-    # pdb.set_trace()
-
     return newGMM
 
 
@@ -140,7 +129,7 @@ def pdf(data, means, covars):
     """
     Calculate Probability Density Function of Gaussian in multiple dimensions. Call this function for each component
     of the mixture individually
-    @param data:
+    @param data: Numpy array of the points, shape = (n_samples, n_features)
     @param means: Means of one component only, shape = n_features
     @param covars: Covars of one component ony, shape = (n_feature, n_features)
     @return:
@@ -156,18 +145,6 @@ def pdf(data, means, covars):
     prob = np.exp(-0.5*prob) / np.sqrt((2*math.pi) ** n_features * (abs(np.linalg.det(covars)) + EPS)) # float()
 
     return prob
-
-def reverseDict(oldDict):
-    """
-    Return new array were keys are the values of the old array and the other way around
-    @param oldDict:
-    @return:
-    """
-    newDict = {}
-    for i, j in zip(oldDict.keys(), oldDict.values()):
-        newDict[j] = i
-
-    return newDict
 
 from adaptGMM import *
 
