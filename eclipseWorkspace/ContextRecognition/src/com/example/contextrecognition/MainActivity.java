@@ -9,15 +9,29 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.Spinner;
 
 public class MainActivity extends ActionBarActivity {
 
+	 String[] contextClasses = {"Context Class 1", "Context Class 2", "Context Class 3", 
+			   "Context Class 4", "Define new class"};
+	 
+	 ImageButton changeButton;
+	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        addListenerOnButton();
 
     }
+    
+    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -73,5 +87,23 @@ public class MainActivity extends ActionBarActivity {
         Intent i = new Intent(MainActivity.this, Help.class);
         startActivity(i);
     }
+    
+	public void addListenerOnButton() {
+		 
+		changeButton = (ImageButton) findViewById(R.id.changeButton);
+ 
+		changeButton.setOnClickListener(new OnClickListener() {
+ 
+			@Override
+			public void onClick(View arg0) {
+ 
+				Intent i = new Intent(MainActivity.this, ContextSelection.class);
+		        startActivity(i);
+ 
+			}
+ 
+		});
+ 
+	}
 
 }
