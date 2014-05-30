@@ -1,9 +1,0 @@
-INDEX VERSION 1.126+/home/freddie/contextRecognition/androidProjects/.metadata/.plugins/org.eclipse.jdt.core
-411838713.index
-1445214103.index
-1748008104.index
-258610419.index
-1212939554.index
-552037147.index
-88466224.index
-4212290850.index
