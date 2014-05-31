@@ -3,7 +3,9 @@ package com.example.contextrecognition;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.preference.PreferenceManager;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -21,18 +24,37 @@ public class MainActivity extends ActionBarActivity {
 			   "Context Class 4", "Define new class"};
 	 
 	 ImageButton changeButton;
+	 private static final String TAG = "MainAcitivty";
+	 SharedPreferences mPrefs;
+	 final String welcomeScreenShownPref = "welcomeScreenShown";
 	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        addListenerOnButton();
+	    mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+	    
+	    Boolean welcomeScreenShown = mPrefs.getBoolean(welcomeScreenShownPref, false);
+
+	    if (!welcomeScreenShown) {
+	    	//Open the welcome activity if it hasn't been shown yet
+
+	    	Log.i(TAG, "Welcome screen already shown before, going to MainActivity instead");
+
+	    	SharedPreferences.Editor editor = mPrefs.edit();
+	        editor.putBoolean(welcomeScreenShownPref, true);
+	        editor.commit();
+	    	
+	    	Intent i = new Intent(MainActivity.this, Welcome.class);
+	        startActivity(i);
+	    } 
+	    	
+    	addListenerOnButton();
 
     }
     
     
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         
