@@ -16,7 +16,7 @@ public class Settings extends ActionBarActivity {
 	
 	SeekBar querySeekBar;
 	TextView currentValueTV;
-	private static final int queryDefault = 10;
+	private static final int queryDefault = 10; //TODO: change this to use the value defined in the welcome screen	
 	private static final int queryLimit = 20;
 	
     @Override
