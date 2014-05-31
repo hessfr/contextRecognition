@@ -20,4 +20,9 @@ public class ModelAdaptor {
 		//TODO: this is only a placeholder
 		Log.i(TAG, "incorporateNewClass: " + contextClass);
 	}
+	
+	public void currentClassCorrect() {
+		//TODO: this is only a placeholder
+	    Log.i(TAG, "currentClassCorrect");
+	}
 }

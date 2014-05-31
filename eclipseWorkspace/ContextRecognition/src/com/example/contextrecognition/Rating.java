@@ -1,15 +1,30 @@
 package com.example.contextrecognition;
 
 //import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.content.Intent;
-import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RatingBar;
 
 public class Rating extends ActionBarActivity {
-    @Override
+    
+	Button submitButton;
+	RatingBar ratingBarAccuracy;
+	RatingBar ratingBarUsefulness;
+	EditText feedbackText;
+	final Context context = this;
+	
+	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
@@ -19,6 +34,10 @@ public class Rating extends ActionBarActivity {
  
         // Enabling Up / Back navigation
         actionBar.setDisplayHomeAsUpEnabled(true);
+        
+        addListenerOnButton();
+        
+        
     }
     
     @Override
@@ -60,4 +79,56 @@ public class Rating extends ActionBarActivity {
         Intent i = new Intent(Rating.this, Help.class);
         startActivity(i);
     }
+    
+	public void addListenerOnButton() {
+		 
+		submitButton = (Button) findViewById(R.id.submitButton);
+		ratingBarAccuracy = (RatingBar) findViewById(R.id.ratingBarAccuracy);
+		ratingBarUsefulness = (RatingBar) findViewById(R.id.ratingBarUsefulness);
+		feedbackText = (EditText) findViewById(R.id.feedbackText);
+		
+		submitButton.setOnClickListener(new OnClickListener() {
+ 
+			@Override
+			public void onClick(View arg0) {
+				float accuracyRating = ratingBarAccuracy.getRating();
+				float usefulnessRating = ratingBarUsefulness.getRating();
+				String feedbackString = feedbackText.getText().toString();
+				
+				//TODO: Call method to send feedback here
+				
+				// Show alert dialog to ask for full evaluation
+		  		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+				
+				alertDialogBuilder.setTitle("");
+				alertDialogBuilder.setMessage(R.string.rating_ask_for_evaluation);
+				
+				alertDialogBuilder.setPositiveButton("Sure!", new DialogInterface.OnClickListener() {
+					
+					public void onClick(DialogInterface dialog, int whichButton) {
+
+							//TODO: open new activity for the complete evaluation form
+					  
+					  }
+				});
+				
+				alertDialogBuilder.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
+					
+					  public void onClick(DialogInterface dialog, int whichButton) {
+					    // Canceled
+					  }
+				});
+				
+				// create alert dialog
+				AlertDialog alertDialog = alertDialogBuilder.create();
+				
+				// show it
+				alertDialog.show(); 
+				
+			}
+ 
+		});
+
+ 
+	}
 }
