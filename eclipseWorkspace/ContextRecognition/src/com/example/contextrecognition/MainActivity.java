@@ -57,17 +57,14 @@ public class MainActivity extends ActionBarActivity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        
-        // Inflate the menu; this adds items to the action bar if it is present.
+    	//Create the options entry in the ActionBar
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+    	//Handle ActionBar selections
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             //Go to settings activity
