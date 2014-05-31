@@ -9,10 +9,11 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
 
-public class Welcome extends Activity {
+public class Welcome1 extends Activity {
 	
-	Button button;
-	private static final String TAG = "Welcome";
+	Button nextButton;
+	
+	private static final String TAG = "Welcome1";
 	SharedPreferences mPrefs;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
 
@@ -21,22 +22,22 @@ public class Welcome extends Activity {
 	    super.onCreate(savedInstanceState);
 	    	this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 	    	
-	    	setContentView(R.layout.activity_welcome);
+	    	setContentView(R.layout.activity_welcome1);
 	    	
 	    	addListenerOnButton();
-	    	
 	}
 	
 	public void addListenerOnButton() {
-		 
-		button = (Button) findViewById(R.id.button1);
+		
+		nextButton = (Button) findViewById(R.id.nextButton);
  
-		button.setOnClickListener(new OnClickListener() {
+		nextButton.setOnClickListener(new OnClickListener() {
  
 			@Override
 			public void onClick(View arg0) {
- 
-				Intent i = new Intent(Welcome.this, MainActivity.class);
+				
+				Intent i = new Intent(Welcome1.this, Welcome2.class);
+				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
 		        startActivity(i);
  
 			}

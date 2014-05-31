@@ -47,7 +47,8 @@ public class MainActivity extends ActionBarActivity {
 	        editor.putBoolean(welcomeScreenShownPref, true);
 	        editor.commit();
 	    	
-	    	Intent i = new Intent(MainActivity.this, Welcome.class);
+	    	Intent i = new Intent(MainActivity.this, Welcome1.class);
+	    	i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
 	        startActivity(i);
 	    } 
 	    	
