@@ -1,8 +1,15 @@
 package com.example.contextrecognition;
 
-import android.util.Log;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+
+import android.util.Log;
 
 public class Classifier {
 	private static final String TAG = "Classifier";
@@ -28,26 +35,78 @@ public class Classifier {
 		
 	}
 	
-	public DenseMatrix64F majorityVote(DenseMatrix64F y_in) {
+	public int[] majorityVote(int[] y_in) {
 		Log.d(TAG,"majorityVote");
 		int frameLength = (int) Math.ceil(MAJORITY_WINDOW/WINDOW_LENGTH);
 		
-		int n_frames = (int) Math.ceil(( (double) y_in.numCols) / ((double) frameLength) ); // TODO: check if this is correct for 1D array! 
+		int n_frames = (int) Math.ceil(( (double) y_in.length) / ((double) frameLength) );
 		
-		DenseMatrix64F resArray = new DenseMatrix64F(y_in.numRows);
+		int[] resArray = new int[y_in.length];
 		
 		for(int i=0; i<n_frames; i++) { //TODO: Check if loop conditions correct
-			if (((i+1) * frameLength) < y_in.numCols) {
+			if (((i+1) * frameLength) < y_in.length) {
 				// All except the very last one:
+				
+				// Create temporary array for the current window:
+				int len = ((i+1) * frameLength) - (i * frameLength);
+				int tmpArray[] = new int[len];
+			    System.arraycopy(y_in, (i * frameLength), tmpArray, 0, len); // arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+				
+				// Find most frequent number in array:
+			    int mostFrequent = getMostFrequent(tmpArray);
+				
+				// Fill with most frequent element:
+				Arrays.fill(tmpArray, mostFrequent);
+				
+				// Write into result array:
+				System.arraycopy(tmpArray, 0, resArray, (i * frameLength), len);
 				
 			}
 			
 			else {
 				// The last sequence most likely not exactly 2.0 seconds long:
+				
+				// Create temporary array for the current window:
+				int len = y_in.length - (i * frameLength);
+				int tmpArray[] = new int[len];
+			    System.arraycopy(y_in, (i * frameLength), tmpArray, 0, len); // arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+				
+			    // Find most frequent number in array:
+				int mostFrequent = getMostFrequent(tmpArray);
+				
+				// Fill with most frequent element:
+				Arrays.fill(tmpArray, mostFrequent);
+				
+				// Write into result array:
+				System.arraycopy(tmpArray, 0, resArray, (i * frameLength), len);
+				
 			}
 		}
 		
 		return resArray;
+	}
+	
+	public int getMostFrequent(int[] a)
+	{
+	  int count = 1, tempCount;
+	  int popular = a[0];
+	  int temp = 0;
+	  for (int i = 0; i < (a.length - 1); i++)
+	  {
+	    temp = a[i];
+	    tempCount = 0;
+	    for (int j = 1; j < a.length; j++)
+	    {
+	      if (temp == a[j])
+		tempCount++;
+	    }
+	    if (tempCount > count)
+	    {
+	      popular = temp;
+	      count = tempCount;
+	    }
+	  }
+	  return popular;
 	}
 }
 
