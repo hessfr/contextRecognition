@@ -249,7 +249,7 @@ def logProb(X, weights, means, covars):
     @param covars: Full covariance matrix of the GMM
     @return:
     """
-    X = copy.copy(X) #???
+    X = copy.copy(X)
     n_samples, n_features = X.shape
     n_components = means.shape[0]
     min_covar = 1e-7
@@ -285,10 +285,6 @@ def logProb(X, weights, means, covars):
     final_log_prob = final_log_prob + vmax
 
     return final_log_prob
-
-
-
-
 
 def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt', useMajorityVote=True):
     """
@@ -571,7 +567,6 @@ def confusionMatrix(y_GT, y_pred, classesDict):
     pl.colorbar()
 
     pl.show()
-
 
 def getIndex(timeStamp, windowLength=0.032):
     """
