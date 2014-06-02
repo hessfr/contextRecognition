@@ -1,9 +1,11 @@
 import os
 from os import listdir
 import numpy as np
-from numpy import linalg
+from scipy import linalg
+from numpy import asarray
 import csv
 import pickle
+import json
 from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
@@ -18,6 +20,7 @@ from featureExtraction import FX_Test
 from featureExtraction import FX_Folder
 import math
 import operator
+import copy
 from scipy.stats import itemfreq
 import ipdb as pdb #pdb.set_trace()
 
@@ -138,7 +141,9 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
     """ Compute log-probability for each class for all points: """
     for i in range(n_classes):
-        logLikelihood[i] = trainedGMM['clfs'][i].score(X_test)
+
+        # logLikelihood[i] = trainedGMM['clfs'][i].score(X_test) # uses scikit function
+        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_, trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_) # uses logProb function defined below
 
     """ Select the class with the highest log-probability: """
     y_pred = np.argmax(logLikelihood, 0)
@@ -233,6 +238,57 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
         return y_majVote
     else:
         return y_pred
+
+def logProb(X, weights, means, covars):
+    """
+    Calculate the log probability of multiple points under a GMM represented by the weights, means, covars parameters
+
+    @param X: Numpy array representing the input data. Each row refers to one point
+    @param weights: Component weights
+    @param means: Means
+    @param covars: Full covariance matrix of the GMM
+    @return:
+    """
+    X = copy.copy(X) #???
+    n_samples, n_features = X.shape
+    n_components = means.shape[0]
+    min_covar = 1e-7
+
+    if X.ndim == 1:
+        X = X[:, np.newaxis]
+    if X.size == 0:
+        return np.array([]), np.empty((0, n_components))
+    if X.shape[1] != means.shape[1]:
+        raise ValueError('The shape of X  is not compatible with self')
+
+    log_prob = np.empty((n_samples, n_components))
+
+    for c, (mu, cv) in enumerate(zip(means, covars)):
+        try:
+            cv_chol = linalg.cholesky(cv, lower=True)
+        except linalg.LinAlgError:
+            # reinitialize component, because it might be stuck with too few observations
+            cv_chol = linalg.cholesky(cv + min_covar * np.eye(n_features),lower=True)
+
+        cv_log_det = 2 * np.sum(np.log(np.diagonal(cv_chol)))
+
+        cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T
+
+        log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det)
+
+    tmp_log_prob = (log_prob + np.log(weights))
+
+    # compute sum in log domain:
+    tmpArray = np.rollaxis(tmp_log_prob, axis=1)
+    vmax = tmpArray.max(axis=0)
+    final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
+    final_log_prob = final_log_prob + vmax
+
+    return final_log_prob
+
+
+
+
 
 def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt', useMajorityVote=True):
     """
