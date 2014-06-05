@@ -86,6 +86,9 @@ def trainGMM(featureData):
 
     clfs = []
     posteriorList = []
+
+    logLikList = []
+
  
     for i in range(n_classes):
         tmpClf = GMM(n_components=n_comp, covariance_type='full', n_iter=1000)
@@ -111,16 +114,21 @@ def trainGMM(featureData):
         for j in range(int(n_tmp)):
             responsibilities[j,:] = (tmpClf.weights_ * proba[j,:]) / (np.sum(tmpClf.weights_ * proba[j,:]) + EPS) + EPS
 
+        F = np.dot(proba,tmpClf.weights_[np.newaxis].T)
+        logLik = np.mean(np.log(F))
+
+        logLikList.append(logLik)
+
         # calculate the posterior probabilities:
         posteriors = responsibilities.sum(axis=0) # shape = n_components
 
         posteriorList.append(posteriors)
 
-        #pdb.set_trace()
+    # pdb.set_trace()
 
     trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'posteriors': posteriorList, 'scaler': scaler}
 
-    return trainedGMM
+    return logLikList, trainedGMM
     
 def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
     """
@@ -415,14 +423,14 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     precisions = []
     for i in range(n_classes):
         tmpPrecision = cm[i,i] / float(colSum[i])
-        print("Precision " + str(sortedLabels[i]) + ": " + str(tmpPrecision))
+        # print("Precision " + str(sortedLabels[i]) + ": " + str(tmpPrecision))
         precisions.append(tmpPrecision)
 
     """ Calculate recall: """
     recalls = []
     for i in range(n_classes):
         recalls.append(normalized[i][i])
-        print("Recall " + str(sortedLabels[i]) + ": " + str(normalized[i][i]))
+        # print("Recall " + str(sortedLabels[i]) + ": " + str(normalized[i][i]))
 
     """ Calculate F1-score: """
     F1s = []

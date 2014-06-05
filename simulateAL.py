@@ -28,7 +28,7 @@ def defineThresholdDict():
 
 
     #values for top 10 threshold for each class:
-    _thresholdDict["Conversation"]["entropy"] = 1.097963
+    _thresholdDict["Conversation"]["entropy"] = 0.1 #1.097963
     _thresholdDict["Conversation"]["margin"] = 1.2e-05
     _thresholdDict["Conversation"]["percentDiff"] = 2.8e-05
 
@@ -100,55 +100,58 @@ def simulateAL(trainedGMM, testFeatureData):
     """ Simulate actual behavior by reading in points one by one: """
     defineThresholdDict()
 
-    for i in range(468530, simFeatures.shape[0]): ###################################
+    for i in range(simFeatures.shape[0]): ###################################
         currentPoint = simFeatures[i,:]
         currentLabel = simLabels[i]
 
-        if numQueriesPerClass[int(currentLabel)] <= 3: # to test what happens if we allow only certain number of queries per class #TODO: remove again later!!
-            if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="entropy"):
-                print("sending query for " + str(revClassesDict[currentLabel]))
+        # if numQueriesPerClass[int(currentLabel)] <= 3: # to test what happens if we allow only certain number of queries per class #TODO: remove again later!!
+        if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="entropy"):
+            print("sending query for " + str(revClassesDict[currentLabel]))
 
-                #set the current label for the last N points:
-                N = 1875 # = 1 minute
-                if i > N:
-                    # updatePoints = simFeatures[i-N:i,:]
-                    # labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
+            #set the current label for the last N points:
+            N = 1875 # = 1 minute
+            if i > N:
+                # updatePoints = simFeatures[i-N:i,:]
+                # labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
 
-                    """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
-                    tmpFeatures = simFeatures[i-N:i,:]
-                    tmpLabels = simLabels[i-N:i]
-                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
-                    labelAccuracy.append(1)
+                """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
+                tmpFeatures = simFeatures[i-N:i,:]
+                tmpLabels = simLabels[i-N:i]
+                updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                labelAccuracy.append(1)
 
-                else:
-                    # updatePoints = simFeatures[0:i,:]
-                    # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
+                # if currentLabel == 0:
+                #     pdb.set_trace()
 
-                    """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
-                    tmpFeatures = simFeatures[0:i,:]
-                    tmpLabels = simLabels[0:i]
-                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
-                    labelAccuracy.append(1)
 
-                """ to test what happens if we allow only certain number of queries per class: """  #TODO: remove again later!!
-                numQueriesPerClass[int(currentLabel)] += 1
+            else:
+                # updatePoints = simFeatures[0:i,:]
+                # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
 
-                updatePointsList.append(updatePoints)
-                givenLabels.append(currentLabel)
+                """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
+                tmpFeatures = simFeatures[0:i,:]
+                tmpLabels = simLabels[0:i]
+                updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                labelAccuracy.append(1)
 
-                currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel, nSteps=500)
-                allGMM.append(currentGMM)
-                timestamps.append(i*0.032)
 
-                #y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
+
+            """ to test what happens if we allow only certain number of queries per class: """  #TODO: remove again later!!
+            numQueriesPerClass[int(currentLabel)] += 1
+
+            updatePointsList.append(updatePoints)
+            givenLabels.append(currentLabel)
+
+            #currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel, nSteps=500)
+            allGMM.append(currentGMM)
+            timestamps.append(i*0.032)
+
+            #y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
 
         #for testing:
-        if len(allGMM) == 3:
-            print("Stopped loop (for testing)")
-
-            pdb.set_trace() # save updatePointsList, givenLabels and allGMM list
-
-            break
+        # if len(allGMM) == 3:
+        #     print("Stopped loop (for testing)")
+        #     break
 
     """ Evaluate performance of all GMMs: """
     print("Evaluating performance of classifiers:")
@@ -175,6 +178,7 @@ def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
     @return: True is query should be send, False if not
     """
     point = np.reshape(featurePoint, (1,12)) #reshape into 2D array that it is compatible with all methods
+
     n_classes = len(trainedGMM['clfs'])
     logLikelihood = np.zeros(n_classes)
     """ Compute (log-)probability for each class for the current point: """
@@ -308,20 +312,20 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     precisions = []
     for i in range(n_classes):
         tmpPrecision = cm[i,i] / float(colSum[i])
-        print("Precision " + str(sortedLabels[i]) + ": " + str(tmpPrecision))
+        # print("Precision " + str(sortedLabels[i]) + ": " + str(tmpPrecision))
         precisions.append(tmpPrecision)
 
     """ Calculate recall: """
     recalls = []
     for i in range(n_classes):
         recalls.append(normCM[i][i])
-        print("Recall " + str(sortedLabels[i]) + ": " + str(normCM[i][i]))
+        # print("Recall " + str(sortedLabels[i]) + ": " + str(normCM[i][i]))
 
     """ Calculate F1-score: """
     F1s = {}
     for i in range(n_classes):
         tmpF1 = 2 * (precisions[i] * recalls[i]) / float(precisions[i] + recalls[i])
-        print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
+        # print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
         F1s[sortedLabels[i]] = tmpF1
 
     # """ Count how often each class was predicted: """

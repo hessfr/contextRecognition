@@ -1,11 +1,6 @@
 package com.example.contextrecognition;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.ejml.data.DenseMatrix64F;
 
@@ -32,7 +27,6 @@ public class Classifier {
 		Log.d(TAG,"logProb");
 		
 		
-		
 	}
 	
 	public int[] majorityVote(int[] y_in) {
@@ -43,7 +37,7 @@ public class Classifier {
 		
 		int[] resArray = new int[y_in.length];
 		
-		for(int i=0; i<n_frames; i++) { //TODO: Check if loop conditions correct
+		for(int i=0; i<n_frames; i++) {
 			if (((i+1) * frameLength) < y_in.length) {
 				// All except the very last one:
 				
@@ -79,7 +73,6 @@ public class Classifier {
 				
 				// Write into result array:
 				System.arraycopy(tmpArray, 0, resArray, (i * frameLength), len);
-				
 			}
 		}
 		
