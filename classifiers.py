@@ -260,6 +260,7 @@ def logProb(X, weights, means, covars):
     X = copy.copy(X)
     n_samples, n_features = X.shape
     n_components = means.shape[0]
+
     min_covar = 1e-7
 
     if X.ndim == 1:

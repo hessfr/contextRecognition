@@ -1,6 +1,7 @@
 import numpy as np
 #from numpy import linalg #xxxxxxxxxxx check if it's still needed
 from scipy import linalg
+from scipy.stats import f
 import pickle
 import copy
 import math
@@ -8,6 +9,10 @@ import matplotlib.pyplot as pl
 from sklearn.mixture import GMM
 from featureExtraction import FX_multiFolders
 import ipdb as pdb #pdb.set_trace()
+
+# tGMM = pickle.load(open("tGMM2.p","rb"))
+# updatePoints = pickle.load(open("updatePointsConv0.p","rb"))
+# realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 
 EPS = np.finfo(float).eps
 
@@ -21,9 +26,15 @@ def adaptGMM(trainedGMM, updatePoints, label):
     @return: adapted GMM model
     """
     X = updatePoints #updatePoints[0:2,:]
+    n_novel = X.shape[0]
     label = int(label)
     n_features = X.shape[1]
     n_components_old = int(trainedGMM["clfs"][label].n_components)
+    oldGMM = copy.deepcopy(trainedGMM["clfs"][label])
+
+    #n_old = 34275 # conv # TODO: save number of training points in tGMM dict! (and update later)
+    n_old = 57567 # office
+    #n_old = 125351 # train
 
 
     """ Estimate number of components in the new data using BIC: """
@@ -39,67 +50,155 @@ def adaptGMM(trainedGMM, updatePoints, label):
     # select that number of components that resulted in the best (lowest) BIC:
     val, n_components_new = min((val, idx) for (idx, val) in enumerate(bicList))
     n_components_new += 1
-    print("Optimal number of components according to BIC: " + str(n_components_new))
+    print("Optimal number of components according to BIC criteria: " + str(n_components_new))
 
     """ Perform EM algorithm on the new data: """
     novelGMM = GMM(n_components=n_components_new, covariance_type='full', n_iter=1000)
     novelGMM.fit(X)
 
-    likelihoods = np.zeros((n_components_new, X.shape[0]))
     """ Assign novel points to component it most likely belongs to: """
+    likelihoods = np.zeros((n_components_new, n_novel))
     for k in range(n_components_new):
-        likelihoods[k] = pdf(X, novelGMM.means_[k,:], novelGMM.covars_[k])
+        likelihoods[k] = pdf(X, novelGMM.means_[k,:], novelGMM.covars_[k,:,:])
     pointComponents = np.argmax(likelihoods, 0) # Indicates for each point the component it most likely belongs to
 
-    Dk = [] # First element is numpy array with all data points that are assigned to first components, and so on...
+    Dk = [] # First element is numpy array with all data points that are assigned to first component (of the novel model), and so on...
+            # use index for novel points (k) to get data from this list
+    Mk = [] # Contains number of points for each array in Dk
+
     for k in range(n_components_new):
         iTmp = (pointComponents == k)
         Dk.append(X[iTmp])
+        Mk.append(X[iTmp].shape[0])
+
+
 
     """ Test covariance and mean equality: """
     mapping = [-1] * 16 # Mapping from OLD to NOVEL (!) components, if old components is not mapped to novel one, the value equals -1.
                         # Elements initialized to -1. mapping[3] = 5 means that old component 3 is equal to new component 5.
+
     for k in range(n_components_new):
         for j in range(n_components_old):
-            if covarTest() == True:
-                if meanTest() == True:
+            pass
+            if covarTest(Dk[k], oldGMM.covars_[j]) == True:
+                if meanTest(Dk[k], oldGMM.means_[j]) == True:
                     mapping[j] = k
                     #TODO: compute log-likelihood of novel points of that new component under component j of old model. ?????
 
-    for el in mapping:
-        if el != -1:
-            mergeComponents()
+    new_model = [] # List containing parameters (weight, means, covars) for each component
+
+    # pdb.set_trace()
+
+    j = 0
+    for k in mapping:
+        if k != -1:
+            tmpComponent = mergeComponents(n_old, n_novel, Mk[k], oldGMM.weights_[j], novelGMM.weights_[k], oldGMM.means_[j], novelGMM.means_[k], oldGMM.covars_[j], novelGMM.covars_[k])
+            print("Merging components")
+            new_model.append(tmpComponent)
         else:
-            addHistoricalComponent()
+            tmpComponent = addHistoricalComponent(n_old, n_novel, oldGMM.weights_[j], oldGMM.means_[j], oldGMM.covars_[j])
+            # print("Adding historical components")
+            new_model.append(tmpComponent)
+        j += 1
 
     for n in range(n_components_new):
         if n not in mapping:
-            addNovelComponent()
+            tmpComponent = addNovelComponent(n_old, n_novel, Mk[n], novelGMM.means_[n], novelGMM.covars_[n])
+            # tmpComponent = addNovelComponent(n_old, n_novel, Mk[-1], novelGMM.means_[-1], novelGMM.covars_[-1]) # -> leads to good result in 50% of all cases
+            # print("Adding novel components")
+            new_model.append(tmpComponent)
+
+    finalGMM = copy.deepcopy(trainedGMM)
+
+
+    finalGMM["clfs"][label] = GMM(n_components=len(new_model), covariance_type='full')
+    dummy = np.random.random((100,12))
+    finalGMM["clfs"][label].fit(dummy)
+
+
+    for i in range(len(new_model)):
+        finalGMM["clfs"][label].weights_[i] = new_model[i][0]
+        finalGMM["clfs"][label].means_[i] = new_model[i][1]
+        finalGMM["clfs"][label].covars_[i] = new_model[i][2]
+
+    # pdb.set_trace()
+
+    return finalGMM
 
 
 
-
-
-
-
-
-def covarTest():
+def covarTest(data, covars_old):
     """
     Calculate W statistic to determine if both components have equal covariance
 
+    @param covars_old: old covariance matrix for one component, shape: (n_features, n_features)
+
     @return: True if covars are equal, False if not
     """
 
-    return True
+    return True #TODO: xxxxxxxx
 
-def meanTest():
+    X = data
+    n_samples = data.shape[0]
+    n_features = data.shape[1]
+    id = np.identity(n_features)
+
+    L0 = linalg.cholesky(covars_old, lower=True) # shape = (n_features, n_features)
+    L0inv = linalg.inv(L0)
+
+
+    Y = np.zeros((n_samples, n_features))
+
+    for i in range(n_samples):
+        Y[i,:] = np.dot(L0inv, X[i,:])
+
+    Sy = np.cov(Y, rowvar=0) # if rowvar = 0, each row represents an observation
+
+    w1 = np.trace(np.dot((Sy-id),(Sy-id))) / float(n_features)
+    w2 = ((np.trace(Sy) / float(n_features)) ** 2) * n_features/float(n_samples)
+    w3 = n_features / float(n_samples)
+
+    W = w1 - w2 + w3 # W statistic
+
+    testStatistic = (n_samples * W * n_features) / 2.0
+
+    # TODO: check if testStatistic has asymptotic chi square distribution
+
+    # pdb.set_trace()
+
+    return False #TODO: xxxxxxxx
+
+def meanTest(data, means_old):
     """
     Use Hotelling T-squared test to determine if both components have equal means
 
+    @param means_old: old mean values for one component, shape: (n_features,)
+
     @return: True if covars are equal, False if not
     """
+    X = data
+    n_samples = data.shape[0]
+    n_features = data.shape[1]
 
-    return True
+    S = np.cov(X, rowvar=0) # if rowvar = 0, each row represents an observation
+    Sinv = linalg.inv(S)
+
+    m = X.mean(axis=0) - means_old
+    T_squared = n_samples * np.dot(np.dot(m.T, Sinv), m)
+
+    test_statistic = ((n_samples - n_features) * T_squared) / float(n_features*(n_samples - 1))
+
+    alpha = 0.05
+    threshold = ((n_samples-1) * n_features) / float(n_samples - n_features) * f.ppf((1-alpha), n_features, (n_samples - n_features))
+
+    # pdb.set_trace()
+
+    #TODO: check if that works properly (only possible after the covariance test passed, as this is the assumption of Hotelling)
+
+    if test_statistic <= threshold:
+        return True
+    else:
+        return False
 
 def mergeComponents(n_old, n_novel, n_comp, weight_old, weight_novel, means_old, means_novel, covars_old, covars_novel):
     """
@@ -119,23 +218,40 @@ def mergeComponents(n_old, n_novel, n_comp, weight_old, weight_novel, means_old,
 
     means = (n_old * weight_old * means_old + n_comp * means_old) / float(n_old * weight_old + n_comp)
 
-    return True
+    #covars:
+    c1 = (n_old * weight_old * covars_old + n_comp * covars_novel) / float(n_old * weight_old + n_comp)
+    c2 = (n_old * weight_old * np.dot(means_old,means_old.T) + n_comp * np.dot(means_novel, means_novel.T)) / float(n_old * weight_old + n_comp) #TODO: check on richtig herum transponiert
+    c3 = np.dot(means,means.T)
+    covars = c1 + c2 + c3
 
-def addHistoricalComponent():
+    weight = (n_old * weight_old + n_comp) / float(n_old + n_novel)
+
+    return [weight, means, covars]
+
+def addHistoricalComponent(n_old, n_novel, weight_old, means_old, covars_old):
     """
     Add mixture component mixture component from the previous GMM. Use equation (10)
 
 
     """
-    pass
 
-def addNovelComponent():
+    weight = (n_old * weight_old) / float(n_old + n_novel)
+
+    return [weight, means_old, covars_old]
+
+def addNovelComponent(n_old, n_novel, n_comp, means_novel, covars_novel):
     """
     Add mixture component mixture component from the novel GMM. Use equation (9)
 
 
     """
-    pass
+    weight = n_comp / float(n_old + n_novel)
+
+    # print(n_comp)
+    # print(means_novel.sum())
+    # print(covars_novel.sum())
+
+    return [weight, means_novel, covars_novel]
 
 
 def pdf(data, means, covars):
@@ -147,8 +263,8 @@ def pdf(data, means, covars):
     @param covars: Covars of one component ony, shape = (n_feature, n_features)
     @return:
     """
-    n_features = data.shape[1]
     n_samples = data.shape[0]
+    n_features = data.shape[1]
 
     data = data - np.tile(means,(n_samples,1))
     data = data.T

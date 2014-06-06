@@ -28,7 +28,7 @@ def defineThresholdDict():
 
 
     #values for top 10 threshold for each class:
-    _thresholdDict["Conversation"]["entropy"] = 0.1 #1.097963
+    _thresholdDict["Conversation"]["entropy"] = 1.097963
     _thresholdDict["Conversation"]["margin"] = 1.2e-05
     _thresholdDict["Conversation"]["percentDiff"] = 2.8e-05
 
@@ -36,7 +36,7 @@ def defineThresholdDict():
     _thresholdDict["Office"]["margin"] = 4.5e-05
     _thresholdDict["Office"]["percentDiff"] = 0.000108
 
-    _thresholdDict["TrainInside"]["entropy"] = 1.098202
+    _thresholdDict["TrainInside"]["entropy"] = 0.1 # 1.098202
     _thresholdDict["TrainInside"]["margin"] = 1.9e-05
     _thresholdDict["TrainInside"]["percentDiff"] = 4e-05
 
@@ -100,7 +100,10 @@ def simulateAL(trainedGMM, testFeatureData):
     """ Simulate actual behavior by reading in points one by one: """
     defineThresholdDict()
 
-    for i in range(simFeatures.shape[0]): ###################################
+    # print(simFeatures.shape[0])
+    # to get Train samples, start with 448500
+
+    for i in range(300000,simFeatures.shape[0]): ###################################
         currentPoint = simFeatures[i,:]
         currentLabel = simLabels[i]
 
@@ -121,7 +124,8 @@ def simulateAL(trainedGMM, testFeatureData):
                 labelAccuracy.append(1)
 
                 # if currentLabel == 0:
-                #     pdb.set_trace()
+                #     if updatePoints.shape[0] > 1000:
+                #         pdb.set_trace()
 
 
             else:
@@ -143,7 +147,7 @@ def simulateAL(trainedGMM, testFeatureData):
             givenLabels.append(currentLabel)
 
             #currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel, nSteps=500)
-            allGMM.append(currentGMM)
+            #allGMM.append(currentGMM)
             timestamps.append(i*0.032)
 
             #y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
