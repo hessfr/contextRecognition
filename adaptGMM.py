@@ -1,7 +1,7 @@
 import numpy as np
-#from numpy import linalg #xxxxxxxxxxx check if it's still needed
 from scipy import linalg
 from scipy.stats import f
+from scipy.stats import chi2
 import pickle
 import copy
 import math
@@ -15,6 +15,8 @@ import ipdb as pdb #pdb.set_trace()
 # realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 
 EPS = np.finfo(float).eps
+
+# tmpList = []
 
 def adaptGMM(trainedGMM, updatePoints, label):
     """
@@ -31,6 +33,8 @@ def adaptGMM(trainedGMM, updatePoints, label):
     n_features = X.shape[1]
     n_components_old = int(trainedGMM["clfs"][label].n_components)
     oldGMM = copy.deepcopy(trainedGMM["clfs"][label])
+    mergedComp = 0
+    addedComp = 0
 
     #n_old = 34275 # conv # TODO: save number of training points in tGMM dict! (and update later)
     n_old = 57567 # office
@@ -74,52 +78,68 @@ def adaptGMM(trainedGMM, updatePoints, label):
 
 
     """ Test covariance and mean equality: """
-    mapping = [-1] * 16 # Mapping from OLD to NOVEL (!) components, if old components is not mapped to novel one, the value equals -1.
+    mapping = [-1] * n_components_old # Mapping from OLD to NOVEL (!) components, if old components is not mapped to novel one, the value equals -1.
                         # Elements initialized to -1. mapping[3] = 5 means that old component 3 is equal to new component 5.
 
     for k in range(n_components_new):
         for j in range(n_components_old):
-            pass
+            # print("Old comp: " + str(j) + " new comp: " + str(k))
             if covarTest(Dk[k], oldGMM.covars_[j]) == True:
                 if meanTest(Dk[k], oldGMM.means_[j]) == True:
                     mapping[j] = k
-                    #TODO: compute log-likelihood of novel points of that new component under component j of old model. ?????
+                    #TODO: compute log-likelihood of novel points of that new component under component j of old model.
 
     new_model = [] # List containing parameters (weight, means, covars) for each component
 
     # pdb.set_trace()
 
+    """ Compute components: """
     j = 0
     for k in mapping:
         if k != -1:
             tmpComponent = mergeComponents(n_old, n_novel, Mk[k], oldGMM.weights_[j], novelGMM.weights_[k], oldGMM.means_[j], novelGMM.means_[k], oldGMM.covars_[j], novelGMM.covars_[k])
             print("Merging components")
+            mergedComp += 1
             new_model.append(tmpComponent)
         else:
             tmpComponent = addHistoricalComponent(n_old, n_novel, oldGMM.weights_[j], oldGMM.means_[j], oldGMM.covars_[j])
-            # print("Adding historical components")
             new_model.append(tmpComponent)
         j += 1
 
     for n in range(n_components_new):
         if n not in mapping:
             tmpComponent = addNovelComponent(n_old, n_novel, Mk[n], novelGMM.means_[n], novelGMM.covars_[n])
-            # tmpComponent = addNovelComponent(n_old, n_novel, Mk[-1], novelGMM.means_[-1], novelGMM.covars_[-1]) # -> leads to good result in 50% of all cases
-            # print("Adding novel components")
+            addedComp += 1
             new_model.append(tmpComponent)
 
+    """ Merge statistically equivalent components: """
+    final_model = [] #
+
+    for el1 in new_model:
+            for el2 in new_model:
+                pass
+                #TODO: implement function to check if covars / means are equivalent using a "similar strategy". Function need to have 2 covars matrices as input instead of points...
+
+
+
+    """ Create GMM object that should be return: """
     finalGMM = copy.deepcopy(trainedGMM)
 
 
     finalGMM["clfs"][label] = GMM(n_components=len(new_model), covariance_type='full')
     dummy = np.random.random((100,12))
-    finalGMM["clfs"][label].fit(dummy)
+    finalGMM["clfs"][label].fit(dummy) # workaround, as sklearn requires that .fit is called before using this GMM. All values are overwritten later anyway
 
 
     for i in range(len(new_model)):
         finalGMM["clfs"][label].weights_[i] = new_model[i][0]
         finalGMM["clfs"][label].means_[i] = new_model[i][1]
         finalGMM["clfs"][label].covars_[i] = new_model[i][2]
+
+    print("Model adapted: new model has " + str(finalGMM["clfs"][label].n_components) +
+          " component(s). " + str(mergedComp) + " component(s) merged, " + str(addedComp) + " component(s) added.")
+
+
 
     # pdb.set_trace()
 
@@ -136,8 +156,6 @@ def covarTest(data, covars_old):
     @return: True if covars are equal, False if not
     """
 
-    return True #TODO: xxxxxxxx
-
     X = data
     n_samples = data.shape[0]
     n_features = data.shape[1]
@@ -152,21 +170,35 @@ def covarTest(data, covars_old):
     for i in range(n_samples):
         Y[i,:] = np.dot(L0inv, X[i,:])
 
+    # pdb.set_trace()
+
     Sy = np.cov(Y, rowvar=0) # if rowvar = 0, each row represents an observation
 
     w1 = np.trace(np.dot((Sy-id),(Sy-id))) / float(n_features)
-    w2 = ((np.trace(Sy) / float(n_features)) ** 2) * n_features/float(n_samples)
+    w2 = (n_features/float(n_samples)) * ((np.trace(Sy) / float(n_features)) ** 2)
     w3 = n_features / float(n_samples)
 
     W = w1 - w2 + w3 # W statistic
 
-    testStatistic = (n_samples * W * n_features) / 2.0
+    test_statistic = (n_samples * W * n_features) / 2.0
 
-    # TODO: check if testStatistic has asymptotic chi square distribution
+    alphaPercentile = 0.05
+    threshold = chi2.ppf(alphaPercentile, (0.5 * (n_features * (n_features + 1))))
+    # 0.05 -> lower threshold / 0.95 -> higher threshold
+
+    print(str(test_statistic) + " - threshold: " + str(threshold))
 
     # pdb.set_trace()
 
-    return False #TODO: xxxxxxxx
+    # return True
+
+    # tmpList.append(test_statistic)
+
+    if test_statistic <= threshold:
+        print("Covars equal")
+        return True
+    else:
+        return False
 
 def meanTest(data, means_old):
     """
@@ -188,14 +220,14 @@ def meanTest(data, means_old):
 
     test_statistic = ((n_samples - n_features) * T_squared) / float(n_features*(n_samples - 1))
 
-    alpha = 0.05
-    threshold = ((n_samples-1) * n_features) / float(n_samples - n_features) * f.ppf((1-alpha), n_features, (n_samples - n_features))
+    alphaPercentile = 0.05
+    threshold = f.ppf(alphaPercentile, n_features, (n_samples - n_features))
+    # f.ppf returns the k-percentile of the f-distribution
 
-    # pdb.set_trace()
-
-    #TODO: check if that works properly (only possible after the covariance test passed, as this is the assumption of Hotelling)
+    print(str(test_statistic) + " - threshold: " + str(threshold))
 
     if test_statistic <= threshold:
+        print("Means equal")
         return True
     else:
         return False
@@ -252,7 +284,6 @@ def addNovelComponent(n_old, n_novel, n_comp, means_novel, covars_novel):
     # print(covars_novel.sum())
 
     return [weight, means_novel, covars_novel]
-
 
 def pdf(data, means, covars):
     """
@@ -480,6 +511,7 @@ def adaptGMM_OLD(trainedGMM, updatePoints, label, nSteps=100):
     newGMM["clfs"][int(label)].converged_ = converged
 
     return logLikList, newGMM
+
 
 from adaptGMM import *
 
