@@ -32,12 +32,15 @@ def adaptGMM(trainedGMM, updatePoints, label):
     label = int(label)
     n_features = X.shape[1]
     n_components_old = int(trainedGMM["clfs"][label].n_components)
+    n_old = trainedGMM["n_train"][label]
+
     oldGMM = copy.deepcopy(trainedGMM["clfs"][label])
+
     mergedComp = 0
     addedComp = 0
 
     #n_old = 34275 # conv # TODO: save number of training points in tGMM dict! (and update later)
-    n_old = 57567 # office
+    # n_old = 57567 # office
     #n_old = 125351 # train
 
 
@@ -54,7 +57,7 @@ def adaptGMM(trainedGMM, updatePoints, label):
     # select that number of components that resulted in the best (lowest) BIC:
     val, n_components_new = min((val, idx) for (idx, val) in enumerate(bicList))
     n_components_new += 1
-    print("Optimal number of components according to BIC criteria: " + str(n_components_new))
+    # print("Optimal number of components according to BIC criteria: " + str(n_components_new))
 
     """ Perform EM algorithm on the new data: """
     novelGMM = GMM(n_components=n_components_new, covariance_type='full', n_iter=1000)
@@ -98,7 +101,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
     for k in mapping:
         if k != -1:
             tmpComponent = mergeComponents(n_old, n_novel, Mk[k], oldGMM.weights_[j], novelGMM.weights_[k], oldGMM.means_[j], novelGMM.means_[k], oldGMM.covars_[j], novelGMM.covars_[k])
-            print("Merging components")
             mergedComp += 1
             new_model.append(tmpComponent)
         else:
@@ -121,7 +123,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
                 #TODO: implement function to check if covars / means are equivalent using a "similar strategy". Function need to have 2 covars matrices as input instead of points...
 
 
-
     """ Create GMM object that should be return: """
     finalGMM = copy.deepcopy(trainedGMM)
 
@@ -135,6 +136,9 @@ def adaptGMM(trainedGMM, updatePoints, label):
         finalGMM["clfs"][label].weights_[i] = new_model[i][0]
         finalGMM["clfs"][label].means_[i] = new_model[i][1]
         finalGMM["clfs"][label].covars_[i] = new_model[i][2]
+        finalGMM["n_train"][label] = n_old + n_novel
+
+    print(finalGMM["n_train"][label])
 
     print("Model adapted: new model has " + str(finalGMM["clfs"][label].n_components) +
           " component(s). " + str(mergedComp) + " component(s) merged, " + str(addedComp) + " component(s) added.")
@@ -186,7 +190,7 @@ def covarTest(data, covars_old):
     threshold = chi2.ppf(alphaPercentile, (0.5 * (n_features * (n_features + 1))))
     # 0.05 -> lower threshold / 0.95 -> higher threshold
 
-    print(str(test_statistic) + " - threshold: " + str(threshold))
+    # print(str(test_statistic) + " - threshold: " + str(threshold))
 
     # pdb.set_trace()
 
@@ -195,7 +199,7 @@ def covarTest(data, covars_old):
     # tmpList.append(test_statistic)
 
     if test_statistic <= threshold:
-        print("Covars equal")
+        print("Covariance test passed")
         return True
     else:
         return False
@@ -224,10 +228,10 @@ def meanTest(data, means_old):
     threshold = f.ppf(alphaPercentile, n_features, (n_samples - n_features))
     # f.ppf returns the k-percentile of the f-distribution
 
-    print(str(test_statistic) + " - threshold: " + str(threshold))
+    # print(str(test_statistic) + " - threshold: " + str(threshold))
 
     if test_statistic <= threshold:
-        print("Means equal")
+        print("Mean test passed")
         return True
     else:
         return False

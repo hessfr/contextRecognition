@@ -85,9 +85,7 @@ def trainGMM(featureData):
     print(str(n_classes) + " different classes")
 
     clfs = []
-    posteriorList = []
-
-    logLikList = []
+    n_train_list = []
 
  
     for i in range(n_classes):
@@ -104,31 +102,15 @@ def trainGMM(featureData):
         tmpClf.fit(tmpTrain)
         clfs.append(tmpClf)
 
-        """ Calculate posterior probabilities (for each component), as we need to know them to adapt the model later: """
-        proba = np.zeros((int(n_tmp), n_comp))
-        for c in range(n_comp):
-            proba[:,c] = pdf(tmpTrain, tmpClf.means_[c,:], tmpClf.covars_[c])
+        n_train_list.append(n_tmp)
 
-        # calculate the responsibilities:
-        responsibilities = np.zeros((int(n_tmp), n_comp))
-        for j in range(int(n_tmp)):
-            responsibilities[j,:] = (tmpClf.weights_ * proba[j,:]) / (np.sum(tmpClf.weights_ * proba[j,:]) + EPS) + EPS
-
-        F = np.dot(proba,tmpClf.weights_[np.newaxis].T)
-        logLik = np.mean(np.log(F))
-
-        logLikList.append(logLik)
-
-        # calculate the posterior probabilities:
-        posteriors = responsibilities.sum(axis=0) # shape = n_components
-
-        posteriorList.append(posteriors)
+        print(n_train_list[-1])
 
     # pdb.set_trace()
 
-    trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'posteriors': posteriorList, 'scaler': scaler}
+    trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'n_train': n_train_list, 'scaler': scaler}
 
-    return logLikList, trainedGMM
+    return trainedGMM
     
 def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
     """

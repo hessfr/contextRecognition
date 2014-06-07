@@ -91,8 +91,6 @@ def simulateAL(trainedGMM, testFeatureData):
     timestamps = [] #time when the query was sent on the simulation data set -> only half the length of the complete data set
     timestamps.append(0)
 
-    numQueriesPerClass = np.zeros(3)  #TODO: remove again later!!
-
     updatePointsList = []
 
     revClassesDict = reverseDict(trainedGMM["classesDict"])
@@ -103,59 +101,51 @@ def simulateAL(trainedGMM, testFeatureData):
     # print(simFeatures.shape[0])
     # to get Train samples, start with 448500
 
-    for i in range(300000,simFeatures.shape[0]): ###################################
+    for i in range(simFeatures.shape[0]):
         currentPoint = simFeatures[i,:]
         currentLabel = simLabels[i]
 
-        # if numQueriesPerClass[int(currentLabel)] <= 3: # to test what happens if we allow only certain number of queries per class #TODO: remove again later!!
         if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="entropy"):
             print("sending query for " + str(revClassesDict[currentLabel]))
 
-            #set the current label for the last N points:
-            N = 1875 # = 1 minute
-            if i > N:
-                # updatePoints = simFeatures[i-N:i,:]
-                # labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
+            if str(revClassesDict[currentLabel]) != "Conversation": #TODO: xxxxxxxxxxxxxxxxxxxxxxx
+                #set the current label for the last N points:
+                N = 1875 # = 1 minute
+                if i > N:
+                    # updatePoints = simFeatures[i-N:i,:]
+                    # labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
 
-                """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
-                tmpFeatures = simFeatures[i-N:i,:]
-                tmpLabels = simLabels[i-N:i]
-                updatePoints = tmpFeatures[tmpLabels == currentLabel]
-                labelAccuracy.append(1)
+                    """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
+                    tmpFeatures = simFeatures[i-N:i,:]
+                    tmpLabels = simLabels[i-N:i]
+                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                    labelAccuracy.append(1)
 
-                # if currentLabel == 0:
-                #     if updatePoints.shape[0] > 1000:
-                #         pdb.set_trace()
+                else:
+                    # updatePoints = simFeatures[0:i,:]
+                    # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
 
+                    """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
+                    tmpFeatures = simFeatures[0:i,:]
+                    tmpLabels = simLabels[0:i]
+                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                    labelAccuracy.append(1)
 
+                updatePointsList.append(updatePoints)
+                givenLabels.append(currentLabel)
+
+                currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel)
+                allGMM.append(currentGMM)
+                timestamps.append(i*0.032)
+
+                #y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
             else:
-                # updatePoints = simFeatures[0:i,:]
-                # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
+                print("Query for conversation ignored.")
 
-                """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
-                tmpFeatures = simFeatures[0:i,:]
-                tmpLabels = simLabels[0:i]
-                updatePoints = tmpFeatures[tmpLabels == currentLabel]
-                labelAccuracy.append(1)
-
-
-
-            """ to test what happens if we allow only certain number of queries per class: """  #TODO: remove again later!!
-            numQueriesPerClass[int(currentLabel)] += 1
-
-            updatePointsList.append(updatePoints)
-            givenLabels.append(currentLabel)
-
-            #currentGMM = adaptGMM(currentGMM, updatePoints, currentLabel, nSteps=500)
-            #allGMM.append(currentGMM)
-            timestamps.append(i*0.032)
-
-            #y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
-
-        #for testing:
-        # if len(allGMM) == 3:
-        #     print("Stopped loop (for testing)")
-        #     break
+        # for testing:
+        if len(allGMM) == 4:
+            print("Stopped loop (for testing)")
+            break
 
     """ Evaluate performance of all GMMs: """
     print("Evaluating performance of classifiers:")
@@ -331,24 +321,6 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
         tmpF1 = 2 * (precisions[i] * recalls[i]) / float(precisions[i] + recalls[i])
         # print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
         F1s[sortedLabels[i]] = tmpF1
-
-    # """ Count how often each class was predicted: """
-    # allPredicted = [0] * n_classes
-    # items = itemfreq(y_pred)
-    # for item in items:
-    #     allPredicted[int(item[0])] = int(item[1])
-    #
-    # precisionsDict = {}
-    #
-    # for cl in trainedGMM["classesDict"]:
-    #     clNum = trainedGMM["classesDict"][cl]
-    #
-    #     if allPredicted[clNum] != 0:
-    #         precision = 100 * correctlyPredicted[clNum]/float(allPredicted[clNum])
-    #         print("Class '" + cl + "' achieved a precision of " + str(round(precision,2)) + "%")
-    #         precisionsDict[cl] = precision
-    #     else:
-    #         print("Class '" + cl + "' wasn't predicted at all")
 
     resDict = {"accuracy": agreement, "F1dict": F1s}
 
