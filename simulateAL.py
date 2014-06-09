@@ -10,13 +10,15 @@ from sklearn.mixture import GMM
 from sklearn import preprocessing
 from classifiers import getIndex
 from classifiers import testGMM
+from classifiers import predictGMM
+from classifiers import majorityVote
 from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
 import ipdb as pdb #pdb.set_trace()
 
 _thresholdDict = {}
 
-#tGMM = pickle.load(open("GMM.p","rb"))
+#tGMM = pickle.load(open("tGMM.p","rb"))
 #realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 #updatePoints = pickle.load(open("updatePoints_label1.p","rb"))
 
@@ -28,31 +30,21 @@ def defineThresholdDict():
 
 
     #values for top 10 threshold for each class:
-    _thresholdDict["Conversation"]["entropy"] = 1.097963
+    _thresholdDict["Conversation"]["entropy"] = 1.098211
     _thresholdDict["Conversation"]["margin"] = 1.2e-05
     _thresholdDict["Conversation"]["percentDiff"] = 2.8e-05
 
-    _thresholdDict["Office"]["entropy"] = 1.097941
+    _thresholdDict["Office"]["entropy"] = 1.098206
     _thresholdDict["Office"]["margin"] = 4.5e-05
     _thresholdDict["Office"]["percentDiff"] = 0.000108
 
-    _thresholdDict["TrainInside"]["entropy"] = 0.1 # 1.098202
+    _thresholdDict["TrainInside"]["entropy"] = 1.098023
     _thresholdDict["TrainInside"]["margin"] = 1.9e-05
     _thresholdDict["TrainInside"]["percentDiff"] = 4e-05
 
-    # #values for top 20 threshold for each class:
-    # _thresholdDict["Conversation"]["entropy"] = 1.097408
-    # _thresholdDict["Conversation"]["margin"] = 2.2e-05
-    # _thresholdDict["Conversation"]["percentDiff"] = 4.9e-05
-    #
-    # _thresholdDict["Office"]["entropy"] = 1.097515
-    # _thresholdDict["Office"]["margin"] = 0.000152
-    # _thresholdDict["Office"]["percentDiff"] = 0.000343
-    #
-    # _thresholdDict["TrainInside"]["entropy"] = 1.097816
-    # _thresholdDict["TrainInside"]["margin"] = 4.3e-05
-    # _thresholdDict["TrainInside"]["percentDiff"] = 9.4e-05
-
+    _thresholdDict["Conversation"]["entropyMean"] = 0.917565
+    _thresholdDict["Office"]["entropyMean"] = 0.903429
+    _thresholdDict["TrainInside"]["entropyMean"] = 0.917368
 
 def simulateAL(trainedGMM, testFeatureData):
     """
@@ -101,36 +93,38 @@ def simulateAL(trainedGMM, testFeatureData):
     # print(simFeatures.shape[0])
     # to get Train samples, start with 448500
 
-    for i in range(simFeatures.shape[0]):
+    for i in range(0, simFeatures.shape[0]):
         currentPoint = simFeatures[i,:]
         currentLabel = simLabels[i]
 
+        # if (i*0.032 + 600) > timestamps[-1]:
         if queryCriteria(currentGMM, currentPoint, revClassesDict[currentLabel], criteria="entropy"):
             print("sending query for " + str(revClassesDict[currentLabel]))
 
-            if str(revClassesDict[currentLabel]) != "Conversation": #TODO: xxxxxxxxxxxxxxxxxxxxxxx
+            if str(revClassesDict[currentLabel]) != "Conversation": # str(revClassesDict[currentLabel]) != "Conversation" and str(revClassesDict[currentLabel]) != "Office": #TODO: xxxxxxxxxxxxxxxxxxxxxxx
                 #set the current label for the last N points:
                 N = 1875 # = 1 minute
                 if i > N:
-                    # updatePoints = simFeatures[i-N:i,:]
-                    # labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
+                    updatePoints = simFeatures[i-N:i,:]
+                    labelAccuracy.append(checkLabelAccuracy(simLabels[i-N:i], currentLabel))
 
                     """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
-                    tmpFeatures = simFeatures[i-N:i,:]
-                    tmpLabels = simLabels[i-N:i]
-                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
-                    labelAccuracy.append(1)
+                    # tmpFeatures = simFeatures[i-N:i,:]
+                    # tmpLabels = simLabels[i-N:i]
+                    # updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                    # labelAccuracy.append(1)
 
                 else:
-                    # updatePoints = simFeatures[0:i,:]
-                    # labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
+                    updatePoints = simFeatures[0:i,:]
+                    labelAccuracy.append(checkLabelAccuracy(simLabels[0:i], currentLabel))
 
                     """ to test when choosing only samples with correct labels: """ #TODO: remove again later!!
-                    tmpFeatures = simFeatures[0:i,:]
-                    tmpLabels = simLabels[0:i]
-                    updatePoints = tmpFeatures[tmpLabels == currentLabel]
-                    labelAccuracy.append(1)
+                    # tmpFeatures = simFeatures[0:i,:]
+                    # tmpLabels = simLabels[0:i]
+                    # updatePoints = tmpFeatures[tmpLabels == currentLabel]
+                    # labelAccuracy.append(1)
 
+                # print(updatePoints.shape[0])
                 updatePointsList.append(updatePoints)
                 givenLabels.append(currentLabel)
 
@@ -140,12 +134,14 @@ def simulateAL(trainedGMM, testFeatureData):
 
                 #y_pred = testGMM(currentGMM, evalFeatures, useMajorityVote=True, showPlots=False)
             else:
-                print("Query for conversation ignored.")
+                print("Query for this context class ignored.")
 
         # for testing:
-        if len(allGMM) == 4:
+        if len(allGMM) == 5:
             print("Stopped loop (for testing)")
             break
+
+    # pdb.set_trace() # save allGMM here
 
     """ Evaluate performance of all GMMs: """
     print("Evaluating performance of classifiers:")
@@ -162,6 +158,110 @@ def simulateAL(trainedGMM, testFeatureData):
         i += 1
 
     return results
+
+def batchAL(trainedGMM, testFeatureData):
+    """
+
+    @param trainedGMM: already trained GMM
+    @param testFeatureData: Numpy array of already extracted features of the test file
+    """
+    y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0], 'labelsAdapted.txt')
+    y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0], 'labels.txt')
+
+    print(trainedGMM["classesDict"])
+
+    """ Create index arrays to define which elements are used to evaluate performance and which for simulation of the AL
+    behavior: """
+    [evalIdx, simIdx] = splitData(y_GT)
+
+    evalFeatures = testFeatureData[evalIdx == 1]
+    evalLabels = y_GTMulti[evalIdx == 1] # contains multiple labels for each point
+
+    simFeatures = testFeatureData[simIdx == 1]
+    simFeatures = trainedGMM['scaler'].transform(simFeatures)
+    simLabels = y_GT[simIdx == 1]
+
+    """ simLabels contains unique label for each point that will be used to update the model later,
+    e.g. if a point has the labels office and conversation, it will be trained with conversation (accoring to the provided
+    groundTruthLabels """
+
+    currentGMM = copy.deepcopy(trainedGMM)
+
+    allGMM = []
+    allGMM.append(currentGMM)
+    givenLabels = []
+    givenLabels.append(-1) #because first classifiers is without active learning yet
+    labelAccuracy = []
+    labelAccuracy.append(-1)
+    timestamps = [] #time when the query was sent on the simulation data set -> only half the length of the complete data set
+    timestamps.append(0)
+
+    updatePointsList = []
+
+    revClassesDict = reverseDict(trainedGMM["classesDict"])
+
+    defineThresholdDict()
+
+    """ Simulate actual behavior by reading in points in batches of size b: """
+    b = 63 # equals 2 seconds
+    # disagreementList = []
+    entropyList = []
+    predictedLabels = []
+
+    # Track entropy of each class in the beginning
+    initialEntropy = []
+    initialEntropy.append([])
+    initialEntropy.append([])
+    initialEntropy.append([])
+
+    thresholdSet = []
+    thresholdSet.append(False)
+    thresholdSet.append(False)
+    thresholdSet.append(False)
+
+    threshold = []
+    threshold.append(-1)
+    threshold.append(-1)
+    threshold.append(-1)
+
+
+
+    for i in range(simFeatures.shape[0]/b):
+        start = i*b
+        end = (i+1)*b
+        currentPoints = simFeatures[start:end,:]
+        currentLabel = simLabels[i]
+
+        resArray, entropy = predictGMM(currentGMM, currentPoints, scale=False, returnEntropy=True)
+        predictedLabel = int(resArray.mean())
+
+        # disagreementList.append(currentDisagreement)
+        predictedLabels.append(predictedLabel)
+
+        """ Fill the inital entropy buffers to compute an initial threshold: """
+        if thresholdSet[predictedLabel] == False:
+            if len(initialEntropy[predictedLabel]) < 30: # 30 * 2sec = 1min
+                initialEntropy[predictedLabel].append(entropy)
+
+            if len(initialEntropy[predictedLabel]) == 30:
+
+                tmp = np.array(initialEntropy[predictedLabel])
+
+                threshold[predictedLabel] = tmp.max() * 0.95
+
+                thresholdSet[predictedLabel] = True
+
+                # pdb.set_trace()
+
+                print("initialEntropy buffer for class " + revClassesDict[predictedLabel] + " is filled. Threshold is set to " + str(threshold[predictedLabel]))
+
+        """ If initial threshold is set, check if we want to query that point: """
+        if thresholdSet[predictedLabel] == True:
+            if entropy > threshold[predictedLabel]:
+                print("Sending query for " + str(revClassesDict[predictedLabel]) + " class at " + str(i*b) + " seconds.")
+
+
+    return predictedLabels, entropyList
 
 def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
     """

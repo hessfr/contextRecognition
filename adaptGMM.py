@@ -138,7 +138,7 @@ def adaptGMM(trainedGMM, updatePoints, label):
         finalGMM["clfs"][label].covars_[i] = new_model[i][2]
         finalGMM["n_train"][label] = n_old + n_novel
 
-    print(finalGMM["n_train"][label])
+    # print(finalGMM["n_train"][label])
 
     print("Model adapted: new model has " + str(finalGMM["clfs"][label].n_components) +
           " component(s). " + str(mergedComp) + " component(s) merged, " + str(addedComp) + " component(s) added.")

@@ -26,10 +26,12 @@ import ipdb as pdb #pdb.set_trace()
 
 EPS = np.finfo(float).eps
 
-def majorityVote(y_Raw):
+def majorityVote(y_Raw, returnDisagreement=False):
     """
     Apply a "majority vote" of fixed window length to a sequence
     @param y_Raw: Input data as 1D numpy array
+    @param returnDisagreement: Set to True if the disagreement of the majority vote should be returned.
+    Only use this when you call the majorityVote method for exactly one frame. Default is False
     @return: Result of the same size as input
     """
     y_raw = y_Raw.copy()
@@ -43,27 +45,52 @@ def majorityVote(y_Raw):
     resArray = np.empty(y_raw.shape)
 
     n_frames = int(math.ceil(y_raw.shape[0]/frameLengthFloat))
-    
+
     for i in range(n_frames):
         if ((i+1) * frameLength) < y_raw.shape[0]:
+
             tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
             
-            """ Get most frequent number in that frames and fill all elements in the frame with it: """
+            """ Get most frequent number in that frames: """
             count = np.bincount(tmpArray)
             tmpMostFrequent = np.argmax(count)
+
+            """ Calculate disagreement: """
+            iTmp = (tmpArray != tmpMostFrequent)
+            t = tmpArray[iTmp]
+            disagreement = t.shape[0] / frameLengthFloat
+
+
+            """ Fill all elements with most frequent number: """
             tmpArray.fill(tmpMostFrequent)
+
             """ Write it into our result array: """
             resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
+
         else:
+
             tmpArray = y_raw[(i * frameLength):y_raw.shape[0]]
+
             """ Get most frequent number in that frames and fill all elements in the frame with it: """
             count = np.bincount(tmpArray)
             tmpMostFrequent = np.argmax(count)
+
+
+            """ Calculate disagreement: """
+            iTmp = (tmpArray != tmpMostFrequent)
+            t = tmpArray[iTmp]
+            disagreement = t.shape[0] / frameLengthFloat
+
+            """ Fill all elements with most frequent number: """
             tmpArray.fill(tmpMostFrequent)
+
             """ Write it into our result array: """
             resArray[(i * frameLength):y_raw.shape[0]] = tmpArray
 
-    return resArray
+    if returnDisagreement == False:
+        return resArray
+    else:
+        return resArray, disagreement
 
 def trainGMM(featureData):
     """
@@ -112,12 +139,13 @@ def trainGMM(featureData):
 
     return trainedGMM
     
-def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
+def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, showPlots=True):
     """
 
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of already extracted features of the test file
-    @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
+    @param useMajorityVote: Set to False if you don't want to use majority vote. Default is True
+    @param scale: Set to False if you do not want featureData to be scaled. Default is True
     @param showPlots:
     """
     n_classes = len(trainedGMM['clfs'])
@@ -125,7 +153,10 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
     if featureData==None:
         X_test = trainedGMM['scaler'].transform(FX_Test("test.wav"))
     else:
-        X_test = trainedGMM['scaler'].transform(featureData)
+        if scale==True:
+            X_test = trainedGMM['scaler'].transform(featureData)
+        else:
+            X_test = featureData
 
     logLikelihood = np.zeros((n_classes, X_test.shape[0]))
 
@@ -172,42 +203,52 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
 
         timestamps = np.array(range(X_test.shape[0])) * 0.032
 
+        """ calculate mean entropy value of the last k samples: """
+        k = 300 # equals approx. 10sec
+        entropyMean = np.zeros((X_test.shape[0]))
+        for i in range(X_test.shape[0]):
+            if i < k:
+                entropyMean[i] = -1
+            else:
+                entropyMean[i] = entropy[i-k:i].mean()
+
+
         """ Calculate threshold values that that divides array with all query criteria value (e.g. entropy) Top x percent: """
-        percentile = 0.00005 #threshold that separates top percentile % of the entries from the rest
-        topK = 20 #threshold that separated to K entries from the rest
+        topK = 10
         for key in trainedGMM["classesDict"]:
             tmp = entropy[y_pred == trainedGMM["classesDict"][key]]
             sorted = np.sort(tmp)
-            #threshold = sorted[int(sorted.shape[0]*(1-percentile))]
             threshold = sorted[-topK]
             print("Entropy threshold for class " + str(key) + " is " + str(round(threshold,6)))
 
+            # tmp = entropyMean[y_pred == trainedGMM["classesDict"][key]]
+            # sorted = np.sort(tmp)
+            # threshold = sorted[-topK]
+            # print("Mean entropy threshold for class " + str(key) + " is " + str(round(threshold,6)))
 
-            tmp = margin[y_pred == trainedGMM["classesDict"][key]]
-            sorted = np.sort(tmp)
-            #threshold = sorted[int(sorted.shape[0]*percentile)]
-            threshold = sorted[topK]
-            print("Margin threshold for class " + str(key) + " is " + str(round(threshold,6)))
-
-            tmp = percentDiff[y_pred == trainedGMM["classesDict"][key]]
-            sorted = np.sort(tmp)
-            #threshold = sorted[int(sorted.shape[0]*percentile)]
-            threshold = sorted[topK]
-            print("percentDiff threshold for class " + str(key) + " is " + str(round(threshold,6)))
+            # tmp = margin[y_pred == trainedGMM["classesDict"][key]]
+            # sorted = np.sort(tmp)
+            # threshold = sorted[topK]
+            # print("Margin threshold for class " + str(key) + " is " + str(round(threshold,6)))
+            #
+            # tmp = percentDiff[y_pred == trainedGMM["classesDict"][key]]
+            # sorted = np.sort(tmp)
+            # threshold = sorted[topK]
+            # print("percentDiff threshold for class " + str(key) + " is " + str(round(threshold,6)))
 
         """ Plot histogram(s): """
-        """variableToPlot = margin
+        variableToPlot = entropy
 
         for key in trainedGMM["classesDict"]:
-            pl.hist(variableToPlot[y_pred == trainedGMM["classesDict"][key]], 500, histtype='bar')
-            #pl.title("Entropy - " + str(key))
-            pl.title("Margin (between two most likely classes) - " + str(key))
-            #pl.title("Percentage difference between two most likely classes  - " + str(key))
+            pl.hist(variableToPlot[y_pred == trainedGMM["classesDict"][key]], 500, histtype='bar') # range=[0.0, 1.0]
+            pl.title("Entropy - " + str(key))
+            # pl.title("Margin (between two most likely classes) - " + str(key))
+            # pl.title("Percentage difference between two most likely classes  - " + str(key))
             pl.show()
-        """
+
 
         """ Plot values over time: """
-        """
+
         f, ax = pl.subplots(2, sharex=True)
 
         ax[0].plot(timestamps,majorityVote(y_pred), 'r+')
@@ -215,19 +256,73 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, showPlots=True):
         ax[0].set_title("Predicted classes")
 
         ax[1].plot(timestamps, margin, 'bo')
-        #ax[1].set_title("Percentage difference between two most likely classes")
-        #ax[1].set_title("Entropy")
-        ax[1].set_title("Margin (between two most likely classes)")
+        # ax[1].set_title("Percentage difference between two most likely classes")
+        ax[1].set_title("Entropy")
+        # ax[1].set_title("Margin (between two most likely classes)")
         pl.xlabel('time (s)')
 
         pl.show()
-        """
+
 
     if useMajorityVote:
-        y_majVote = majorityVote(y_pred)
-        return y_majVote
+        return majorityVote(y_pred)
     else:
         return y_pred
+
+def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
+    """
+    Always use majority vote
+    @param trainedGMM: already trained GMM
+    @param featureData: Numpy array of features of the points that should be tested
+    @param scale: Set to False if you do not want featureData to be scaled. Default is True
+    @param returnEntropy: Set to True if you want to return the mean value of the entropy
+    """
+    n_classes = len(trainedGMM['clfs'])
+
+    if scale==True:
+        X_test = trainedGMM['scaler'].transform(featureData)
+    else:
+        X_test = featureData
+
+    logLikelihood = np.zeros((n_classes, X_test.shape[0]))
+
+    """ Compute log-probability for each class for all points: """
+    for i in range(n_classes):
+
+        # logLikelihood[i] = trainedGMM['clfs'][i].score(X_test) # uses scikit function
+        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_, trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_) # uses logProb function defined below
+
+    """ Select the class with the highest log-probability: """
+    y_pred = np.argmax(logLikelihood, 0)
+
+    likelihood = np.zeros((n_classes, X_test.shape[0]))
+    likelihoodSorted = np.zeros((n_classes, X_test.shape[0]))
+
+    tmpProduct = np.zeros((n_classes, X_test.shape[0]))
+    entropy = np.zeros((X_test.shape[0]))
+
+    # percentDiff = np.zeros((X_test.shape[0])) #Percentage-difference between two most likely classes
+    # margin = np.zeros((X_test.shape[0])) #Difference between two most likely classes
+
+    likelihood = np.exp(logLikelihood)
+
+    tmpSum = np.array(likelihood.sum(axis=0), dtype=np.float64)
+    likelihoodNormed = likelihood/tmpSum
+
+    logLikelihoodNormed = np.log(likelihoodNormed)
+
+    for i in range(n_classes):
+        tmpProduct[i,:] = likelihoodNormed[i,:] * logLikelihoodNormed[i,:]
+
+    entropy = tmpProduct.sum(axis=0) * -1
+
+    entropyMean = entropy.mean()
+
+    if returnEntropy == True:
+        return majorityVote(y_pred, returnDisagreement=False), entropyMean
+    else:
+        return majorityVote(y_pred, returnDisagreement=False)
+
 
 def logProb(X, weights, means, covars):
     """
@@ -236,7 +331,7 @@ def logProb(X, weights, means, covars):
     @param X: Numpy array representing the input data. Each row refers to one point
     @param weights: Component weights
     @param means: Means
-    @param covars: Full covariance matrix of the GMM
+    @param covars: Full covariance matrix of the mixture
     @return:
     """
     X = copy.copy(X)
@@ -255,15 +350,21 @@ def logProb(X, weights, means, covars):
     log_prob = np.empty((n_samples, n_components))
 
     for c, (mu, cv) in enumerate(zip(means, covars)):
+        # loops through each component in means and covars, i.e. cv has shape (12,12) and um has shape (12,)
+
         try:
             cv_chol = linalg.cholesky(cv, lower=True)
         except linalg.LinAlgError:
             # reinitialize component, because it might be stuck with too few observations
             cv_chol = linalg.cholesky(cv + min_covar * np.eye(n_features),lower=True)
 
+        # pdb.set_trace()
+
         cv_log_det = 2 * np.sum(np.log(np.diagonal(cv_chol)))
 
         cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T
+
+        # pdb.set_trace()
 
         log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det)
 

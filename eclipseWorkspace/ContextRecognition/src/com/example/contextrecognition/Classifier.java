@@ -3,6 +3,7 @@ package com.example.contextrecognition;
 import java.util.Arrays;
 
 import org.ejml.data.DenseMatrix64F;
+import org.ejml.alg.dense.decomposition.chol.*;
 
 import android.util.Log;
 
