@@ -208,29 +208,60 @@ def batchAL(trainedGMM, testFeatureData):
     entropyList = []
     predictedLabels = []
 
+    currentTime = 0
+    prevTime = -1000000.0
+
     # Track entropy of each class in the beginning
     initialEntropy = []
     initialEntropy.append([])
     initialEntropy.append([])
     initialEntropy.append([])
 
-    thresholdSet = []
-    thresholdSet.append(False)
-    thresholdSet.append(False)
-    thresholdSet.append(False)
+    # Track entropy after the initialization
+    histEntropy = []
+    histEntropy.append([])
+    histEntropy.append([])
+    histEntropy.append([])
 
+    # Booleans that indicate if the initial threshold was already set:
+    initThresSet = []
+    initThresSet.append(False)
+    initThresSet.append(False)
+    initThresSet.append(False)
+
+    # Number of queries asked for each class:
+    numQueries = []
+    numQueries.append(0)
+    numQueries.append(0)
+    numQueries.append(0)
+
+    # Thresholds for the different classes:
     threshold = []
     threshold.append(-1)
     threshold.append(-1)
     threshold.append(-1)
 
+    # Thresholds for the different classes:
+    maxEnt = []
+    maxEnt.append(-1)
+    maxEnt.append(-1)
+    maxEnt.append(-1)
 
+    updatePoints = []
 
     for i in range(simFeatures.shape[0]/b):
         start = i*b
         end = (i+1)*b
         currentPoints = simFeatures[start:end,:]
-        currentLabel = simLabels[i]
+        currentLabel = int(simLabels[end]) # only the last label is used to adapt the model, like in real-life
+        currentTime = i*b*0.032
+
+        # Buffer points of the 30 last 2 second intervals, as we used want to update our model with the last minute of data
+        if len(updatePoints) < 1875:
+            updatePoints.extend(currentPoints.tolist())
+        else:
+            updatePoints.extend(currentPoints.tolist())
+            del updatePoints[0:b]
 
         resArray, entropy = predictGMM(currentGMM, currentPoints, scale=False, returnEntropy=True)
         predictedLabel = int(resArray.mean())
@@ -238,30 +269,116 @@ def batchAL(trainedGMM, testFeatureData):
         # disagreementList.append(currentDisagreement)
         predictedLabels.append(predictedLabel)
 
-        """ Fill the inital entropy buffers to compute an initial threshold: """
-        if thresholdSet[predictedLabel] == False:
+        # Fill the inital entropy buffers to compute an initial threshold:
+        if initThresSet[predictedLabel] == False:
             if len(initialEntropy[predictedLabel]) < 30: # 30 * 2sec = 1min
                 initialEntropy[predictedLabel].append(entropy)
 
-            if len(initialEntropy[predictedLabel]) == 30:
-
+            else:
                 tmp = np.array(initialEntropy[predictedLabel])
-
                 threshold[predictedLabel] = tmp.max() * 0.95
-
-                thresholdSet[predictedLabel] = True
-
+                initThresSet[predictedLabel] = True
                 # pdb.set_trace()
 
-                print("initialEntropy buffer for class " + revClassesDict[predictedLabel] + " is filled. Threshold is set to " + str(threshold[predictedLabel]))
+                print("initialEntropy buffer for " + revClassesDict[predictedLabel] + " class filled. Initial threshold is set to " + str(threshold[predictedLabel]))
 
-        """ If initial threshold is set, check if we want to query that point: """
-        if thresholdSet[predictedLabel] == True:
-            if entropy > threshold[predictedLabel]:
-                print("Sending query for " + str(revClassesDict[predictedLabel]) + " class at " + str(i*b) + " seconds.")
+            # fill longer buffer with entropy values of the last 10min
+            if len(histEntropy[predictedLabel]) < 300: # 300 * 2sec = 10min
+                histEntropy[predictedLabel].append(entropy)
+            else:
+                histEntropy[predictedLabel].append(entropy)
+                del histEntropy[predictedLabel][0] # keep buffer size constant at 300
+
+        if initThresSet[predictedLabel] == True:
+
+            # fill a buffer with entropy values of the last 10min
+            if len(histEntropy[predictedLabel]) < 300: # 300 * 2sec = 10min
+                histEntropy[predictedLabel].append(entropy)
+            else:
+                histEntropy[predictedLabel].append(entropy)
+                del histEntropy[predictedLabel][0] # keep buffer size constant at 300
+
+            # only query if more than 10min since the last query:
+            if (currentTime - prevTime) > 600:
+                # check if we want to query these points and update our threshold value if we adapt the model:
+                if entropy > threshold[predictedLabel]:
+
+                    # update total max value of entropy:
+                    if maxEnt[currentLabel] < entropy: # this is the entropy for the actual label, as we get a query feedback for this
+                        maxEnt[currentLabel] = entropy
+
+                    if str(revClassesDict[currentLabel]) != "Conversation" and str(revClassesDict[predictedLabel]) != "Conversation": # ignore queries that are labeled as conversation or that were predicted as conversation
+                        print("Query for " + str(revClassesDict[currentLabel]) + " class (predicted as " + str(revClassesDict[predictedLabel]) + ") received at " + str(currentTime) + " seconds.")
+
+                        # adapt the model:
+                        upd = np.array(updatePoints)
+
+                        # pdb.set_trace()
+
+                        currentGMM = adaptGMM(currentGMM, upd, currentLabel)
+
+                        allGMM.append(currentGMM)
+                        givenLabels.append(currentLabel)
+                        labelAccuracy.append(checkLabelAccuracy(simLabels[start:end], currentLabel))
+                        timestamps.append(currentTime)
+
+                        numQueries[currentLabel] += 1
+
+                        # update threshold:
+                        if numQueries[currentLabel] <= 2:
+                            # set threshold to max entropy of the last 10min:
+                            if len(histEntropy[currentLabel]) == 300:
+                                tmp = np.array(histEntropy[currentLabel])
+                                threshold[currentLabel] = tmp.max() * 0.95
+                                print("New threshold for " + revClassesDict[currentLabel] + " class " + str(threshold[currentLabel]))
+
+                                # Test: increase threshold of class that was predicted by certain percentage:
+                                if predictedLabel != currentLabel:
+                                    threshold[predictedLabel] = threshold[predictedLabel] * 1.025
+                                    print("New threshold for " + revClassesDict[predictedLabel] + " class " + str(threshold[predictedLabel]))
+
+                            else:
+                                tmp = np.array(histEntropy[currentLabel])
+                                threshold[currentLabel] = tmp.max() * 0.95
+                                print("New threshold for " + revClassesDict[currentLabel] + " class " + str(threshold[currentLabel]))
+
+                                # Test: increase threshold of class that was predicted by certain percentage:
+                                if predictedLabel != currentLabel:
+                                    threshold[predictedLabel] = threshold[predictedLabel] * 1.025
+                                    print("New threshold for " + revClassesDict[predictedLabel] + " class " + str(threshold[predictedLabel]))
+                        else:
+                            # set threshold to total max value of entropy:
+                            threshold[currentLabel] = maxEnt[currentLabel] #TODO: check again if we can improve this
+                            print("New threshold for " + revClassesDict[currentLabel] + " class " + str(threshold[currentLabel]))
+
+                            # Test: increase threshold of class that was predicted by certain percentage:
+                            if predictedLabel != currentLabel:
+                                threshold[predictedLabel] = threshold[predictedLabel] * 1.025
+                                print("New threshold for " + revClassesDict[predictedLabel] + " class " + str(threshold[predictedLabel]))
+
+                        prevTime = currentTime
+
+                        # if sum(numQueries) == 10:
+                        #     break
 
 
-    return predictedLabels, entropyList
+
+    """ Evaluate performance of all GMMs: """
+    print("Evaluating performance of classifiers:")
+    results = []
+    i=0
+    for GMM in allGMM:
+        resultDict = evaluateGMM(GMM, evalFeatures, evalLabels)
+        resultDict["label"] = givenLabels[i]
+        resultDict["labelAccuracy"] = labelAccuracy[i]
+        resultDict["timestamp"] = timestamps[i]
+        resultDict["classesDict"] = GMM["classesDict"]
+        resultDict["duration"] = simFeatures.shape[0] * 0.032 #length in seconds
+        results.append(resultDict)
+        i += 1
+
+
+    return results
 
 def queryCriteria(trainedGMM, featurePoint, className, criteria="entropy"):
     """
@@ -325,7 +442,7 @@ def checkLabelAccuracy(actualLabels, label):
     @param label: The label of the class with which the model should be adapted
     """
     accuracy = len(actualLabels[actualLabels == label]) / float(len(actualLabels))
-    print(str(accuracy*100) + "% of the labels used to adapt the model were correct")
+    print(str(round(accuracy*100,1)) + "% of the labels used to adapt the model were correct")
 
     return accuracy
 
