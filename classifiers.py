@@ -271,7 +271,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, show
 
 def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
     """
-    Always use majority vote
+    Always use majority vote and return the mean entropy of the 2second interval
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of features of the points that should be tested
     @param scale: Set to False if you do not want featureData to be scaled. Default is True
