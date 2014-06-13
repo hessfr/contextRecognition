@@ -353,7 +353,7 @@ def logProb(X, weights, means, covars):
         # loops through each component in means and covars, i.e. cv has shape (12,12) and um has shape (12,)
 
         try:
-            cv_chol = linalg.cholesky(cv, lower=True)
+            cv_chol = linalg.cholesky(cv, lower=True) # = L0 in Java
         except linalg.LinAlgError:
             # reinitialize component, because it might be stuck with too few observations
             cv_chol = linalg.cholesky(cv + min_covar * np.eye(n_features),lower=True)
@@ -362,19 +362,19 @@ def logProb(X, weights, means, covars):
 
         cv_log_det = 2 * np.sum(np.log(np.diagonal(cv_chol)))
 
-        cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T
+        cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T # = solved in Java
 
-        # pdb.set_trace()
-
-        log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det)
+        log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det) #=rowSum in Java
 
     tmp_log_prob = (log_prob + np.log(weights))
 
-    # compute sum in log domain:
-    tmpArray = np.rollaxis(tmp_log_prob, axis=1)
+    # compute sum in log domain: # xxxxxxxxxxxxxxx continue Java here!!
+    tmpArray = np.rollaxis(tmp_log_prob, axis=1) # transpose
     vmax = tmpArray.max(axis=0)
     final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
-    final_log_prob = final_log_prob + vmax
+    final_log_prob = final_log_prob + vmax # shape = (n_samples,)
+
+    # pdb.set_trace()
 
     return final_log_prob
 
