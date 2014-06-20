@@ -350,15 +350,13 @@ def logProb(X, weights, means, covars):
     log_prob = np.empty((n_samples, n_components))
 
     for c, (mu, cv) in enumerate(zip(means, covars)):
-        # loops through each component in means and covars, i.e. cv has shape (12,12) and um has shape (12,)
+        # loops through each component in means and covars, i.e. cv has shape (12,12) and mu has shape (12,)
 
         try:
             cv_chol = linalg.cholesky(cv, lower=True) # = L0 in Java
         except linalg.LinAlgError:
             # reinitialize component, because it might be stuck with too few observations
             cv_chol = linalg.cholesky(cv + min_covar * np.eye(n_features),lower=True)
-
-        # pdb.set_trace()
 
         cv_log_det = 2 * np.sum(np.log(np.diagonal(cv_chol)))
 
@@ -368,13 +366,13 @@ def logProb(X, weights, means, covars):
 
     tmp_log_prob = (log_prob + np.log(weights))
 
-    # compute sum in log domain: # xxxxxxxxxxxxxxx continue Java here!!
+    # compute sum in log domain:
     tmpArray = np.rollaxis(tmp_log_prob, axis=1) # transpose
     vmax = tmpArray.max(axis=0)
     final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
     final_log_prob = final_log_prob + vmax # shape = (n_samples,)
 
-    # pdb.set_trace()
+
 
     return final_log_prob
 

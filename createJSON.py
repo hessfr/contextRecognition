@@ -10,11 +10,11 @@ from sklearn.mixture import GMM
 from sklearn import preprocessing
 import ipdb as pdb #pdb.set_trace()
 
-_thresholdDict = {}
-
 #tGMM = pickle.load(open("tGMM.p","rb"))
 #realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
 #updatePoints = pickle.load(open("updatePoints_label1.p","rb"))
+# fewPoints = json.load(open("fewPoints.json","rb"))
+# fewPoints = np.array(fewPoints["points"])
 
 
 def createJSON(trainedGMM, filename):
@@ -61,51 +61,23 @@ def createJSON(trainedGMM, filename):
 
     path = filename + ".json"
 
-    json.dump(seriGMM,open(path,"wb"))
+    json.dump(seriGMM, open(path,"wb"))
 
-def createJSONOLD(trainedGMM, filename):
+def pointsToJSON(data, filename):
     """
-    Deserialize the GMM object in Python and dump it into a JSON file. Final JSON structure looks like this:
-    GMM["clfs"][0]["weights"]
-    GMM["clfs"][0]["means"]
-    GMM["clfs"][0]["covars"]
-    GMM["clfs"][0]["n_components"]
-    GMM["clfs"][0]["n_features"]
-    GMM["clfs"][1]["weights"]
-    ...
-    GMM["classesDict"]
-    GMM["n_train"]
-    GMM["scaler"]["mean"]
-    GMM["scaler"]["stddev"]
-    GMM["n_classes"]
+    Dumps feature points into a JSON file that looks like this: {"points": [[123...][123....]]}
 
-    @param trainedGMM: GMM object that should be dumped
-    @param filename: filename under which it shoulld be stored
+    @param trainedGMM: Numpy array of points that should be dumped
+    @param filename: filename under which it should be stored
     """
 
-    seriGMM = copy.deepcopy(trainedGMM)
-
-    # delete the sklearn GMM objects (as the can't be deserialized) and replace them by dicts containing weights, means, covars:
-    for i in range(len(seriGMM["clfs"])):
-        seriGMM["clfs"][i] = {}
-        seriGMM["clfs"][i]["weights"] = trainedGMM["clfs"][i].weights_.tolist()
-        seriGMM["clfs"][i]["means"] = trainedGMM["clfs"][i].means_.tolist()
-        seriGMM["clfs"][i]["covars"] = trainedGMM["clfs"][i].covars_.tolist()
-        seriGMM["clfs"][i]["n_components"] = trainedGMM["clfs"][0].means_.shape[0]
-        seriGMM["clfs"][i]["n_features"] = trainedGMM["clfs"][0].means_.shape[1]
-
-
-    # Save mean and stddev from the scaler and delete the original scaler object:
-    seriGMM["scaler"] = {}
-    seriGMM["scaler"]["mean"] = trainedGMM["scaler"].mean_.tolist()
-    seriGMM["scaler"]["stddev"] = trainedGMM["scaler"].std_.tolist()
-    seriGMM["n_classes"] = len(seriGMM["clfs"])
-
-    # pdb.set_trace()
+    dict = {"points": data.tolist()}
 
     path = filename + ".json"
 
-    json.dump(seriGMM,open(path,"wb"))
+    json.dump(dict, open(path,"wb"))
+
+
 
 
 

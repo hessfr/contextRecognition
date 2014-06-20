@@ -2,6 +2,8 @@ package com.example.contextrecognition;
 
 import android.util.Log;
 
+//TODO: do we still need this file?
+
 public class ModelAdaptor {
 
 	private static final String TAG = "AdaptModel";
