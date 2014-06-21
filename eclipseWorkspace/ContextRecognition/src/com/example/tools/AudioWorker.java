@@ -29,7 +29,6 @@ public class AudioWorker extends IntentService {
 	public static final String PREDICTION_INT = "predictionInt";
 	public static final String PREDICTION_STRING = "predictionString";
 	public static final String RESULTCODE = "resultcode";
-//	public static final String NOTIFICATION = "com.example.tools";
 	public static final String RESULT_REQUEST = "resultRequest";
 	public static int code = Activity.RESULT_CANCELED;
 
@@ -65,12 +64,19 @@ public class AudioWorker extends IntentService {
 		clf = new Classifier();
 		gmm = new GMM("jsonGMM.json"); //TODO
 		
-		//Start recording when the app is started
-		startRec();
+		//Initialize the data handling
+		initializeDataHandling();
 		
 	}
 	
-	public void startRec() { //TODO: change name
+	/*
+	 * This method overrides the data handling method of the SoundHandler to
+	 * (i) extract features of 32ms window size from the 2s sound data
+	 * (ii) run the classification algorithm
+	 * 
+	 * and start the actual recording
+	 */
+	public void initializeDataHandling() {
 
 		soundHandler = new SoundHandler() {
 
@@ -113,7 +119,7 @@ public class AudioWorker extends IntentService {
 					
 					stringRes = gmm.get_class_name(intRes);
 					
-					// Log.i(TAG, "Current Context: " + stringRes);
+					Log.v(TAG, "Current Context: " + stringRes);
 					
 					// Set result code to okay and publish the result
 					code = Activity.RESULT_OK;

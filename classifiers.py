@@ -6,9 +6,6 @@ from numpy import asarray
 import csv
 import pickle
 import json
-from sklearn.svm import SVC
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.svm import LinearSVC
 from sklearn.mixture import GMM
 from sklearn import cross_validation
 from sklearn import preprocessing
@@ -322,7 +319,6 @@ def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
         return majorityVote(y_pred, returnDisagreement=False), entropyMean
     else:
         return majorityVote(y_pred, returnDisagreement=False)
-
 
 def logProb(X, weights, means, covars):
     """
@@ -712,71 +708,6 @@ def k_FoldGMM(featureData,k):
             agreementCounter = agreementCounter + 1
     
     print str(100 * agreementCounter/y_test.shape[0]) + " % of all samples predicted correctly (without majority vote...)"
-    
-def SVM(featureData):
-    """
-    Build a multi-class support vector machine on the given data using Scikit-Learn
-    @param data: Input data containing 12 MFCC features in the first 12 columns and the class label in the last column
-    @return: Scikit-Learn SVM classifier
-    """
-    X_train = featureData['features'] #preprocessing.scale(featureData['features'])
-    scaler = preprocessing.StandardScaler().fit(X_train)
-    X_train = scaler.transform(X_train)
-
-    y_train = featureData['labels'][:,0]
-
-#     clf = SVC(kernel='linear')
-    clf = LinearSVC() #OneVsRestClassifier(LinearSVC())
-    
-    clf.fit(X_train, y_train)
-    
-    return clf
-
-def testSVM(trainedSVM,featureData=None,useMajorityVote=True):
-    """
-    To check only
-    @param trainedSVM:
-    @param featureData: Numpy array of already extracted features of the test file
-    @param useMajorityVote: Set to False if you don't want to use majority vote here. Default is True
-    """
-    if featureData==None:
-        X_test = FX_Test("test.wav")
-    else:
-        X_test = featureData
-
-    y_pred = trainedSVM.predict(X_test)
-
-    if useMajorityVote:
-        y_majVote = majorityVote(y_pred)
-        return y_majVote
-    else:
-        return y_pred
-
-def randomSplitSVM(featureData):
-    """
-    Build a Support Vector Machine on the given data and evaluate the performance by randomly splitting data into train and test
-    and compare results to ground truth.
-    @param data: Input data containing 12 MFCC features in the first 13 columns and the class label in the last column
-    @return: Scikit-Learn SVM classifier
-    """
-    #TODO: change to using scaler:
-    X_train, X_test, y_train, y_test = cross_validation.train_test_split(preprocessing.scale(featureData['features']), featureData['labels'], test_size=0.33, random_state=43)
-     
-    clf = LinearSVC()
- 
-    clf.fit(X_train, y_train)
-     
-    y_pred = clf.predict(X_test)
- 
-    """ Compare predictions to ground truth: """
-    agreementCounter = 0
-    for j in range(y_test.shape[0]):
-        if y_test[j] == y_pred[j]:
-            agreementCounter = agreementCounter + 1
-     
-    print str(100 * agreementCounter/y_test.shape[0]) + " % of all samples predicted correctly (without majority vote...)"
-     
-    return clf
 
 def addNewClassGMM(prevTrainedGMM, newClassName, newClassData=None):
     """
