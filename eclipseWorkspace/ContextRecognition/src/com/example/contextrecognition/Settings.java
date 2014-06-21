@@ -68,6 +68,11 @@ public class Settings extends ActionBarActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
     	//Handle ActionBar clicks
         int id = item.getItemId();
+        if (id == R.id.action_label) {
+        	//Go to rating activity
+        	callLabel();
+        	return true;
+        }
         if (id == R.id.action_rating) {
         	//Go to rating activity
         	callRating();
@@ -82,6 +87,13 @@ public class Settings extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Launch Label activity
+     * */
+    private void callLabel() {
+        Intent i = new Intent(Settings.this, Label.class);
+        startActivity(i);
+    }
     /**
      * Launch Rating activity
      * */

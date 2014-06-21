@@ -56,6 +56,11 @@ public class Rating extends ActionBarActivity {
         	callSettings();
         	return true;
         }
+        if (id == R.id.action_label) {
+            //Go to settings activity
+        	callLabel();
+        	return true;
+        }
         if (id == R.id.action_help) {
         	//Go to help activity
             callHelp();
@@ -70,6 +75,13 @@ public class Rating extends ActionBarActivity {
      * */
     private void callSettings() {
         Intent i = new Intent(Rating.this, Settings.class);
+        startActivity(i);
+    }
+    /**
+     * Launch Label activity
+     * */
+    private void callLabel() {
+        Intent i = new Intent(Rating.this, Label.class);
         startActivity(i);
     }
     /**

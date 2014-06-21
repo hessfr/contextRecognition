@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 public class Help extends ActionBarActivity {
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,12 +38,17 @@ public class Help extends ActionBarActivity {
         	callSettings();
         	return true;
         }
+        if (id == R.id.action_label) {
+        	//Go to rating activity
+        	callLabel();
+        	return true;
+        }
         if (id == R.id.action_rating) {
         	//Go to rating activity
         	callRating();
         	return true;
         }
-        
+
         return super.onOptionsItemSelected(item);
     }
     
@@ -51,6 +57,13 @@ public class Help extends ActionBarActivity {
      * */
     private void callSettings() {
         Intent i = new Intent(Help.this, Settings.class);
+        startActivity(i);
+    }
+    /**
+     * Launch Settings activity
+     * */
+    private void callLabel() {
+        Intent i = new Intent(Help.this, Label.class);
         startActivity(i);
     }
     /**

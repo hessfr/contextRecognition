@@ -1,10 +1,9 @@
 package com.example.contextrecognition;
 
-import java.util.LinkedList;
-
-import org.ejml.data.DenseMatrix64F;
-
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,16 +17,13 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.example.tools.Classifier;
-import com.example.tools.FeaturesExtractor;
-import com.example.tools.GMM;
-import com.example.tools.Mfccs;
-import com.example.tools.SoundHandler;
+import com.example.tools.AudioWorker;
 
 public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = "MainAcitivty";
 	
+	public static final String STOP_RECORDING = "stopRecording";
 	
 	String[] contextClasses = {"Context Class 1", "Context Class 2", "Context Class 3", 
 			   "Context Class 4", "Define new class"};
@@ -36,17 +32,6 @@ public class MainActivity extends ActionBarActivity {
 	SharedPreferences mPrefs;
 	TextView contextTV;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
-	
-	private Handler guiHandler = new Handler();
-	
-	// Objects needed for classifications:
-	private GMM gmm;
-	private Classifier clf;
-	private SoundHandler soundHandler;
-	private FeaturesExtractor featuresExtractor;
-	private LinkedList<double[]> mfccList;
-	
-	private String currentContext;
 	
 	ModelAdaptor modelAdaptor = new ModelAdaptor(); //TODO: delete??????
 	 
@@ -75,20 +60,17 @@ public class MainActivity extends ActionBarActivity {
     	
 	    addListenerOnButton();
 	    contextTV = (TextView) findViewById(R.id.contextTV);
-	    currentContext = new String();
-	    
-	    // Initialize objects needed for classification
-	    mfccList = new LinkedList<double[]>();
-		featuresExtractor = new FeaturesExtractor();
-		soundHandler = new SoundHandler();
-		clf = new Classifier();
-		gmm = new GMM("jsonGMM.json"); //TODO
 		
-		//Start recording when the app is started
-		startRec();
+		// Start the AudioWorker service:
+		Intent i = new Intent(this, AudioWorker.class);
+    	startService(i);
     }
     
-    // ---------- Some methods for the user interface: ----------
+    @Override
+    protected void onResume() {
+      super.onResume();
+      registerReceiver(receiver, new IntentFilter(AudioWorker.RESULT_REQUEST));
+    }
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -106,6 +88,11 @@ public class MainActivity extends ActionBarActivity {
         	callSettings();
         	return true;
         }
+        if (id == R.id.action_label) {
+        	//Go to label activity
+        	callLabel();
+        	return true;
+        }
         if (id == R.id.action_rating) {
         	//Go to rating activity
         	callRating();
@@ -117,7 +104,7 @@ public class MainActivity extends ActionBarActivity {
         	return true;
         }
         if (id == R.id.action_exit) {
-        	endRec();
+        	stopRecording();
         	finish();
         }
         
@@ -130,6 +117,13 @@ public class MainActivity extends ActionBarActivity {
      * */
     private void callSettings() {
         Intent i = new Intent(MainActivity.this, Settings.class);
+        startActivity(i);
+    }
+    /**
+     * Launch Label activity
+     * */
+    private void callLabel() {
+        Intent i = new Intent(MainActivity.this, Label.class);
         startActivity(i);
     }
     /**
@@ -181,75 +175,32 @@ public class MainActivity extends ActionBarActivity {
 	public void setText(String str) {
 		contextTV.setText(str);
 	}
+
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
+		@Override
+	    public void onReceive(Context context, Intent intent) {
+			Bundle bundle = intent.getExtras();
+		      if (bundle != null) {
+		    	  
+		        int resultCode = bundle.getInt(AudioWorker.RESULTCODE);
+		        int predInt = bundle.getInt(AudioWorker.PREDICTION_INT);
+		        String predString = bundle.getString(AudioWorker.PREDICTION_STRING);	
+		        
+		        if (resultCode == RESULT_OK) {
+		        	Log.i(TAG, "Current Prediction: " + predString + ": " + predInt);
+		        	setText(predString);		        	
+		        	
+		        } else {
+		        	Log.i(TAG, "Result not okay, result code " + resultCode);
+		        }
+		      }
+	    }
+	};
 	
-	// ---------- Methods for classification: ----------
-	
-	public void startRec() {
-
-		soundHandler = new SoundHandler() {
-
-			@Override
-			protected void handleData(short[] data, int length, int frameLength) {
-				
-				//length of data has to be 1024 to match our 32ms windows, 64512 to match 63 32ms windows
-				if (data.length != 64512) {
-					Log.e(TAG,"data sequence has wrong length, aborting calculation");
-					return;
-				}
-				
-				// Call handle data from SoundHandler class
-				super.handleData(data, length, frameLength);
-
-				// Loop through the audio data and extract our features for each 32ms window
-				
-				for(int i=0; i<63; i++) {
-					
-					// Split the data into 32ms chunks (equals 1024 elements)
-					short[] tmpData = new short[1024];
-					System.arraycopy(data, i*1024, tmpData, 0, 1024);
-					
-					Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
-					mfccList.add(currentMFCCs.get());
-				}
-				
-				// If we have 2 seconds of data, call our prediction method and clear the List afterwards again 
-				if (mfccList.size() == 63) {
-					// Convert data to DenseMatrix:
-					double[][] array = new double[mfccList.size()][12]; // TODO: n_features instead of 12
-					for (int i=0; i<mfccList.size(); i++) {
-					    array[i] = mfccList.get(i);
-					}
-					DenseMatrix64F samples = new DenseMatrix64F(array);
-
-					DenseMatrix64F res = clf.predict(gmm, samples);
-					
-					int tmp = (int) res.get(10); // TODO: implement this properly! As this array is exactly the length of one majority vote window, all elements in it are the same 
-					
-					currentContext = gmm.get_class_name(tmp);
-					
-					Log.i(TAG, "Current Context: " + currentContext);
-					
-					// Delete all elements of the list afterwards
-					mfccList.clear();
-				}
-				
-				guiHandler.post(new Runnable() {
-				@Override
-				public void run() {
-					
-					setText(currentContext);
-					
-					}
-				});
-
-			}
-
-		};
-
-		soundHandler.beginRec();
+	private void stopRecording() {
+		Intent intent = new Intent(STOP_RECORDING);
+		unregisterReceiver(receiver);
+		sendBroadcast(intent);
 	}
 
-	private void endRec() {
-		soundHandler.endRec();
-	}	
 }
