@@ -41,8 +41,9 @@ def FX_multiFolders(classesList=None, saveFeatures=False, useJSON=True): #TODO: 
     labelList = []
     featureDir = os.getcwd() + "/extractedFeatures"
 
-    for folder in classesDict.keys():
-        if alreadyExtracted(folder):
+    for folder in classesDict.keys():      
+        
+        if alreadyExtracted(folder, useJSON=useJSON):
             """ Use already extracted data if available: """
             if useJSON == False:
                 fileDir = featureDir + "/" + folder + ".p"
@@ -73,14 +74,17 @@ def FX_multiFolders(classesList=None, saveFeatures=False, useJSON=True): #TODO: 
     return featureData
 
 
-def alreadyExtracted(className):
+def alreadyExtracted(className, useJSON=True):
     """
     Check if features for this folder were already extracted and the data is stored in the /extractedFeatures folder
     @param className: name of the class that should be checked
     @return: True if it exists, False if it doesn't
     """
     rootDir = os.getcwd() + "/extractedFeatures"
-    fileDir = rootDir + "/" + className + ".p"
+    if useJSON == True:
+        fileDir = rootDir + "/" + className + ".json"
+    else:
+        fileDir = rootDir + "/" + className + ".p"
 
     if os.path.exists(fileDir):
         exists = True
