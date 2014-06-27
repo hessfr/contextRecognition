@@ -17,7 +17,6 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.google.gson.Gson;
-
 /*
 Contains parameters for the Gaussian mixture of all context classes
 */
@@ -40,6 +39,16 @@ public class GMM {
 		List<JsonModel> jsonGMM = parseGSON(filename);
 		
 		convertJSONtoGMM(jsonGMM);
+	}
+	
+	// Copy Constructor:
+	public GMM(GMM otherGMM) {
+		this.clfs = otherGMM.clfs;
+		this.classesDict = otherGMM.classesDict;
+		this.n_classes = otherGMM.n_classes;
+		this.n_features = otherGMM.n_features;
+		this.scale_means = otherGMM.scale_means;
+		this.scale_stddevs = otherGMM.scale_stddevs;
 	}
 	
 	public List<JsonModel> parseGSON(String filename) {

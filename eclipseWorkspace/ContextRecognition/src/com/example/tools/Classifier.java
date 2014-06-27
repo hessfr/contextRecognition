@@ -173,16 +173,16 @@ public class Classifier {
 		// Substract vmax vector from every column in logProbs and substract it from log prob value
 		DenseMatrix64F substracted = new DenseMatrix64F(n_components, n_samples); //refers to (tmpArray - vmax) in Python
 		DenseMatrix64F tmpRow = new DenseMatrix64F(1, n_samples);
-		DenseMatrix64F vmaxNeg = new DenseMatrix64F(1, n_samples);
+		// DenseMatrix64F vmaxNeg = new DenseMatrix64F(1, n_samples);
 		for(int i=0; i<n_components; i++) {
 			
 			CommonOps.extract(logProbs, i, (i+1), 0, logProbs.numCols, tmpRow, 0, 0);
 			
 			// CommonOps.scale(-1,tmpRow);
-			CommonOps.scale(-1,vmax,vmaxNeg);
+			// CommonOps.scale(-1,vmax,vmaxNeg);
 			
 			//Substract the tmpRow from all vmax values:
-			CommonOps.add(tmpRow, vmax, tmpRow);
+			CommonOps.sub(tmpRow, vmax, tmpRow); //used to be CommonOps.add(tmpRow, vmax, tmpRow);
 			
 			//Fill the column for the correct feature in the substracted matrix:
 			CommonOps.extract(tmpRow, 0, 1, 0, tmpRow.numCols, substracted, i, 0);
@@ -215,9 +215,10 @@ public class Classifier {
 		return finalLogProb;
 	}
 
-	// Subtract mean and norm standard deviation of of input data according to the mean and stddev values of the training data
-	// means and stddevs have shape of (1 x n_features)
-	
+	/*
+	 * Subtract mean and norm standard deviation of of input data according to the mean and stddev values of the training data
+	 * means and stddevs have shape of (1 x n_features)
+	 */
 	public DenseMatrix64F norm(DenseMatrix64F X, DenseMatrix64F means, DenseMatrix64F stddevs) {
 		DenseMatrix64F normed = new DenseMatrix64F(X.numRows,X.numCols);
 		DenseMatrix64F tmpCol = new DenseMatrix64F(X.numRows, 1);
@@ -237,8 +238,9 @@ public class Classifier {
 		
 	}
 	
-	
-	// Calculate a majority vote of given window length on a double array and returns the resulting DenseMatrix64F
+	/*
+	 * Calculate a majority vote of given window length on a double array and returns the resulting DenseMatrix64F
+	 */
 	public DenseMatrix64F majorityVote(double[] y_in) {
 		double MAJORITY_WINDOW = 2.0; // in seconds
 		double WINDOW_LENGTH = 0.1; // in seconds

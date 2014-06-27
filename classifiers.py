@@ -16,6 +16,7 @@ from sklearn.cross_validation import KFold
 import pylab as pl
 from featureExtraction import FX_Test
 from featureExtraction import FX_Folder
+from createJSON import pointsToJSON
 import math
 import operator
 import copy
@@ -90,120 +91,127 @@ def majorityVote(y_Raw, returnDisagreement=False):
     else:
         return resArray, disagreement
 
-def trainGMMJava(featureData):
+def trainGMMJava(featureData, n_comp=16):
     """
     Method to be rebuild in Java, not actually used. Build a Gaussian Mixture Model on the given data WITHOUT using Scikit-Learn to train,
     but create scikit-learn GMMs anyway to test if it works properly
-    @param featureData: Dictionary containing 'features' and 'labels' as numpy array and 'classesDict' for mapping of class names to numbers
+    @param featureData: Numpy array of already scaled features
     @return: Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
     """
-    X_train = featureData['features']
-    scaler = preprocessing.StandardScaler().fit(X_train)
-    X_train = scaler.transform(X_train)
+#    X_train = featureData['features']
+#    scaler = preprocessing.StandardScaler().fit(X_train)
+#    X_train = scaler.transform(X_train)
+#    y_train = featureData['labels']
+    
+    X_train = featureData
 
-    y_train = featureData['labels']
-
-    n_classes = len(np.unique(y_train))
-
-    n_comp = 16 # number of components
+    # n_comp = 16 # number of components
     n_features = 12
 
     nSteps = 1000
-
-    print(str(n_classes) + " different classes")
-
-    clfs = []
+    
     n_train_list = []
 
+    # Train with sklearn to create the GMM object, but we will overwrite everything later anyway:
+    clf = GMM(n_components=n_comp, covariance_type='full', n_iter=3)
+    tmpTrain = X_train
+    n_tmp = tmpTrain.shape[0]
+    clf.fit(tmpTrain)
 
-    for k in range(n_classes):
-        # Train with sklearn to create the GMM object, but we will overwrite everything later anyway:
-        tmpClf = GMM(n_components=n_comp, covariance_type='full', n_iter=2)
-        iTmp = (y_train == k)
-        tmpTrain = X_train[iTmp]
-        n_tmp = tmpTrain.shape[0]
-        tmpClf.fit(tmpTrain)
-
-        # -------------------------------
-        tmpClf.weights_ = 0
-        tmpClf.means_ = 0
-        tmpClf.covars_ = 0
-        
-#        weights = tmpClf.weights_
-#        means = tmpClf.means_
-#        covars = tmpClf.covars_
-
-        # --- Initialization ----
-        means = cluster.KMeans(n_clusters=n_comp).fit(tmpTrain).cluster_centers_
-        
-        weights = np.zeros(n_comp)
-        weights.fill(1.0 / n_comp)
-        
-        cc = np.cov(tmpTrain.T) + 1e-3 * np.eye(n_features) # -> 12x12 matrix
-        covars = np.tile(cc, (n_comp, 1, 1)) # this creates 16x12x12 matrix with each 12x12 matrix equal to cc
-
-        # --------------------
-        # --- EM Algorithm ---
-        log_likelihood = [] # to check for convergence
-        converged = False
-
-        # pdb.set_trace()
-        
-        for i in range(nSteps):
-            
-            # print(i)
-            
-            # ------- E-Step: -------
-            # calculate the probabilities:
-            proba = logProb(tmpTrain, weights, means, covars)
-
-            log_likelihood.append(proba.sum())
-
-
-            # calculate the responsibilities:  
-            lp = lpr(tmpTrain, weights, means, covars) + + np.log(weights)
-            
-            responsibilities = np.exp(lp - proba[:, np.newaxis])
-
-            # Check for convergence:
-            if i>0 and abs(log_likelihood[-1] - log_likelihood[-2]) < 0.01:
-                print("Convergence of class " + str(k) + " reached after " + str(i) + " steps" )                
-                converged = True
-                break
-
-            # ------- M-Step: -------
-
-            tWeights = responsibilities.sum(axis=0)
-            weighted_X_sum = np.dot(responsibilities.T, tmpTrain)
-            inverse_weights = 1.0 / (tWeights[:, np.newaxis])
+    # -------------------------------
+    clf.weights_ = 0
+    clf.means_ = 0
+    clf.covars_ = 0
     
-            # update weights:
-            weights = tWeights / float(tWeights.sum() + 10 * EPS) + EPS
+#        weights = clf.weights_
+#        means = clf.means_
+#        covars = clf.covars_
 
-            # update means:      
-            means = weighted_X_sum * inverse_weights
+    # --- Initialization ----
+    means = cluster.KMeans(n_clusters=n_comp).fit(tmpTrain).cluster_centers_    
+    
+    means = np.array(json.load(open("morePointsMeans.json","rb"))) #xxxxxxxxxxxxxx
+    
+    # pointsToJSON(means, "means")   
+    
+    weights = np.zeros(n_comp)
+    weights.fill(1.0 / n_comp)
+    
+    cc = np.cov(tmpTrain.T) + 1e-3 * np.eye(n_features) # -> 12x12 matrix
+    covars = np.tile(cc, (n_comp, 1, 1)) # this creates 16x12x12 matrix with each 12x12 matrix equal to cc
 
-            #update covars:
-            for c in range(n_comp):
-                post = responsibilities[:, c]
-                avg_cv = np.dot((post * tmpTrain.T), tmpTrain) / (post.sum() + 10 * EPS)
-                mu = means[c][np.newaxis]
-
-                covars[c] = avg_cv - np.dot(mu.T, mu) + (1e-3 * np.eye(n_features))
-
-        n_train_list.append(n_tmp)
-        tmpClf.weights_ = weights
-        tmpClf.means_ = means
-        tmpClf.covars_ = covars
-        tmpClf.converged_ = converged
-
-        clfs.append(tmpClf)
+    # --------------------
+    # --- EM Algorithm ---
+    log_likelihood = [] # to check for convergence
+    converged = False
 
     # pdb.set_trace()
+    
+    for i in range(nSteps):
+        
+        # print(i)
+        
+        # ------- E-Step: -------
+        # calculate the probabilities:
 
-    trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'n_train': n_train_list, 'scaler': scaler}
+        proba = logProb(tmpTrain, weights, means, covars)
+        
+        log_likelihood.append(proba.sum())
 
-    return trainedGMM
+
+        # calculate the responsibilities:  
+        lp = lpr(tmpTrain, weights, means, covars) + np.log(weights) # lprTmp in Java
+        
+        responsibilities = np.exp(lp - proba[:, np.newaxis])
+    
+#        print(proba)
+#        print(weights.sum())
+#        print(means.sum())
+#        print(covars[0].sum())
+                
+        
+        # Check for convergence:
+        if i>0 and abs(log_likelihood[-1] - log_likelihood[-2]) < 0.01:
+            print("Convergence reached after " + str(i) + " steps" )                
+            
+            # pdb.set_trace()           
+            
+            converged = True
+            break
+
+        # ------- M-Step: -------
+
+        tWeights = responsibilities.sum(axis=0) # sum up each column
+        weighted_X_sum = np.dot(responsibilities.T, tmpTrain)
+        inverse_weights = 1.0 / (tWeights[:, np.newaxis])
+
+        # update weights:
+        weights = tWeights / float(tWeights.sum() + 10 * EPS) + EPS
+
+        # update means:      
+        means = weighted_X_sum * inverse_weights
+
+        #update covars:
+        for c in range(n_comp):
+            post = responsibilities[:, c]
+            avg_cv = np.dot((post * tmpTrain.T), tmpTrain) / (post.sum() + 10 * EPS) # post * tmpTrain.T = tmp1 in Java
+            mu = means[c][np.newaxis]
+            
+            covars[c] = avg_cv - np.dot(mu.T, mu) + (1e-3 * np.eye(n_features))
+
+    n_train_list.append(n_tmp)
+    clf.weights_ = weights
+    clf.means_ = means
+    clf.covars_ = covars
+    clf.converged_ = converged
+    
+    resDict = {}
+    resDict["clfs"] = []
+    resDict["clfs"].append(clf)
+    resDict["n_train"] = n_train_list
+        
+    
+    return resDict
 
 
 def trainGMM(featureData):
@@ -470,13 +478,25 @@ def logProb(X, weights, means, covars):
             cv_chol = linalg.cholesky(cv, lower=True) # = L0 in Java
         except linalg.LinAlgError:
             # reinitialize component, because it might be stuck with too few observations
+            print("LinAlgError")
             cv_chol = linalg.cholesky(cv + min_covar * np.eye(n_features),lower=True)
 
         cv_log_det = 2 * np.sum(np.log(np.diagonal(cv_chol)))
 
         cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T # = solved in Java
 
+        # Instead of solving the equation for the complete (n_featuresxn_samples) matrix at once, we
+        # solve it for every sample point:
+#        cv_sol = np.zeros((n_features, n_samples))        
+#        for i in range(n_samples):
+#            tmpSol = linalg.solve_triangular(cv_chol, ((X - mu).T)[:,i], lower=True)
+#            cv_sol[:,i] = tmpSol.T
+#        cv_sol = cv_sol.T
+
         log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det) #=rowSum in Java
+
+#        if (c==0):
+#            pdb.set_trace()
 
     tmp_log_prob = (log_prob + np.log(weights))
 
@@ -484,7 +504,10 @@ def logProb(X, weights, means, covars):
     tmpArray = np.rollaxis(tmp_log_prob, axis=1) # transpose
     vmax = tmpArray.max(axis=0)
     final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
+
+
     final_log_prob = final_log_prob + vmax # shape = (n_samples,)
+    
 
     return final_log_prob
 

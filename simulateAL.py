@@ -20,7 +20,6 @@ _thresholdDict = {}
 
 #tGMM = pickle.load(open("tGMM.p","rb"))
 #realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
-#updatePoints = pickle.load(open("updatePoints_label1.p","rb"))
 
 def defineThresholdDict():
 

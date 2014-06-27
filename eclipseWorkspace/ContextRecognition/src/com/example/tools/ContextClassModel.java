@@ -10,6 +10,7 @@ public class ContextClassModel {
 		private int n_components;
 		private int n_features;
 		private int n_train;
+		private boolean converged;
 		
 		private DenseMatrix64F means;
 		private DenseMatrix64F weights;
@@ -25,6 +26,10 @@ public class ContextClassModel {
 		
 		public int get_n_train() {
 			return n_train;
+		}
+		
+		public boolean get_converged() {
+			return converged;
 		}
 		
 		public DenseMatrix64F get_means() {
@@ -50,6 +55,10 @@ public class ContextClassModel {
 		
 		public void set_n_train(int n_train_new) {
 			n_train = n_train_new;
+		}
+		
+		public void set_converged(boolean conv) {
+			converged = conv;
 		}
 		
 		public void set_means(DenseMatrix64F means_new) {

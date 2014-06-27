@@ -3,16 +3,18 @@ from scipy import linalg
 from scipy.stats import f
 from scipy.stats import chi2
 import pickle
+import json
 import copy
 import math
 import matplotlib.pyplot as pl
 from sklearn.mixture import GMM
 from featureExtraction import FX_multiFolders
+from classifiers import trainGMMJava
 import ipdb as pdb #pdb.set_trace()
 
-# tGMM = pickle.load(open("tGMM2.p","rb"))
-# updatePoints = pickle.load(open("updatePointsConv0.p","rb"))
+# tGMM = pickle.load(open("tGMM.p","rb"))
 # realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
+# fewPoints = pickle.load(open("fewPoints.p","rb"))
 
 EPS = np.finfo(float).eps
 
@@ -45,7 +47,7 @@ def adaptGMM(trainedGMM, updatePoints, label):
 
 
     """ Estimate number of components in the new data using BIC: """
-    n_components_list = range(1,17)
+    n_components_list = range(1,8)
     bicList = []
     for c in n_components_list:
         tmpClf = GMM(n_components=c, covariance_type='full', n_iter=1000)
@@ -57,11 +59,13 @@ def adaptGMM(trainedGMM, updatePoints, label):
     # select that number of components that resulted in the best (lowest) BIC:
     val, n_components_new = min((val, idx) for (idx, val) in enumerate(bicList))
     n_components_new += 1
-    # print("Optimal number of components according to BIC criteria: " + str(n_components_new))
+    print("Optimal number of components according to BIC criteria: " + str(n_components_new))
 
     """ Perform EM algorithm on the new data: """
     novelGMM = GMM(n_components=n_components_new, covariance_type='full', n_iter=1000)
     novelGMM.fit(X)
+    
+    #pdb.set_trace()
 
     """ Assign novel points to component it most likely belongs to: """
     likelihoods = np.zeros((n_components_new, n_novel))
@@ -78,8 +82,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
         Dk.append(X[iTmp])
         Mk.append(X[iTmp].shape[0])
 
-
-
     """ Test covariance and mean equality: """
     mapping = [-1] * n_components_old # Mapping from OLD to NOVEL (!) components, if old components is not mapped to novel one, the value equals -1.
                         # Elements initialized to -1. mapping[3] = 5 means that old component 3 is equal to new component 5.
@@ -87,7 +89,8 @@ def adaptGMM(trainedGMM, updatePoints, label):
     for k in range(n_components_new):
         for j in range(n_components_old):
             # print("Old comp: " + str(j) + " new comp: " + str(k))
-            if covarTest(Dk[k], oldGMM.covars_[j]) == True:
+            # if True:            
+            if covarTest(Dk[k], oldGMM.covars_[j]) == True: #TODO: removed for to test meanTest!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 if meanTest(Dk[k], oldGMM.means_[j]) == True:
                     mapping[j] = k
                     #TODO: compute log-likelihood of novel points of that new component under component j of old model.
@@ -97,8 +100,11 @@ def adaptGMM(trainedGMM, updatePoints, label):
     # pdb.set_trace()
 
     """ Compute components: """
-    j = 0
+    j = 0    
     for k in mapping:
+        # TODO: delete this later: xxxxxxxxxxxxxx
+        # tmpComponent = mergeComponents(n_old, n_novel, Mk[k], oldGMM.weights_[j], novelGMM.weights_[k], oldGMM.means_[j], novelGMM.means_[k], oldGMM.covars_[j], novelGMM.covars_[k])
+        # xxxxxxxx
         if k != -1:
             tmpComponent = mergeComponents(n_old, n_novel, Mk[k], oldGMM.weights_[j], novelGMM.weights_[k], oldGMM.means_[j], novelGMM.means_[k], oldGMM.covars_[j], novelGMM.covars_[k])
             mergedComp += 1
@@ -115,7 +121,7 @@ def adaptGMM(trainedGMM, updatePoints, label):
             new_model.append(tmpComponent)
 
     """ Merge statistically equivalent components: """
-    final_model = [] #
+    final_model = []
 
     for el1 in new_model:
             for el2 in new_model:
@@ -164,16 +170,15 @@ def covarTest(data, covars_old):
     n_samples = data.shape[0]
     n_features = data.shape[1]
     id = np.identity(n_features)
-
+    
     L0 = linalg.cholesky(covars_old, lower=True) # shape = (n_features, n_features)
     L0inv = linalg.inv(L0)
-
 
     Y = np.zeros((n_samples, n_features))
 
     for i in range(n_samples):
         Y[i,:] = np.dot(L0inv, X[i,:])
-
+    
     # pdb.set_trace()
 
     Sy = np.cov(Y, rowvar=0) # if rowvar = 0, each row represents an observation
@@ -188,6 +193,12 @@ def covarTest(data, covars_old):
 
     alphaPercentile = 0.05
     threshold = chi2.ppf(alphaPercentile, (0.5 * (n_features * (n_features + 1))))
+
+    #if (n_samples < 30): # only compare if same component
+        #print(w1)
+
+    # pdb.set_trace()
+        
     # 0.05 -> lower threshold / 0.95 -> higher threshold
 
     # print(str(test_statistic) + " - threshold: " + str(threshold))
@@ -218,6 +229,8 @@ def meanTest(data, means_old):
 
     S = np.cov(X, rowvar=0) # if rowvar = 0, each row represents an observation
     Sinv = linalg.inv(S)
+
+    # pdb.set_trace()
 
     m = X.mean(axis=0) - means_old
     T_squared = n_samples * np.dot(np.dot(m.T, Sinv), m)
@@ -256,13 +269,40 @@ def mergeComponents(n_old, n_novel, n_comp, weight_old, weight_novel, means_old,
 
     #covars:
     c1 = (n_old * weight_old * covars_old + n_comp * covars_novel) / float(n_old * weight_old + n_comp)
-    c2 = (n_old * weight_old * np.dot(means_old,means_old.T) + n_comp * np.dot(means_novel, means_novel.T)) / float(n_old * weight_old + n_comp) #TODO: check on richtig herum transponiert
+    c2 = (n_old * weight_old * np.dot(means_old,means_old.T) + n_comp * np.dot(means_novel, means_novel.T)) / float(n_old * weight_old + n_comp)
     c3 = np.dot(means,means.T)
     covars = c1 + c2 + c3
 
     weight = (n_old * weight_old + n_comp) / float(n_old + n_novel)
 
+    pdb.set_trace()
+
     return [weight, means, covars]
+
+def mergeComponentTest(tGMM, label):
+
+    means = np.array(json.load(open("morePointsMeans.json","rb")))
+    
+    X = pickle.load(open("morePointsScaled.p","rb"))
+    
+    newGMM = trainGMMJava(X, 2) 
+    
+    # pdb.set_trace()    
+    
+    n_old = tGMM["n_train"][label]
+    n_novel = newGMM["n_train"][0]
+    n_comp = 50    
+    
+    mergeComponents(n_old, n_novel, n_comp, tGMM["clfs"][label].weights_[0], 
+                    newGMM["clfs"][0].weights_[0], tGMM["clfs"][label].means_[0,:], 
+                    newGMM["clfs"][0].means_[0,:], tGMM["clfs"][label].covars_[0], newGMM["clfs"][0].covars_[0])
+    
+    
+    
+    
+    
+    
+
 
 def addHistoricalComponent(n_old, n_novel, weight_old, means_old, covars_old):
     """
@@ -301,12 +341,12 @@ def pdf(data, means, covars):
     n_samples = data.shape[0]
     n_features = data.shape[1]
 
-    data = data - np.tile(means,(n_samples,1))
+    data = data - np.tile(means,(n_samples,1)) # tile creates a matrix where each row is equal to means
     data = data.T
 
-    prob = np.sum(np.dot(data.T, linalg.inv(covars)).T * data, axis=0)
+    prob = np.sum(np.dot(data.T, linalg.inv(covars)).T * data, axis=0) #colSum in Java
 
-    prob = np.exp(-0.5*prob) / np.sqrt((2*math.pi) ** n_features * (abs(np.linalg.det(covars)) + EPS)) # float()
+    prob = np.exp(-0.5*prob) / np.sqrt((2*math.pi) ** n_features * (abs(np.linalg.det(covars)) + EPS))
 
     return prob
 
@@ -360,7 +400,7 @@ def logProb(X, weights, means, covars):
 def bic(data, means, covars, weights, n_comp):
     """
     Calculate BIC criteria (the lower this value, the better)
-    @param data: Numpy array of the points, shape = (n_samples, n_features)
+    @param data: Numpy array - already scale. shape = (n_samples, n_features)
     @param means: Means of one component only, shape = n_features
     @param covars: Covars of one component ony, shape = (n_feature, n_features)
     @return: BIC criteria (the lower this value, the better)
@@ -368,7 +408,7 @@ def bic(data, means, covars, weights, n_comp):
     n_points = data.shape[0] #number of points
     n_feat = data.shape[1] # number of features
 
-    logLik = -2.0 * logProb(data, weights, means, covars).sum() #xxxx check if using .sum() is correct
+    logLik = -2.0 * logProb(data, weights, means, covars).sum()
 
     complexity = ((n_comp/2.0 * (n_feat+1) * (n_feat+2)) - 1.0) * np.log(n_points)
 
