@@ -1,10 +1,9 @@
 package com.example.tools;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.ejml.data.DenseMatrix64F;
-
-import com.example.contextrecognition.MainActivity;
 
 import android.app.Activity;
 import android.app.IntentService;
@@ -14,6 +13,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.example.contextrecognition.MainActivity;
 
 public class AudioWorker extends IntentService {
 
@@ -26,12 +27,14 @@ public class AudioWorker extends IntentService {
 	private LinkedList<double[]> mfccList;
 	private String stringRes;
 	
+	public static final String PREDICTION = "resultRequest";
 	public static final String PREDICTION_INT = "predictionInt";
 	public static final String PREDICTION_STRING = "predictionString";
+	public static final String CLASSES_DICT = "classesDict";
 	public static final String RESULTCODE = "resultcode";
-	public static final String RESULT_REQUEST = "resultRequest";
 	public static int code = Activity.RESULT_CANCELED;
 
+	private BroadcastReceiver receiver;
 	
 	public AudioWorker() {
 		super("AudioWorker");
@@ -41,7 +44,42 @@ public class AudioWorker extends IntentService {
     public void onCreate() {
         // TODO Auto-generated method stub
         super.onCreate();
-        registerReceiver(receiver, new IntentFilter(MainActivity.STOP_RECORDING));
+        
+        // Register the broadcast receiver and intent filters:
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(MainActivity.STOP_RECORDING);
+        filter.addAction(MainActivity.REQ_CLASSNAMES);
+        
+    	this.receiver = new BroadcastReceiver() {
+    		   
+    		   @Override
+    		   public void onReceive(Context context, Intent intent) {
+    			   
+    			   Log.d(TAG, "Broadcast received xxxxxxxxxxxxxxxxx");
+    			   
+    			   Bundle bundle = intent.getExtras();
+    			   
+    			   Log.i(TAG, "xxxxxxxxxxxxxxxxxx" + intent.getAction());
+    			   
+    			   if (bundle != null) {
+    				   
+    				   if (intent.getAction().equals(MainActivity.STOP_RECORDING)) {
+    					   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx stop recording");
+    					   endRec();
+    					   
+    					   Log.i(TAG,"Recording stopped");
+    				   } else if(intent.getAction().equals(MainActivity.REQ_CLASSNAMES)) {
+    					   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx request class names");
+    			       }
+    			        //int resultCode = bundle.getInt(MainActivity.STOP_RECORDING);
+    				   	
+    			   }
+    		   }
+    		};
+        
+        
+        this.registerReceiver(receiver, filter);
+        
         Log.d(TAG, "Broadcast receiver registered");
         Log.d(TAG, "AudioWorker created");
     }
@@ -121,9 +159,11 @@ public class AudioWorker extends IntentService {
 					
 					Log.v(TAG, "Current Context: " + stringRes);
 					
+					HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
+					
 					// Set result code to okay and publish the result
 					code = Activity.RESULT_OK;
-					publish(intRes, stringRes, code);
+					publish(intRes, stringRes, code, hm);
 					
 					// Delete all elements of the list afterwards
 					mfccList.clear();
@@ -140,22 +180,44 @@ public class AudioWorker extends IntentService {
 		soundHandler.endRec();
 	}
 	
-	private final BroadcastReceiver receiver = new BroadcastReceiver() {
-	   @Override
-	   public void onReceive(Context context, Intent intent) {
-		   Bundle bundle = intent.getExtras();
-		   if (bundle != null) {
-		        //int resultCode = bundle.getInt(MainActivity.STOP_RECORDING);
-			   	endRec();
-			   	Log.i(TAG,"Recording stopped");
-		   }
-	   }
-	};
+//	private BroadcastReceiver receiver = new BroadcastReceiver() {
+//	   @Override
+//	   public void onReceive(Context context, Intent intent) {
+//		   
+//		   Log.d(TAG, "Broadcast received");
+//		   
+//		   Bundle bundle = intent.getExtras();
+//		   
+//		   //Log.i(TAG, "xxxxx" + intent.getAction());
+//		   
+//		   if (bundle != null) {
+//			   
+//			   if (intent.getAction().equals(MainActivity.STOP_RECORDING)) {
+//				   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx stop recording");
+//				   endRec();
+//				   
+//				   Log.i(TAG,"Recording stopped");
+//			   } else if(intent.getAction().equals(MainActivity.REQ_CLASSNAMES)) {
+//				   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx request class names");
+//		       }
+//		        //int resultCode = bundle.getInt(MainActivity.STOP_RECORDING);
+//			   	
+//		   }
+//	   }
+//	};
 	
-	private void publish(int predictionInt, String predicationString, int resultCode) {
-		Intent intent = new Intent(RESULT_REQUEST);
+	private void publish(int predictionInt, String predicationString, int resultCode, HashMap<String, Integer> classesDict) {
+		Intent intent = new Intent(PREDICTION);
+		
+		Bundle bundle = new Bundle();
+		
+		bundle.putSerializable(CLASSES_DICT,classesDict);
+		
+		intent.putExtras(bundle);
+		
 		intent.putExtra(PREDICTION_INT, predictionInt);
 		intent.putExtra(PREDICTION_STRING, predicationString);
+
 		intent.putExtra(RESULTCODE, code);
 		sendBroadcast(intent);
 	}

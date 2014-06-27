@@ -1,5 +1,9 @@
 package com.example.contextrecognition;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,24 +19,27 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.tools.AudioWorker;
+import com.example.tools.ClassesDict;
 
 public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = "MainAcitivty";
 	
 	public static final String STOP_RECORDING = "stopRecording";
+	public static final String REQ_CLASSNAMES = "reqClassNames";
 	
-	String[] contextClasses = {"Context Class 1", "Context Class 2", "Context Class 3", 
-			   "Context Class 4", "Define new class"};
+	public Map<String, Integer> classesDict = new HashMap<String, Integer>();
+	private ClassesDict cd = new ClassesDict();
+	
+	public String[] contextClasses;
 	ImageButton changeButton;
 	ImageButton confirmButton;
 	SharedPreferences mPrefs;
 	TextView contextTV;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
-	
-	ModelAdaptor modelAdaptor = new ModelAdaptor(); //TODO: delete??????
 	 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,12 +70,22 @@ public class MainActivity extends ActionBarActivity {
 		// Start the AudioWorker service:
 		Intent i = new Intent(this, AudioWorker.class);
     	startService(i);
+    	
+    	// Request the class names from the AudioWorker:
+    	// requestClassNames();
     }
     
     @Override
     protected void onResume() {
       super.onResume();
-      registerReceiver(receiver, new IntentFilter(AudioWorker.RESULT_REQUEST));
+      
+      // Register the broadcast receiver and intent filters:
+      IntentFilter filter = new IntentFilter();
+      filter.addAction(AudioWorker.PREDICTION);
+      //filter.addAction(Params.INTENT_UPDATE);
+      
+      registerReceiver(receiver, filter);
+      
     }
     
     @Override
@@ -151,8 +168,17 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
  
-				Intent i = new Intent(MainActivity.this, ContextSelection.class);
-		        startActivity(i);
+				if (ClassesDict.getInstance().isEmpty() == false) {
+					Intent i = new Intent(MainActivity.this, ContextSelection.class);
+			        startActivity(i);
+				} else {
+					// If class names not yet available, send Toast
+					Toast.makeText(getBaseContext(),(String) "Please wait until the system is initialized", Toast.LENGTH_SHORT).show();
+					
+					Log.w(TAG, "Not changing to ContextSelection activity, as class names not available yet.");
+				}
+				
+				
  
 			}
  
@@ -163,7 +189,9 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
  
-				modelAdaptor.currentClassCorrect();
+				// requestClassNames();
+				
+				// TODO: call model adaptor
  
 			}
  
@@ -176,22 +204,35 @@ public class MainActivity extends ActionBarActivity {
 	}
 
 	private BroadcastReceiver receiver = new BroadcastReceiver() {
+		@SuppressWarnings("unchecked")
 		@Override
 	    public void onReceive(Context context, Intent intent) {
 			Bundle bundle = intent.getExtras();
 		      if (bundle != null) {
+		    	  	
+		    	  	if (intent.getAction().equals(AudioWorker.PREDICTION)) {
+		    	  		
+		    	  		int resultCode = bundle.getInt(AudioWorker.RESULTCODE);
+						int predInt = bundle.getInt(AudioWorker.PREDICTION_INT);
+						String predString = bundle.getString(AudioWorker.PREDICTION_STRING);	
+						
+						if (resultCode == RESULT_OK) {
+							Log.i(TAG, "Current Prediction: " + predString + ": " + predInt);
+							setText(predString);
+							
+							Serializable ser = new HashMap<String, Integer>();
+							ser = bundle.getSerializable(AudioWorker.CLASSES_DICT);
+							classesDict = ((HashMap<String, Integer>) ser);
+							
+							ClassesDict.getInstance().setMap(classesDict);
+							
+						} else {
+							Log.i(TAG, "Result not okay, result code " + resultCode);
+						}
+		    	  	}
 		    	  
-		        int resultCode = bundle.getInt(AudioWorker.RESULTCODE);
-		        int predInt = bundle.getInt(AudioWorker.PREDICTION_INT);
-		        String predString = bundle.getString(AudioWorker.PREDICTION_STRING);	
-		        
-		        if (resultCode == RESULT_OK) {
-		        	Log.i(TAG, "Current Prediction: " + predString + ": " + predInt);
-		        	setText(predString);		        	
-		        	
-		        } else {
-		        	Log.i(TAG, "Result not okay, result code " + resultCode);
-		        }
+					  
+					
 		      }
 	    }
 	};
@@ -200,6 +241,13 @@ public class MainActivity extends ActionBarActivity {
 		Intent intent = new Intent(STOP_RECORDING);
 		unregisterReceiver(receiver);
 		sendBroadcast(intent);
+	}
+	
+	private void requestClassNames() {
+		Intent intent = new Intent(REQ_CLASSNAMES);
+		//unregisterReceiver(receiver);
+		sendBroadcast(intent);
+		Log.d(TAG, "xxxxx Class name request sent");
 	}
 
 }
