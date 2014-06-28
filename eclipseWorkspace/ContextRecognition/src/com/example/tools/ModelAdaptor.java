@@ -75,7 +75,7 @@ public class ModelAdaptor {
 		 * component (of the novel model), and so on...
 		*/
 		ArrayList<DenseMatrix64F> Dk = new ArrayList<DenseMatrix64F>();
-	    // Mk ontains the number of points for each entry (component) in the Dk ArrayList:
+	    // Mk contains the number of points for each entry (component) in the Dk ArrayList:
 		ArrayList<Integer> Mk = new ArrayList<Integer>();
 		
 		// Fill the Mk array first
@@ -380,7 +380,6 @@ public class ModelAdaptor {
 		return false;
 	}
 
-	
 	/*
      * Merge two mixture components.
      * 
@@ -579,8 +578,6 @@ public class ModelAdaptor {
 		return prob;
 	}
 	    
-	    
-	
 	/*
 	 * Train a new mixture model for one class. featureData has to be scaled already.
 	 */
@@ -808,7 +805,6 @@ public class ModelAdaptor {
 
 		return result;
 	}
-	
 	
 	/*
 	 * Calculate the log probability of multiple points under a GMM represented
@@ -1238,7 +1234,6 @@ public class ModelAdaptor {
         writer.close();
 	}
 	
-
 	private static double[][] convertToArray(DenseMatrix64F matrix) {
 	    double array[][] = new double[matrix.getNumRows()][matrix.getNumCols()];
 	    for (int r=0; r<matrix.getNumRows(); r++)

@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import com.example.tools.AudioWorker;
 import com.example.tools.ClassesDict;
+import com.example.tools.appStatus;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -71,8 +72,10 @@ public class MainActivity extends ActionBarActivity {
 		Intent i = new Intent(this, AudioWorker.class);
     	startService(i);
     	
-    	// Request the class names from the AudioWorker:
-    	// requestClassNames();
+    	// Set app status to initializing:
+		appStatus.getInstance().set(appStatus.INIT);
+		Log.i(TAG, "New status: init");
+
     }
     
     @Override
@@ -188,11 +191,8 @@ public class MainActivity extends ActionBarActivity {
 			 
 			@Override
 			public void onClick(View arg0) {
- 
-				// requestClassNames();
 				
 				// TODO: call model adaptor
- 
 			}
  
 		});
@@ -220,10 +220,10 @@ public class MainActivity extends ActionBarActivity {
 							Log.i(TAG, "Current Prediction: " + predString + ": " + predInt);
 							setText(predString);
 							
+							// Update the ClassesDict
 							Serializable ser = new HashMap<String, Integer>();
 							ser = bundle.getSerializable(AudioWorker.CLASSES_DICT);
 							classesDict = ((HashMap<String, Integer>) ser);
-							
 							ClassesDict.getInstance().setMap(classesDict);
 							
 						} else {
@@ -241,13 +241,6 @@ public class MainActivity extends ActionBarActivity {
 		Intent intent = new Intent(STOP_RECORDING);
 		unregisterReceiver(receiver);
 		sendBroadcast(intent);
-	}
-	
-	private void requestClassNames() {
-		Intent intent = new Intent(REQ_CLASSNAMES);
-		//unregisterReceiver(receiver);
-		sendBroadcast(intent);
-		Log.d(TAG, "xxxxx Class name request sent");
 	}
 
 }

@@ -7,14 +7,9 @@ import org.ejml.data.DenseMatrix64F;
 
 import android.app.Activity;
 import android.app.IntentService;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
-
-import com.example.contextrecognition.MainActivity;
 
 public class AudioWorker extends IntentService {
 
@@ -25,6 +20,8 @@ public class AudioWorker extends IntentService {
 	private SoundHandler soundHandler;
 	private FeaturesExtractor featuresExtractor;
 	private LinkedList<double[]> mfccList;
+	public LinkedList<double[]> dataBuffer; // buffer the last 1 minute of data for the model adaption
+	private static int DATA_BUFFER_SIZE = 1875; // equals ~1min for 0.032ms window length
 	private String stringRes;
 	
 	public static final String PREDICTION = "resultRequest";
@@ -34,8 +31,6 @@ public class AudioWorker extends IntentService {
 	public static final String RESULTCODE = "resultcode";
 	public static int code = Activity.RESULT_CANCELED;
 
-	private BroadcastReceiver receiver;
-	
 	public AudioWorker() {
 		super("AudioWorker");
 	}
@@ -45,42 +40,6 @@ public class AudioWorker extends IntentService {
         // TODO Auto-generated method stub
         super.onCreate();
         
-        // Register the broadcast receiver and intent filters:
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(MainActivity.STOP_RECORDING);
-        filter.addAction(MainActivity.REQ_CLASSNAMES);
-        
-    	this.receiver = new BroadcastReceiver() {
-    		   
-    		   @Override
-    		   public void onReceive(Context context, Intent intent) {
-    			   
-    			   Log.d(TAG, "Broadcast received xxxxxxxxxxxxxxxxx");
-    			   
-    			   Bundle bundle = intent.getExtras();
-    			   
-    			   Log.i(TAG, "xxxxxxxxxxxxxxxxxx" + intent.getAction());
-    			   
-    			   if (bundle != null) {
-    				   
-    				   if (intent.getAction().equals(MainActivity.STOP_RECORDING)) {
-    					   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx stop recording");
-    					   endRec();
-    					   
-    					   Log.i(TAG,"Recording stopped");
-    				   } else if(intent.getAction().equals(MainActivity.REQ_CLASSNAMES)) {
-    					   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx request class names");
-    			       }
-    			        //int resultCode = bundle.getInt(MainActivity.STOP_RECORDING);
-    				   	
-    			   }
-    		   }
-    		};
-        
-        
-        this.registerReceiver(receiver, filter);
-        
-        Log.d(TAG, "Broadcast receiver registered");
         Log.d(TAG, "AudioWorker created");
     }
 	
@@ -88,7 +47,6 @@ public class AudioWorker extends IntentService {
     public void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
-        unregisterReceiver(receiver);
         Log.d(TAG, "AudioWorker destroyed");
     }
 
@@ -97,10 +55,11 @@ public class AudioWorker extends IntentService {
 		Log.i(TAG, "AudioWorker Service started");
 		
 	    mfccList = new LinkedList<double[]>();
+	    dataBuffer = new LinkedList<double[]>();
 		featuresExtractor = new FeaturesExtractor();
 		soundHandler = new SoundHandler();
 		clf = new Classifier();
-		gmm = new GMM("jsonGMM.json"); //TODO
+		gmm = new GMM("GMM.json"); //TODO
 		
 		//Initialize the data handling
 		initializeDataHandling();
@@ -117,56 +76,88 @@ public class AudioWorker extends IntentService {
 	public void initializeDataHandling() {
 
 		soundHandler = new SoundHandler() {
-
+			
 			@Override
 			protected void handleData(short[] data, int length, int frameLength) {
 				
-				//length of data has to be 1024 to match our 32ms windows, 64512 to match 63 32ms windows
-				if (data.length != 64512) {
-					Log.e(TAG,"data sequence has wrong length, aborting calculation");
-					return;
-				}
-				
-				// Call handle data from SoundHandler class
-				super.handleData(data, length, frameLength);
-
-				// Loop through the audio data and extract our features for each 32ms window
-				
-				for(int i=0; i<63; i++) {
+				// Only handle new data if we are in init or normal classification status:
+				if ((appStatus.getInstance().get() == appStatus.NORMAL_CLASSIFICATION) ||
+						appStatus.getInstance().get() == appStatus.INIT) {
 					
-					// Split the data into 32ms chunks (equals 1024 elements)
-					short[] tmpData = new short[1024];
-					System.arraycopy(data, i*1024, tmpData, 0, 1024);
-					
-					Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
-					mfccList.add(currentMFCCs.get());
-				}
-				
-				// If we have 2 seconds of data, call our prediction method and clear the List afterwards again 
-				if (mfccList.size() == 63) {
-					// Convert data to DenseMatrix:
-					double[][] array = new double[mfccList.size()][12]; // TODO: n_features instead of 12
-					for (int i=0; i<mfccList.size(); i++) {
-					    array[i] = mfccList.get(i);
+					//Check if sequence length is 2 seconds (more precisely 63 32ms windows)
+					if (data.length != 64512) { // a single 32ms window has size 1024
+						Log.e(TAG,"data sequence has wrong length, aborting calculation");
+						return;
 					}
-					DenseMatrix64F samples = new DenseMatrix64F(array);
+					
+					// add this sequence to the buffer needed for the model adaption
+					
+					
+					// Call handle data from SoundHandler class
+					super.handleData(data, length, frameLength);
 
-					DenseMatrix64F res = clf.predict(gmm, samples);
+					// Loop through the audio data and extract our features for each 32ms window
+					for(int i=0; i<63; i++) {
+						
+						// Split the data into 32ms chunks (equals 1024 elements)
+						short[] tmpData = new short[1024];
+						System.arraycopy(data, i*1024, tmpData, 0, 1024);
+						
+						Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
+						mfccList.add(currentMFCCs.get());
+						
+						// Also add the MFCCs to the 1min data buffer:
+						
+						if (dataBuffer.size() < DATA_BUFFER_SIZE) {
+							// Add new feature point:
+							dataBuffer.add(currentMFCCs.get());
+							
+						} else {
+							
+							// Add new feature point and remove the oldest one:
+							dataBuffer.add(currentMFCCs.get());
+							dataBuffer.remove(0);
+						}					
+						
+					}
 					
-					int intRes = (int) res.get(10); // TODO: implement this properly! As this array is exactly the length of one majority vote window, all elements in it are the same 
-					
-					stringRes = gmm.get_class_name(intRes);
-					
-					Log.v(TAG, "Current Context: " + stringRes);
-					
-					HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
-					
-					// Set result code to okay and publish the result
-					code = Activity.RESULT_OK;
-					publish(intRes, stringRes, code, hm);
-					
-					// Delete all elements of the list afterwards
-					mfccList.clear();
+					// If we have 2 seconds of data, call our prediction method and clear the list afterwards again 
+					if (mfccList.size() == 63) {
+						// Convert data to DenseMatrix:
+						double[][] array = new double[mfccList.size()][12]; // TODO: n_features instead of 12
+						for (int i=0; i<mfccList.size(); i++) {
+						    array[i] = mfccList.get(i);
+						}
+						DenseMatrix64F samples = new DenseMatrix64F(array);
+
+						DenseMatrix64F res = clf.predict(gmm, samples);
+						
+						int intRes = (int) res.get(10); // TODO: implement this properly! As this array is exactly the length of one majority vote window, all elements in it are the same 
+						
+						stringRes = gmm.get_class_name(intRes);
+						
+						Log.v(TAG, "Current Context: " + stringRes);
+						
+						HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
+						
+						// Set result code to okay and publish the result
+						code = Activity.RESULT_OK;
+						publish(intRes, stringRes, code, hm);
+						
+						// Delete all elements of the list afterwards
+						mfccList.clear();
+						
+						// If we were in init status, change to normal classification now:
+						if (appStatus.getInstance().get() == appStatus.INIT) {
+							appStatus.getInstance().set(appStatus.NORMAL_CLASSIFICATION);
+							Log.i(TAG, "New status: normal classification");
+						}
+						
+						//TEST-------------------
+						gmm.dumpJSON();
+						//-----------------------
+						
+					}
 				}
 
 			}
@@ -179,32 +170,6 @@ public class AudioWorker extends IntentService {
 	private void endRec() {
 		soundHandler.endRec();
 	}
-	
-//	private BroadcastReceiver receiver = new BroadcastReceiver() {
-//	   @Override
-//	   public void onReceive(Context context, Intent intent) {
-//		   
-//		   Log.d(TAG, "Broadcast received");
-//		   
-//		   Bundle bundle = intent.getExtras();
-//		   
-//		   //Log.i(TAG, "xxxxx" + intent.getAction());
-//		   
-//		   if (bundle != null) {
-//			   
-//			   if (intent.getAction().equals(MainActivity.STOP_RECORDING)) {
-//				   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx stop recording");
-//				   endRec();
-//				   
-//				   Log.i(TAG,"Recording stopped");
-//			   } else if(intent.getAction().equals(MainActivity.REQ_CLASSNAMES)) {
-//				   Log.i(TAG,"xxxxxxxxxxxxxxxxxxxxx request class names");
-//		       }
-//		        //int resultCode = bundle.getInt(MainActivity.STOP_RECORDING);
-//			   	
-//		   }
-//	   }
-//	};
 	
 	private void publish(int predictionInt, String predicationString, int resultCode, HashMap<String, Integer> classesDict) {
 		Intent intent = new Intent(PREDICTION);

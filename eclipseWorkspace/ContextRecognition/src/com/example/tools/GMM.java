@@ -2,6 +2,8 @@ package com.example.tools;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -117,6 +119,65 @@ public class GMM {
 			//TODO:
 		}
 	}
+
+	// Dump a GMM object into a JSON file
+	public void dumpJSON() {
+
+		List<JsonModel> jm = convertGMMtoJSON();
+		
+		String str = new Gson().toJson(jm);
+
+		File sdcard = Environment.getExternalStorageDirectory();
+
+		File dir = new File(sdcard.getAbsolutePath());
+
+		File file = new File(dir, "GMM.json");
+		
+		FileOutputStream f = null;
+		try {
+			f = new FileOutputStream(file);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		try {
+			f.write(str.getBytes());
+			f.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	// Convert GMM to ArrayList of JsonModels:
+	public List<JsonModel> convertGMMtoJSON() {
+
+		List<JsonModel> jsonModelList = new ArrayList<JsonModel>();
+		
+		for(int i=0; i<get_n_classes(); i++) {
+			JsonModel j = new JsonModel();
+			
+			j.set_n_classes(get_n_classes());
+			j.set_classesDict(get_classesDict());
+			j.set_n_features(get_n_features());
+			j.set_scale_means(convertToArrayList_1D_row(get_scale_means()));
+			j.set_scale_stddevs(convertToArrayList_1D_row(get_scale_stddevs()));
+			
+			j.set_n_components(clf(i).get_n_components());
+			j.set_n_features(clf(i).get_n_features());
+			j.set_n_train(clf(i).get_n_train());
+			
+			j.set_weights(convertToArrayList_1D_row(clf(i).get_weights()));
+			j.set_means(convertToArrayList_2D(clf(i).get_means()));
+			j.set_covars(convertToArrayList_3D(clf(i).get_covars()));
+			
+			jsonModelList.add(j);			
+		}
+			
+			return jsonModelList;
+	}
 	
 	// Converts an ArrayList into a (1 x n) EJML DenseMatrix64F. If a (n x 1) matrix is needed, transpose the result
 	private DenseMatrix64F convertToEJML_1D_row(ArrayList<Double> in) {
@@ -126,6 +187,21 @@ public class GMM {
 		
 		for(int i=0; i<len; i++) {
 			out.set(0, i, in.get(i));
+		}
+		
+		return out;
+		
+	}
+	
+	// Converts an ArrayList into a (1 x n) EJML DenseMatrix64F. If a (n x 1) matrix is needed, transpose the result
+	private ArrayList<Double> convertToArrayList_1D_row(DenseMatrix64F in) {
+		
+		ArrayList<Double> out = new ArrayList<Double>();
+		
+		int len = in.numCols;
+		
+		for(int i=0; i<len; i++) {
+			out.add(in.get(0, i));
 		}
 		
 		return out;
@@ -145,6 +221,30 @@ public class GMM {
 				out.set(r, c, in.get(r).get(c));
 			}
 			
+		}
+		
+		return out;
+		
+	}
+
+	// Converts an ArrayList into a 2D EJML DenseMatrix64F.
+	private ArrayList<ArrayList<Double>> convertToArrayList_2D(DenseMatrix64F in) {
+		
+		ArrayList<ArrayList<Double>> out = new ArrayList<ArrayList<Double>>();
+		
+		int nRows = in.numRows;
+		int nCols = in.numCols;
+		
+		for(int r=0; r<nRows; r++) {
+			
+			ArrayList<Double> tmpRow = new ArrayList<Double>();
+			
+			for(int c=0; c<nCols; c++) {
+				
+				tmpRow.add(in.get(r, c));
+				
+			}
+			out.add(tmpRow);
 		}
 		
 		return out;
@@ -178,6 +278,40 @@ public class GMM {
 		
 	}
 
+	// Converts an array of 2D EJML DenseMatrix64Fs into a 3D ArrayList.
+	private ArrayList<ArrayList<ArrayList<Double>>> convertToArrayList_3D(DenseMatrix64F[] in) {
+		
+		ArrayList<ArrayList<ArrayList<Double>>> out = new ArrayList<ArrayList<ArrayList<Double>>>();
+		
+		int nMatrices = in.length;
+		int nRows = in[0].numRows;
+		int nCols = in[0].numCols;
+		
+		for(int m=0; m<nMatrices; m++) {
+			
+			ArrayList<ArrayList<Double>> tmpMatrix = new ArrayList<ArrayList<Double>>();
+			
+			for(int r=0; r<nRows; r++) {
+				
+				ArrayList<Double> tmpRow = new ArrayList<Double>();
+				
+				for(int c=0; c<nCols; c++) {
+					
+					tmpRow.add(in[m].get(r, c));
+					
+				}
+				tmpMatrix.add(tmpRow);
+			}
+			
+			out.add(tmpMatrix);
+		}
+		
+
+		
+		return out;
+		
+	}
+	
 	// Methods to access data:
 	public ContextClassModel clf(int i) {
 		return clfs.get(i);

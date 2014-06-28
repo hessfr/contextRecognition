@@ -14,10 +14,6 @@ public class SoundHandler extends Thread {
 	private AudioRecord rec = null;
 	
 	private boolean currentlyRecording = false;
-	
-	// this is the number of bytes per frame to create 32ms window when f=16kHz
-	// private static int BYTE_PER_FRAME = 1024; //TODO: implement this properly
-	// private static int BYTE_PER_FRAME = 63*1024; //equals 2seconds
 
 	private int SEQUENCE_LENGTH = 63*1024; // equals 2seconds
 	
@@ -33,7 +29,7 @@ public class SoundHandler extends Thread {
 
 	// Constructor:
 	public SoundHandler(){		
-		super(); //TODO: do we have to call Thread constructor here or is it done implicitly?
+		super();
 	}
 	
 	private Thread recorderThread = new Thread() {
@@ -170,7 +166,7 @@ public class SoundHandler extends Thread {
 	}
 	
 	/*
-	 * Override this method in MainActivity later
+	 * Override this method in AudioWorker
 	 */
 	protected void handleData(short[] data, int length, int frameLength) {
 

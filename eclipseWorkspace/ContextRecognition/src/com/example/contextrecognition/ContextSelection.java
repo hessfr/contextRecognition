@@ -12,6 +12,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 
 import com.example.tools.ClassesDict;
+import com.example.tools.appStatus;
 
 public class ContextSelection extends ListActivity {
     
@@ -52,6 +53,12 @@ public class ContextSelection extends ListActivity {
     	  Log.i(TAG,"Existing class selected");
     	  
     	  //TODO: call model adaption
+    	  
+    	  
+    	  appStatus.getInstance().set(appStatus.MODEL_ADPATION);
+    	  Log.i(TAG, "New status: model adaption");
+    	  
+    	  
 
           finish();
     	  
