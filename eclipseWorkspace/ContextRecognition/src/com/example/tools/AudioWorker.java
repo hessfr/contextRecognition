@@ -37,20 +37,8 @@ public class AudioWorker extends IntentService {
 	public static final String STATUS = "status"; //TODO: more suitable name
 	public static final String CLASS_STRINGS = "classesStrings";
 	public static final String GMM_OBJECT = "gmmObject";
-	public static final String CURRENT_BUFFER_STATUS = "currentBufferStatus";
-	public static final String CURRENT_BUFFER = "currentBuffer";
-	
-	// Codes for the result receiver:
-	public static int CLASSNAMES_CODE = 0;
-	public static int BUFFER_STATUS_CODE = 1;
-	public static int BUFFER_CODE = 2;
-	public static int GMM_CODE = 3;
-	
-	public static String CLASSNAMES = "classnamesReq";
-	public static String BUFFER_STATUS = "bufferStatusReq";
-	public static String BUFFER = "bufferReq";
-	public static String GMM = "gmmReq";
-	
+	public static final String BUFFER_STATUS = "bufferStatus";
+	public static final String BUFFER = "buffer";	
 			
 	public AudioWorker() {
 		super("AudioWorker");
@@ -84,35 +72,6 @@ public class AudioWorker extends IntentService {
 
 		// Initialize the data handling
 		initializeDataHandling();
-		
-		// ResultReceiver:
-		final ResultReceiver receiver = arg0.getParcelableExtra("receiver");
-        String command = arg0.getStringExtra("command");
-        Bundle b = new Bundle();
-        
-        if (command != null) {
-        	if(command.equals(CLASSNAMES)) {
-	        	b.putStringArray(CLASSNAMES, getStringArray(ClassesDict.getInstance().getMap()));
-	            receiver.send(CLASSNAMES_CODE, b);
-	            
-	        } else if (command.equals(BUFFER_STATUS)) {
-	        	
-	        	System.out.println(dataBuffer.size());
-	        	
-	        	if (dataBuffer.size() == DATA_BUFFER_SIZE) {
-	        		b.putBoolean(BUFFER_STATUS, true);
-	        		
-	        	} else {
-	        		b.putBoolean(BUFFER_STATUS, false);
-	        	}
-	        	receiver.send(BUFFER_STATUS_CODE, b);
-	        	
-	        	
-	        } else if (command.equals(BUFFER)) {
-	        	
-	        } else if (command.equals(GMM)) {
-	        }
-        }
         
 	}
 	
@@ -249,11 +208,10 @@ public class AudioWorker extends IntentService {
 		bundle.putStringArray(CLASS_STRINGS,getStringArray(classesDict));
 		bundle.putSerializable(CLASSES_DICT, classesDict);
 		bundle.putParcelable(GMM_OBJECT, gmm);
-		bundle.putBoolean(CURRENT_BUFFER_STATUS, bufferStatus);
-		bundle.putSerializable(CURRENT_BUFFER, buffer);
+		bundle.putBoolean(BUFFER_STATUS, bufferStatus);
+		bundle.putSerializable(BUFFER, buffer);
 		bundle.putInt(RESULTCODE, code);
-		
-		
+
 		intent.putExtras(bundle);
 
 		sendBroadcast(intent);

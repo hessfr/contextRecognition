@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -26,15 +25,13 @@ import android.widget.Toast;
 import com.example.tools.AudioWorker;
 import com.example.tools.ClassesDict;
 import com.example.tools.GMM;
-import com.example.tools.MyResultReceiver;
 import com.example.tools.appStatus;
 
-public class MainActivity extends ActionBarActivity implements MyResultReceiver.Receiver {
+public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = "MainAcitivty";
 	
 	public static final String STOP_RECORDING = "stopRecording";
-	public static final String REQ_CLASSNAMES = "reqClassNames";
 	
 	// Variables of the current prediction:
 	private int predictionInt;
@@ -45,9 +42,6 @@ public class MainActivity extends ActionBarActivity implements MyResultReceiver.
 	private ArrayList<double[]> buffer;
 	private GMM gmm;
 	
-	
-	
-	public MyResultReceiver myReceiver;
 	
 	private Context cxt = this;
 	
@@ -83,19 +77,10 @@ public class MainActivity extends ActionBarActivity implements MyResultReceiver.
     	
 	    addListenerOnButton();
 	    contextTV = (TextView) findViewById(R.id.contextTV);
-		
-	    // Register ResultReceiver for communication with AudioWorker service
-    	myReceiver = new MyResultReceiver(new Handler());
-        myReceiver.setReceiver(this);
 	    
 		// Start the AudioWorker service:
 		Intent i = new Intent(this, AudioWorker.class);
         startService(i);
-        
-//		final Intent intent = new Intent(Intent.ACTION_SYNC, null, cxt, AudioWorker.class);				
-//		intent.putExtra("receiver", myReceiver);
-//        intent.putExtra("command", "query");
-//    	startService(intent);
     	
     	// Set app status to initializing:
 		appStatus.getInstance().set(appStatus.INIT);
@@ -216,11 +201,6 @@ public class MainActivity extends ActionBarActivity implements MyResultReceiver.
 			 
 			@Override
 			public void onClick(View arg0) {
-				
-//				final Intent intent = new Intent(Intent.ACTION_SYNC, null, cxt, AudioWorker.class);				
-//				intent.putExtra("receiver", myReceiver);
-//		        intent.putExtra("command", AudioWorker.BUFFER_STATUS);
-//		    	startService(intent);
 		        
 		    	//Toast.makeText(getBaseContext(),(String) "current prediction: " + predictionString, Toast.LENGTH_SHORT).show();
 				
@@ -271,9 +251,9 @@ public class MainActivity extends ActionBarActivity implements MyResultReceiver.
 		    	  		if (resultCode == RESULT_OK) {
 		    	  			classNameArray = bundle.getStringArray(AudioWorker.CLASS_STRINGS);
 //			    	  		Log.i(TAG, "xxxxx " + classNameArray[0]);
-		    	  			bufferStatus = bundle.getBoolean(AudioWorker.CURRENT_BUFFER_STATUS);
+		    	  			bufferStatus = bundle.getBoolean(AudioWorker.BUFFER_STATUS);
 //			    	  		Log.i(TAG, "xxxxx " + String.valueOf(bufferStatus));
-			    	  		Serializable s1 = bundle.getSerializable(AudioWorker.CURRENT_BUFFER);
+			    	  		Serializable s1 = bundle.getSerializable(AudioWorker.BUFFER);
 			    	  		buffer = (ArrayList<double[]>) s1;		    	  		
 //			    	  		Log.i(TAG, "xxxxx " + String.valueOf(buffer.get(0)[0]));
 			    	  		
@@ -305,38 +285,9 @@ public class MainActivity extends ActionBarActivity implements MyResultReceiver.
 		unregisterReceiver(receiver);
 		sendBroadcast(intent);
 	}
-
-	@Override
-	public void onReceiveResult(int resultCode, Bundle resultData) {
-		
-		if (resultCode == AudioWorker.CLASSNAMES_CODE) {
-			
-			String[] classes = resultData.getStringArray(AudioWorker.CLASSNAMES);
-
-			
-		} else if (resultCode == AudioWorker.BUFFER_STATUS_CODE) {
-			
-			boolean s = resultData.getBoolean(AudioWorker.BUFFER_STATUS);
-			
-			Log.i(TAG, "xxxxxx " + String.valueOf(s));
-			
-		} else if (resultCode == AudioWorker.BUFFER_CODE) {
-			
-			Log.i(TAG, "xxxxxxx received");
-			
-		} else if (resultCode == AudioWorker.GMM_CODE) {
-			
-			Log.i(TAG, "xxxxxxx received");
-			
-		}
-    }
 		
     @Override
     public void onPause() {
         super.onPause();
-        if (myReceiver!=null) myReceiver.setReceiver(null); // avoid leaks
     }
-		
-	//}
-
 }
