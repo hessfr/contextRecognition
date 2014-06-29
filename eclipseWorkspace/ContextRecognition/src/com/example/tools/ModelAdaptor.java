@@ -20,6 +20,9 @@ import org.ejml.factory.DecompositionFactory;
 import org.ejml.ops.CommonOps;
 import org.ejml.simple.SimpleMatrix;
 
+import android.os.AsyncTask;
+import android.util.Log;
+
 //import org.apache.commons.math3.linear.CholeskyDecomposition;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,9 +30,44 @@ import com.google.gson.GsonBuilder;
 /*
  * GMM updatedGMM = inst.adaptGMM(gmm, X_train, 0, 3);
  */
-public class ModelAdaptor {
+public class ModelAdaptor extends AsyncTask<GMM, Void, GMM> {
+	/*
+	 * 1. argument: type of parameter
+	 * 2. argument: type of progress unit published during processing
+	 * 3. argument: type of result
+	 */
+	
+	
+	private static final String TAG = "ModelAdaptor";
+	private static final double EPS = Double.MIN_VALUE;
+	private LinkedList<double[]> buffer;
+	
+	private void fillBuffer() {
+		
+		//buffer = AudioWorker.dataBuffer;
+	}
+	
+	@Override
+	protected GMM doInBackground(GMM... arg0) {
 
-	public static final double EPS = Double.MIN_VALUE;
+		GMM newGMM = null;
+		
+		if (appStatus.getInstance().getBufferStatus() == appStatus.BUFFER_READY) {
+			
+			//GMM newGMM = adaptGMM(arg0[0], 1, 1);
+			
+			//LinkedList<double[]> buffer = AudioWorker.dataBuffer;
+			
+		} else {
+			Log.e(TAG, "Buffer not ready yet, existing");
+			return null;
+		}
+		
+		
+		
+		
+		return newGMM;
+	}
 	
 	public GMM adaptGMM(GMM oldGMM, DenseMatrix64F updatePoints, int label, int maxNewComp) throws IOException { 
 		

@@ -1,6 +1,7 @@
 package com.example.contextrecognition;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -23,17 +25,31 @@ import android.widget.Toast;
 
 import com.example.tools.AudioWorker;
 import com.example.tools.ClassesDict;
+import com.example.tools.GMM;
+import com.example.tools.MyResultReceiver;
 import com.example.tools.appStatus;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements MyResultReceiver.Receiver {
 
 	private static final String TAG = "MainAcitivty";
 	
 	public static final String STOP_RECORDING = "stopRecording";
 	public static final String REQ_CLASSNAMES = "reqClassNames";
 	
-	public Map<String, Integer> classesDict = new HashMap<String, Integer>();
-	private ClassesDict cd = new ClassesDict();
+	// Variables of the current prediction:
+	private int predictionInt;
+	private String predictionString;
+	private Map<String, Integer> classesDict = new HashMap<String, Integer>();
+	private String[] classNameArray;
+	private boolean bufferStatus;
+	private ArrayList<double[]> buffer;
+	private GMM gmm;
+	
+	
+	
+	public MyResultReceiver myReceiver;
+	
+	private Context cxt = this;
 	
 	public String[] contextClasses;
 	ImageButton changeButton;
@@ -68,14 +84,23 @@ public class MainActivity extends ActionBarActivity {
 	    addListenerOnButton();
 	    contextTV = (TextView) findViewById(R.id.contextTV);
 		
+	    // Register ResultReceiver for communication with AudioWorker service
+    	myReceiver = new MyResultReceiver(new Handler());
+        myReceiver.setReceiver(this);
+	    
 		// Start the AudioWorker service:
 		Intent i = new Intent(this, AudioWorker.class);
-    	startService(i);
+        startService(i);
+        
+//		final Intent intent = new Intent(Intent.ACTION_SYNC, null, cxt, AudioWorker.class);				
+//		intent.putExtra("receiver", myReceiver);
+//        intent.putExtra("command", "query");
+//    	startService(intent);
     	
     	// Set app status to initializing:
 		appStatus.getInstance().set(appStatus.INIT);
 		Log.i(TAG, "New status: init");
-
+		
     }
     
     @Override
@@ -85,6 +110,7 @@ public class MainActivity extends ActionBarActivity {
       // Register the broadcast receiver and intent filters:
       IntentFilter filter = new IntentFilter();
       filter.addAction(AudioWorker.PREDICTION);
+      filter.addAction(AudioWorker.STATUS);
       //filter.addAction(Params.INTENT_UPDATE);
       
       registerReceiver(receiver, filter);
@@ -164,7 +190,6 @@ public class MainActivity extends ActionBarActivity {
 		 
 		changeButton = (ImageButton) findViewById(R.id.changeButton);
 		confirmButton = (ImageButton) findViewById(R.id.confirmButton);
-		
  
 		changeButton.setOnClickListener(new OnClickListener() {
  
@@ -192,7 +217,23 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 				
-				// TODO: call model adaptor
+//				final Intent intent = new Intent(Intent.ACTION_SYNC, null, cxt, AudioWorker.class);				
+//				intent.putExtra("receiver", myReceiver);
+//		        intent.putExtra("command", AudioWorker.BUFFER_STATUS);
+//		    	startService(intent);
+		        
+		    	//Toast.makeText(getBaseContext(),(String) "current prediction: " + predictionString, Toast.LENGTH_SHORT).show();
+				
+//				if (appStatus.getInstance().getBufferStatus() == appStatus.BUFFER_READY) {
+//					
+//					// TODO: call model adaptor
+//					
+//				} else {
+//					// If not initialized yet, send Toast
+//					Toast.makeText(getBaseContext(),(String) "Please wait until the system is initialized", Toast.LENGTH_SHORT).show();
+//					Log.w(TAG, "Buffer not full yet. Not adapting the model");
+//				}
+				
 			}
  
 		});
@@ -213,22 +254,44 @@ public class MainActivity extends ActionBarActivity {
 		    	  	if (intent.getAction().equals(AudioWorker.PREDICTION)) {
 		    	  		
 		    	  		int resultCode = bundle.getInt(AudioWorker.RESULTCODE);
-						int predInt = bundle.getInt(AudioWorker.PREDICTION_INT);
-						String predString = bundle.getString(AudioWorker.PREDICTION_STRING);	
+		    	  		predictionInt = bundle.getInt(AudioWorker.PREDICTION_INT);
+		    	  		predictionString = bundle.getString(AudioWorker.PREDICTION_STRING);	
 						
 						if (resultCode == RESULT_OK) {
-							Log.i(TAG, "Current Prediction: " + predString + ": " + predInt);
-							setText(predString);
-							
-							// Update the ClassesDict
-							Serializable ser = new HashMap<String, Integer>();
-							ser = bundle.getSerializable(AudioWorker.CLASSES_DICT);
-							classesDict = ((HashMap<String, Integer>) ser);
-							ClassesDict.getInstance().setMap(classesDict);
-							
+							Log.i(TAG, "Current Prediction: " + predictionString + ": " + predictionInt);
+							setText(predictionString);
 						} else {
-							Log.i(TAG, "Result not okay, result code " + resultCode);
+							Log.i(TAG, "Received prediction result not okay, result code " + resultCode);
 						}
+						
+		    	  	} else if (intent.getAction().equals(AudioWorker.STATUS)) {
+		    	  		
+		    	  		int resultCode = bundle.getInt(AudioWorker.RESULTCODE);
+		    	  		
+		    	  		if (resultCode == RESULT_OK) {
+		    	  			classNameArray = bundle.getStringArray(AudioWorker.CLASS_STRINGS);
+//			    	  		Log.i(TAG, "xxxxx " + classNameArray[0]);
+		    	  			bufferStatus = bundle.getBoolean(AudioWorker.CURRENT_BUFFER_STATUS);
+//			    	  		Log.i(TAG, "xxxxx " + String.valueOf(bufferStatus));
+			    	  		Serializable s1 = bundle.getSerializable(AudioWorker.CURRENT_BUFFER);
+			    	  		buffer = (ArrayList<double[]>) s1;		    	  		
+//			    	  		Log.i(TAG, "xxxxx " + String.valueOf(buffer.get(0)[0]));
+			    	  		
+			    	  		gmm = bundle.getParcelable(AudioWorker.GMM_OBJECT);
+//			    	  		Log.i(TAG, "xxxxxx " + gmm.get_class_name(0));
+			    	  		
+			    	  		// Update the ClassesDict
+							Serializable s2 = new HashMap<String, Integer>();
+							s2 = bundle.getSerializable(AudioWorker.CLASSES_DICT);
+							classesDict = ((HashMap<String, Integer>) s2);
+							ClassesDict.getInstance().setMap(classesDict); //TODO: delete???
+//							Log.i(TAG, "xxxxxx " + ClassesDict.getInstance().getStringArray()[0]);
+		    	  		
+		    	  		} else {
+							Log.i(TAG, "Received prediction result not okay, result code " + resultCode);
+						}
+		    	  		
+
 		    	  	}
 		    	  
 					  
@@ -242,5 +305,38 @@ public class MainActivity extends ActionBarActivity {
 		unregisterReceiver(receiver);
 		sendBroadcast(intent);
 	}
+
+	@Override
+	public void onReceiveResult(int resultCode, Bundle resultData) {
+		
+		if (resultCode == AudioWorker.CLASSNAMES_CODE) {
+			
+			String[] classes = resultData.getStringArray(AudioWorker.CLASSNAMES);
+
+			
+		} else if (resultCode == AudioWorker.BUFFER_STATUS_CODE) {
+			
+			boolean s = resultData.getBoolean(AudioWorker.BUFFER_STATUS);
+			
+			Log.i(TAG, "xxxxxx " + String.valueOf(s));
+			
+		} else if (resultCode == AudioWorker.BUFFER_CODE) {
+			
+			Log.i(TAG, "xxxxxxx received");
+			
+		} else if (resultCode == AudioWorker.GMM_CODE) {
+			
+			Log.i(TAG, "xxxxxxx received");
+			
+		}
+    }
+		
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (myReceiver!=null) myReceiver.setReceiver(null); // avoid leaks
+    }
+		
+	//}
 
 }

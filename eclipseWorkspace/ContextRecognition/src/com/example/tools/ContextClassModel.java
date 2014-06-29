@@ -1,11 +1,15 @@
 package com.example.tools;
 
+import java.io.Serializable;
+
 import org.ejml.data.DenseMatrix64F;
 
 /*
 Contains context class specific parameter of a single class:
 */
-public class ContextClassModel {
+public class ContextClassModel implements Serializable {
+
+		private static final long serialVersionUID = 1L;
 		
 		private int n_components;
 		private int n_features;

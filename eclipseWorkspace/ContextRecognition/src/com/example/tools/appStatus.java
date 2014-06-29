@@ -12,7 +12,11 @@ public class appStatus {
 	public static final int MODEL_ADPATION = 1;
 	public static final int INIT = 2;
 	
+	public static final int BUFFER_NOT_READY = 0;
+	public static final int BUFFER_READY = 1;
+	
 	private int status = INIT;
+	private int bufferStatus = BUFFER_NOT_READY;
 	
 	public void set(int s) {
 		this.status = s;
@@ -20,6 +24,14 @@ public class appStatus {
 	
 	public int get() {
 		return this.status;
+	}
+	
+	public void setBufferStatus(int s) {
+		this.bufferStatus = s;
+	}
+	
+	public int getBufferStatus() {
+		return this.bufferStatus;
 	}
 	
 	private static final appStatus stat = new appStatus();

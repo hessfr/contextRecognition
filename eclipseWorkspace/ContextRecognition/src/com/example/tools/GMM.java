@@ -16,14 +16,16 @@ import java.util.Map.Entry;
 import org.ejml.data.DenseMatrix64F;
 
 import android.os.Environment;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.gson.Gson;
 /*
 Contains parameters for the Gaussian mixture of all context classes
 */
-public class GMM {
-	
+public class GMM implements Parcelable {
+
 	private static String TAG = "GMM";
 	
 	private ArrayList<ContextClassModel> clfs = new ArrayList<ContextClassModel>();
@@ -52,6 +54,44 @@ public class GMM {
 		this.scale_means = otherGMM.scale_means;
 		this.scale_stddevs = otherGMM.scale_stddevs;
 	}
+	
+	// Parcelable Constructor:
+	public GMM(Parcel in) {
+		this.clfs = in.readArrayList(null); //in.readArrayList(ContextClassModel.class.getClassLoader())
+		in.readMap(this.classesDict, Map.class.getClassLoader());
+		this.n_classes = in.readInt();
+		this.n_features = in.readInt();
+		this.scale_means = (DenseMatrix64F) in.readSerializable();		//does this work??????????
+		this.scale_stddevs = (DenseMatrix64F) in.readSerializable(); 	//does this work??????????
+	}
+	
+    public static final Parcelable.Creator<GMM> CREATOR = new Parcelable.Creator<GMM>() {
+        public GMM createFromParcel(Parcel in) {
+            return new GMM(in);
+        }
+
+        public GMM[] newArray(int size) {
+            return new GMM[size];
+        }
+    };
+	
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel out, int flags) {
+		out.writeList(clfs);
+		out.writeMap(classesDict);
+		out.writeInt(n_classes);
+		out.writeInt(n_features);
+		out.writeSerializable(scale_means);
+		out.writeSerializable(scale_stddevs);
+	}
+
+	
 	
 	public List<JsonModel> parseGSON(String filename) {
 		
