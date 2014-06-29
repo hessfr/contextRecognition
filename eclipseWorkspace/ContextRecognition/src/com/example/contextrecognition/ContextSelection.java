@@ -1,8 +1,16 @@
 package com.example.contextrecognition;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,12 +19,15 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 
-import com.example.tools.ClassesDict;
+import com.example.tools.AudioWorker;
+//import com.example.tools.ClassesDictXXX;
 import com.example.tools.appStatus;
 
 public class ContextSelection extends ListActivity {
     
 	private static final String TAG = "ContextSelection";
+	
+	private String[] classNames;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -25,19 +36,30 @@ public class ContextSelection extends ListActivity {
         setListAdapter(new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.context_classes)));
         
-		if (ClassesDict.getInstance().getStringArray() != null) {
+        Bundle b = getIntent().getExtras();
+        classNames = b.getStringArray(MainActivity.CLASS_NAMES);     
+        
+		if (classNames != null) {
 			// Add the "Define Own Context Class" to the bottom of the list:
-			int len = ClassesDict.getInstance().getStringArray().length;
+			int len = classNames.length;
 			String[] list = new String[len+1];
 			
 			for(int i=0; i<len; i++) {
-				list[i] = ClassesDict.getInstance().getStringArray()[i];
+				list[i] = classNames[i];
 			}
 			list[len] = "Define own context class";
 			
 			setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list));
+		} else {
+			Log.e(TAG, "xxxxxxxxxxxxxxx");
 		}
 
+    }
+    
+    @Override
+    protected void onResume() {
+      super.onResume();
+      
     }
     
     @Override
@@ -57,8 +79,6 @@ public class ContextSelection extends ListActivity {
     	  
     	  appStatus.getInstance().set(appStatus.MODEL_ADPATION);
     	  Log.i(TAG, "New status: model adaption");
-    	  
-    	  
 
           finish();
     	  

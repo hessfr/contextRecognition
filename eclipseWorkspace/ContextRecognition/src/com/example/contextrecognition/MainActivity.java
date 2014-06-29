@@ -23,7 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tools.AudioWorker;
-import com.example.tools.ClassesDict;
+//import com.example.tools.ClassesDictXXX;
 import com.example.tools.GMM;
 import com.example.tools.appStatus;
 
@@ -33,15 +33,18 @@ public class MainActivity extends ActionBarActivity {
 	
 	public static final String STOP_RECORDING = "stopRecording";
 	
+	public static final String CLASS_NAMES_REQ = "classNamesReq";
+	public static final String CLASS_NAMES_INTENT = "classNamesIntent";
+	public static final String CLASS_NAMES = "classNames";
+	
 	// Variables of the current prediction:
 	private int predictionInt;
 	private String predictionString;
-	private Map<String, Integer> classesDict = new HashMap<String, Integer>();
+	public Map<String, Integer> classesDict = new HashMap<String, Integer>();
 	private String[] classNameArray;
 	private boolean bufferStatus;
 	private ArrayList<double[]> buffer;
 	private GMM gmm;
-	
 	
 	private Context cxt = this;
 	
@@ -96,7 +99,7 @@ public class MainActivity extends ActionBarActivity {
       IntentFilter filter = new IntentFilter();
       filter.addAction(AudioWorker.PREDICTION);
       filter.addAction(AudioWorker.STATUS);
-      //filter.addAction(Params.INTENT_UPDATE);
+      filter.addAction(CLASS_NAMES_REQ);
       
       registerReceiver(receiver, filter);
       
@@ -180,9 +183,12 @@ public class MainActivity extends ActionBarActivity {
  
 			@Override
 			public void onClick(View arg0) {
- 
-				if (ClassesDict.getInstance().isEmpty() == false) {
+
+				if (classesDict.size() > 0) {
 					Intent i = new Intent(MainActivity.this, ContextSelection.class);
+					Bundle b = new Bundle();
+					b.putStringArray(CLASS_NAMES, getStringArray(classesDict));
+	    			i.putExtras(b);
 			        startActivity(i);
 				} else {
 					// If class names not yet available, send Toast
@@ -190,9 +196,6 @@ public class MainActivity extends ActionBarActivity {
 					
 					Log.w(TAG, "Not changing to ContextSelection activity, as class names not available yet.");
 				}
-				
-				
- 
 			}
  
 		});
@@ -202,6 +205,11 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 		        
+				
+				// (Re-)Start the AudioWorker service:
+				Intent i = new Intent(cxt, AudioWorker.class);
+		        startService(i);
+				
 		    	//Toast.makeText(getBaseContext(),(String) "current prediction: " + predictionString, Toast.LENGTH_SHORT).show();
 				
 //				if (appStatus.getInstance().getBufferStatus() == appStatus.BUFFER_READY) {
@@ -250,28 +258,37 @@ public class MainActivity extends ActionBarActivity {
 		    	  		
 		    	  		if (resultCode == RESULT_OK) {
 		    	  			classNameArray = bundle.getStringArray(AudioWorker.CLASS_STRINGS);
-//			    	  		Log.i(TAG, "xxxxx " + classNameArray[0]);
+//			    	  		Log.i(TAG, classNameArray[0]);
 		    	  			bufferStatus = bundle.getBoolean(AudioWorker.BUFFER_STATUS);
-//			    	  		Log.i(TAG, "xxxxx " + String.valueOf(bufferStatus));
+//			    	  		Log.i(TAG, String.valueOf(bufferStatus));
 			    	  		Serializable s1 = bundle.getSerializable(AudioWorker.BUFFER);
 			    	  		buffer = (ArrayList<double[]>) s1;		    	  		
-//			    	  		Log.i(TAG, "xxxxx " + String.valueOf(buffer.get(0)[0]));
+//			    	  		Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 			    	  		
 			    	  		gmm = bundle.getParcelable(AudioWorker.GMM_OBJECT);
-//			    	  		Log.i(TAG, "xxxxxx " + gmm.get_class_name(0));
+//			    	  		Log.i(TAG, gmm.get_class_name(0));
 			    	  		
 			    	  		// Update the ClassesDict
 							Serializable s2 = new HashMap<String, Integer>();
 							s2 = bundle.getSerializable(AudioWorker.CLASSES_DICT);
-							classesDict = ((HashMap<String, Integer>) s2);
-							ClassesDict.getInstance().setMap(classesDict); //TODO: delete???
-//							Log.i(TAG, "xxxxxx " + ClassesDict.getInstance().getStringArray()[0]);
+							classesDict = (HashMap<String, Integer>) s2;
+							
+							//ClassesDictXXX.getInstance().setMap(classesDict); //TODO: delete???
+//							Log.i(TAG, ClassesDict.getInstance().getStringArray()[0]);
 		    	  		
 		    	  		} else {
 							Log.i(TAG, "Received prediction result not okay, result code " + resultCode);
 						}
 		    	  		
 
+		    	  	} else if (intent.getAction().equals(CLASS_NAMES_REQ)) {
+		    	  		
+		    	  		Intent i = new Intent(CLASS_NAMES_INTENT);
+		    			Bundle b = new Bundle();
+		    			b.putStringArray(CLASS_NAMES, getStringArray(classesDict));
+		    			i.putExtras(b);
+		    			sendBroadcast(i);
+		    			
 		    	  	}
 		    	  
 					  
@@ -290,4 +307,20 @@ public class MainActivity extends ActionBarActivity {
     public void onPause() {
         super.onPause();
     }
+    
+	public String[] getStringArray(Map<String, Integer> classesDict) {
+		
+		int len = classesDict.size();
+		
+		String[] strArray = new String[len];
+		
+		int i=0;
+		for ( String key : classesDict.keySet() ) {
+			strArray[i] = key;
+			i++;
+		}
+		
+		return strArray;
+		
+	}
 }

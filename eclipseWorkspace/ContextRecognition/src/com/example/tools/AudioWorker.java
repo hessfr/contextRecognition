@@ -40,6 +40,8 @@ public class AudioWorker extends IntentService {
 	public static final String BUFFER_STATUS = "bufferStatus";
 	public static final String BUFFER = "buffer";	
 			
+	private int testInt = 0;
+	
 	public AudioWorker() {
 		super("AudioWorker");
 	}
@@ -48,7 +50,6 @@ public class AudioWorker extends IntentService {
     public void onCreate() {
         // TODO Auto-generated method stub
         super.onCreate();
-        
         Log.d(TAG, "AudioWorker created");
     }
 	
@@ -69,7 +70,7 @@ public class AudioWorker extends IntentService {
 		soundHandler = new SoundHandler();
 		clf = new Classifier();
 		gmm = new GMM("GMM.json"); //TODO
-
+		
 		// Initialize the data handling
 		initializeDataHandling();
         
@@ -178,13 +179,10 @@ public class AudioWorker extends IntentService {
 		};
 		
 		//Log.i(TAG,String.valueOf(dataBuffer.size()));
+
+		soundHandler.beginRec();	
 		
-		soundHandler.beginRec();
 	
-	}
-	
-	private void endRec() {
-		soundHandler.endRec();
 	}
 	
 	private void publishResult(int predictionInt, String predicationString, int resultCode) {
@@ -231,6 +229,6 @@ public class AudioWorker extends IntentService {
 			
 			return strArray;
 			
-		}
+	}
 	
 }
