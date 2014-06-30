@@ -25,6 +25,7 @@ import android.widget.Toast;
 import com.example.tools.AudioWorker;
 //import com.example.tools.ClassesDictXXX;
 import com.example.tools.GMM;
+import com.example.tools.ModelAdaptor;
 import com.example.tools.appStatus;
 
 public class MainActivity extends ActionBarActivity {
@@ -40,11 +41,11 @@ public class MainActivity extends ActionBarActivity {
 	// Variables of the current prediction:
 	private int predictionInt;
 	private String predictionString;
-	public Map<String, Integer> classesDict = new HashMap<String, Integer>();
+	public Map<String, Integer> classesDict = new HashMap<String, Integer>(); //Needed??
 	private String[] classNameArray;
 	private boolean bufferStatus;
 	private ArrayList<double[]> buffer;
-	private GMM gmm;
+	private GMM gmm; //Needed??
 	
 	private Context cxt = this;
 	
@@ -205,10 +206,11 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 		        
+				callModelAdaption();
 				
 				// (Re-)Start the AudioWorker service:
-				Intent i = new Intent(cxt, AudioWorker.class);
-		        startService(i);
+//				Intent i = new Intent(cxt, AudioWorker.class);
+//		        startService(i);
 				
 		    	//Toast.makeText(getBaseContext(),(String) "current prediction: " + predictionString, Toast.LENGTH_SHORT).show();
 				
@@ -265,16 +267,12 @@ public class MainActivity extends ActionBarActivity {
 			    	  		buffer = (ArrayList<double[]>) s1;		    	  		
 //			    	  		Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 			    	  		
-			    	  		gmm = bundle.getParcelable(AudioWorker.GMM_OBJECT);
+			    	  		gmm = bundle.getParcelable(AudioWorker.GMM_OBJECT); //Needed??
 //			    	  		Log.i(TAG, gmm.get_class_name(0));
 			    	  		
-			    	  		// Update the ClassesDict
 							Serializable s2 = new HashMap<String, Integer>();
 							s2 = bundle.getSerializable(AudioWorker.CLASSES_DICT);
 							classesDict = (HashMap<String, Integer>) s2;
-							
-							//ClassesDictXXX.getInstance().setMap(classesDict); //TODO: delete???
-//							Log.i(TAG, ClassesDict.getInstance().getStringArray()[0]);
 		    	  		
 		    	  		} else {
 							Log.i(TAG, "Received prediction result not okay, result code " + resultCode);
@@ -323,4 +321,31 @@ public class MainActivity extends ActionBarActivity {
 		return strArray;
 		
 	}
+	
+	public void callModelAdaption() {
+		
+//		appStatus.getInstance().set(appStatus.MODEL_ADPATION);
+//		Log.i(TAG, "New status: model adaption");
+//		try {
+//		      Thread.sleep(4000);
+//		    } catch (InterruptedException e) {
+//		      e.printStackTrace();
+//		    }
+		
+//		if(bufferStatus == true) {
+			
+			ModelAdaptor task = new ModelAdaptor();
+			
+			task.execute(buffer);
+			
+//		} else {
+//			
+//			Toast.makeText(getBaseContext(),(String) "Please wait until the system is initialized", Toast.LENGTH_SHORT).show();
+//			
+//			Log.w(TAG, "Model adaption not called, as the buffer is not full yet.");
+//		}
+		
+		
+	}
+	
 }

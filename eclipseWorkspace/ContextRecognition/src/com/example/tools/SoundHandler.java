@@ -16,6 +16,7 @@ public class SoundHandler extends Thread {
 	private boolean currentlyRecording = false;
 
 	private int SEQUENCE_LENGTH = 63*1024; // equals 2seconds
+//	private int SEQUENCE_LENGTH = 63*512; // equals 2seconds
 	
 	private Object blockSync = new Object();
 
@@ -125,7 +126,7 @@ public class SoundHandler extends Thread {
 			int mono = AudioFormat.CHANNEL_IN_MONO;
 			int encoding = AudioFormat.ENCODING_PCM_16BIT;
 			// TODO: We have to have SEQUENCE_LENGTH equivalent to 2sec here
-			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, SEQUENCE_LENGTH); // SEQUENCE_LENGTH xxxx
+			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, SEQUENCE_LENGTH*2); // SEQUENCE_LENGTH xxxx
 			
 		} catch(IllegalArgumentException e){
 			Log.e(TAG, "Error occured while initializing AudioRecorder");

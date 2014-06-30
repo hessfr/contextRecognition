@@ -1,5 +1,6 @@
 package com.example.tools;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -94,13 +95,15 @@ public class AudioWorker extends IntentService {
 						appStatus.getInstance().get() == appStatus.INIT) {
 					
 					//Check if sequence length is 2 seconds (more precisely 63 32ms windows)
-					if (data.length != 64512) { // a single 32ms window has size 1024
+					if (data.length != 64512) { //data.length != 64512
+						// a single 32ms window has size 1024??
 						Log.e(TAG,"data sequence has wrong length, aborting calculation");
 						return;
 					}
 					
-					// add this sequence to the buffer needed for the model adaption
-					
+//					Log.i(TAG, "----");
+//					Log.i(TAG, String.valueOf(data[30000]));
+//					Log.i(TAG, String.valueOf(data[64000]));
 					
 					// Call handle data from SoundHandler class
 					super.handleData(data, length, frameLength);
@@ -108,9 +111,12 @@ public class AudioWorker extends IntentService {
 					// Loop through the audio data and extract our features for each 32ms window
 					for(int i=0; i<63; i++) {
 						
-						// Split the data into 32ms chunks (equals 1024 elements)
+						// Split the data into 32ms chunks (equals 1024 (??) elements)
 						short[] tmpData = new short[1024];
 						System.arraycopy(data, i*1024, tmpData, 0, 1024);
+						
+//						short[] tmpData = new short[512];
+//						System.arraycopy(data, i*512, tmpData, 0, 512);
 						
 						Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
 						mfccList.add(currentMFCCs.get());
@@ -135,7 +141,7 @@ public class AudioWorker extends IntentService {
 							if (bufferStatus != true) {
 								bufferStatus = true;
 							}
-						}	
+						}
 						
 					}
 					
@@ -148,6 +154,13 @@ public class AudioWorker extends IntentService {
 						}
 						DenseMatrix64F samples = new DenseMatrix64F(array);
 
+						
+						
+//						Log.i(TAG, "xxxxxxxxxxxx in AudioWorker: ");
+//						Log.i(TAG, samples.toString());
+						
+						
+						
 						DenseMatrix64F res = clf.predict(gmm, samples);
 						
 						int intRes = (int) res.get(10); // TODO: implement this properly! As this array is exactly the length of one majority vote window, all elements in it are the same 
@@ -204,14 +217,16 @@ public class AudioWorker extends IntentService {
 		Bundle bundle = new Bundle();
 		
 		bundle.putStringArray(CLASS_STRINGS,getStringArray(classesDict));
-		bundle.putSerializable(CLASSES_DICT, classesDict);
-		bundle.putParcelable(GMM_OBJECT, gmm);
+		bundle.putSerializable(CLASSES_DICT, classesDict); //Needed??
+		bundle.putParcelable(GMM_OBJECT, gmm); //Needed??
 		bundle.putBoolean(BUFFER_STATUS, bufferStatus);
 		bundle.putSerializable(BUFFER, buffer);
 		bundle.putInt(RESULTCODE, code);
 
+//		Log.i(TAG, convertToEJML(buffer).toString());
+		
 		intent.putExtras(bundle);
-
+		
 		sendBroadcast(intent);
 	}
 	
@@ -229,6 +244,27 @@ public class AudioWorker extends IntentService {
 			
 			return strArray;
 			
+	}
+	
+	/*
+	 *  Converts an LinkedList of double arrays into a EJML DenseMatrix64F
+	 */
+	private DenseMatrix64F convertToEJML(LinkedList<double[]> in) {
+		
+		int nRows = in.size();
+		int nCols = in.get(0).length;
+		
+		DenseMatrix64F out = new DenseMatrix64F(nRows, nCols);
+		
+		for(int r=0; r<nRows; r++) {
+			for(int c=0; c<nCols; c++) {
+				out.set(r, c, in.get(r)[c]);
+			}
+			
+		}
+		
+		return out;
+		
 	}
 	
 }
