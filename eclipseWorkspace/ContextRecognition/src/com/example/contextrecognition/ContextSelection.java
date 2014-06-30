@@ -76,7 +76,7 @@ public class ContextSelection extends ListActivity {
     	  	if (position != conversationIdx) {
     	  		
     	  		Log.i(TAG, "Existing class " + item + " selected");
-
+    	  		
     			Intent intent = new Intent(MainActivity.MODEL_ADAPTION_EXISTING_INTENT);
     			Bundle bundle = new Bundle();
     			intent.putExtra(MainActivity.LABEL, position);

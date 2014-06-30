@@ -107,7 +107,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	@Override
 	protected void onPostExecute(GMM newGMM) {
 
-		Log.i(TAG, "Model adaption finished for class " + label + " finished, new class model has "
+		Log.i(TAG, "Model adaption finished for class " + newGMM.get_class_name(label) + " finished, new class model has "
 				+ newGMM.clf(label).get_n_components() + " components");
 
 		if (listener != null)

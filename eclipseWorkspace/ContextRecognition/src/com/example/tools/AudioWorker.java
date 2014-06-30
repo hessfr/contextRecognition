@@ -207,7 +207,12 @@ public class AudioWorker extends IntentService {
 		
 		Bundle bundle = new Bundle();
 		
-		bundle.putStringArray(CLASS_STRINGS,getStringArray(classesDict));
+//		Log.i(TAG, "xxxxx " + gmm.get_string_array()[0]);
+//		Log.i(TAG, "xxxxx " + gmm.get_string_array()[1]);
+//		Log.i(TAG, "xxxxx " + gmm.get_string_array()[2]);
+//		Log.i(TAG, "-------------");
+		
+		bundle.putStringArray(CLASS_STRINGS,gmm.get_string_array());
 		bundle.putSerializable(CLASSES_DICT, classesDict); //Needed??
 		bundle.putParcelable(GMM_OBJECT, gmm); //Needed??
 		bundle.putBoolean(BUFFER_STATUS, bufferStatus);
@@ -219,22 +224,6 @@ public class AudioWorker extends IntentService {
 		intent.putExtras(bundle);
 		
 		sendBroadcast(intent);
-	}
-	
-	public String[] getStringArray(Map<String, Integer> classesDict) {
-			
-			int len = classesDict.size();
-			
-			String[] strArray = new String[len];
-			
-			int i=0;
-			for ( String key : classesDict.keySet() ) {
-				strArray[i] = key;
-				i++;
-			}
-			
-			return strArray;
-			
 	}
 	
 	/*

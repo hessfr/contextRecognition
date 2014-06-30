@@ -105,7 +105,7 @@ public class GMM implements Parcelable {
 
 		if(file.exists()) {
 			
-			Log.i(TAG,"JSON file found");
+			Log.v(TAG,"JSON file found");
 			
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(file));
@@ -386,6 +386,18 @@ public class GMM implements Parcelable {
             }
         }
 		return res;	
+	}
+	
+	// Return array of strings for all classes
+	public String[] get_string_array() {
+		
+		String[] result = new String[n_classes];
+		
+		for(int i=0; i<n_classes; i++) {
+			result[i] = get_class_name(i);
+		}
+		
+		return result;
 	}
 
 	

@@ -199,7 +199,7 @@ public class MainActivity extends ActionBarActivity {
 				if (classesDict.size() > 0) {
 					Intent i = new Intent(MainActivity.this, ContextSelection.class);
 					Bundle b = new Bundle();
-					b.putStringArray(CLASS_NAMES, getStringArray(classesDict));
+					b.putStringArray(CLASS_NAMES, gmm.get_string_array());
 	    			i.putExtras(b);
 			        startActivity(i);
 				} else {
@@ -305,22 +305,6 @@ public class MainActivity extends ActionBarActivity {
     public void onPause() {
         super.onPause();
     }
-    
-	public String[] getStringArray(Map<String, Integer> classesDict) {
-		
-		int len = classesDict.size();
-		
-		String[] strArray = new String[len];
-		
-		int i=0;
-		for ( String key : classesDict.keySet() ) {
-			strArray[i] = key;
-			i++;
-		}
-		
-		return strArray;
-		
-	}
 	
 	private void requestNewClassFromServer(String newClassName) {
 		
