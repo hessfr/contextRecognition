@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,6 +27,7 @@ import com.example.tools.AudioWorker;
 //import com.example.tools.ClassesDictXXX;
 import com.example.tools.GMM;
 import com.example.tools.ModelAdaptor;
+import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
 import com.example.tools.appStatus;
 
 public class MainActivity extends ActionBarActivity {
@@ -34,9 +36,16 @@ public class MainActivity extends ActionBarActivity {
 	
 	public static final String STOP_RECORDING = "stopRecording";
 	
-	public static final String CLASS_NAMES_REQ = "classNamesReq";
 	public static final String CLASS_NAMES_INTENT = "classNamesIntent";
 	public static final String CLASS_NAMES = "classNames";
+	
+	public static final String MODEL_ADAPTION_EXISTING_INTENT = "modelAdaptionExisting";
+	public static final String LABEL = "label";
+	
+	public static final String MODEL_ADAPTION_FINISHED_INTENT = "modelAdaptionFinished";
+	
+	public static final String MODEL_ADAPTION_NEW_INTENT = "modelAdaptionNew";
+	public static final String NEW_CLASS_NAME = "newClassName";
 	
 	// Variables of the current prediction:
 	private int predictionInt;
@@ -100,7 +109,9 @@ public class MainActivity extends ActionBarActivity {
       IntentFilter filter = new IntentFilter();
       filter.addAction(AudioWorker.PREDICTION);
       filter.addAction(AudioWorker.STATUS);
-      filter.addAction(CLASS_NAMES_REQ);
+      filter.addAction(MODEL_ADAPTION_EXISTING_INTENT);
+      filter.addAction(MODEL_ADAPTION_FINISHED_INTENT);
+      filter.addAction(MODEL_ADAPTION_NEW_INTENT);
       
       registerReceiver(receiver, filter);
       
@@ -206,23 +217,7 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 		        
-				callModelAdaption();
-				
-				// (Re-)Start the AudioWorker service:
-//				Intent i = new Intent(cxt, AudioWorker.class);
-//		        startService(i);
-				
-		    	//Toast.makeText(getBaseContext(),(String) "current prediction: " + predictionString, Toast.LENGTH_SHORT).show();
-				
-//				if (appStatus.getInstance().getBufferStatus() == appStatus.BUFFER_READY) {
-//					
-//					// TODO: call model adaptor
-//					
-//				} else {
-//					// If not initialized yet, send Toast
-//					Toast.makeText(getBaseContext(),(String) "Please wait until the system is initialized", Toast.LENGTH_SHORT).show();
-//					Log.w(TAG, "Buffer not full yet. Not adapting the model");
-//				}
+				callModelAdaption(predictionInt);
 				
 			}
  
@@ -248,7 +243,7 @@ public class MainActivity extends ActionBarActivity {
 		    	  		predictionString = bundle.getString(AudioWorker.PREDICTION_STRING);	
 						
 						if (resultCode == RESULT_OK) {
-							Log.i(TAG, "Current Prediction: " + predictionString + ": " + predictionInt);
+							Log.d(TAG, "Current Prediction: " + predictionString + ": " + predictionInt);
 							setText(predictionString);
 						} else {
 							Log.i(TAG, "Received prediction result not okay, result code " + resultCode);
@@ -279,18 +274,23 @@ public class MainActivity extends ActionBarActivity {
 						}
 		    	  		
 
-		    	  	} else if (intent.getAction().equals(CLASS_NAMES_REQ)) {
+		    	  	} else if (intent.getAction().equals(MODEL_ADAPTION_EXISTING_INTENT)) {
 		    	  		
-		    	  		Intent i = new Intent(CLASS_NAMES_INTENT);
-		    			Bundle b = new Bundle();
-		    			b.putStringArray(CLASS_NAMES, getStringArray(classesDict));
-		    			i.putExtras(b);
-		    			sendBroadcast(i);
+		    	  		int label = bundle.getInt(LABEL);
+		    	  		callModelAdaption(label);
 		    			
-		    	  	}
-		    	  
-					  
-					
+		    	  	} else if (intent.getAction().equals(MODEL_ADAPTION_FINISHED_INTENT)) {
+		    	  		
+		    	  		Toast.makeText(getBaseContext(),(String) "Model adaptation finished", Toast.LENGTH_SHORT).show();
+		    			
+		    	  	} else if (intent.getAction().equals(MODEL_ADAPTION_NEW_INTENT)) {
+		    	  		
+		    	  		String newClassName = bundle.getString(NEW_CLASS_NAME);
+
+		    	  		requestNewClassFromServer(newClassName);
+		    	  	}	    	  
+		    	  	
+		    	  	
 		      }
 	    }
 	};
@@ -322,21 +322,19 @@ public class MainActivity extends ActionBarActivity {
 		
 	}
 	
-	public void callModelAdaption() {
+	private void requestNewClassFromServer(String newClassName) {
 		
-//		appStatus.getInstance().set(appStatus.MODEL_ADPATION);
-//		Log.i(TAG, "New status: model adaption");
-//		try {
-//		      Thread.sleep(4000);
-//		    } catch (InterruptedException e) {
-//		      e.printStackTrace();
-//		    }
+		Log.i(TAG, "Requesting new context class " + newClassName  + " from server");
+		
+	}
+	
+	private void callModelAdaption(int label) {
 		
 //		if(bufferStatus == true) {
+				
+			new ModelAdaptor(buffer, label, listener).execute(this);
 			
-			ModelAdaptor task = new ModelAdaptor();
-			
-			task.execute(buffer);
+			Toast.makeText(getBaseContext(),(String) "Model is being adapted", Toast.LENGTH_SHORT).show();
 			
 //		} else {
 //			
@@ -347,5 +345,14 @@ public class MainActivity extends ActionBarActivity {
 		
 		
 	}
+	
+	private onModelAdaptionCompleted listener = new onModelAdaptionCompleted() {
+
+		@Override
+		public void onModelAdaptionCompleted(GMM newGMM) {
+			
+			Toast.makeText(getBaseContext(),(String) "Model adation completed", Toast.LENGTH_SHORT).show();
+		}
+	};
 	
 }

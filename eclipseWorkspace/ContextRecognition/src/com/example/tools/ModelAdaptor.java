@@ -20,9 +20,14 @@ import org.ejml.factory.DecompositionFactory;
 import org.ejml.ops.CommonOps;
 import org.ejml.simple.SimpleMatrix;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 
+
+import com.example.contextrecognition.MainActivity;
 //import org.apache.commons.math3.linear.CholeskyDecomposition;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,11 +35,15 @@ import com.google.gson.GsonBuilder;
 /*
  * GMM updatedGMM = inst.adaptGMM(gmm, X_train, 0, 3);
  */
-public class ModelAdaptor extends AsyncTask<ArrayList<double[]>, Void, GMM> {
+public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	/*
 	 * 1. argument: type of parameter 2. argument: type of progress unit
 	 * published during processing 3. argument: type of result
 	 */
+	
+	private ArrayList<double[]> buffer;
+	private int label;
+	
 
 	private static final String TAG = "ModelAdaptor";
 	private static final double EPS = Double.MIN_VALUE;
@@ -45,15 +54,28 @@ public class ModelAdaptor extends AsyncTask<ArrayList<double[]>, Void, GMM> {
 	//
 	// //buffer = AudioWorker.dataBuffer;
 	// }
+	
+	/*
+	 * Constructor allows us to pass multiple arguments of different types to AsyncTask
+	 */
+	public ModelAdaptor(ArrayList<double[]> b, int l, onModelAdaptionCompleted listener) {
+		this. buffer = b;
+		this.label = l;
+		this.listener = listener;
+	}
 
+	public interface onModelAdaptionCompleted{
+        void onModelAdaptionCompleted(GMM newGMM);
+    }
+
+    private onModelAdaptionCompleted listener;	
+	
 	@Override
-	protected GMM doInBackground(ArrayList<double[]>... arg0) {
+	protected GMM doInBackground(Context... arg0) {
 
 		GMM oldGMM = new GMM("GMM.json");
 
 		GMM newGMM = null;
-
-		ArrayList<double[]> buffer = arg0[0];
 
 		// if (buffer.size() == 1875) {
 
@@ -63,9 +85,11 @@ public class ModelAdaptor extends AsyncTask<ArrayList<double[]>, Void, GMM> {
 
 		DenseMatrix64F updatePoints = convertToEJML(buffer);
 
+		int maxNewClasses = 3;
+		
 		try {
 
-			newGMM = adaptGMM(oldGMM, updatePoints, 1, 4); // TODO: xxxxxxxxxxx
+			newGMM = adaptGMM(oldGMM, updatePoints, label, maxNewClasses);
 
 		} catch (IOException e) {
 
@@ -83,9 +107,15 @@ public class ModelAdaptor extends AsyncTask<ArrayList<double[]>, Void, GMM> {
 	@Override
 	protected void onPostExecute(GMM newGMM) {
 
-		Log.i(TAG, "Model adaption finished, new class model has "
-				+ newGMM.clf(0).get_n_components() + " components"); //TODO: for correct class
+		Log.i(TAG, "Model adaption finished for class " + label + " finished, new class model has "
+				+ newGMM.clf(label).get_n_components() + " components");
 
+		if (listener != null)
+            listener.onModelAdaptionCompleted(newGMM);
+		
+		// Save the new GMM to the SD-card and reset the app status to initializing
+		newGMM.dumpJSON();
+		
 		appStatus.getInstance().set(appStatus.INIT);
 	}
 
@@ -315,8 +345,8 @@ public class ModelAdaptor extends AsyncTask<ArrayList<double[]>, Void, GMM> {
 
 		}
 
-		Log.i(TAG, n_added + " components were added and " + n_merged
-				+ " components were merged");
+		Log.i(TAG, n_added + " component(s) added and " + n_merged
+				+ " component(s) merged");
 
 		// ----- Merge statistically equivalent components: -----
 		// TODO

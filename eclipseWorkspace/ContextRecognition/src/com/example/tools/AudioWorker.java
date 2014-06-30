@@ -154,21 +154,12 @@ public class AudioWorker extends IntentService {
 						}
 						DenseMatrix64F samples = new DenseMatrix64F(array);
 
-						
-						
-//						Log.i(TAG, "xxxxxxxxxxxx in AudioWorker: ");
-//						Log.i(TAG, samples.toString());
-						
-						
-						
 						DenseMatrix64F res = clf.predict(gmm, samples);
 						
 						int intRes = (int) res.get(10); // TODO: implement this properly! As this array is exactly the length of one majority vote window, all elements in it are the same 
 						
 						stringRes = gmm.get_class_name(intRes);
 						
-						//Log.v(TAG, "Current Context: " + stringRes);
-
 						// Set result code to okay and publish the result
 						code = Activity.RESULT_OK;
 						publishResult(intRes, stringRes, code);

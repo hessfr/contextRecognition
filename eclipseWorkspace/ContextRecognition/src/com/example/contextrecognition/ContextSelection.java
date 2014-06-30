@@ -3,6 +3,7 @@ package com.example.contextrecognition;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,6 +21,7 @@ public class ContextSelection extends ListActivity {
 	private static final String TAG = "ContextSelection";
 	
 	private String[] classNames;
+	private int conversationIdx = -1;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,6 +48,13 @@ public class ContextSelection extends ListActivity {
 			Log.e(TAG, "classNames String Array empty. List could not be set");
 		}
 
+		// Find index of the conversation class, as we do not want to adapt our model for these:
+		for(int i=0; i<classNames.length; i++) {
+			if (classNames[i].equals("Conversation")) {
+				conversationIdx = i;
+			}
+		}
+		
     }
     
     @Override
@@ -63,19 +72,19 @@ public class ContextSelection extends ListActivity {
       
       //normal context class selected:
       if (position != (getListAdapter().getCount()-1)) {
-    	  
-    	  Log.i(TAG,"Existing class selected");
-    	  
-    	  //TODO: call model adaption
-    	  
-    	  
-    	  
-    	  
-//    	  appStatus.getInstance().set(appStatus.MODEL_ADPATION);
-//    	  Log.i(TAG, "New status: model adaption");
-//    	  
-//    	  ModelAdaptor task = new ModelAdaptor();
-//    	  task.execute(new String[] { "http://www.vogella.com" });
+
+    	  	if (position != conversationIdx) {
+    	  		
+    	  		Log.i(TAG, "Existing class " + item + " selected");
+
+    			Intent intent = new Intent(MainActivity.MODEL_ADAPTION_EXISTING_INTENT);
+    			Bundle bundle = new Bundle();
+    			intent.putExtra(MainActivity.LABEL, position);
+    			intent.putExtras(bundle);
+    			sendBroadcast(intent);
+    	  	} else {
+    	  		Log.i(TAG, "Conversation class will not be incorporated into our model");
+    	  	}
 
           finish();
     	  
@@ -110,10 +119,15 @@ public class ContextSelection extends ListActivity {
 				public void onClick(DialogInterface dialog, int whichButton) {
 					String enteredText = autoCompleteTV.getText().toString();
 					
-					//Call method to incorporate the new class, i.e. get new model from server
-					
-					//TODO: call model adaption
-				  
+					Log.i(TAG, "New context class " + enteredText + " requested");
+
+	    			Intent intent = new Intent(MainActivity.MODEL_ADAPTION_NEW_INTENT);
+	    			Bundle bundle = new Bundle();
+	    			intent.putExtra(MainActivity.NEW_CLASS_NAME, enteredText);
+	    			intent.putExtras(bundle);
+	    			sendBroadcast(intent);
+	    			
+	    			finish();			  
 				  }
 			});
 			
