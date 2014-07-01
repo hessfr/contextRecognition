@@ -589,9 +589,9 @@ def meanAL(trainedGMM, testFeatureData):
                     thresSet[predictedLabel] = True
                     initThresSet[predictedLabel] = True
 
-        # --- Setting threshold: ---
+        # --- Setting threshold (not the initial ones): ---
         if (thresSet[predictedLabel] == False) and (feedbackReceived[predictedLabel] == True):
-            if len(thresBuffer[predictedLabel]) < 300: #TODO: xxxxxxxxxx
+            if len(thresBuffer[predictedLabel]) < 300: # 300 equals 10min #TODO: xxxxxxxxxx
                 # Fill threshold buffer
                 thresBuffer[predictedLabel].append(entropy)
             else:
@@ -601,11 +601,17 @@ def meanAL(trainedGMM, testFeatureData):
                 if initThresSet[predictedLabel] == True:
                     # set threshold after a model adaption:
                     tmp = np.array(thresBuffer[predictedLabel])
-                    thres = tmp.mean() + 3 * tmp.std() #TODO: xxxxxxxxxx
-                    prevThreshold = threshold[predictedLabel]
-                    threshold[predictedLabel] = (thres + prevThreshold) / 2.0
+                    thres = tmp.mean() + 3 * tmp.std() #TODO: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    #prevThreshold = threshold[predictedLabel]
+                    #threshold[predictedLabel] = (thres + prevThreshold) / 2.0
+                    
+                    threshold[predictedLabel] = (thres + thresQueriedInterval) / 2.0
+                    
                     print("New threshold for " + revClassesDict[predictedLabel] + " class " +
                           str(round(threshold[predictedLabel],4)) + ". Set " + str(round(currentTime-prevTime)) + "s after model adaption")
+                    
+                    print("thresQueriedInterval: " + str(thresQueriedInterval))
+                    
                     thresSet[predictedLabel] = True
 
 
@@ -658,6 +664,9 @@ def meanAL(trainedGMM, testFeatureData):
                         numQueries[actualLabel] += 1
 
                         feedbackReceived[actualLabel] = True
+
+                        # Compute a value for the threshold on this interval, as we want to use it to calculate the new threshold later.
+                        thresQueriedInterval = majPoints.mean()# + 2 * majPoints.std() #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
                         # reset buffers:
                         buffer = []

@@ -21,13 +21,9 @@ import org.ejml.ops.CommonOps;
 import org.ejml.simple.SimpleMatrix;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.util.Log;
 
-
-import com.example.contextrecognition.MainActivity;
 //import org.apache.commons.math3.linear.CholeskyDecomposition;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
