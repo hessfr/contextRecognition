@@ -90,10 +90,6 @@ public class AudioWorker extends IntentService {
 						return;
 					}
 					
-//					Log.i(TAG, "----");
-//					Log.i(TAG, String.valueOf(data[30000]));
-//					Log.i(TAG, String.valueOf(data[64000]));
-					
 					// Call handle data from SoundHandler class
 					super.handleData(data, length, frameLength);
 
@@ -119,8 +115,7 @@ public class AudioWorker extends IntentService {
 							if (bufferStatus != false) {
 								bufferStatus = false;
 							}
-							
-							
+
 						} else {
 							// Add new feature point and remove the oldest one:
 							dataBuffer.add(currentMFCCs.get());

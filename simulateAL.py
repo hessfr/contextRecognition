@@ -81,7 +81,7 @@ def meanAL(trainedGMM, testFeatureData):
     thresSet.append(False)
 
     # Booleans that indicate if any label was already provided by user for a class. To make sure that we
-    # don't that the threshold too high for that class after the model was adapted
+    # don't set the threshold too high for that class after the model was adapted
     feedbackReceived = []
     feedbackReceived.append(False)
     feedbackReceived.append(False)
@@ -123,10 +123,10 @@ def meanAL(trainedGMM, testFeatureData):
     queryBuffer = []
 
     # Our 3 min (?) buffer we use to initialized the threshold:
-    initBuffer = []
-    initBuffer.append([])
-    initBuffer.append([])
-    initBuffer.append([])
+    initThresBuffer = []
+    initThresBuffer.append([])
+    initThresBuffer.append([])
+    initThresBuffer.append([])
 
     # Our 10min buffer we use for threshold calculation after adapting the model:
     thresBuffer = []
@@ -185,13 +185,13 @@ def meanAL(trainedGMM, testFeatureData):
 
         # --- Setting initial threshold: ---
         if (initThresSet[predictedLabel] == False):
-                if len(initBuffer[predictedLabel]) < 90:
+                if len(initThresBuffer[predictedLabel]) < 90:
                     # Fill init threshold buffer
-                    initBuffer[predictedLabel].append(entropy)
+                    initThresBuffer[predictedLabel].append(entropy)
 
                 else:
                     # set first threshold to 95% of max value if init buffer is full:
-                    tmp = np.array(initBuffer[predictedLabel])
+                    tmp = np.array(initThresBuffer[predictedLabel])
                     threshold[predictedLabel] = tmp.mean() + 1 * tmp.std() #TODO: xxxxxxxxxx
                     print("Initial threshold for " + revClassesDict[predictedLabel] + " class " + str(round(threshold[predictedLabel],4)))
                     thresSet[predictedLabel] = True
@@ -283,11 +283,11 @@ def meanAL(trainedGMM, testFeatureData):
                         thresSet[2] = False
 
                         if(feedbackReceived[0]) == False:
-                            initBuffer[0] = []
+                            initThresBuffer[0] = []
                         if(feedbackReceived[1]) == False:
-                            initBuffer[1] = []
+                            initThresBuffer[1] = []
                         if(feedbackReceived[2]) == False:
-                            initBuffer[2] = []
+                            initThresBuffer[2] = []
 
 
                         prevTime = currentTime

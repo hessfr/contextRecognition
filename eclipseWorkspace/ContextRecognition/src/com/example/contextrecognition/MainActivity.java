@@ -34,32 +34,6 @@ public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = "MainAcitivty";
 
-//	public static final String STOP_RECORDING = "stopRecording";
-
-	public static final String CLASS_NAMES_INTENT = "classNamesIntent";
-	public static final String CLASS_NAMES = "classNames";
-
-	public static final String MODEL_ADAPTION_EXISTING_INTENT = "modelAdaptionExisting";
-	public static final String LABEL = "label";
-
-	public static final String MODEL_ADAPTION_FINISHED_INTENT = "modelAdaptionFinished";
-
-	public static final String MODEL_ADAPTION_NEW_INTENT = "modelAdaptionNew";
-	public static final String NEW_CLASS_NAME = "newClassName";
-	
-	public static final String CALL_CONTEXT_SELECTION_INTENT = "callContextSelection";
-	
-	public static final int NOTIFICATION_ID = 1;
-	
-	// Variables of the current prediction:
-	private int predictionInt;
-	private String predictionString;
-	public Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
-	private String[] classNameArray;
-	private boolean bufferStatus;
-	private ArrayList<double[]> buffer;
-	private GMM gmm; // Needed??
-
 	private Context context = this;
 
 	public String[] contextClasses;
@@ -68,8 +42,6 @@ public class MainActivity extends ActionBarActivity {
 	SharedPreferences mPrefs;
 	TextView contextTV;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
-
-	StateManager stateManager;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +79,7 @@ public class MainActivity extends ActionBarActivity {
 		// Set app status to initializing:
 		appStatus.getInstance().set(appStatus.INIT);
 		Log.i(TAG, "New status: init");
-
+		
 		new PostRequest().execute();
 
 	}
@@ -120,19 +92,6 @@ public class MainActivity extends ActionBarActivity {
 		IntentFilter filterMain = new IntentFilter();
 		filterMain.addAction(StateManager.PREDICTION_CHANGED_INTENT);
 		registerReceiver(receiverMainActivity, filterMain);
-		
-		// Register the broadcast receiver of StateManager:
-		stateManager = new StateManager();
-		IntentFilter filterStateManager = new IntentFilter();
-		filterStateManager.addAction(StateManager.PREDICTION_INTENT);
-		filterStateManager.addAction(StateManager.STATUS_INTENT);
-		filterStateManager.addAction(StateManager.MODEL_ADAPTION_EXISTING_INTENT);
-		filterStateManager.addAction(StateManager.MODEL_ADAPTION_FINISHED_INTENT);
-		filterStateManager.addAction(StateManager.MODEL_ADAPTION_NEW_INTENT);
-		filterStateManager.addAction(StateManager.CALL_CONTEXT_SELECTION_INTENT);
-
-		registerReceiver(stateManager, filterStateManager);
-
 	}
 
 	@Override
@@ -218,23 +177,10 @@ public class MainActivity extends ActionBarActivity {
 
 //				sendQuery(); //TODO
 				
-				if (classesDict.size() > 0) {
-					Intent i = new Intent(MainActivity.this,
-							ContextSelection.class);
-					Bundle b = new Bundle();
-					b.putStringArray(CLASS_NAMES, gmm.get_string_array());
-					i.putExtras(b);
-					startActivity(i);
-				} else {
-					// If class names not yet available, send Toast
-					Toast.makeText(
-							getBaseContext(),
-							(String) "Please wait until the system is initialized",
-							Toast.LENGTH_SHORT).show();
-
-					Log.w(TAG,
-							"Not changing to ContextSelection activity, as class names not available yet.");
-				}
+				Intent intent = new Intent(StateManager.CALL_CONTEXT_SELECTION_INTENT);
+    			Bundle bundle = new Bundle();
+    			intent.putExtras(bundle);
+    			sendBroadcast(intent);
 			}
 
 		});
@@ -244,11 +190,11 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 
-				stateManager.sendQuery(context);
-				
-//				callModelAdaption(predictionInt);
-				
-				//TODO
+				Intent intent = new Intent(StateManager.MODEL_ADAPTION_EXISTING_INTENT);
+    			Bundle bundle = new Bundle();
+    			bundle.putInt(StateManager.LABEL, 1);
+    			intent.putExtras(bundle);
+    			sendBroadcast(intent);
 
 			}
 
@@ -271,125 +217,19 @@ public class MainActivity extends ActionBarActivity {
 					setText(bundle.getString(StateManager.NEW_PREDICTION_STRING));
 				}
 
-//				if (intent.getAction().equals(AudioWorker.PREDICTION)) {
-//
-//					int resultCode = bundle.getInt(AudioWorker.RESULTCODE);
-//					predictionInt = bundle.getInt(AudioWorker.PREDICTION_INT);
-//					predictionString = bundle
-//							.getString(AudioWorker.PREDICTION_STRING);
-//
-//					if (resultCode == RESULT_OK) {
-//						Log.d(TAG, "Current Prediction: " + predictionString
-//								+ ": " + predictionInt);
-//						setText(predictionString);
-//					} else {
-//						Log.i(TAG,
-//								"Received prediction result not okay, result code "
-//										+ resultCode);
-//					}
-//
-//				} else if (intent.getAction().equals(AudioWorker.STATUS)) {
-//
-//					int resultCode = bundle.getInt(AudioWorker.RESULTCODE);
-//
-//					if (resultCode == RESULT_OK) {
-//						classNameArray = bundle
-//								.getStringArray(AudioWorker.CLASS_STRINGS);
-//						// Log.i(TAG, classNameArray[0]);
-//						bufferStatus = bundle
-//								.getBoolean(AudioWorker.BUFFER_STATUS);
-//						// Log.i(TAG, String.valueOf(bufferStatus));
-//						Serializable s1 = bundle
-//								.getSerializable(AudioWorker.BUFFER);
-//						buffer = (ArrayList<double[]>) s1;
-//						// Log.i(TAG, String.valueOf(buffer.get(0)[0]));
-//
-//						gmm = bundle.getParcelable(AudioWorker.GMM_OBJECT); // Needed??
-//						// Log.i(TAG, gmm.get_class_name(0));
-//
-//						Serializable s2 = new HashMap<String, Integer>();
-//						s2 = bundle.getSerializable(AudioWorker.CLASSES_DICT);
-//						classesDict = (HashMap<String, Integer>) s2;
-//
-//					} else {
-//						Log.i(TAG,
-//								"Received prediction result not okay, result code "
-//										+ resultCode);
-//					}
-//
-//				} else if (intent.getAction().equals(
-//						MODEL_ADAPTION_EXISTING_INTENT)) {
-//
-//					int label = bundle.getInt(LABEL);
-//					callModelAdaption(label);
-//
-//				} else if (intent.getAction().equals(
-//						MODEL_ADAPTION_FINISHED_INTENT)) {
-//
-//					Toast.makeText(getBaseContext(),
-//							(String) "Model adaptation finished",
-//							Toast.LENGTH_SHORT).show();
-//
-//				} else if (intent.getAction().equals(MODEL_ADAPTION_NEW_INTENT)) {
-//
-//					String newClassName = bundle.getString(NEW_CLASS_NAME);
-//
-//					requestNewClassFromServer(newClassName);
-//					
-//				} else if (intent.getAction().equals(CALL_CONTEXT_SELECTION_INTENT)) {
-//
-//					Log.i(TAG, "xxxxxxxxxxxxxxxxxxxxxxx");
-//					
-//					callContextSelectionActivity();
-//				}
-
 			}
 		}
 	};
-
-//	private void stopRecording() {
-//		Intent intent = new Intent(STOP_RECORDING);
-//		unregisterReceiver(receiver);
-//		sendBroadcast(intent);
-//	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
 		
 		unregisterReceiver(receiverMainActivity);
-		unregisterReceiver(stateManager);
-
 
 	}
 
-//	private void requestNewClassFromServer(String newClassName) {
-//
-//		Log.i(TAG, "Requesting new context class " + newClassName
-//				+ " from server");
-//
-//	}
 
-//	private void callModelAdaption(int label) {
-//
-//		// if(bufferStatus == true) {
-//
-//		new ModelAdaptor(buffer, label, listener).execute(this);
-//
-//		Toast.makeText(getBaseContext(), (String) "Model is being adapted",
-//				Toast.LENGTH_SHORT).show();
-//
-//		// } else {
-//		//
-//		// Toast.makeText(getBaseContext(),(String)
-//		// "Please wait until the system is initialized",
-//		// Toast.LENGTH_SHORT).show();
-//		//
-//		// Log.w(TAG,
-//		// "Model adaption not called, as the buffer is not full yet.");
-//		// }
-//
-//	}
 
 	private onModelAdaptionCompleted listener = new onModelAdaptionCompleted() {
 
@@ -401,69 +241,5 @@ public class MainActivity extends ActionBarActivity {
 					.show();
 		}
 	};
-
-//	private void sendQuery() {
-//
-//		long[] vibratePattern = {0, 500}; // Start with 0 delay and vibrate for 500ms
-//		
-//		// To cancel the query
-//		Intent dismissIntent = new Intent(getApplicationContext(), MainActivity.class);
-//		dismissIntent.setAction("notification_cancelled");
-//		PendingIntent dismiss = PendingIntent.getActivity(getApplicationContext(), 40, dismissIntent , 0);
-//		
-//		NotificationCompat.Builder builder = new NotificationCompat.Builder(
-//				this).setSmallIcon(R.drawable.ic_launcher)
-//				.setContentTitle("What's your current context?")
-//				.setAutoCancel(true)
-//				.setWhen(System.currentTimeMillis())
-//				.setTicker("What's your current context?")
-//				.setVibrate(vibratePattern)
-//				.addAction(R.drawable.ic_stat_dismiss, "Dismiss", PendingIntent.getActivity(getApplicationContext(), 0, new Intent(), 0));
-//		
-//		Intent notificationIntent = callContextSelectionActivity();
-//		if (notificationIntent == null) {
-//			Log.e(TAG, "Notification intent could not be initialized, as callContextSelectionActivity returned null");
-//			return;
-//		}
-//
-//		
-//		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-//				notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//		builder.setContentIntent(contentIntent);
-//
-//
-//		NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//		manager.notify(NOTIFICATION_ID, builder.build());
-//
-//	}
-	
-	private void removeNotification() {
-	    NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-	    manager.cancel(NOTIFICATION_ID);
-	}
-	
-//	public Intent callContextSelectionActivity() {
-//		Intent i;
-//		if (classesDict.size() > 0) {
-//			i = new Intent(MainActivity.this,
-//					ContextSelection.class);
-//			Bundle b = new Bundle();
-//			b.putStringArray(CLASS_NAMES, gmm.get_string_array());
-//			i.putExtras(b);
-//			startActivity(i);
-//		} else {
-//			// If class names not yet available, send Toast
-//			i = null;			
-//			Toast.makeText(
-//					getBaseContext(),
-//					(String) "Please wait until the system is initialized",
-//					Toast.LENGTH_SHORT).show();
-//
-//			Log.w(TAG,
-//					"Not changing to ContextSelection activity, as class names not available yet.");
-//		}
-//		
-//		return i;
-//	}
 
 }

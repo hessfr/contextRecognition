@@ -12,9 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 
-import com.example.tools.ModelAdaptor;
-//import com.example.tools.ClassesDictXXX;
-import com.example.tools.appStatus;
+import com.example.tools.StateManager;
 
 public class ContextSelection extends ListActivity {
     
@@ -31,7 +29,7 @@ public class ContextSelection extends ListActivity {
                 android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.context_classes)));
         
         Bundle b = getIntent().getExtras();
-        classNames = b.getStringArray(MainActivity.CLASS_NAMES);     
+        classNames = b.getStringArray(StateManager.CLASS_NAMES);     
         
 		if (classNames != null) {
 			// Add the "Define Own Context Class" to the bottom of the list:
@@ -66,9 +64,6 @@ public class ContextSelection extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
       String item = (String) getListAdapter().getItem(position);
-
-      //Assuming last item is always the "Define own context class"... TODO: do this properly!
-      int lastItem = getListAdapter().getCount();
       
       //normal context class selected:
       if (position != (getListAdapter().getCount()-1)) {
@@ -77,11 +72,12 @@ public class ContextSelection extends ListActivity {
     	  		
     	  		Log.i(TAG, "Existing class " + item + " selected");
     	  		
-    			Intent intent = new Intent(MainActivity.MODEL_ADAPTION_EXISTING_INTENT);
+    			Intent intent = new Intent(StateManager.MODEL_ADAPTION_EXISTING_INTENT);
     			Bundle bundle = new Bundle();
-    			intent.putExtra(MainActivity.LABEL, position);
+    			bundle.putInt(StateManager.LABEL, position);
     			intent.putExtras(bundle);
     			sendBroadcast(intent);
+    			
     	  	} else {
     	  		Log.i(TAG, "Conversation class will not be incorporated into our model");
     	  	}
@@ -120,10 +116,10 @@ public class ContextSelection extends ListActivity {
 					String enteredText = autoCompleteTV.getText().toString();
 					
 					Log.i(TAG, "New context class " + enteredText + " requested");
-
-	    			Intent intent = new Intent(MainActivity.MODEL_ADAPTION_NEW_INTENT);
+	    			
+	    			Intent intent = new Intent(StateManager.MODEL_ADAPTION_NEW_INTENT);
 	    			Bundle bundle = new Bundle();
-	    			intent.putExtra(MainActivity.NEW_CLASS_NAME, enteredText);
+	    			bundle.putString(StateManager.NEW_CLASS_NAME, enteredText);
 	    			intent.putExtras(bundle);
 	    			sendBroadcast(intent);
 	    			
