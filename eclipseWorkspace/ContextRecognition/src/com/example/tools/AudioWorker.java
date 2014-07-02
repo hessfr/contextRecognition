@@ -27,19 +27,8 @@ public class AudioWorker extends IntentService {
 	private static int DATA_BUFFER_SIZE = 1875; // equals ~1min for 0.032ms window length
 	private boolean bufferStatus = false;
 	private String stringRes;
-	
-	public static final String PREDICTION = "resultRequest";
-	public static final String PREDICTION_INT = "predictionInt";
-	public static final String PREDICTION_STRING = "predictionString";
-	public static final String CLASSES_DICT = "classesDict";
-	public static final String RESULTCODE = "resultcode";
-	public static int code = Activity.RESULT_CANCELED;
 
-	public static final String STATUS = "status"; //TODO: more suitable name
-	public static final String CLASS_STRINGS = "classesStrings";
-	public static final String GMM_OBJECT = "gmmObject";
-	public static final String BUFFER_STATUS = "bufferStatus";
-	public static final String BUFFER = "buffer";	
+	public static int code = Activity.RESULT_CANCELED;	
 			
 	private int testInt = 0;
 	
@@ -164,6 +153,8 @@ public class AudioWorker extends IntentService {
 						code = Activity.RESULT_OK;
 						publishResult(intRes, stringRes, code);
 						
+						//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
+						
 						// Delete all elements of the list afterwards
 						mfccList.clear();
 						
@@ -190,29 +181,31 @@ public class AudioWorker extends IntentService {
 	}
 	
 	private void publishResult(int predictionInt, String predicationString, int resultCode) {
-		Intent intent = new Intent(PREDICTION);
+		Intent intent = new Intent(StateManager.PREDICTION_INTENT);
 		
 		Bundle bundle = new Bundle();
 		
 		intent.putExtras(bundle);
-		intent.putExtra(PREDICTION_INT, predictionInt);
-		intent.putExtra(PREDICTION_STRING, predicationString);
-		intent.putExtra(RESULTCODE, code);
+		intent.putExtra(StateManager.PREDICTION_INT, predictionInt);
+		intent.putExtra(StateManager.PREDICTION_STRING, predicationString);
+		intent.putExtra(StateManager.RESULTCODE, code);
 		
 		sendBroadcast(intent);
+		
+		//Log.d(TAG, "Prediction broadcasted");
 	}
 	
 	private void publishStatus(HashMap<String, Integer> classesDict, GMM gmm, boolean bufferStatus, LinkedList<double[]> buffer, int resultCode) {
-		Intent intent = new Intent(STATUS);
+		Intent intent = new Intent(StateManager.STATUS_INTENT);
 		
 		Bundle bundle = new Bundle();
 
-		bundle.putStringArray(CLASS_STRINGS,gmm.get_string_array());
-		bundle.putSerializable(CLASSES_DICT, classesDict); //Needed??
-		bundle.putParcelable(GMM_OBJECT, gmm); //Needed??
-		bundle.putBoolean(BUFFER_STATUS, bufferStatus);
-		bundle.putSerializable(BUFFER, buffer);
-		bundle.putInt(RESULTCODE, code);
+		bundle.putStringArray(StateManager.CLASS_STRINGS,gmm.get_string_array());
+		bundle.putSerializable(StateManager.CLASSES_DICT, classesDict); //Needed??
+		bundle.putParcelable(StateManager.GMM_OBJECT, gmm); //Needed??
+		bundle.putBoolean(StateManager.BUFFER_STATUS, bufferStatus);
+		bundle.putSerializable(StateManager.BUFFER, buffer);
+		bundle.putInt(StateManager.RESULTCODE, code);
 
 		intent.putExtras(bundle);
 		

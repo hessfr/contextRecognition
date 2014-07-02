@@ -499,12 +499,6 @@ def meanAL(trainedGMM, testFeatureData):
     predBuffer = []
     actBuffer = []
 
-    # Our 1min buffers that we use to calculate our query criteria:
-    # buffers = []
-    # buffers.append([])
-    # buffers.append([])
-    # buffers.append([])
-
     # Single buffer containing the last 30 points regardless of the predicted class
     buffer = []
 
@@ -522,6 +516,11 @@ def meanAL(trainedGMM, testFeatureData):
 
     majCorrectCnt = 0
     majWrongCnt = 0
+    
+    thresQueriedInterval = []
+    thresQueriedInterval.append(-1)
+    thresQueriedInterval.append(-1)
+    thresQueriedInterval.append(-1)
 
     # This loop loads new data every 2sec
     for i in range(simFeatures.shape[0]/b):
@@ -541,13 +540,6 @@ def meanAL(trainedGMM, testFeatureData):
         resArray, entropy = predictGMM(currentGMM, currentPoints, scale=False, returnEntropy=True)
         predictedLabel = int(resArray.mean())
         predictedLabels.append(predictedLabel)
-
-        # Buffer last 30 points for each class
-        # if len(buffers[predictedLabel]) < 30:
-        #     buffers[predictedLabel].append(entropy)
-        # else:
-        #     buffers[predictedLabel].append(entropy)
-        #     del buffers[predictedLabel][0]
 
         # Buffer last 30 points for each class
         if len(buffer) < 30:
@@ -605,22 +597,18 @@ def meanAL(trainedGMM, testFeatureData):
                     #prevThreshold = threshold[predictedLabel]
                     #threshold[predictedLabel] = (thres + prevThreshold) / 2.0
                     
-                    threshold[predictedLabel] = (thres + thresQueriedInterval) / 2.0
+                    threshold[predictedLabel] = (thres + thresQueriedInterval[predictedLabel]) / 2.0
                     
                     print("New threshold for " + revClassesDict[predictedLabel] + " class " +
                           str(round(threshold[predictedLabel],4)) + ". Set " + str(round(currentTime-prevTime)) + "s after model adaption")
                     
-                    print("thresQueriedInterval: " + str(thresQueriedInterval))
+                    print("thresQueriedInterval for class " + str(predictedLabel) + ": " + str(thresQueriedInterval[predictedLabel]))
                     
                     thresSet[predictedLabel] = True
 
 
         # if the buffer is filled, check if we want to query:
         if (thresSet[predictedLabel] == True) and (len(buffer) == 30): #(len(buffers[predictedLabel]) == 30)
-
-            # --- calculate current query criteria: ---
-            # tmp = np.array(buffers[predictedLabel]) #if using last 30 correctly predicted values
-            # queryCrit = tmp.mean() + tmp.std() #if using last 30 correctly predicted values
 
             # --- calculate current query criteria: ---
             npCrit = np.array(buffer)
@@ -666,15 +654,13 @@ def meanAL(trainedGMM, testFeatureData):
                         feedbackReceived[actualLabel] = True
 
                         # Compute a value for the threshold on this interval, as we want to use it to calculate the new threshold later.
-                        thresQueriedInterval = majPoints.mean()# + 2 * majPoints.std() #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        thresQueriedInterval[actualLabel] = majPoints.mean()# + 2 * majPoints.std() #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
                         # reset buffers:
                         buffer = []
                         predBuffer = []
                         actBuffer = []
-                        # buffers[0] = []
-                        # buffers[1] = []
-                        # buffers[2] = []
+
                         thresBuffer[0] = []
                         thresBuffer[1] = []
                         thresBuffer[2] = []

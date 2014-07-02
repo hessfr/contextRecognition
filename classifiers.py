@@ -414,9 +414,12 @@ def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
         # logLikelihood[i] = trainedGMM['clfs'][i].score(X_test) # uses scikit function
         logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_, trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_) # uses logProb function defined below
 
-    """ Select the class with the highest log-probability: """
-    y_pred = np.argmax(logLikelihood, 0)
+    
 
+    """ Select the class with the highest log-probability: """
+    y_pred = np.argmax(logLikelihood, 0) # =predictions in Java
+
+    """ Calculate the entropy for each point """
     likelihood = np.zeros((n_classes, X_test.shape[0]))
     likelihoodSorted = np.zeros((n_classes, X_test.shape[0]))
 
@@ -435,9 +438,10 @@ def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
 
     for i in range(n_classes):
         tmpProduct[i,:] = likelihoodNormed[i,:] * logLikelihoodNormed[i,:]
-
+    
     entropy = tmpProduct.sum(axis=0) * -1
 
+    """ Calculate the mean entropy for the whole (2sec) window """
     entropyMean = entropy.mean()
 
     if returnEntropy == True:

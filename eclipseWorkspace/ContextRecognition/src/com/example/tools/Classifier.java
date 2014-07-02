@@ -49,9 +49,7 @@ public class Classifier {
     		
     		predictions.set(i,0,index);
     	}
-    	
-    	
-    	
+
 		DenseMatrix64F res = majorityVote(predictions.getData());
 		//res.setData(maj);
 

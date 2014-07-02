@@ -81,7 +81,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 
 		DenseMatrix64F updatePoints = convertToEJML(buffer);
 
-		int maxNewClasses = 3;
+		int maxNewClasses = 2;
 		
 		try {
 
