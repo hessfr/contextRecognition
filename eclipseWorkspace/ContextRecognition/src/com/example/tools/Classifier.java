@@ -9,10 +9,12 @@ import org.ejml.factory.DecompositionFactory;
 import org.ejml.ops.CommonOps;
 
 public class Classifier {
+	
+	public final String TAG = "Classifier";
    
    	// Make a prediction for any number of data points
-    public DenseMatrix64F predict(GMM gmm, DenseMatrix64F featureData) {
-    	
+    public PredictionResult predict(GMM gmm, DenseMatrix64F featureData) {
+
     	int n_samples = featureData.numRows;
     	int n_classes = gmm.get_n_classes();
     	
@@ -51,9 +53,73 @@ public class Classifier {
     	}
 
 		DenseMatrix64F res = majorityVote(predictions.getData());
-		//res.setData(maj);
+		
+		//------- Calculate the entropy for each point -------
+		DenseMatrix64F logLikelihoodT = new DenseMatrix64F(n_classes, n_samples);
+		CommonOps.transpose(logLikelihood, logLikelihoodT);
+		
+		DenseMatrix64F likelihood = new DenseMatrix64F(n_classes, n_samples);
+		DenseMatrix64F tmpProduct = new DenseMatrix64F(n_classes, n_samples);
+		DenseMatrix64F entropy = new DenseMatrix64F(1, n_samples);
+		
+		// Calculate the normal likelihood from the logLikelihood:
+		for(int r=0; r<n_classes; r++) {
+			for(int c=0; c<n_samples; c++) {
+				likelihood.set(r,c,Math.exp(logLikelihoodT.get(r,c)));
+			}
+		}
+		
+		// Norm the likelihood for every point to one
+		for(int c=0; c<n_samples; c++) {
+			double sum=0;
+			for(int r=0; r<n_classes; r++) {
+				sum = sum + likelihood.get(r,c);
+			}
+			for(int r=0; r<n_classes; r++) {
+				likelihood.set(r,c, (likelihood.get(r,c)/sum));
+			}
+		}
+		
+		// Calculate the normed log-likelihood now:
+		DenseMatrix64F loglikelihoodNormed = new DenseMatrix64F(n_classes, n_samples);
+		for(int c=0; c<n_samples; c++) {
+			for(int r=0; r<n_classes; r++) {
+				loglikelihoodNormed.set(r,c, Math.log(likelihood.get(r,c)));
+			}
+		}
+		
+		// Element-wise multiply likelihood with log-likelihood:
+		for(int c=0; c<n_samples; c++) {
+			for(int r=0; r<n_classes; r++) {
+				tmpProduct.set(r,c, (loglikelihoodNormed.get(r,c) * likelihood.get(r,c)));
+			}
+		}
+		
+		// Calculate sum for each column:
+		for(int c=0; c<n_samples; c++) {
+			double sum=0;
+			for(int r=0; r<n_classes; r++) {
+				sum = sum + tmpProduct.get(r,c);
+			}
+			entropy.set(0, c, sum);
+		}
+		
+		CommonOps.scale(-1, entropy);
+		
+		//------- Calculate the mean entropy for the whole (2sec) window -------
+		double entropyMean = CommonOps.elementSum(entropy) / entropy.numCols;
 
-    	return res;
+		//------- Calculate the number of the resulting class: -------
+		double elSum = CommonOps.elementSum(res);
+		double div = elSum / ((double) n_samples);
+		int resultInt = (int) Math.round(div);
+		
+//		Log.i(TAG, String.valueOf(elSum));
+//		Log.i(TAG, String.valueOf(div));
+
+		PredictionResult predictionResult = new PredictionResult(resultInt, entropyMean);
+		
+    	return predictionResult;
     }
    
     // Calculate the log probability of multiple points under a GMM represented by the weights, means, covars

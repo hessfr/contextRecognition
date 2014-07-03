@@ -138,15 +138,19 @@ public class AudioWorker extends IntentService {
 						}
 						DenseMatrix64F samples = new DenseMatrix64F(array);
 
-						DenseMatrix64F res = clf.predict(gmm, samples);
+						PredictionResult predictionResult = clf.predict(gmm, samples);
+						int currentResult = predictionResult.get_class();
+						double currentEntropy = predictionResult.get_entropy();
 						
-						int intRes = (int) res.get(10); // TODO: implement this properly! As this array is exactly the length of one majority vote window, all elements in it are the same 
-						
-						stringRes = gmm.get_class_name(intRes);
+						stringRes = gmm.get_class_name(currentResult);
 						
 						// Set result code to okay and publish the result
 						code = Activity.RESULT_OK;
-						publishResult(intRes, stringRes, code);
+						HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
+						publishResult(currentResult, currentEntropy, stringRes, hm, gmm, bufferStatus, dataBuffer, code);
+						
+						
+						//publishStatus(hm, gmm, bufferStatus, dataBuffer, code);
 						
 						//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
 						
@@ -162,8 +166,7 @@ public class AudioWorker extends IntentService {
 					}
 				}
 				
-				HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
-				publishStatus(hm, gmm, bufferStatus, dataBuffer, code);
+
 
 			}
 		};
@@ -175,36 +178,37 @@ public class AudioWorker extends IntentService {
 	
 	}
 	
-	private void publishResult(int predictionInt, String predicationString, int resultCode) {
+	private void publishResult(int predictionInt, double predictionEntropy,
+			String predicationString, HashMap<String, Integer> classesDict,
+			GMM gmm, boolean bufferStatus, LinkedList<double[]> buffer,
+			int resultCode) {
 		Intent intent = new Intent(StateManager.PREDICTION_INTENT);
-		
-		Bundle bundle = new Bundle();
-		
-		intent.putExtras(bundle);
-		intent.putExtra(StateManager.PREDICTION_INT, predictionInt);
-		intent.putExtra(StateManager.PREDICTION_STRING, predicationString);
-		intent.putExtra(StateManager.RESULTCODE, code);
-		
-		sendBroadcast(intent);
-		
-		//Log.d(TAG, "Prediction broadcasted");
-	}
-	
-	private void publishStatus(HashMap<String, Integer> classesDict, GMM gmm, boolean bufferStatus, LinkedList<double[]> buffer, int resultCode) {
-		Intent intent = new Intent(StateManager.STATUS_INTENT);
-		
+
 		Bundle bundle = new Bundle();
 
+		
+		bundle.putInt(StateManager.PREDICTION_INT, predictionInt);
+		bundle.putDouble(StateManager.PREDICTION_ENTROPY, predictionEntropy);
+		bundle.putString(StateManager.PREDICTION_STRING, predicationString);
+		
+		//Log.i(TAG, "------------------");
+		//Log.i(TAG, gmm.get_string_array()[2]);
 		bundle.putStringArray(StateManager.CLASS_STRINGS,gmm.get_string_array());
-		bundle.putSerializable(StateManager.CLASSES_DICT, classesDict); //Needed??
-		bundle.putParcelable(StateManager.GMM_OBJECT, gmm); //Needed??
+		
 		bundle.putBoolean(StateManager.BUFFER_STATUS, bufferStatus);
 		bundle.putSerializable(StateManager.BUFFER, buffer);
+		
+		bundle.putParcelable(StateManager.GMM_OBJECT, gmm); //Needed??
+		
+		bundle.putSerializable(StateManager.CLASSES_DICT, classesDict); //Needed??
+
 		bundle.putInt(StateManager.RESULTCODE, code);
 
 		intent.putExtras(bundle);
 		
 		sendBroadcast(intent);
+
+		// Log.d(TAG, "Prediction broadcasted");
 	}
 	
 	/*

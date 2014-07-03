@@ -21,7 +21,11 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-
+/*
+ * Handles all broadcasts and holds all prediction varaiables like current context, buffers, class names, ...
+ * 
+ * AL Queries are also sent from here...
+ */
 public class StateManager extends BroadcastReceiver {
 
 	private static final String TAG = "StateManager";
@@ -31,7 +35,8 @@ public class StateManager extends BroadcastReceiver {
 	 * 
 	 * Remember that these variables are only initialized after the first prediction (after ~2sec)
 	 */
-	private static int predictionInt;
+	private static int currentPrediction;
+	private static double currentEntropy;
 	private static String predictionString;
 	private static String prevPredictionString = "";
 	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
@@ -46,6 +51,7 @@ public class StateManager extends BroadcastReceiver {
 	// Send from AudioWorker:
 	public static final String PREDICTION_INTENT = "action.prediction";
 	public static final String PREDICTION_INT = "predictionInt";
+	public static final String PREDICTION_ENTROPY = "predictionEntropy";
 	public static final String PREDICTION_STRING = "predictionString";
 	public static final String CLASSES_DICT = "classesDict";
 	public static final String RESULTCODE = "resultcode";
@@ -54,7 +60,8 @@ public class StateManager extends BroadcastReceiver {
 	public static final String CLASS_STRINGS = "classesStrings";
 	public static final String GMM_OBJECT = "gmmObject";
 	public static final String BUFFER_STATUS = "bufferStatus";
-	public static final String BUFFER = "buffer";	
+	public static final String BUFFER = "buffer";
+	
 
 	// Received by the state manager:
 	public static final String MODEL_ADAPTION_EXISTING_INTENT = "action.modelAdaptionExisting";
@@ -86,20 +93,45 @@ public class StateManager extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		
 		Bundle bundle = intent.getExtras();
-		
-//		Log.i(TAG, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
 		if (bundle != null) {
 
 			if (intent.getAction().equals(PREDICTION_INTENT)) {
 
 				int resultCode = bundle.getInt(RESULTCODE);
-				predictionInt = bundle.getInt(PREDICTION_INT);
-				predictionString = bundle.getString(PREDICTION_STRING);
 
 				if (resultCode == Activity.RESULT_OK) {
 					
-					Log.i(TAG, "Current Prediction: " + predictionString + ": " + predictionInt);
+					// The following lines have to be in exactly the same order as the were put on the bundle (in the AudioWorker):
+
+					currentPrediction = bundle.getInt(PREDICTION_INT);
+					currentEntropy = bundle.getDouble(PREDICTION_ENTROPY);
+					predictionString = bundle.getString(PREDICTION_STRING);
+					
+					classNameArray = bundle.getStringArray(CLASS_STRINGS);
+//					Log.i(TAG, classNameArray[0]);
+					
+					bufferStatus = bundle
+							.getBoolean(BUFFER_STATUS);
+//					Log.i(TAG, String.valueOf(bufferStatus));
+					
+					Serializable s1 = bundle.getSerializable(BUFFER);
+					buffer = (ArrayList<double[]>) s1;
+//					Log.i(TAG, String.valueOf(buffer.get(0)[0]));
+
+					gmm = bundle.getParcelable(GMM_OBJECT); // Needed??
+//					Log.i(TAG, gmm.get_class_name(0));
+
+					Serializable s2 = new HashMap<String, Integer>();
+					s2 = bundle.getSerializable(CLASSES_DICT);
+//					classesDict = (HashMap<String, Integer>) s2;
+					
+					if (querySendTemp == false) {
+						sendQuery(context);
+						querySendTemp = true;
+					}
+					
+					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 					
 					// Send broadcast to change text, if prediction has changed
 					if (!predictionString.equals(prevPredictionString)) {
@@ -120,46 +152,9 @@ public class StateManager extends BroadcastReceiver {
 									+ resultCode);
 				}
 
-			} else if (intent.getAction().equals(STATUS_INTENT)) {
-
-				int resultCode = bundle.getInt(RESULTCODE);
-
-				if (resultCode == Activity.RESULT_OK) {
-					
-					
-					classNameArray = bundle
-							.getStringArray(CLASS_STRINGS);
-					// Log.i(TAG, classNameArray[0]);
-					bufferStatus = bundle
-							.getBoolean(BUFFER_STATUS);
-					// Log.i(TAG, String.valueOf(bufferStatus));
-					Serializable s1 = bundle
-							.getSerializable(BUFFER);
-					buffer = (ArrayList<double[]>) s1;
-					// Log.i(TAG, String.valueOf(buffer.get(0)[0]));
-
-					gmm = bundle.getParcelable(GMM_OBJECT); // Needed??
-					// Log.i(TAG, gmm.get_class_name(0));
-
-					Serializable s2 = new HashMap<String, Integer>();
-					s2 = bundle.getSerializable(CLASSES_DICT);
-					classesDict = (HashMap<String, Integer>) s2;
-					
-					if (querySendTemp == false) {
-						sendQuery(context);
-						querySendTemp = true;
-					}
-					
-					
-				} else {
-					Log.i(TAG,
-							"Received prediction result not okay, result code "
-									+ resultCode);
-				}
-				
-				
-
-			} else if (intent.getAction().equals(MODEL_ADAPTION_EXISTING_INTENT)) {
+			}
+		
+			else if (intent.getAction().equals(MODEL_ADAPTION_EXISTING_INTENT)) {
 				
 				int label = bundle.getInt(LABEL);
 				callModelAdaption(label);
@@ -264,7 +259,7 @@ public class StateManager extends BroadcastReceiver {
 			}
 			
 		} else {
-			// We cannot start ContextSelection activitiy if class names not yet available
+			// We cannot start ContextSelection activity if class names not yet available
 			i = null;
 
 			Log.w(TAG,
