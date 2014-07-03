@@ -229,17 +229,4 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
-
-
-	private onModelAdaptionCompleted listener = new onModelAdaptionCompleted() {
-
-		@Override
-		public void onModelAdaptionCompleted(GMM newGMM) {
-
-			Toast.makeText(getBaseContext(),
-					(String) "Model adation completed", Toast.LENGTH_SHORT)
-					.show();
-		}
-	};
-
 }
