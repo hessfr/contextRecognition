@@ -5,10 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.example.contextrecognition.ContextSelection;
-import com.example.contextrecognition.MainActivity;
-import com.example.contextrecognition.R;
-import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -19,7 +18,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
+
+import com.example.contextrecognition.ContextSelection;
+import com.example.contextrecognition.R;
+import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
 
 /*
  * Handles all broadcasts and holds all prediction varaiables like current context, buffers, class names, ...
@@ -35,6 +37,8 @@ public class StateManager extends BroadcastReceiver {
 	 * 
 	 * Remember that these variables are only initialized after the first prediction (after ~2sec)
 	 */
+	private static boolean variablesInitialized = false;
+	
 	private static int currentPrediction;
 	private static double currentEntropy;
 	private static String predictionString;
@@ -42,11 +46,62 @@ public class StateManager extends BroadcastReceiver {
 	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
 	private static String[] classNameArray;
 	private static boolean bufferStatus;
-	private static ArrayList<double[]> buffer;
 	private static GMM gmm; // Needed??
 	
+	// ----- Variables needed to calculate the queryCriteria: -----
+	private static long prevTime = -1000000;
+	private static ArrayList<Boolean> initThresSet;
+	private static ArrayList<Boolean> thresSet;
+	private static ArrayList<Boolean> feedbackReceived;
+	private static ArrayList<Double> threshold;
 	
-	private static boolean querySendTemp = false; // for testing only
+	// To calculate maj vote on the last minute of  data and only incorporate those points matching the majority vote:
+	private static ArrayList<Integer> predBuffer;
+	private static int PRED_BUFFER_SIZE = 30;
+	
+	// Mean entropy values (on 2sec window) of the last min:
+	private static ArrayList<Double> queryBuffer;
+	private static int QUERY_BUFFER_SIZE = 30;
+	
+	// Store entropy values to set threshold for the first time. Separate for different classes:
+	private static ArrayList<ArrayList<Double>> initThresBuffer;
+	private static int INIT_THRES_BUFFER_SIZE = 90;
+	
+	// Store entropy values to set threshold after the init model adaption is done. Separate for different classes:
+	private static ArrayList<ArrayList<Double>> thresBuffer;
+	private static int THRES_BUFFER_SIZE = 300;
+	
+	// Value computed on the points where query was sent. Used to calculate the new query criteria:
+	private static ArrayList<Double> thresQueriedInterval;
+
+	/*
+	 * This is the buffer of feature points be use to adapt the model. Called "updatePoints" in Python.
+	 * The update of this buffer is completely done in the AudioWorker
+	 */
+	private static ArrayList<double[]> buffer;
+	
+	// Count the number of queries for each context class
+	private static ArrayList<Integer> numQueries;
+	
+	// Count the number of of voluntary feedback for each context class. For evaluation only
+	private static ArrayList<Integer> volFeedback;
+	
+	// Minimum time we has to wait between two queries:
+	private static long minBreak = 600000;
+	
+	// Apache Commons methods to calculate means and standard deviations:
+	StandardDeviation stdCalc = new StandardDeviation();
+	Mean meanCalc = new Mean();
+	
+	// When we wait for user feedback, don't change the buffer:
+	private static boolean waitingForFeedback = false;
+	
+	// Value contributing to the query criteria that is computed on the interval where the query was sent.
+	private static double tmpQueryCrit;
+	
+	// -------------------------------------------------------------
+	
+//	private static boolean testBool = false; // for testing only
 	
 	// Send from AudioWorker:
 	public static final String PREDICTION_INTENT = "action.prediction";
@@ -116,7 +171,10 @@ public class StateManager extends BroadcastReceiver {
 //					Log.i(TAG, String.valueOf(bufferStatus));
 					
 					Serializable s1 = bundle.getSerializable(BUFFER);
-					buffer = (ArrayList<double[]>) s1;
+					if (waitingForFeedback == true) {
+						buffer = (ArrayList<double[]>) s1;
+					}
+						
 //					Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 
 					gmm = bundle.getParcelable(GMM_OBJECT); // Needed??
@@ -126,12 +184,188 @@ public class StateManager extends BroadcastReceiver {
 					s2 = bundle.getSerializable(CLASSES_DICT);
 //					classesDict = (HashMap<String, Integer>) s2;
 					
-					if (querySendTemp == false) {
-						sendQuery(context);
-						querySendTemp = true;
-					}
+//					if (testBool == false) {
+//						sendQuery(context);
+//						testBool = true;
+//					}
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
+					
+					
+					//=================================================================================
+					//============ Handle sending of query, threshold calculations, ... ===============
+					//=================================================================================
+					
+					// Initialize the variable when receiving the first set of data:
+					if(variablesInitialized == false) {
+						initThresSet = new ArrayList<Boolean>();
+						thresSet = new ArrayList<Boolean>();
+						feedbackReceived = new ArrayList<Boolean>();
+						threshold = new ArrayList<Double>();
+						numQueries = new ArrayList<Integer>();
+						volFeedback = new ArrayList<Integer>();
+						
+						initThresBuffer = new ArrayList<ArrayList<Double>>();
+						thresBuffer = new ArrayList<ArrayList<Double>>();
+						
+						thresQueriedInterval = new ArrayList<Double>();
+						
+						queryBuffer = new ArrayList<Double>();
+						predBuffer = new ArrayList<Integer>();
+	
+						for(int i=0; i<gmm.get_n_classes(); i++) {
+							
+							initThresSet.add(false);
+							thresSet.add(false);
+							feedbackReceived.add(false);
+							threshold.add(-1.0);
+							numQueries.add(0);
+							volFeedback.add(0);
+							
+							initThresBuffer.add(new ArrayList<Double>());
+							thresBuffer.add(new ArrayList<Double>());
+							thresQueriedInterval.add(-1.0);
+						}
+						
+						variablesInitialized = true;
+					}
+
+					// For each class buffer the last (30) entropy values
+					if (queryBuffer.size() < QUERY_BUFFER_SIZE) {
+						
+						queryBuffer.add(currentEntropy);
+						predBuffer.add(currentPrediction);
+						
+					} else {
+						
+						queryBuffer.add(currentEntropy);
+						queryBuffer.remove(0);
+						predBuffer.add(currentPrediction);
+						predBuffer.remove(0);
+					}
+					
+					// ----- Set initial threshold -----
+					if (initThresSet.get(currentPrediction) == false) {
+						if (initThresBuffer.get(currentPrediction).size() < INIT_THRES_BUFFER_SIZE) {
+							// Fill the buffer for the predicted class first:
+							ArrayList<Double> tmpList = initThresBuffer.get(currentPrediction);
+							tmpList.add(currentEntropy);
+							initThresBuffer.set(currentPrediction, tmpList);
+							Log.i(TAG, "initThresBuffer length: " + initThresBuffer.get(currentPrediction).size());
+						} else {
+							// As soon as the buffer is full, set the initial threshold for this class:
+							Double[] ds = initThresBuffer.get(currentPrediction).toArray(new Double[initThresBuffer.get(currentPrediction).size()]);							
+							double[] d = ArrayUtils.toPrimitive(ds);
+							double mean = meanCalc.evaluate(d);
+							double std = stdCalc.evaluate(d);
+							
+							threshold.set(currentPrediction, initMetric(mean, std));
+							Log.i(TAG, "Initial threshold for class " + gmm.get_class_name(currentPrediction) +
+									" set to " + initMetric(mean, std));
+							
+							thresSet.set(currentPrediction, true);
+							initThresSet.set(currentPrediction, true);	
+						}
+					}
+					
+					// ----- Set threshold (not initial one...) -----
+					if ((thresSet.get(currentPrediction) == false) && 
+							(feedbackReceived.get(currentPrediction) == true)) {
+						
+						if (thresBuffer.size() < THRES_BUFFER_SIZE) {
+							// Fill the threshold buffer for the predicted class first:
+							ArrayList<Double> tmpList = thresBuffer.get(currentPrediction);
+							tmpList.add(currentEntropy);
+							thresBuffer.set(currentPrediction, tmpList);
+						} else {
+							/*
+							 * Threshold buffer full for the predicted class -> set new threshold
+							 * for this class:
+							 */
+							if (initThresSet.get(currentPrediction) == true) {
+								Double[] ds = thresBuffer.get(currentPrediction).toArray(new Double[thresBuffer.get(currentPrediction).size()]);							
+								double[] d = ArrayUtils.toPrimitive(ds);
+								double mean = meanCalc.evaluate(d);
+								double std = stdCalc.evaluate(d);
+								double newThreshold = (metricAfterFeedback(mean, std) + thresQueriedInterval.get(currentPrediction)) / 2.0;
+								
+								threshold.set(currentPrediction, newThreshold);
+								
+								Log.i(TAG, "Threshold for class " + gmm.get_class_name(currentPrediction) +
+										" updated to " + newThreshold);
+								
+								thresSet.set(currentPrediction, true);
+							}
+							
+						}
+						
+						Log.i(TAG, "thresBuffer length: " + thresBuffer.get(currentPrediction).size());
+
+					}
+					
+					// ----- Check if we want to query -----
+					if ((thresSet.get(currentPrediction) == true) && 
+							(queryBuffer.size() == QUERY_BUFFER_SIZE)) {
+						
+						Integer[] ds = predBuffer.toArray(new Integer[predBuffer.size()]);							
+						int[] d = ArrayUtils.toPrimitive(ds);
+						int mostFreq = getMostFrequent(d);
+						
+						/*
+						 * Make a majority vote on the last minute and only consider elements
+						 * (2sec windows) equal to the majority in this minute.
+						 * Regardless of this, all feature points will be used to adapt the model
+						 * later...
+						 */
+						ArrayList<Double> majElements = new ArrayList<Double>();
+						for (int i=0; i<PRED_BUFFER_SIZE; i++) {
+							if (predBuffer.get(i) == mostFreq) {
+								majElements.add(queryBuffer.get(i));
+							}
+						}
+						
+						// Use mean entropy value of the last last 30 2sec windows as query criteria
+						Double[] ms = majElements.toArray(new Double[majElements.size()]);							
+						double[] m = ArrayUtils.toPrimitive(ms);
+						double queryCrit = meanCalc.evaluate(m);
+						double std = stdCalc.evaluate(m);
+						
+						if ((System.currentTimeMillis() - prevTime) > minBreak) {
+							
+							//if (queryCrit > threshold.get(currentPrediction)) { //TODO: xxxxxxxxxx
+								
+							if (queryCrit > 0 && waitingForFeedback == false) {
+								
+								Log.i(TAG, "Threshold exceeded, user queried for current context");
+
+								sendQuery(context);
+
+								prevTime = System.currentTimeMillis();
+								
+								/*
+								 * Contributing to the query criteria that is computed on the interval where the query was sent.
+								 * We can only assign this value to the correct class, once we received the ground truth from
+								 * the user:
+								 */
+								tmpQueryCrit = metricBeforeFeedback(queryCrit, std); // queryCrit is just the mean
+								
+								waitingForFeedback = true;
+
+								/*
+								 * The model adaption is handled in the callModelAdaption, that is always being called
+								 * from the ContextSelection Activity
+								 */
+								
+							}
+
+						}
+						
+					}
+					
+					//=================================================================================
+					//=================================================================================
+					//=================================================================================
+
 					
 					// Send broadcast to change text, if prediction has changed
 					if (!predictionString.equals(prevPredictionString)) {
@@ -190,6 +424,59 @@ public class StateManager extends BroadcastReceiver {
 		
 	}
 	
+	// ------------------ methods used for the threshold computation: ------------------
+	
+	/*
+	 * Metric used to set the initial threshold. This value should be slightly lower than
+	 * the threshold used after the the first feedback to make sure that we don't miss asking
+	 * queries at all due to a too high initial threshold
+	 */
+	private double initMetric(double mean, double std) {
+		return (mean + std);
+	}
+	
+	/*
+	 * Part of the threshold calculation accounting for only for values after the model adaption
+	 * (calculated with the new model)
+	 */
+	private double metricAfterFeedback(double mean, double std) {
+		return (mean + 3 * std);
+	}
+	
+	/*
+	 * Part of the threshold calculation accounting for only for values on the interval that triggered
+	 * the query (calculated with the old model)
+	 */
+	private double metricBeforeFeedback(double mean, double std) {
+		return (mean + 2 * std);
+	}
+	
+	public int getMostFrequent(int[] a) {
+		
+		  int count = 1, tempCount;
+		  int popular = a[0];
+		  int temp = 0;
+		  for (int i = 0; i < (a.length - 1); i++)
+		  {
+		    temp = a[i];
+		    tempCount = 0;
+		    for (int j = 1; j < a.length; j++)
+		    {
+		      if (temp == a[j])
+			tempCount++;
+		    }
+		    if (tempCount > count)
+		    {
+		      popular = temp;
+		      count = tempCount;
+		    }
+		  }
+		  
+		  return popular;
+	}
+	
+	// ------------------------------------------------------------------------------------
+	
 	private onModelAdaptionCompleted listener = new onModelAdaptionCompleted() {
 
 		@Override
@@ -208,8 +495,49 @@ public class StateManager extends BroadcastReceiver {
 	private void callModelAdaption(int label) {
 
 		Log.i(TAG, "Model adaption called for class " + String.valueOf(label));	
+
+		new ModelAdaptor(buffer, label, listener).execute();
 		
-		new ModelAdaptor(buffer, label, listener).execute(); // used to be .execute(this)
+		// If the feedback is a response to a query the system sent out, clear all buffer values etc.
+		if (waitingForFeedback == true) {
+			
+			// Update the number of queries (for evaluation only)
+			numQueries.set(label, (numQueries.get(label)+1));
+			
+			feedbackReceived.set(label, true);
+			
+			// Calculate first part of the new threshold
+			thresQueriedInterval.set(label, tmpQueryCrit);
+			
+			// Flush the buffers
+			queryBuffer.clear();
+			predBuffer.clear();
+			for(int i=0; i<gmm.get_n_classes(); i++) {
+				ArrayList<Double> tmp = thresBuffer.get(i);
+				tmp.clear();
+				thresBuffer.set(i, tmp);
+				
+				thresSet.set(i, false);
+				
+				if (feedbackReceived.get(i) == false) {
+					ArrayList<Double> tmp2 = initThresBuffer.get(i);
+					tmp2.clear();
+					initThresBuffer.set(i, tmp2);
+				}
+			}
+			
+			waitingForFeedback = false;
+			
+		} else {
+			
+			//TODO: do we have to flush all buffers as well here ???
+			
+			// If the feedback was given voluntarily (without a query from the system):
+			volFeedback.set(label, (volFeedback.get(label)+1));
+			
+		}
+		
+		
 				
 //		Toast.makeText(getBaseContext(), (String) "Model is being adapted",
 //				Toast.LENGTH_SHORT).show();
@@ -273,6 +601,58 @@ public class StateManager extends BroadcastReceiver {
 
 		Log.i(TAG, "Requesting new context class " + newClassName
 				+ " from server");
+		
+		// If the feedback is a response to a query the system sent out, clear all buffer values etc. first
+		if (waitingForFeedback == true) {
+
+			// Flush the buffers
+			queryBuffer.clear();
+			predBuffer.clear();
+			for (int i = 0; i < gmm.get_n_classes(); i++) {
+				ArrayList<Double> tmp = thresBuffer.get(i);
+				tmp.clear();
+				thresBuffer.set(i, tmp);
+
+				thresSet.set(i, false);
+
+				if (feedbackReceived.get(i) == false) {
+					ArrayList<Double> tmp2 = initThresBuffer.get(i);
+					tmp2.clear();
+					initThresBuffer.set(i, tmp2);
+				}
+			}
+			
+			
+			//TODO: xxxxxxxxxx
+			
+			waitingForFeedback = false;
+
+		} else {
+			
+			//TODO: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+			
+			// Update the number of queries (for evaluation only)
+//			numQueries.set(label, (numQueries.get(label) + 1));
+//
+//			feedbackReceived.set(label, true);
+//
+//			// Calculate first part of the new threshold
+//			thresQueriedInterval.set(label, tmpQueryCrit);
+
+			
+		}
+		
+		
+		
+		
+		//TODO: increase all the ArrayLists etc. in this class!!!
+		
+		
+		
+		
+		
+		
+		
 
 	}
 	

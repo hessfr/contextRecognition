@@ -368,8 +368,8 @@ public class Classifier {
 		return res;
 	}
 	
-	public double getMostFrequent(double[] a)
-	{
+	public double getMostFrequent(double[] a) {
+		
 	  int count = 1, tempCount;
 	  double popular = a[0];
 	  double temp = 0;

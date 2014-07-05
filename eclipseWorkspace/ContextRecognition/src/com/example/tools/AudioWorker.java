@@ -149,9 +149,6 @@ public class AudioWorker extends IntentService {
 						HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
 						publishResult(currentResult, currentEntropy, stringRes, hm, gmm, bufferStatus, dataBuffer, code);
 						
-						
-						//publishStatus(hm, gmm, bufferStatus, dataBuffer, code);
-						
 						//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
 						
 						// Delete all elements of the list afterwards
@@ -165,13 +162,8 @@ public class AudioWorker extends IntentService {
 												
 					}
 				}
-				
-
-
 			}
 		};
-		
-		//Log.i(TAG,String.valueOf(dataBuffer.size()));
 
 		soundHandler.beginRec();	
 		
