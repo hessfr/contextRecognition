@@ -80,7 +80,7 @@ public class MainActivity extends ActionBarActivity {
 		appStatus.getInstance().set(appStatus.INIT);
 		Log.i(TAG, "New status: init");
 		
-		new PostRequest().execute();
+		
 
 	}
 

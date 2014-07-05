@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -104,7 +105,7 @@ public class StateManager extends BroadcastReceiver {
 	
 	// -------------------------------------------------------------
 	
-//	private static boolean testBool = false; // for testing only
+	private static boolean testBool = false; // for testing only
 	
 	// Send from AudioWorker:
 	public static final String PREDICTION_INTENT = "action.prediction";
@@ -187,10 +188,10 @@ public class StateManager extends BroadcastReceiver {
 					s2 = bundle.getSerializable(CLASSES_DICT);
 //					classesDict = (HashMap<String, Integer>) s2;
 					
-//					if (testBool == false) {
-//						sendQuery(context);
-//						testBool = true;
-//					}
+					if (testBool == false) {
+						requestNewClassFromServer("Restaurant");
+						testBool = true;
+					}
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 					
@@ -609,6 +610,24 @@ public class StateManager extends BroadcastReceiver {
 
 		Log.i(TAG, "Requesting new context class " + newClassName
 				+ " from server");
+
+		PostRequest postReq = new PostRequest();
+		//String filenameOnServer = null;
+		
+		try {
+			String filenameOnServer = postReq.execute(newClassName).get();
+
+			Log.i(TAG, "xxxxxxxxxxxxxx Filename on server: " + filenameOnServer);
+			
+			
+			
+		} catch (InterruptedException e) {
+
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+
+			e.printStackTrace();
+		}
 		
 		// If the feedback is a response to a query the system sent out, clear all buffer values etc. first
 		if (waitingForFeedback == true) {
