@@ -65,11 +65,11 @@ public class StateManager extends BroadcastReceiver {
 	
 	// Store entropy values to set threshold for the first time. Separate for different classes:
 	private static ArrayList<ArrayList<Double>> initThresBuffer;
-	private static int INIT_THRES_BUFFER_SIZE = 90;
+	private static int INIT_THRES_BUFFER_SIZE = 30; //TODO: change back to 90 xxxxxxxxxxxxxxxxxxxxxx
 	
 	// Store entropy values to set threshold after the init model adaption is done. Separate for different classes:
 	private static ArrayList<ArrayList<Double>> thresBuffer;
-	private static int THRES_BUFFER_SIZE = 300;
+	private static int THRES_BUFFER_SIZE = 30; //TODO: change back to 300 xxxxxxxxxxxxxxxx
 	
 	// Value computed on the points where query was sent. Used to calculate the new query criteria:
 	private static ArrayList<Double> thresQueriedInterval;
@@ -81,13 +81,16 @@ public class StateManager extends BroadcastReceiver {
 	private static ArrayList<double[]> buffer;
 	
 	// Count the number of queries for each context class
-	private static ArrayList<Integer> numQueries;
+	private static ArrayList<Integer> numQueriesAnswered;
+	
+	// Count the number of queries for each context class
+	private static ArrayList<Integer> numQueriesIgnored; //TODO
 	
 	// Count the number of of voluntary feedback for each context class. For evaluation only
 	private static ArrayList<Integer> volFeedback;
 	
 	// Minimum time we has to wait between two queries:
-	private static long minBreak = 600000;
+	private static long minBreak = 100000; //TODO: change back to 600000
 	
 	// Apache Commons methods to calculate means and standard deviations:
 	StandardDeviation stdCalc = new StandardDeviation();
@@ -171,7 +174,7 @@ public class StateManager extends BroadcastReceiver {
 //					Log.i(TAG, String.valueOf(bufferStatus));
 					
 					Serializable s1 = bundle.getSerializable(BUFFER);
-					if (waitingForFeedback == true) {
+					if (waitingForFeedback == false) {
 						buffer = (ArrayList<double[]>) s1;
 					}
 						
@@ -202,7 +205,8 @@ public class StateManager extends BroadcastReceiver {
 						thresSet = new ArrayList<Boolean>();
 						feedbackReceived = new ArrayList<Boolean>();
 						threshold = new ArrayList<Double>();
-						numQueries = new ArrayList<Integer>();
+						numQueriesAnswered = new ArrayList<Integer>();
+						numQueriesIgnored = new ArrayList<Integer>();
 						volFeedback = new ArrayList<Integer>();
 						
 						initThresBuffer = new ArrayList<ArrayList<Double>>();
@@ -219,7 +223,8 @@ public class StateManager extends BroadcastReceiver {
 							thresSet.add(false);
 							feedbackReceived.add(false);
 							threshold.add(-1.0);
-							numQueries.add(0);
+							numQueriesAnswered.add(0);
+							numQueriesIgnored.add(0);
 							volFeedback.add(0);
 							
 							initThresBuffer.add(new ArrayList<Double>());
@@ -272,7 +277,7 @@ public class StateManager extends BroadcastReceiver {
 					if ((thresSet.get(currentPrediction) == false) && 
 							(feedbackReceived.get(currentPrediction) == true)) {
 						
-						if (thresBuffer.size() < THRES_BUFFER_SIZE) {
+						if (thresBuffer.get(currentPrediction).size() < THRES_BUFFER_SIZE) {
 							// Fill the threshold buffer for the predicted class first:
 							ArrayList<Double> tmpList = thresBuffer.get(currentPrediction);
 							tmpList.add(currentEntropy);
@@ -298,7 +303,7 @@ public class StateManager extends BroadcastReceiver {
 							}
 							
 						}
-						
+
 						Log.i(TAG, "thresBuffer length: " + thresBuffer.get(currentPrediction).size());
 
 					}
@@ -329,6 +334,9 @@ public class StateManager extends BroadcastReceiver {
 						double[] m = ArrayUtils.toPrimitive(ms);
 						double queryCrit = meanCalc.evaluate(m);
 						double std = stdCalc.evaluate(m);
+						
+						Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
+						Log.i(TAG,"thresSet: " + thresSet.get(currentPrediction) + " - feedback received: " + feedbackReceived.get(currentPrediction));
 						
 						if ((System.currentTimeMillis() - prevTime) > minBreak) {
 							
@@ -502,7 +510,7 @@ public class StateManager extends BroadcastReceiver {
 		if (waitingForFeedback == true) {
 			
 			// Update the number of queries (for evaluation only)
-			numQueries.set(label, (numQueries.get(label)+1));
+			numQueriesAnswered.set(label, (numQueriesAnswered.get(label)+1));
 			
 			feedbackReceived.set(label, true);
 			
@@ -691,9 +699,10 @@ public class StateManager extends BroadcastReceiver {
 	}
 	
 	private void dismissNotifitcation (Context context) {
+
 		NotificationManager notificationManager = (NotificationManager) context
 	            .getSystemService(Context.NOTIFICATION_SERVICE);
-	    notificationManager.cancel(NOTIFICATION_ID);
+		notificationManager.cancel(NOTIFICATION_ID);
 	}
 	
 }
