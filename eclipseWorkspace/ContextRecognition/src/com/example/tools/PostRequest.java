@@ -1,11 +1,12 @@
 package com.example.tools;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -19,10 +20,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import android.os.AsyncTask;
-import android.provider.Settings.Global;
+import android.os.Environment;
 import android.util.Log;
-
-import com.google.gson.GsonBuilder;
 
 public class PostRequest extends AsyncTask<String, Void, String> {
 	
@@ -61,15 +60,50 @@ public class PostRequest extends AsyncTask<String, Void, String> {
     	post.setHeader("Content-type", "application/json");
 
 	    //Add data:
-	    Map<String, String> comment = new HashMap<String, String>();
-	    comment.put("GMM", "thisIsMyGMMObject");
-	    comment.put("moreData", "moreData");
-	    comment.put("moreDatamoreData", "moreDatamoreData");
-	    String json = new GsonBuilder().create().toJson(comment, Map.class);
-	    
+//	    Map<String, String> comment = new HashMap<String, String>();
+//	    comment.put("GMM", "thisIsMyGMMObject");
+//	    comment.put("moreData", "moreData");
+//	    comment.put("moreDatamoreData", "moreDatamoreData");
+//	    String json = new GsonBuilder().create().toJson(comment, Map.class);
+    	
+    	// Read our classifier from the storage into a string:
+    	String filename = "GMM.json";
+    	
+		File dir = Environment.getExternalStorageDirectory();
+		File file = new File(dir,filename);
+		
+		String jsonString = null;
+		
+		if(file.exists()) {
+			
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(file));
+				
+				StringBuffer strBuffer = new StringBuffer();
+				char[] buf = new char[1024];
+				int numRead = 0;
+				while((numRead=br.read(buf)) != -1){
+		            String readData = String.valueOf(buf, 0, numRead);
+		            strBuffer.append(readData);
+		        }
+				
+				br.close();
+				jsonString = strBuffer.toString();
+
+				//Log.i(TAG, jsonString);
+				
+			} catch (IOException e) {
+				Log.e(TAG,"Couldn't open JSON file");
+				e.printStackTrace();
+			}
+			
+		} else {
+			Log.e(TAG, "File does not exist: " + file.toString());
+        }
+
+		// Send the POST request:
 	    try {
-	    	
-	    	post.setEntity(new StringEntity(json, "UTF-8"));
+	    	post.setEntity(new StringEntity(jsonString, "UTF-8"));
 	    	
 	    	HttpResponse response = client.execute(post);
 
@@ -81,6 +115,7 @@ public class PostRequest extends AsyncTask<String, Void, String> {
 	    		Log.e(TAG, String.valueOf(response.getStatusLine()));
 
 	    	}
+
 	    	
 	    } catch (UnsupportedEncodingException e) {
 	        e.printStackTrace();

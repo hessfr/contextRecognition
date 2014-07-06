@@ -1,14 +1,26 @@
 package com.example.tools;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -615,12 +627,29 @@ public class StateManager extends BroadcastReceiver {
 		//String filenameOnServer = null;
 		
 		try {
+
 			String filenameOnServer = postReq.execute(newClassName).get();
 
+			// Remove quotation marks:
+//			filenameOnServer = filenameOnServer.substring(1, filenameOnServer.length()-1);
 			Log.i(TAG, "xxxxxxxxxxxxxx Filename on server: " + filenameOnServer);
-			
-			
-			
+
+
+			GetRequest getReq = new GetRequest();
+			String tmp = getReq.execute(filenameOnServer).get();			
+	        
+			// Now check periodically if the computation is finished on the server
+//		    Timer t = new Timer();
+//		    t.schedule(new TimerTask() {
+//
+//		        public void run() {
+//
+//
+//		            //Your code will be here 
+//
+//		        }
+//		      }, 1000);
+
 		} catch (InterruptedException e) {
 
 			e.printStackTrace();
