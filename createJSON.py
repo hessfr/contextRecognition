@@ -17,7 +17,7 @@ import ipdb as pdb #pdb.set_trace()
 # fewPoints = np.array(fewPoints["points"])
 
 
-def createJSON(trainedGMM, filename):
+def createJSON(trainedGMM, returnGMM=False, filename=None):
     """
     Deserialize the GMM object in Python and dump it into a JSON file. Final JSON structure looks like this:
     GMM[0]["classesDict"]
@@ -59,9 +59,13 @@ def createJSON(trainedGMM, filename):
 
     # pdb.set_trace()
 
-    path = filename + ".json"
-
-    json.dump(seriGMM, open(path,"wb"))
+    if filename != None:
+        path = filename + ".json"
+    
+        json.dump(seriGMM, open(path,"wb"))
+    
+    if returnGMM == True:
+        return seriGMM
 
 def pointsToJSON(data, filename):
     """
