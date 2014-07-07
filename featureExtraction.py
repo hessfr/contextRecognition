@@ -12,7 +12,11 @@ from subprocess import Popen, PIPE
 import wave
 import contextlib
 import json
+#from createInitialModel import checkDownloaded
+from getSound import getSoundBySingleTag
+from fileConversion import convertFolder
 import ipdb as pdb #pdb.set_trace()
+
 
 def FX_multiFolders(classesList=None, saveFeatures=False, useJSON=True): #TODO: Set saveFeatures to True when finished testing
     """
@@ -73,6 +77,46 @@ def FX_multiFolders(classesList=None, saveFeatures=False, useJSON=True): #TODO: 
     
     return featureData
 
+
+    
+    
+    
+    
+
+def FX_Java(className):
+    """
+    Extract features of the given class and dump them in the extractedFeatures folder as a JSON File.
+    This function class the Java class to do the actual feature extraction
+    
+    @param className:
+    @return: True if successful, false if not
+    """
+    cmd = "cd java && java -cp gson-2.2.4.jar:. extractFeatures --folder " + str(className) + " && cd .."
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    if str(err) != "":
+        print("A problem occurred while extracting the features")
+        return False
+    
+    return True
+    
+def FX_JSON(className):
+    """
+    Return numpy array of features that were extracted previously and are stored in the JSON file
+    
+    @param className:
+    @return: Numpy array of extracted features
+    """
+    
+    filename = "./extractedFeatures/" + str(className) + ".json"    
+    
+    if os.path.exists(filename):    
+        res = np.array(json.load(open(filename,"rb")))
+        return res
+    else:
+        print("File could not be found")
+        return None
+    
 
 def alreadyExtracted(className, useJSON=True):
     """
@@ -258,5 +302,27 @@ def FX_Test(file, sampleRate = 16000, windowLength = 0.032, splitLength = 7200, 
         feat = np.concatenate(tup)
 
         return feat
+
+def checkDownloaded(className, minNumber=10):
+    """
+    Check if at least minNumber of files exists for the given class in the sound/className/
+    @param className: name of the class that should be checked
+    @param minNumber: Minimum number of files, that have to exist in order from the class to be considered as already downloaded. Default value is 10
+    @return: True if enough files exist already, False if not.
+    """
+
+    dir = os.getcwd() + "/sound" + "/" + className
+
+    """ Check if folder exists at all: """
+    if not os.path.exists(dir):
+        return False
+
+    """ Check if enough audio files exists in that folder: """
+    numberOfFiles = len(listdir(dir))
+    if numberOfFiles < minNumber:
+        print("Not enough sound files downloaded for given class: " + str(numberOfFiles) + " instead of the required " + str(minNumber))
+        return False
+    else:
+        return True
 
 from featureExtraction import *

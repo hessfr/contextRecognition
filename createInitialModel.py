@@ -10,6 +10,9 @@ from classifiers import trainGMM
 
 def createInitialModel(classesList):
     """
+    
+    Outdated, as it still uses FX in Python    
+    
     Method to create a model for a given list of classes.
     Assume that class name always equals the freesound search tag,
     @param classesList: Dict containing the classes (corresponds to folders) and a mapping to numbers. If not provided, features will be extracted from all sub-folders

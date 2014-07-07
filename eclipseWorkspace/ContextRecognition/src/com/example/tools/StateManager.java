@@ -201,8 +201,8 @@ public class StateManager extends BroadcastReceiver {
 //					classesDict = (HashMap<String, Integer>) s2;
 					
 					if (testBool == false) {
-						requestNewClassFromServer("Restaurant");
 						testBool = true;
+						requestNewClassFromServer("Restaurant");
 					}
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
@@ -630,15 +630,14 @@ public class StateManager extends BroadcastReceiver {
 
 			String filenameOnServer = postReq.execute(newClassName).get();
 
-			// Remove quotation marks:
+//			// Remove quotation marks:
 //			filenameOnServer = filenameOnServer.substring(1, filenameOnServer.length()-1);
 			Log.i(TAG, "xxxxxxxxxxxxxx Filename on server: " + filenameOnServer);
-
 
 			GetRequest getReq = new GetRequest();
 			String tmp = getReq.execute(filenameOnServer).get();			
 	        
-			// Now check periodically if the computation is finished on the server
+			// Now check periodically if the computation on server is finished
 //		    Timer t = new Timer();
 //		    t.schedule(new TimerTask() {
 //

@@ -15,6 +15,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.os.AsyncTask;
@@ -30,9 +33,10 @@ public class GetRequest extends AsyncTask<String, Void, String> {
 		
 		String filenameOnServer = params[0];
 		
-		Log.i(TAG,"PostRequest called");
+		Log.i(TAG,"GetRequest called");
 		
-		String IP = "192.168.0.23";
+//		String IP = "192.168.0.23";
+		String IP = "172.30.152.238";
 	    String PORT = "8080";
 	    
 	    String URL = "http://" + IP + ":" + PORT + "/?";
@@ -43,7 +47,14 @@ public class GetRequest extends AsyncTask<String, Void, String> {
         String paramString = URLEncodedUtils.format(par, "utf-8");
         URL += paramString;
         
-		HttpClient client = new DefaultHttpClient();
+        //Set timeout parameters:
+        HttpParams httpParameters = new BasicHttpParams();
+        int timeoutConnection = 3000;
+        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+        int timeoutSocket = 5000;
+        HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+        
+		HttpClient client = new DefaultHttpClient(httpParameters);
         HttpGet get = new HttpGet(URL);
         
 		// Send the POST request:

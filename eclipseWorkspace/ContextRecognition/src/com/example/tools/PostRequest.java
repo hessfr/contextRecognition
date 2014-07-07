@@ -17,6 +17,9 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.os.AsyncTask;
@@ -37,8 +40,10 @@ public class PostRequest extends AsyncTask<String, Void, String> {
 		
 		Log.i(TAG,"PostRequest called");
 		
-		String IP = "192.168.0.23";
-	    String PORT = "8080";
+//		String IP = "192.168.0.23";
+		String IP = "172.30.152.238";
+	    
+		String PORT = "8080";
 	    
 	    String URL = "http://" + IP + ":" + PORT + "/?";
 	    
@@ -51,20 +56,20 @@ public class PostRequest extends AsyncTask<String, Void, String> {
         
         //Log.i(TAG, URL);
         
-        HttpClient client = new DefaultHttpClient();
+        //Set timeout parameters:
+        HttpParams httpParameters = new BasicHttpParams();
+        int timeoutConnection = 3000;
+        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+        int timeoutSocket = 5000;
+        HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+        
+        HttpClient client = new DefaultHttpClient(httpParameters);
 	    HttpPost post = new HttpPost(URL);
 	    
 	    //Add headers to URL
 	    //post.setHeader("Content-type", "text/plain");
 	    post.setHeader("Accept", "application/json");
     	post.setHeader("Content-type", "application/json");
-
-	    //Add data:
-//	    Map<String, String> comment = new HashMap<String, String>();
-//	    comment.put("GMM", "thisIsMyGMMObject");
-//	    comment.put("moreData", "moreData");
-//	    comment.put("moreDatamoreData", "moreDatamoreData");
-//	    String json = new GsonBuilder().create().toJson(comment, Map.class);
     	
     	// Read our classifier from the storage into a string:
     	String filename = "GMM.json";
@@ -104,8 +109,10 @@ public class PostRequest extends AsyncTask<String, Void, String> {
 		// Send the POST request:
 	    try {
 	    	post.setEntity(new StringEntity(jsonString, "UTF-8"));
-	    	
+
 	    	HttpResponse response = client.execute(post);
+	    	
+	    	Log.i(TAG, "POST request sent");
 
 	    	if (response.getStatusLine().getStatusCode() == 200) {
 	    		filenameOnServer = EntityUtils.toString(response.getEntity());

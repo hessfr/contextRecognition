@@ -82,7 +82,7 @@ def getSoundByTags(label, tags, maxNumber):
         else:
             print "File '"+ fileDir + "' was skipped, because it already exists in the current directory"
             
-def getSoundBySingleTag(tag, maxNumber):
+def getSoundBySingleTag(tag, maxNumber=30):
     """
     Downloads audio files from freesound.org based on a search for a single tags. The files will be downloaded into a folder named after the 
     given tag, a given number of clips defined by @param maxNumber with the highest rating will be downloaded.
@@ -103,7 +103,7 @@ def getSoundBySingleTag(tag, maxNumber):
 
     if searchResults["num_results"] < maxNumber:
         print("Only " + str(searchResults["num_results"]) + " instead of " + str(maxNumber) +" results were found. No files will be downloaded")
-        return False
+        return False # TODO: change!!!
 
     dir = os.getcwd() + "/sound/" + tag
     if not os.path.exists(dir):
