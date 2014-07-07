@@ -200,7 +200,7 @@ public class AudioWorker extends IntentService {
 		
 		sendBroadcast(intent);
 
-		// Log.d(TAG, "Prediction broadcasted");
+		//Log.i(TAG, "Prediction broadcasted");
 	}
 	
 	/*

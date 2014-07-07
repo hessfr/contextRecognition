@@ -4,6 +4,7 @@ import pickle
 from sklearn.mixture import GMM
 from getFeatures import getFeatures
 from sklearn import preprocessing
+import ipdb as pdb #pdb.set_trace()
 
 def addNewClass(jsonGMM, newClassName, newClassData=None):
     """
@@ -32,7 +33,7 @@ def addNewClass(jsonGMM, newClassName, newClassData=None):
     n_features = X_train.shape[1]
     n_components = 16
 
-    newClf = GMM(n_components = n_components)
+    newClf = GMM(n_components = n_components, covariance_type='full', n_iter=1000)
     newClf.fit(X_train)
 
     """ Update the dict containing mapping of class names: """
@@ -45,7 +46,8 @@ def addNewClass(jsonGMM, newClassName, newClassData=None):
     for i in range(len(jGMM)):
         jGMM[i]["classesDict"] = newClassDict
         jGMM[i]["n_classes"] = new_n_classes
-        
+     
+    #pdb.set_trace()    
 
     """ Add the new class to the list: """
     jGMM.append({})   

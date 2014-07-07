@@ -119,6 +119,9 @@ public class StateManager extends BroadcastReceiver {
 	
 	private static boolean testBool = false; // for testing only
 	
+	private static long startTime;
+	private static long endTime;
+	
 	// Send from AudioWorker:
 	public static final String PREDICTION_INTENT = "action.prediction";
 	public static final String PREDICTION_INT = "predictionInt";
@@ -194,7 +197,6 @@ public class StateManager extends BroadcastReceiver {
 //					Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 
 					gmm = bundle.getParcelable(GMM_OBJECT); // Needed??
-//					Log.i(TAG, gmm.get_class_name(0));
 
 					Serializable s2 = new HashMap<String, Integer>();
 					s2 = bundle.getSerializable(CLASSES_DICT);
@@ -202,15 +204,18 @@ public class StateManager extends BroadcastReceiver {
 					
 					if (testBool == false) {
 						testBool = true;
-						requestNewClassFromServer("Restaurant");
+						//requestNewClassFromServer("Restaurant");
 					}
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 					
 					
+					
 					//=================================================================================
 					//============ Handle sending of query, threshold calculations, ... ===============
 					//=================================================================================
+					
+					startTime = System.currentTimeMillis();
 					
 					// Initialize the variable when receiving the first set of data:
 					if(variablesInitialized == false) {
@@ -348,9 +353,8 @@ public class StateManager extends BroadcastReceiver {
 						double queryCrit = meanCalc.evaluate(m);
 						double std = stdCalc.evaluate(m);
 						
-						Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
-						Log.i(TAG,"thresSet: " + thresSet.get(currentPrediction) + " - feedback received: " + feedbackReceived.get(currentPrediction));
-						
+						//Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
+
 						if ((System.currentTimeMillis() - prevTime) > minBreak) {
 							
 							//if (queryCrit > threshold.get(currentPrediction)) { //TODO: xxxxxxxxxx
@@ -368,7 +372,7 @@ public class StateManager extends BroadcastReceiver {
 								 * We can only assign this value to the correct class, once we received the ground truth from
 								 * the user:
 								 */
-								tmpQueryCrit = metricBeforeFeedback(queryCrit, std); // queryCrit is just the mean
+								tmpQueryCrit = metricBeforeFeedback(queryCrit, std); // queryCrit is just value of the mean
 								
 								waitingForFeedback = true;
 
@@ -382,12 +386,22 @@ public class StateManager extends BroadcastReceiver {
 						}
 						
 					}
+								
+					long sincePrevEndTime = System.currentTimeMillis() - endTime;
+					
+					endTime = System.currentTimeMillis();
+					
+					long diff = endTime-startTime;
+					
+					//Log.w(TAG, "Time: " + startTime);
+					//Log.w(TAG, "Time: " + endTime);
+					Log.w(TAG, "Time for one computation: " + diff);
+					Log.w(TAG, "Time since last cycle: " + sincePrevEndTime);
 					
 					//=================================================================================
 					//=================================================================================
 					//=================================================================================
 
-					
 					// Send broadcast to change text, if prediction has changed
 					if (!predictionString.equals(prevPredictionString)) {
 						
