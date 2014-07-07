@@ -84,7 +84,7 @@ public class AudioWorker extends IntentService {
 						appStatus.getInstance().get() == appStatus.INIT) {
 					
 					//Check if sequence length is 2 seconds (more precisely 63 32ms windows)
-					if (data.length != 64512) { //data.length != 64512
+					if (data.length != 32256) { //data.length != 64512
 						// a single 32ms window has size 1024??
 						Log.e(TAG,"data sequence has wrong length, aborting calculation");
 						return;
@@ -92,20 +92,22 @@ public class AudioWorker extends IntentService {
 					
 					// Call handle data from SoundHandler class
 					super.handleData(data, length, frameLength);
-
+					
+					long startTimeFX = System.currentTimeMillis();
+					
 					// Loop through the audio data and extract our features for each 32ms window
 					for(int i=0; i<63; i++) {
 						
 						// Split the data into 32ms chunks (equals 1024 (??) elements)
-						short[] tmpData = new short[1024];
-						System.arraycopy(data, i*1024, tmpData, 0, 1024);
+//						short[] tmpData = new short[1024];
+//						System.arraycopy(data, i*1024, tmpData, 0, 1024);
 						
-//						short[] tmpData = new short[512];
-//						System.arraycopy(data, i*512, tmpData, 0, 512);
-						
+						short[] tmpData = new short[512];
+						System.arraycopy(data, i*512, tmpData, 0, 512);
+
 						Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
 						mfccList.add(currentMFCCs.get());
-						
+
 						// Also add the MFCCs to the 1min data buffer:
 						if (dataBuffer.size() < DATA_BUFFER_SIZE) {
 							// Add new feature point:
@@ -125,18 +127,24 @@ public class AudioWorker extends IntentService {
 							if (bufferStatus != true) {
 								bufferStatus = true;
 							}
-						}
-						
+						}	
 					}
+					
+					long endTimeFX = System.currentTimeMillis();
+					//Log.i(TAG, "Feature extraction duration: " + (endTimeFX-startTimeFX)); //~2s
 					
 					// If we have 2 seconds of data, call our prediction method and clear the list afterwards again 
 					if (mfccList.size() == 63) {
+						
+						long startTimeClf = System.currentTimeMillis();
+						
 						// Convert data to DenseMatrix:
 						double[][] array = new double[mfccList.size()][12]; // TODO: n_features instead of 12
 						for (int i=0; i<mfccList.size(); i++) {
 						    array[i] = mfccList.get(i);
 						}
 						DenseMatrix64F samples = new DenseMatrix64F(array);
+						//Log.i(TAG, samples.toString());
 
 						PredictionResult predictionResult = clf.predict(gmm, samples);
 						int currentResult = predictionResult.get_class();
@@ -159,10 +167,19 @@ public class AudioWorker extends IntentService {
 							appStatus.getInstance().set(appStatus.NORMAL_CLASSIFICATION);
 							Log.i(TAG, "New status: normal classification");
 						}
+						
+						long endTimeClf = System.currentTimeMillis();
+						//Log.i(TAG, "Classification duration: " + (endTimeClf-startTimeClf)); // ~0.5s
 												
+					} else {
+						Log.e(TAG, "mfccList has wrong size of " + mfccList.size() + "instead of 63");
 					}
+					
+					
 				}
 			}
+			
+			
 		};
 
 		soundHandler.beginRec();	

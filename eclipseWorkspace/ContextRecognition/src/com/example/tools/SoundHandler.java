@@ -9,17 +9,23 @@ import android.util.Log;
 
 public class SoundHandler extends Thread {
 	
-	private final String TAG = "NewProcessor"; 
+	private final String TAG = "SoundHandler"; 
 	
 	private AudioRecord rec = null;
 	
 	private boolean currentlyRecording = false;
+	
+	// If there is more than one sample in the queue, do not continue the recording and process all elements first:
+	private boolean processQueueFirst = false; 
 
-	private int SEQUENCE_LENGTH = 63*1024; // equals 2seconds
-//	private int SEQUENCE_LENGTH = 63*512; // equals 2seconds
+//	private int SEQUENCE_LENGTH = 63*1024; // equals 2seconds
+	private int SEQUENCE_LENGTH = 63*512; // equals 2seconds
 	
 	private Object blockSync = new Object();
 
+	// Time interval we wait at least until all elements in the queue are processed:
+	private static long SLEEPTIME = 500;
+	
 	public static final int RECORDER_SAMPLERATE = 16000; //TODO: better define this somewhere else??
 	
 	private LinkedList<queueElement> queue = new LinkedList<queueElement>(); // contains the raw audio data, each element is 2 seconds long
@@ -27,6 +33,8 @@ public class SoundHandler extends Thread {
 		public int numSamplesRead;
 		public short[] data;
 	}
+	
+	private long prevTime;
 
 	// Constructor:
 	public SoundHandler(){		
@@ -40,25 +48,24 @@ public class SoundHandler extends Thread {
 				
 				queueElement newEL = null;
 				synchronized(blockSync) {
+
+					//Log.i(TAG, String.valueOf(queue.size()));
 					
 					if(queue.size() != 0) {
-						// get new object from queue if available
+						//Log.i(TAG, "queue size: " + queue.size());
+						
+						// get new object from queue:
 						newEL = queue.poll(); // return the head element of the list and remove it
-					} else {
-						// otherwise verify if we are still recording data and stop the thread if not 
-						if(currentlyRecording != true){
-							Log.d(TAG, "Soundhandler stopped");
-							break;
-						}
-					}
+					} 
 				}
 				
 				// If element is not null process the new data
 				if(newEL != null) {
+
 					handleData(newEL.data, newEL.numSamplesRead, newEL.data.length);
-					
-//					Log.i(TAG, "Length: " + String.valueOf(newEL.sampleRead));
-//					Log.i(TAG, "Framelength: " + String.valueOf(newEL.buffer.length));
+
+					//Log.i(TAG, "Length: " + String.valueOf(newEL.sampleRead));
+					//Log.i(TAG, "Framelength: " + String.valueOf(newEL.buffer.length));
 				}
 				
 				// Wait 10ms before getting the next element again: // TODO: is this a good value???
@@ -85,6 +92,8 @@ public class SoundHandler extends Thread {
 				break;
 			}
 			
+			//Log.e(TAG, "Queue length: " + queue.size());
+			
 			// Verify that sequence has the correct length //TODO: if we keep SEQUENCE_LENGTH fixed ,we can remove this
 			if(SEQUENCE_LENGTH <= 0) {
 				Log.e(TAG,"Invalid buffer size: " + String.valueOf(SEQUENCE_LENGTH));
@@ -93,18 +102,43 @@ public class SoundHandler extends Thread {
 			try{
 				short[] data = new short[SEQUENCE_LENGTH]; //TODO: implement this properly
 
-				int nRead = rec.read(data, 0, data.length); //number of recorder samples
-
+				int nRead = rec.read(data, 0, data.length); //number of recorder samples (equal to SEQUENCE_LENGTH)
+				//Log.i(TAG, "nRead: " + nRead);
+				
 				queueElement newEL = new queueElement();
 				// Fill the new element for the queue:
 				newEL.data = data;
 				newEL.numSamplesRead = nRead;
+
+				//Log.dTAG, "Queue length: " + queue.size());
 				
-				// Add it to queue if possible:
-				synchronized(this.blockSync) {
-					queue.add(newEL);
-					//Log.d(TAG,"new element added to queue");
+				/*
+				 * If there is already an element in the queue that is not processed yet, send the
+				 * recorder thread to sleep and only continue once it is empty
+				 */
+				while (queue.size() != 0) {
+					//Log.d(TAG, "Thread sent to sleep waiting for all elements in the queue to be processed");
+					recorderThread.sleep(SLEEPTIME);
 				}
+
+				/*
+				 * Only add the new element when the queue is empty again and make sure nobody reads
+				 * from it at the same time:
+				 */
+				synchronized(this.blockSync) {
+
+					queue.add(newEL);
+					
+//						if (prevTime>0) {
+//							long diff = System.currentTimeMillis() - prevTime;
+//							Log.i(TAG,"new element added to queue after " + diff);
+//							prevTime = System.currentTimeMillis();
+//						} else{
+//							prevTime = System.currentTimeMillis();
+//						}
+					
+				}
+
 				
 			} catch(Exception recordException) {
 				Log.e(TAG, "Recorder expection occured");
@@ -126,7 +160,7 @@ public class SoundHandler extends Thread {
 			int mono = AudioFormat.CHANNEL_IN_MONO;
 			int encoding = AudioFormat.ENCODING_PCM_16BIT;
 			// TODO: We have to have SEQUENCE_LENGTH equivalent to 2sec here
-			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, SEQUENCE_LENGTH*2); // SEQUENCE_LENGTH xxxx
+			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, SEQUENCE_LENGTH*2); // SEQUENCE_LENGTH * 2 ????
 			
 		} catch(IllegalArgumentException e){
 			Log.e(TAG, "Error occured while initializing AudioRecorder");
@@ -161,7 +195,7 @@ public class SoundHandler extends Thread {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public void endRec() {
 		this.currentlyRecording = false;
 	}
@@ -170,6 +204,7 @@ public class SoundHandler extends Thread {
 	 * Override this method in AudioWorker
 	 */
 	protected void handleData(short[] data, int length, int frameLength) {
-
+		//Log.d(TAG, "handleData called");
+		
 	}
 }

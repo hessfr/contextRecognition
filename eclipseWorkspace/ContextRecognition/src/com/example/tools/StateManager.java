@@ -193,7 +193,6 @@ public class StateManager extends BroadcastReceiver {
 					if (waitingForFeedback == false) {
 						buffer = (ArrayList<double[]>) s1;
 					}
-						
 //					Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 
 					gmm = bundle.getParcelable(GMM_OBJECT); // Needed??
@@ -274,7 +273,7 @@ public class StateManager extends BroadcastReceiver {
 							ArrayList<Double> tmpList = initThresBuffer.get(currentPrediction);
 							tmpList.add(currentEntropy);
 							initThresBuffer.set(currentPrediction, tmpList);
-							Log.i(TAG, "initThresBuffer length: " + initThresBuffer.get(currentPrediction).size());
+							//Log.i(TAG, "initThresBuffer length: " + initThresBuffer.get(currentPrediction).size());
 						} else {
 							// As soon as the buffer is full, set the initial threshold for this class:
 							Double[] ds = initThresBuffer.get(currentPrediction).toArray(new Double[initThresBuffer.get(currentPrediction).size()]);							
@@ -395,8 +394,8 @@ public class StateManager extends BroadcastReceiver {
 					
 					//Log.w(TAG, "Time: " + startTime);
 					//Log.w(TAG, "Time: " + endTime);
-					Log.w(TAG, "Time for one computation: " + diff);
-					Log.w(TAG, "Time since last cycle: " + sincePrevEndTime);
+					//Log.w(TAG, "Time for one computation: " + diff);
+					//Log.w(TAG, "Time since last cycle: " + sincePrevEndTime);
 					
 					//=================================================================================
 					//=================================================================================
