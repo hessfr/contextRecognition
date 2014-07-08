@@ -28,7 +28,7 @@ public class SoundHandler extends Thread {
 	 * Size of the buffer for the Audiorecord. This has to be larger than BUFFER_LENGTH to avoid potential
 	 * "over-running" and loss of data
 	 */
-	private static int AUDIORECORD_BUFFER = 10 * 4608; //10 * 4096;
+	private static int AUDIORECORD_BUFFER = 4608 * 10; //10 * 4096;
 	
 	/*
 	 * One 2s sequence contains 63 32ms windows, the prediction method is called with this buffer
@@ -123,13 +123,8 @@ public class SoundHandler extends Thread {
 				//Log.i(TAG, "byte: " + data[0] + " " + data[1] + " " + data[2]);
 				//Log.i(TAG, "short: " + dataShort[0] + " " + dataShort[1] + " " + dataShort[2]);
 				//Log.i(TAG, "-------------");
-
-				// convert to short array: TODO: check if this needs too much performance
 				
-//				for (int i = 0; i < BUFFER_LENGTH; i++)
-//					dataShort[i] = (short) dataShort[i];
-				
-				//Log.i(TAG, "nRead: " + nRead);
+				Log.i(TAG, "nRead: " + nRead);
 
 				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
 						|| nRead == AudioRecord.ERROR_BAD_VALUE) {
@@ -154,13 +149,13 @@ public class SoundHandler extends Thread {
 					} else {
 						predictionDataAvailable = true;
 						pointer = 0;
-						Log.i(TAG, "xxxx pred available true");
 					}
 					
 					if(predictionDataAvailable == true) {
 						/*
 						 * Add element (to make a prediction) only if there is no other element in
-						 * the queue. Otherwise don't do anything:
+						 * the queue. Otherwise don't do anything (i.e. wait until all other elements
+						 * in the queue are processed
 						 */
 						if (queue.size() == 0) {
 							queueElement newEL = new queueElement();
