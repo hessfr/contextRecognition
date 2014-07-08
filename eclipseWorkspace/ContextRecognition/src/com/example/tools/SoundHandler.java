@@ -3,6 +3,7 @@ package com.example.tools;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import android.media.AudioFormat;
@@ -124,7 +125,7 @@ public class SoundHandler extends Thread {
 				//Log.i(TAG, "short: " + dataShort[0] + " " + dataShort[1] + " " + dataShort[2]);
 				//Log.i(TAG, "-------------");
 				
-				Log.i(TAG, "nRead: " + nRead);
+				//Log.i(TAG, "nRead: " + nRead);
 
 				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
 						|| nRead == AudioRecord.ERROR_BAD_VALUE) {
@@ -139,7 +140,7 @@ public class SoundHandler extends Thread {
 					
 					// Write this chunk of data to a file (for evaluation only):
 					
-//					appendToFile(data, mRecFile);
+					//appendToFile(data, mRecFile);
 					
 					// Fill the prediction buffer ("ring-buffer": if full, overwrite the oldest elements...)
 					System.arraycopy(dataShort, 0, predictionBuffer, (pointer * dataShort.length), dataShort.length);
@@ -161,7 +162,7 @@ public class SoundHandler extends Thread {
 							queueElement newEL = new queueElement();
 							
 							// Add the new element to the queue:
-							newEL.data = predictionBuffer; // changed to dataShort!!
+							newEL.data = predictionBuffer;
 							newEL.numSamplesRead = nRead;
 
 							//Log.dTAG, "Queue length: " + queue.size());
@@ -172,12 +173,14 @@ public class SoundHandler extends Thread {
 							 */
 							synchronized(this.blockSync) {
 								queue.add(newEL);
-								Log.i(TAG, "xxxx element added to queue");
+								//Log.i(TAG, "Element added to queue");
 							}
 							
-							// After we added the element to the queue, "clear" the prediction buffer (i.e. fill it from the beginning)
+							// After we added the element to the queue, "clear" the prediction buffer
+							predictionBuffer = new short[PREDICTION_LENGTH];
 							pointer = 0;
 							predictionDataAvailable = false;
+							Log.d(TAG, "PredictionBuffer cleared");
 						}
 						
 					}	
