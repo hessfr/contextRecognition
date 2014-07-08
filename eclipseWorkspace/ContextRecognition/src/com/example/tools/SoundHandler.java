@@ -104,42 +104,51 @@ public class SoundHandler extends Thread {
 
 				int nRead = rec.read(data, 0, data.length); //number of recorder samples (equal to SEQUENCE_LENGTH)
 				//Log.i(TAG, "nRead: " + nRead);
-				
-				queueElement newEL = new queueElement();
-				// Fill the new element for the queue:
-				newEL.data = data;
-				newEL.numSamplesRead = nRead;
 
-				//Log.dTAG, "Queue length: " + queue.size());
-				
-				/*
-				 * If there is already an element in the queue that is not processed yet, send the
-				 * recorder thread to sleep and only continue once it is empty
-				 */
-				while (queue.size() != 0) {
-					//Log.d(TAG, "Thread sent to sleep waiting for all elements in the queue to be processed");
-					recorderThread.sleep(SLEEPTIME);
-				}
+				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
+						|| nRead == AudioRecord.ERROR_BAD_VALUE) {
 
-				/*
-				 * Only add the new element when the queue is empty again and make sure nobody reads
-				 * from it at the same time:
-				 */
-				synchronized(this.blockSync) {
+					Log.e(TAG, "Reading audio failed");
 
-					queue.add(newEL);
+				} else if (nRead < SEQUENCE_LENGTH) {
+
+					Log.e(TAG,"Only " + nRead + " of " + SEQUENCE_LENGTH + " samples were recorded");
+
+				} else {
+					queueElement newEL = new queueElement();
+					// Fill the new element for the queue:
+					newEL.data = data;
+					newEL.numSamplesRead = nRead;
+
+					//Log.dTAG, "Queue length: " + queue.size());
 					
-//						if (prevTime>0) {
-//							long diff = System.currentTimeMillis() - prevTime;
-//							Log.i(TAG,"new element added to queue after " + diff);
-//							prevTime = System.currentTimeMillis();
-//						} else{
-//							prevTime = System.currentTimeMillis();
-//						}
-					
-				}
+					/*
+					 * If there is already an element in the queue that is not processed yet, send the
+					 * recorder thread to sleep and only continue once it is empty
+					 */
+					while (queue.size() != 0) {
+						//Log.d(TAG, "Thread sent to sleep waiting for all elements in the queue to be processed");
+						recorderThread.sleep(SLEEPTIME);
+					}
 
-				
+					/*
+					 * Only add the new element when the queue is empty again and make sure nobody reads
+					 * from it at the same time:
+					 */
+					synchronized(this.blockSync) {
+
+						queue.add(newEL);
+						
+//							if (prevTime>0) {
+//								long diff = System.currentTimeMillis() - prevTime;
+//								Log.i(TAG,"new element added to queue after " + diff);
+//								prevTime = System.currentTimeMillis();
+//							} else{
+//								prevTime = System.currentTimeMillis();
+//							}
+						
+					}
+				}
 			} catch(Exception recordException) {
 				Log.e(TAG, "Recorder expection occured");
 				recordException.printStackTrace();
@@ -158,7 +167,8 @@ public class SoundHandler extends Thread {
 		try {
 			int src = MediaRecorder.AudioSource.DEFAULT;
 			int mono = AudioFormat.CHANNEL_IN_MONO;
-			int encoding = AudioFormat.ENCODING_PCM_16BIT;
+			int encoding = AudioFormat.ENCODING_PCM_16BIT;		
+			
 			// TODO: We have to have SEQUENCE_LENGTH equivalent to 2sec here
 			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, SEQUENCE_LENGTH*2); // SEQUENCE_LENGTH * 2 ????
 			

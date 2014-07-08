@@ -1,26 +1,14 @@
 package com.example.tools;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -37,7 +25,7 @@ import com.example.contextrecognition.R;
 import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
 
 /*
- * Handles all broadcasts and holds all prediction varaiables like current context, buffers, class names, ...
+ * Handles all broadcasts and holds all prediction var	iables like current context, buffers, class names, ...
  * 
  * AL Queries are also sent from here...
  */
