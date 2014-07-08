@@ -1,10 +1,14 @@
 package com.example.tools;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.LinkedList;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Environment;
 import android.util.Log;
 
 public class SoundHandler extends Thread {
@@ -18,13 +22,26 @@ public class SoundHandler extends Thread {
 	// If there is more than one sample in the queue, do not continue the recording and process all elements first:
 	private boolean processQueueFirst = false; 
 
-//	private int SEQUENCE_LENGTH = 63*1024; // equals 2seconds
-	private int SEQUENCE_LENGTH = 63*512; // equals 2seconds
+	private static int BUFFER_LENGTH = 4608; //4096; // Size of the chunks of data we read in using AudioRecord.read()
+	
+	/*
+	 * Size of the buffer for the Audiorecord. This has to be larger than BUFFER_LENGTH to avoid potential
+	 * "over-running" and loss of data
+	 */
+	private static int AUDIORECORD_BUFFER = 10 * 4608; //10 * 4096;
+	
+	/*
+	 * One 2s sequence contains 63 32ms windows, the prediction method is called with this buffer
+	 * Also, one of this sequences is exactly 7 buffer lengths long
+	 * 63 * 512 ~= 2s
+	 */
+	private static int PREDICTION_LENGTH = 32256;
+	private short[] predictionBuffer;
+	private boolean predictionDataAvailable = false;
+	
+	private int pointer = 0; // to fill the sequence for the prediction with the recorded data
 	
 	private Object blockSync = new Object();
-
-	// Time interval we wait at least until all elements in the queue are processed:
-	private static long SLEEPTIME = 500;
 	
 	public static final int RECORDER_SAMPLERATE = 16000; //TODO: better define this somewhere else??
 	
@@ -33,6 +50,8 @@ public class SoundHandler extends Thread {
 		public int numSamplesRead;
 		public short[] data;
 	}
+	
+	private File mRecFile;
 	
 	private long prevTime;
 
@@ -93,16 +112,23 @@ public class SoundHandler extends Thread {
 			}
 			
 			//Log.e(TAG, "Queue length: " + queue.size());
-			
-			// Verify that sequence has the correct length //TODO: if we keep SEQUENCE_LENGTH fixed ,we can remove this
-			if(SEQUENCE_LENGTH <= 0) {
-				Log.e(TAG,"Invalid buffer size: " + String.valueOf(SEQUENCE_LENGTH));
-			}
 				
 			try{
-				short[] data = new short[SEQUENCE_LENGTH]; //TODO: implement this properly
+//				byte[] data = new byte[BUFFER_LENGTH];
+//				int nRead = rec.read(data, 0, data.length);
+				
+				short[] dataShort = new short[BUFFER_LENGTH];
+				int nRead = rec.read(dataShort, 0, dataShort.length);
+				
+				//Log.i(TAG, "byte: " + data[0] + " " + data[1] + " " + data[2]);
+				//Log.i(TAG, "short: " + dataShort[0] + " " + dataShort[1] + " " + dataShort[2]);
+				//Log.i(TAG, "-------------");
 
-				int nRead = rec.read(data, 0, data.length); //number of recorder samples (equal to SEQUENCE_LENGTH)
+				// convert to short array: TODO: check if this needs too much performance
+				
+//				for (int i = 0; i < BUFFER_LENGTH; i++)
+//					dataShort[i] = (short) dataShort[i];
+				
 				//Log.i(TAG, "nRead: " + nRead);
 
 				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
@@ -110,44 +136,57 @@ public class SoundHandler extends Thread {
 
 					Log.e(TAG, "Reading audio failed");
 
-				} else if (nRead < SEQUENCE_LENGTH) {
+				} else if (nRead < BUFFER_LENGTH) {
 
-					Log.e(TAG,"Only " + nRead + " of " + SEQUENCE_LENGTH + " samples were recorded");
+					Log.e(TAG,"Only " + nRead + " of " + BUFFER_LENGTH + " samples were recorded");
 
 				} else {
-					queueElement newEL = new queueElement();
-					// Fill the new element for the queue:
-					newEL.data = data;
-					newEL.numSamplesRead = nRead;
-
-					//Log.dTAG, "Queue length: " + queue.size());
 					
-					/*
-					 * If there is already an element in the queue that is not processed yet, send the
-					 * recorder thread to sleep and only continue once it is empty
-					 */
-					while (queue.size() != 0) {
-						//Log.d(TAG, "Thread sent to sleep waiting for all elements in the queue to be processed");
-						recorderThread.sleep(SLEEPTIME);
+					// Write this chunk of data to a file (for evaluation only):
+					
+//					appendToFile(data, mRecFile);
+					
+					// Fill the prediction buffer ("ring-buffer": if full, overwrite the oldest elements...)
+					System.arraycopy(dataShort, 0, predictionBuffer, (pointer * dataShort.length), dataShort.length);
+					
+					if (pointer < 6) {
+						pointer++;
+					} else {
+						predictionDataAvailable = true;
+						pointer = 0;
+						Log.i(TAG, "xxxx pred available true");
 					}
+					
+					if(predictionDataAvailable == true) {
+						/*
+						 * Add element (to make a prediction) only if there is no other element in
+						 * the queue. Otherwise don't do anything:
+						 */
+						if (queue.size() == 0) {
+							queueElement newEL = new queueElement();
+							
+							// Add the new element to the queue:
+							newEL.data = predictionBuffer; // changed to dataShort!!
+							newEL.numSamplesRead = nRead;
 
-					/*
-					 * Only add the new element when the queue is empty again and make sure nobody reads
-					 * from it at the same time:
-					 */
-					synchronized(this.blockSync) {
+							//Log.dTAG, "Queue length: " + queue.size());
 
-						queue.add(newEL);
+							/*
+							 * Only add the new element when the queue is empty again and make sure nobody reads
+							 * from it at the same time:
+							 */
+							synchronized(this.blockSync) {
+								queue.add(newEL);
+								Log.i(TAG, "xxxx element added to queue");
+							}
+							
+							// After we added the element to the queue, "clear" the prediction buffer (i.e. fill it from the beginning)
+							pointer = 0;
+							predictionDataAvailable = false;
+						}
 						
-//							if (prevTime>0) {
-//								long diff = System.currentTimeMillis() - prevTime;
-//								Log.i(TAG,"new element added to queue after " + diff);
-//								prevTime = System.currentTimeMillis();
-//							} else{
-//								prevTime = System.currentTimeMillis();
-//							}
-						
-					}
+					}	
+					
 				}
 			} catch(Exception recordException) {
 				Log.e(TAG, "Recorder expection occured");
@@ -169,8 +208,7 @@ public class SoundHandler extends Thread {
 			int mono = AudioFormat.CHANNEL_IN_MONO;
 			int encoding = AudioFormat.ENCODING_PCM_16BIT;		
 			
-			// TODO: We have to have SEQUENCE_LENGTH equivalent to 2sec here
-			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, SEQUENCE_LENGTH*2); // SEQUENCE_LENGTH * 2 ????
+			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, AUDIORECORD_BUFFER);
 			
 		} catch(IllegalArgumentException e){
 			Log.e(TAG, "Error occured while initializing AudioRecorder");
@@ -195,6 +233,10 @@ public class SoundHandler extends Thread {
 				}
 			}
 			
+			mRecFile = createFile("rawAudio");
+			
+			predictionBuffer = new short[PREDICTION_LENGTH];
+			
 			// Start the recording
 			rec.startRecording();
 			this.start();
@@ -208,6 +250,36 @@ public class SoundHandler extends Thread {
 	
 	public void endRec() {
 		this.currentlyRecording = false;
+	}
+	
+	private File createFile(String filename) {
+		
+		File dir = Environment.getExternalStorageDirectory();
+		
+		File file;
+		
+		file = new File(dir, filename);
+		
+    	if (file.exists()) 
+    		file.delete();
+    	try {
+    		file.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
+    	return file;
+	}
+	
+	private void appendToFile(byte[] buffer, File file){
+		try {
+			FileOutputStream os = new FileOutputStream(file, true); // appending to file
+			os.write(buffer);
+			os.close();      	
+
+		} catch (IOException e) {
+			Log.e(TAG, "Error writing to audio data to file");
+		}
 	}
 	
 	/*
