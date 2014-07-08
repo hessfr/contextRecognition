@@ -4,8 +4,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
@@ -15,6 +17,7 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -111,6 +114,9 @@ public class StateManager extends BroadcastReceiver {
 	// Time when query was sent, used to calculate the response time of the user
 	private static long timeQuerySent;
 	
+	// Number of queries left for that day.
+	private static int numQueriesLeft = Globals.MAX_QUERIES_PER_DAY;
+	
 	// -------------------------------------------------------------
 	
 	private static boolean testBool = false; // for testing only
@@ -147,6 +153,9 @@ public class StateManager extends BroadcastReceiver {
 	
 	public static final String DISMISS_NOTIFICATION = "action.dismissNotification";
 	
+	public static final String REGISTER_QUERY_NUMBER_RESET = "action.registerQueryNumberReset";
+	
+	public static final String RESET_MAX_QUERY_NUMBER = "action.resetMaxQueryNumber";
 	
 	// Send by the StateManager:
 	public static final String PREDICTION_CHANGED_INTENT = "predictionChangedIntent";
@@ -349,11 +358,11 @@ public class StateManager extends BroadcastReceiver {
 						
 						//Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
 
-						if ((System.currentTimeMillis() - prevTime) > minBreak) {
+						//if ((System.currentTimeMillis() - prevTime) > minBreak) {
 							
-							//if (queryCrit > threshold.get(currentPrediction)) { //TODO: xxxxxxxxxx
-								
-							if (queryCrit > 0 && waitingForFeedback == false) {
+							//(queryCrit > threshold.get(currentPrediction)) //TODO: xxxxxxxxxxxxxxxx
+							if ((queryCrit > 0) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
+									((System.currentTimeMillis() - prevTime) > minBreak)) {
 								
 								Log.i(TAG, "Threshold exceeded, user queried for current context");
 
@@ -375,7 +384,7 @@ public class StateManager extends BroadcastReceiver {
 								
 							}
 
-						}
+						//}
 						
 					}
 								
@@ -446,6 +455,30 @@ public class StateManager extends BroadcastReceiver {
 			dismissNotifitcation(context);
 			
 			Log.i(TAG, "Query dismissed");
+			
+		}
+		
+		if (intent.getAction().equals(REGISTER_QUERY_NUMBER_RESET)) {
+			
+			Calendar updateTime = Calendar.getInstance();
+		    updateTime.setTimeZone(TimeZone.getTimeZone("GMT"));
+		    updateTime.set(Calendar.HOUR_OF_DAY, 23);
+		    updateTime.set(Calendar.MINUTE, 59);			
+		    
+		    Intent resetIntent = new Intent(RESET_MAX_QUERY_NUMBER);
+	        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
+	        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, updateTime.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+		    
+	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
+	        
+		} 
+		
+		if (intent.getAction().equals(RESET_MAX_QUERY_NUMBER)) {
+
+			numQueriesLeft = Globals.MAX_QUERIES_PER_DAY;
+			
+			Log.d(TAG, "Maximum number of queries resetted");
 			
 		}
 		
@@ -774,11 +807,14 @@ public class StateManager extends BroadcastReceiver {
 		waitingForFeedback = true;
 		timeQuerySent = System.currentTimeMillis();
 		
-		//Start TimerTask:
+		// Start TimerTask:
 		CancelQueryTask cancelQueryTask = new CancelQueryTask(context);
         Timer cancelTimer = new Timer();
         cancelTimer.schedule(cancelQueryTask, Globals.CANCEL_QUERY_TIME);
         
+        // Decrement the number of queries left (for today):
+        numQueriesLeft--;
+        Log.d(TAG, numQueriesLeft + " queries left for today");
 
 	}
 	
