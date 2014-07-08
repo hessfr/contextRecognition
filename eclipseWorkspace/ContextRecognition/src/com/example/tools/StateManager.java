@@ -1,9 +1,13 @@
 package com.example.tools;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -21,6 +25,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.example.contextrecognition.ContextSelection;
+import com.example.contextrecognition.Globals;
 import com.example.contextrecognition.R;
 import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
 
@@ -102,6 +107,9 @@ public class StateManager extends BroadcastReceiver {
 	
 	// Value contributing to the query criteria that is computed on the interval where the query was sent.
 	private static double tmpQueryCrit;
+	
+	// Time when query was sent, used to calculate the response time of the user
+	private static long timeQuerySent;
 	
 	// -------------------------------------------------------------
 	
@@ -191,13 +199,12 @@ public class StateManager extends BroadcastReceiver {
 					
 					if (testBool == false) {
 						testBool = true;
+						sendQuery(context);
 						//requestNewClassFromServer("Restaurant");
 					}
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
-					
-					
-					
+
 					//=================================================================================
 					//============ Handle sending of query, threshold calculations, ... ===============
 					//=================================================================================
@@ -360,8 +367,6 @@ public class StateManager extends BroadcastReceiver {
 								 * the user:
 								 */
 								tmpQueryCrit = metricBeforeFeedback(queryCrit, std); // queryCrit is just value of the mean
-								
-								waitingForFeedback = true;
 
 								/*
 								 * The model adaption is handled in the callModelAdaption, that is always being called
@@ -516,51 +521,73 @@ public class StateManager extends BroadcastReceiver {
 	
 	private void callModelAdaption(int label) {
 
-		Log.i(TAG, "Model adaption called for class " + String.valueOf(label));	
-
-		new ModelAdaptor(buffer, label, listener).execute();
-		
-		// If the feedback is a response to a query the system sent out, clear all buffer values etc.
+		// Log the AL feedback:
 		if (waitingForFeedback == true) {
-			
-			// Update the number of queries (for evaluation only)
-			numQueriesAnswered.set(label, (numQueriesAnswered.get(label)+1));
-			
-			feedbackReceived.set(label, true);
-			
-			// Calculate first part of the new threshold
-			thresQueriedInterval.set(label, tmpQueryCrit);
-			
-			// Flush the buffers
-			queryBuffer.clear();
-			predBuffer.clear();
-			for(int i=0; i<gmm.get_n_classes(); i++) {
-				ArrayList<Double> tmp = thresBuffer.get(i);
-				tmp.clear();
-				thresBuffer.set(i, tmp);
-				
-				thresSet.set(i, false);
-				
-				if (feedbackReceived.get(i) == false) {
-					ArrayList<Double> tmp2 = initThresBuffer.get(i);
-					tmp2.clear();
-					initThresBuffer.set(i, tmp2);
-				}
-			}
-			
-			waitingForFeedback = false;
-			
+			appendToLog(true, label, currentPrediction, false, false);
 		} else {
-			
-			//TODO: do we have to flush all buffers as well here ???
-			
-			// If the feedback was given voluntarily (without a query from the system):
-			volFeedback.set(label, (volFeedback.get(label)+1));
-			
+			appendToLog(true, label, currentPrediction, false, true);
 		}
 		
+		// Find index of the conversation class, as we do not want to adapt our model for these:
+		int conversationIdx = -1;
+		for(int i=0; i<gmm.get_n_classes(); i++) {
+			if (gmm.get_class_name(i).equals("Conversation")) {
+				conversationIdx = i;
+			}
+		}
 		
+		if (label != conversationIdx) {
+			
+			Log.i(TAG, "Model adaption called for class " + String.valueOf(label));	
+			Log.i(TAG, "waitingForFeedback: " + waitingForFeedback);
+			
+			new ModelAdaptor(buffer, label, listener).execute();
+			
+			// If the feedback is a response to a query the system sent out, clear all buffer values etc.
+			if (waitingForFeedback == true) {
 				
+				// Update the number of queries (for evaluation only)
+				numQueriesAnswered.set(label, (numQueriesAnswered.get(label)+1));
+				
+				feedbackReceived.set(label, true);
+				
+				// Calculate first part of the new threshold
+				thresQueriedInterval.set(label, tmpQueryCrit);
+				
+				// Flush the buffers
+				queryBuffer.clear();
+				predBuffer.clear();
+				for(int i=0; i<gmm.get_n_classes(); i++) {
+					ArrayList<Double> tmp = thresBuffer.get(i);
+					tmp.clear();
+					thresBuffer.set(i, tmp);
+					
+					thresSet.set(i, false);
+					
+					if (feedbackReceived.get(i) == false) {
+						ArrayList<Double> tmp2 = initThresBuffer.get(i);
+						tmp2.clear();
+						initThresBuffer.set(i, tmp2);
+					}
+				}
+
+			} else {
+				
+				//TODO: do we have to flush all buffers as well here ???
+				
+				// If the feedback was given voluntarily (without a query from the system):
+				volFeedback.set(label, (volFeedback.get(label)+1));
+				
+			}
+			
+		} else {
+			Log.i(TAG, "Conversation class will not be incorporated into our model");
+		}
+		
+		waitingForFeedback = false; //TODO: better here, or before the model adaption is beign executed??
+
+		
+		
 //		Toast.makeText(getBaseContext(), (String) "Model is being adapted",
 //				Toast.LENGTH_SHORT).show();
 
@@ -743,14 +770,91 @@ public class StateManager extends BroadcastReceiver {
 
 		NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		manager.notify(NOTIFICATION_ID, builder.build());
+		
+		waitingForFeedback = true;
+		timeQuerySent = System.currentTimeMillis();
+		
+		//Start TimerTask:
+		CancelQueryTask cancelQueryTask = new CancelQueryTask(context);
+        Timer cancelTimer = new Timer();
+        cancelTimer.schedule(cancelQueryTask, Globals.CANCEL_QUERY_TIME);
+        
 
 	}
 	
-	private void dismissNotifitcation (Context context) {
+	private void dismissNotifitcation(Context context) {
 
 		NotificationManager notificationManager = (NotificationManager) context
 	            .getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationManager.cancel(NOTIFICATION_ID);
+	}
+	
+	private void appendToLog(boolean feedbackReceived, int contextClassGT, 
+			int contextClassPredicted, boolean isNewClass, boolean voluntaryFeedback) {
+		
+		Log.i(TAG, "appendToLog called");
+		
+		String classNameGT = null;
+		String classNamePredicted = gmm.get_class_name(contextClassPredicted);
+		String timePassed = null;
+		String isNewClassString = null;
+		String volFeedbackString = null;
+		
+		if (feedbackReceived == true) {
+			classNameGT = gmm.get_class_name(contextClassGT);
+			timePassed = String.valueOf(System.currentTimeMillis()-timeQuerySent);
+			if (isNewClass == true) {
+				isNewClassString = "new_class";
+			} else {
+				isNewClassString = "known_class";
+			}
+			if (voluntaryFeedback == true) {
+				volFeedbackString = "voluntarily";
+				timePassed = String.valueOf(-1);
+			} else {
+				volFeedbackString = "query_response";
+			}
+		} else {
+			classNameGT = String.valueOf(-1);
+			timePassed = String.valueOf(-1);
+			isNewClassString = String.valueOf(-1);
+			volFeedbackString = String.valueOf(-1);
+		}
+
+		try {
+			FileWriter f = new FileWriter(Globals.AL_LOG_FILE, true);
+			f.write(System.currentTimeMillis() + "\t" + classNamePredicted + "\t" +  
+			classNameGT + "\t" + timePassed + "\t" + isNewClassString + "\t" + volFeedbackString + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to AL log file failed");
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
+	
+	class CancelQueryTask extends TimerTask {
+		
+		Context context;
+		
+		public CancelQueryTask(Context c) {
+			this.context = c;
+		}
+		
+		
+		public void run() {
+
+			Log.d(TAG, "CancelQueryTask started");
+			
+				waitingForFeedback = false;
+
+				appendToLog(false, -1, currentPrediction, false, false);
+				
+				dismissNotifitcation(context);
+			
+		}
 	}
 	
 }

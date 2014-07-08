@@ -26,33 +26,28 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
+import com.example.contextrecognition.Globals;
+
 public class PostRequest extends AsyncTask<String, Void, String> {
 	
 	private static final String TAG = "PostRequest";
-	
+
     // Contains filename under which the adapted GMM can be requested from the server
     private String filenameOnServer;
-
+    
 	@Override
 	protected String doInBackground(String... params) {
 		
 		String newClassName = params[0];
 		
 		Log.i(TAG,"PostRequest called");
-		
-//		String IP = "192.168.0.23";
-		String IP = "172.30.152.238";
-	    
-		String PORT = "8080";
-	    
-	    String URL = "http://" + IP + ":" + PORT + "/?";
 	    
 	    //Add parameters to URL
 	    List<NameValuePair> par = new LinkedList<NameValuePair>();
         par.add(new BasicNameValuePair("request_type", "addContextClass"));
         par.add(new BasicNameValuePair("new_classname", newClassName));
         String paramString = URLEncodedUtils.format(par, "utf-8");
-        URL += paramString;     
+        String URL = Globals.BASE_URL + paramString;     
         
         //Log.i(TAG, URL);
         
@@ -73,9 +68,8 @@ public class PostRequest extends AsyncTask<String, Void, String> {
     	
     	// Read our classifier from the storage into a string:
     	String filename = "GMM.json";
-    	
-		File dir = Environment.getExternalStorageDirectory();
-		File file = new File(dir,filename);
+
+		File file = new File(Globals.APP_PATH,filename);
 		
 		String jsonString = null;
 		

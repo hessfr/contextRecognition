@@ -19,7 +19,7 @@ public class ContextSelection extends ListActivity {
 	private static final String TAG = "ContextSelection";
 	
 	private String[] classNames;
-	private int conversationIdx = -1;
+	
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,13 +45,6 @@ public class ContextSelection extends ListActivity {
 		} else {
 			Log.e(TAG, "classNames String Array empty. List could not be set");
 		}
-
-		// Find index of the conversation class, as we do not want to adapt our model for these:
-		for(int i=0; i<classNames.length; i++) {
-			if (classNames[i].equals("Conversation")) {
-				conversationIdx = i;
-			}
-		}
 		
     }
     
@@ -68,21 +61,15 @@ public class ContextSelection extends ListActivity {
       //normal context class selected:
       if (position != (getListAdapter().getCount()-1)) {
 
-    	  	if (position != conversationIdx) {
-    	  		
-    	  		Log.i(TAG, "Existing class " + item + " selected");
-    	  		
-    			Intent intent = new Intent(StateManager.MODEL_ADAPTION_EXISTING_INTENT);
-    			Bundle bundle = new Bundle();
-    			bundle.putInt(StateManager.LABEL, position);
-    			intent.putExtras(bundle);
-    			sendBroadcast(intent);
-    			
-    	  	} else {
-    	  		Log.i(TAG, "Conversation class will not be incorporated into our model");
-    	  	}
+	  		Log.i(TAG, "Existing class " + item + " selected");
+	  		
+			Intent intent = new Intent(StateManager.MODEL_ADAPTION_EXISTING_INTENT);
+			Bundle bundle = new Bundle();
+			bundle.putInt(StateManager.LABEL, position);
+			intent.putExtras(bundle);
+			sendBroadcast(intent);
 
-          finish();
+			finish();
     	  
       } else { // "Define own context class" selected
     	  

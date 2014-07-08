@@ -24,28 +24,24 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
+import com.example.contextrecognition.Globals;
+
 public class GetRequest extends AsyncTask<String, Void, String> {
 	
 	private static final String TAG = "GetRequest";
-
+	
 	@Override
 	protected String doInBackground(String... params) {
 		
 		String filenameOnServer = params[0];
 		
 		Log.i(TAG,"GetRequest called");
-		
-//		String IP = "192.168.0.23";
-		String IP = "172.30.152.238";
-	    String PORT = "8080";
-	    
-	    String URL = "http://" + IP + ":" + PORT + "/?";
-	    
+
 	    //Add parameters to URL
 	    List<NameValuePair> par = new LinkedList<NameValuePair>();
         par.add(new BasicNameValuePair("filename", filenameOnServer));
         String paramString = URLEncodedUtils.format(par, "utf-8");
-        URL += paramString;
+        String URL = Globals.BASE_URL + paramString;
         
         //Set timeout parameters:
         HttpParams httpParameters = new BasicHttpParams();
@@ -69,8 +65,7 @@ public class GetRequest extends AsyncTask<String, Void, String> {
 	    		//String filename = "111_newGMM_test.json";
 	    		String filename = "GMM.json";
 	    		
-	    		File dir = Environment.getExternalStorageDirectory();
-	    		File file = new File(dir,filename);
+	    		File file = new File(Globals.APP_PATH,filename);
 	    		
 	    		try {
 	    			FileWriter out = new FileWriter(file);

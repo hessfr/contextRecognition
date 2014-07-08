@@ -20,6 +20,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import com.example.contextrecognition.Globals;
 import com.google.gson.Gson;
 /*
 Contains parameters for the Gaussian mixture of all context classes
@@ -35,7 +36,6 @@ public class GMM implements Parcelable {
 	private int n_features;
 	private DenseMatrix64F scale_means = new DenseMatrix64F(1, n_features);
 	private DenseMatrix64F scale_stddevs = new DenseMatrix64F(1, n_features);
-	
 	
 	// Constructor:
 	public GMM(String filename) {
@@ -98,10 +98,8 @@ public class GMM implements Parcelable {
 		Gson gson = new Gson();
 		
 		List<JsonModel> jsonGMM;
-
-		File dir = Environment.getExternalStorageDirectory();
 		
-		File file = new File(dir,filename);
+		File file = new File(Globals.APP_PATH,filename);
 
 		if(file.exists()) {
 			
@@ -167,11 +165,7 @@ public class GMM implements Parcelable {
 		
 		String str = new Gson().toJson(jm);
 
-		File sdcard = Environment.getExternalStorageDirectory();
-
-		File dir = new File(sdcard.getAbsolutePath());
-
-		File file = new File(dir, "GMM.json");
+		File file = new File(Globals.APP_PATH, "GMM.json");
 		
 		FileOutputStream f = null;
 		try {
