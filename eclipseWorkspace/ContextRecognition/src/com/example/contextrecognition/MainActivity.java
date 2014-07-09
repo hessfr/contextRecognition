@@ -80,8 +80,8 @@ public class MainActivity extends ActionBarActivity {
 		appStatus.getInstance().set(appStatus.INIT);
 		Log.i(TAG, "New status: init");
 		
-		// Register the daily reset of the maximum number of queries:
-		Intent i2 = new Intent(Globals.REGISTER_QUERY_NUMBER_RESET);
+		// Register the daily reset of the maximum number of queries and periodic data backup:
+		Intent i2 = new Intent(Globals.REGISTER_RECURRING_TASKS);
 		context.sendBroadcast(i2);
 		
 		// Set preferences intitially if it hasn't been set already:

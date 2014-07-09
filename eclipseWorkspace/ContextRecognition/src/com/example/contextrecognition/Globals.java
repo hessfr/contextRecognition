@@ -11,8 +11,10 @@ public class Globals {
 	public static final String APP_FOLDER = "ContextRecognition";
 	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 			+ "/" + APP_FOLDER);
+	
+	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");
 
-	public static final File AL_LOG_FILE = new File(APP_PATH, "AL_Log.txt"); //-> does this override existing file?
+	public static final File AL_LOG_FILE = new File(APP_PATH, "AL_Log.txt");
 	
 	/*
 	 * App settings
@@ -24,8 +26,10 @@ public class Globals {
 	public static int MAX_QUERIES_PER_DAY = 10;
 	
 	// Minimum time we has to wait between two queries:
-	public static long minBreak = 100000; //TODO: change back to 600000
+	public static long minBreak = 10 * 60 * 1000;
 	
+	// Time after which the app data (buffers, threshold, ...) should be periodically persisted to external storage
+	public static long PERSIST_PERIOD = 5000;//10 * 60 * 1000;
 	
 	/*
 	 * Buffer lengthes for the threshold calculation
@@ -88,9 +92,11 @@ public class Globals {
 	
 	public static final String DISMISS_NOTIFICATION = "action.dismissNotification";
 	
-	public static final String REGISTER_QUERY_NUMBER_RESET = "action.registerQueryNumberReset";
+	public static final String REGISTER_RECURRING_TASKS = "action.registerRecurringTasks";
 	
 	public static final String RESET_MAX_QUERY_NUMBER = "action.resetMaxQueryNumber";
+	
+	public static final String PERSIST_DATA = "action.persistData";
 	
 	public static final String MAX_QUERY_NUMBER_CHANGED = "action.maxQueryNumberChanged";
 	

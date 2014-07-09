@@ -1,11 +1,18 @@
 package com.example.tools;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.Timer;
@@ -33,6 +40,7 @@ import com.example.contextrecognition.ContextSelection;
 import com.example.contextrecognition.Globals;
 import com.example.contextrecognition.R;
 import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
+import com.google.gson.Gson;
 
 /*
  * Handles all broadcasts and holds all prediction var	iables like current context, buffers, class names, ...
@@ -86,16 +94,6 @@ public class StateManager extends BroadcastReceiver {
 	 * The update of this buffer is completely done in the AudioWorker
 	 */
 	private static ArrayList<double[]> buffer;
-	
-	// Count the number of queries for each context class
-	private static ArrayList<Integer> numQueriesAnswered;
-	
-	// Count the number of queries for each context class
-	private static ArrayList<Integer> numQueriesIgnored; //TODO
-	
-	// Count the number of of voluntary feedback for each context class. For evaluation only
-	private static ArrayList<Integer> volFeedback;
-	
 
 	// Apache Commons methods to calculate means and standard deviations:
 	StandardDeviation stdCalc = new StandardDeviation();
@@ -179,42 +177,57 @@ public class StateManager extends BroadcastReceiver {
 					
 					// Initialize the variable when receiving the first set of data:
 					if(variablesInitialized == false) {
-						initThresSet = new ArrayList<Boolean>();
-						thresSet = new ArrayList<Boolean>();
-						feedbackReceived = new ArrayList<Boolean>();
-						threshold = new ArrayList<Double>();
-						numQueriesAnswered = new ArrayList<Integer>();
-						numQueriesIgnored = new ArrayList<Integer>();
-						volFeedback = new ArrayList<Integer>();
+						// Load data from JSON file from external storage if it already exists:
+						if (Globals.APP_DATA_FILE.exists()) {
+							Log.i(TAG, "Loading app data from JSON file");
+							
+							AppData appData = readAppData();
+							initThresSet = appData.get_initThresSet();
+							thresSet = appData.get_thresSet();
+							feedbackReceived = appData.get_feedbackReceived();
+							threshold = appData.get_threshold();
+							initThresBuffer = appData.get_initThresBuffer();
+							thresBuffer = appData.get_thresBuffer();
+							thresQueriedInterval = appData.get_thresQueriedInterval();
+							numQueriesLeft = appData.get_numQueriesLeft();
+
+						} else {
+							/*
+							 *  If it doesn't exists (i.e. at the very first start) initialize variables empty:
+							 *  (same goes for the buffer containing the MFCC values)
+							 */
+							
+							Log.i(TAG, "Initializing empty app data, because no JSON file was created yet");
+							
+							initThresSet = new ArrayList<Boolean>();
+							thresSet = new ArrayList<Boolean>();
+							feedbackReceived = new ArrayList<Boolean>();
+							threshold = new ArrayList<Double>();
+							initThresBuffer = new ArrayList<ArrayList<Double>>();
+							thresBuffer = new ArrayList<ArrayList<Double>>();
+							thresQueriedInterval = new ArrayList<Double>();
+							
+							for(int i=0; i<gmm.get_n_classes(); i++) {
+								initThresSet.add(false);
+								thresSet.add(false);
+								feedbackReceived.add(false);
+								threshold.add(-1.0);
+								initThresBuffer.add(new ArrayList<Double>());
+								thresBuffer.add(new ArrayList<Double>());
+								thresQueriedInterval.add(-1.0);
+							}
+							
+							resetQueriesLeft(context);
+							
+						}						
 						
-						initThresBuffer = new ArrayList<ArrayList<Double>>();
-						thresBuffer = new ArrayList<ArrayList<Double>>();
-						
-						thresQueriedInterval = new ArrayList<Double>();
-						
+						// These buffers doesn't need to be taken from the last run:
 						queryBuffer = new ArrayList<Double>();
 						predBuffer = new ArrayList<Integer>();
-	
-						for(int i=0; i<gmm.get_n_classes(); i++) {
-							
-							initThresSet.add(false);
-							thresSet.add(false);
-							feedbackReceived.add(false);
-							threshold.add(-1.0);
-							numQueriesAnswered.add(0);
-							numQueriesIgnored.add(0);
-							volFeedback.add(0);
-							
-							initThresBuffer.add(new ArrayList<Double>());
-							thresBuffer.add(new ArrayList<Double>());
-							thresQueriedInterval.add(-1.0);
-						}
-						
-						resetQueriesLeft(context);
-						
-						variablesInitialized = true;
-					}
 
+						variablesInitialized = true;
+					}					
+					
 					// For each class buffer the last (30) entropy values
 					if (queryBuffer.size() < Globals.QUERY_BUFFER_SIZE) {
 						
@@ -317,9 +330,6 @@ public class StateManager extends BroadcastReceiver {
 						
 						//Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
 
-						//if ((System.currentTimeMillis() - prevTime) > minBreak) {
-							
-							//(queryCrit > threshold.get(currentPrediction)) //TODO: xxxxxxxxxxxxxxxx
 							if ((queryCrit > threshold.get(currentPrediction)) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
 									((System.currentTimeMillis() - prevTime) > Globals.minBreak)) {
 								
@@ -340,11 +350,7 @@ public class StateManager extends BroadcastReceiver {
 								 * The model adaption is handled in the callModelAdaption, that is always being called
 								 * from the ContextSelection Activity
 								 */
-								
-							}
-
-						//}
-						
+							}						
 					}
 								
 					long sincePrevEndTime = System.currentTimeMillis() - endTime;
@@ -417,7 +423,7 @@ public class StateManager extends BroadcastReceiver {
 			
 		}
 		
-		if (intent.getAction().equals(Globals.REGISTER_QUERY_NUMBER_RESET)) {
+		if (intent.getAction().equals(Globals.REGISTER_RECURRING_TASKS)) {
 			
 			Calendar updateTime = Calendar.getInstance();
 		    updateTime.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -425,18 +431,35 @@ public class StateManager extends BroadcastReceiver {
 		    updateTime.set(Calendar.MINUTE, 59);			
 		    
 		    Intent resetIntent = new Intent(Globals.RESET_MAX_QUERY_NUMBER);
-	        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
+	        PendingIntent pendingResetIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
+	        
 	        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, updateTime.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, updateTime.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingResetIntent);
 		    
 	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
 	        
+	        Intent persistIntent = new Intent(Globals.PERSIST_DATA);
+	        PendingIntent pendingPersistIntent = PendingIntent.getBroadcast(context, 0, persistIntent, 0);
+
+	        Calendar currentCal = Calendar.getInstance();
+	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, currentCal.getTimeInMillis(), 5000, pendingPersistIntent); //change to 10min or so
+		    
+	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
+
 		} 
 		
 		if (intent.getAction().equals(Globals.RESET_MAX_QUERY_NUMBER)) {
 
 			resetQueriesLeft(context);
 			
+		}
+		
+		if (intent.getAction().equals(Globals.PERSIST_DATA)) {
+
+			if (variablesInitialized == true) {
+				persistData();
+			}
+
 		}
 		
 		if (intent.getAction().equals(Globals.MAX_QUERY_NUMBER_CHANGED)) {
@@ -542,9 +565,6 @@ public class StateManager extends BroadcastReceiver {
 			// If the feedback is a response to a query the system sent out, clear all buffer values etc.
 			if (waitingForFeedback == true) {
 				
-				// Update the number of queries (for evaluation only)
-				numQueriesAnswered.set(label, (numQueriesAnswered.get(label)+1));
-				
 				feedbackReceived.set(label, true);
 				
 				// Calculate first part of the new threshold
@@ -571,8 +591,6 @@ public class StateManager extends BroadcastReceiver {
 				
 				//TODO: do we have to flush all buffers as well here ???
 				
-				// If the feedback was given voluntarily (without a query from the system):
-				volFeedback.set(label, (volFeedback.get(label)+1));
 				
 			}
 			
@@ -876,6 +894,67 @@ public class StateManager extends BroadcastReceiver {
 		}
 
 	}
+	
+	/*
+	 * Save buffers, threshold values etc periodically to external storage
+	 */
+	private void persistData() {
+		
+		AppData appData = new AppData(initThresSet, thresSet, feedbackReceived, 
+				threshold, initThresBuffer, thresBuffer, thresQueriedInterval, numQueriesLeft);
+		
+		String str = new Gson().toJson(appData);
+		
+		if(!str.equals("{}")) { //Only write to file, if it is not empty
+			FileOutputStream f = null;
+			try {
+				f = new FileOutputStream(Globals.APP_DATA_FILE);
+			} catch (FileNotFoundException e) {
+				Log.e(TAG, "App data file to store JSON not found");
+				e.printStackTrace();
+			}
+			try {
+				Log.d(TAG, "App data persited to JSON file");
+				f.write(str.getBytes());
+				f.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}	
+	}
+	
+	/*
+	 * Read in buffers, thresholds, ... is called when the application is started, to read in values
+	 * from the last time
+	 */
+	private AppData readAppData() {
+		
+		Gson gson = new Gson();
+		
+		AppData appData;
+
+		if(Globals.APP_DATA_FILE.exists()) {
+			
+			Log.v(TAG,"JSON file found");
+			
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(Globals.APP_DATA_FILE));
+			
+				appData = gson.fromJson(br, AppData.class);
+				
+			} catch (IOException e) {
+				appData = null;
+				Log.e(TAG,"Couldn't open JSON file");
+				e.printStackTrace();
+			}
+		} else {
+			appData = null;
+			Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
+        }
+		
+		return appData;
+	}
+	
 	
 	class CancelQueryTask extends TimerTask {
 		
