@@ -37,12 +37,13 @@ public class Globals {
 	public static int QUERY_BUFFER_SIZE = 30;
 	
 	// Store entropy values to set threshold for the first time. Separate for different classes:
-	public static int INIT_THRES_BUFFER_SIZE = 30; //TODO: change back to 90 xxxxxxxxxxxxxxxxxxxxxx
+	public static int INIT_THRES_BUFFER_SIZE = 90; // decrease this for testing...
 	
 	// Store entropy values to set threshold after the init model adaption is done. Separate for different classes:
-	public static int THRES_BUFFER_SIZE = 30; //TODO: change back to 300 xxxxxxxxxxxxxxxx
+	public static int THRES_BUFFER_SIZE = 300; // decrease this for testing...
 	
-	
+	public static String MAX_NUM_QUERIES = "maxNumQueries";
+	public static String PREV_MAX_NUM_QUERIES = "PrevMaxNumQueries";
 	
 	
 	/*
@@ -90,6 +91,8 @@ public class Globals {
 	public static final String REGISTER_QUERY_NUMBER_RESET = "action.registerQueryNumberReset";
 	
 	public static final String RESET_MAX_QUERY_NUMBER = "action.resetMaxQueryNumber";
+	
+	public static final String MAX_QUERY_NUMBER_CHANGED = "action.maxQueryNumberChanged";
 	
 	// Send by the StateManager:
 	public static final String PREDICTION_CHANGED_INTENT = "predictionChangedIntent";

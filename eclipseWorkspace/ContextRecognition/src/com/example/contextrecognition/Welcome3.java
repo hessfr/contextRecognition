@@ -26,6 +26,8 @@ public class Welcome3 extends Activity {
 	    	setContentView(R.layout.activity_welcome3);
 	    	
 	    	addListenerOnButton();
+	    	
+	    	//TODO: set max number of queries per day and save as preference (analog to SettingsActivity)
 	}
 	
 	public void addListenerOnButton() {

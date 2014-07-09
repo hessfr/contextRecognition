@@ -83,6 +83,18 @@ public class MainActivity extends ActionBarActivity {
 		// Register the daily reset of the maximum number of queries:
 		Intent i2 = new Intent(Globals.REGISTER_QUERY_NUMBER_RESET);
 		context.sendBroadcast(i2);
+		
+		// Set preferences intitially if it hasn't been set already:
+		int tmp = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);	
+		if (tmp == -1) {
+			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putInt(Globals.MAX_NUM_QUERIES, 10);
+			editor.commit();
+			
+			Log.i(TAG, "Preference commited");
+		}
+		
+		
 	}
 
 	@Override

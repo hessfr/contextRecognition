@@ -1,22 +1,28 @@
 package com.example.contextrecognition;
 
 //import android.app.ActionBar;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class Settings extends ActionBarActivity {
 	
+	private static final String TAG = "SettingsAcitivty";
+	
 	SeekBar querySeekBar;
 	TextView currentValueTV;
-	private static final int queryDefault = 10; //TODO: change this to use the value defined in the welcome screen	
+	SharedPreferences mPrefs;
+	private Context context = this;
 	private static final int queryLimit = 20;
 	
     @Override
@@ -29,9 +35,17 @@ public class Settings extends ActionBarActivity {
         // Enabling Up / Back navigation
         actionBar.setDisplayHomeAsUpEnabled(true);
         
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        
+        int currentValue = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
+		if (currentValue == -1) {
+			Log.e(TAG, "Got invalid value from preference, change to default value instead (only for GUI)");
+			currentValue = 10;
+		}        
+		
         // TextView to show the current query limit value
         currentValueTV = (TextView) findViewById(R.id.currentSeekBarValue);
-        currentValueTV.setText(String.valueOf(queryDefault));
+        currentValueTV.setText(String.valueOf(currentValue));
         
         // SeekBar set-up
         querySeekBar = (SeekBar) findViewById(R.id.seekBar);
@@ -51,8 +65,25 @@ public class Settings extends ActionBarActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {
             	currentValueTV.setText(String.valueOf(newValue));
             	
-            	//TODO: call method to process this input
+            	SharedPreferences.Editor editor = mPrefs.edit();
+            	int prev = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
+            	if (prev != -1) {
+            		editor.putInt(Globals.PREV_MAX_NUM_QUERIES, prev);
+            	} else {
+            		Log.e(TAG, "Could not get max number of queries from preferences");
+            	}
             	
+    			editor.putInt(Globals.MAX_NUM_QUERIES, newValue);
+    			editor.commit();
+    			
+    			Log.d(TAG, "Preference commited, new value of MAX_NUM_QUERIES: " + newValue);
+    			
+    			Intent intent = new Intent(Globals.MAX_QUERY_NUMBER_CHANGED);
+    			
+    			sendBroadcast(intent);
+    			
+            	// TODO: call intent
+    			
             }
         });
     }

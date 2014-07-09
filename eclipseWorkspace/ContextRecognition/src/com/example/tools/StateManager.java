@@ -23,7 +23,9 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -109,7 +111,7 @@ public class StateManager extends BroadcastReceiver {
 	private static long timeQuerySent;
 	
 	// Number of queries left for that day.
-	private static int numQueriesLeft = Globals.MAX_QUERIES_PER_DAY;
+	private static int numQueriesLeft;
 	
 	// -------------------------------------------------------------
 	
@@ -118,14 +120,9 @@ public class StateManager extends BroadcastReceiver {
 	private static long startTime;
 	private static long endTime;
 	
-
+	SharedPreferences mPrefs;
 	
 	public static final int NOTIFICATION_ID = 1;
-	
-	// Constructor:
-//	public StateManager() {
-//		Log.i(TAG, "constructor");
-//	}
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -139,7 +136,7 @@ public class StateManager extends BroadcastReceiver {
 				int resultCode = bundle.getInt(Globals.RESULTCODE);
 
 				if (resultCode == Activity.RESULT_OK) {
-					
+
 					// The following lines have to be in exactly the same order as the were put on the bundle (in the AudioWorker):
 
 					currentPrediction = bundle.getInt(Globals.PREDICTION_INT);
@@ -165,11 +162,12 @@ public class StateManager extends BroadcastReceiver {
 					s2 = bundle.getSerializable(Globals.CLASSES_DICT);
 //					classesDict = (HashMap<String, Integer>) s2;
 					
-					if (testBool == false) {
-						testBool = true;
-						sendQuery(context);
-						//requestNewClassFromServer("Restaurant");
-					}
+					// For testing: send query just at the start:
+//					if (testBool == false) {
+//						testBool = true;
+//						sendQuery(context);
+//						//requestNewClassFromServer("Restaurant");
+//					}
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 
@@ -211,6 +209,8 @@ public class StateManager extends BroadcastReceiver {
 							thresBuffer.add(new ArrayList<Double>());
 							thresQueriedInterval.add(-1.0);
 						}
+						
+						resetQueriesLeft(context);
 						
 						variablesInitialized = true;
 					}
@@ -435,9 +435,13 @@ public class StateManager extends BroadcastReceiver {
 		
 		if (intent.getAction().equals(Globals.RESET_MAX_QUERY_NUMBER)) {
 
-			numQueriesLeft = Globals.MAX_QUERIES_PER_DAY;
+			resetQueriesLeft(context);
 			
-			Log.d(TAG, "Maximum number of queries resetted");
+		}
+		
+		if (intent.getAction().equals(Globals.MAX_QUERY_NUMBER_CHANGED)) {
+
+			maxQueryNumberChanged(context);
 			
 		}
 		
@@ -828,6 +832,49 @@ public class StateManager extends BroadcastReceiver {
 		
 		
 		
+	}
+	
+	private void resetQueriesLeft(Context context) {
+		
+		mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		
+		int tmp = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
+		if (tmp != -1) {
+			numQueriesLeft = tmp;
+			Log.i(TAG, "Maximum number of queries resetted to " + tmp);
+		} else {
+			Log.e(TAG, "Got invalid value from preference, could not reset reset max number of queries");
+		}
+
+	}
+	
+	/* 
+	 * Called if the maximum number of queries is changed in the settings activity and updates numQueriesLeft
+	 * accordingly
+	 */
+	private void maxQueryNumberChanged(Context context) {
+		
+		mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		
+		int newValue = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
+		int prevValue = mPrefs.getInt(Globals.PREV_MAX_NUM_QUERIES, -1);
+		if ((newValue != -1) && (prevValue != -1)) {
+			
+			int diff = newValue - prevValue;
+			
+			
+			numQueriesLeft = numQueriesLeft + diff;
+			
+			if (numQueriesLeft < 0) {
+				numQueriesLeft = 0;
+			}
+			
+			
+			Log.i(TAG, "Maximum number of queries changed to " + numQueriesLeft);
+		} else {
+			Log.e(TAG, "Got invalid value from preference, could not reset reset max number of queries");
+		}
+
 	}
 	
 	class CancelQueryTask extends TimerTask {
