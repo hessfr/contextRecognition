@@ -66,19 +66,15 @@ public class StateManager extends BroadcastReceiver {
 	
 	// To calculate maj vote on the last minute of  data and only incorporate those points matching the majority vote:
 	private static ArrayList<Integer> predBuffer;
-	private static int PRED_BUFFER_SIZE = 30;
 	
 	// Mean entropy values (on 2sec window) of the last min:
 	private static ArrayList<Double> queryBuffer;
-	private static int QUERY_BUFFER_SIZE = 30;
 	
 	// Store entropy values to set threshold for the first time. Separate for different classes:
 	private static ArrayList<ArrayList<Double>> initThresBuffer;
-	private static int INIT_THRES_BUFFER_SIZE = 30; //TODO: change back to 90 xxxxxxxxxxxxxxxxxxxxxx
 	
 	// Store entropy values to set threshold after the init model adaption is done. Separate for different classes:
 	private static ArrayList<ArrayList<Double>> thresBuffer;
-	private static int THRES_BUFFER_SIZE = 30; //TODO: change back to 300 xxxxxxxxxxxxxxxx
 	
 	// Value computed on the points where query was sent. Used to calculate the new query criteria:
 	private static ArrayList<Double> thresQueriedInterval;
@@ -98,9 +94,7 @@ public class StateManager extends BroadcastReceiver {
 	// Count the number of of voluntary feedback for each context class. For evaluation only
 	private static ArrayList<Integer> volFeedback;
 	
-	// Minimum time we has to wait between two queries:
-	private static long minBreak = 100000; //TODO: change back to 600000
-	
+
 	// Apache Commons methods to calculate means and standard deviations:
 	StandardDeviation stdCalc = new StandardDeviation();
 	Mean meanCalc = new Mean();
@@ -124,42 +118,7 @@ public class StateManager extends BroadcastReceiver {
 	private static long startTime;
 	private static long endTime;
 	
-	// Send from AudioWorker:
-	public static final String PREDICTION_INTENT = "action.prediction";
-	public static final String PREDICTION_INT = "predictionInt";
-	public static final String PREDICTION_ENTROPY = "predictionEntropy";
-	public static final String PREDICTION_STRING = "predictionString";
-	public static final String CLASSES_DICT = "classesDict";
-	public static final String RESULTCODE = "resultcode";
-	
-	public static final String STATUS_INTENT = "action.status";
-	public static final String CLASS_STRINGS = "classesStrings";
-	public static final String GMM_OBJECT = "gmmObject";
-	public static final String BUFFER_STATUS = "bufferStatus";
-	public static final String BUFFER = "buffer";
-	
 
-	// Received by the state manager:
-	public static final String MODEL_ADAPTION_EXISTING_INTENT = "action.modelAdaptionExisting";
-	public static final String LABEL = "label";
-	
-	public static final String CLASS_NAMES = "classNames";
-	
-	public static final String MODEL_ADAPTION_NEW_INTENT = "action.modelAdaptionNew";
-	public static final String NEW_CLASS_NAME = "newClassName";
-	
-	public static final String MODEL_ADAPTION_FINISHED_INTENT = "action.modelAdaptionFinished";
-	public static final String CALL_CONTEXT_SELECTION_INTENT = "action.callContextSelection";
-	
-	public static final String DISMISS_NOTIFICATION = "action.dismissNotification";
-	
-	public static final String REGISTER_QUERY_NUMBER_RESET = "action.registerQueryNumberReset";
-	
-	public static final String RESET_MAX_QUERY_NUMBER = "action.resetMaxQueryNumber";
-	
-	// Send by the StateManager:
-	public static final String PREDICTION_CHANGED_INTENT = "predictionChangedIntent";
-	public static final String NEW_PREDICTION_STRING = "newPredictionString";
 	
 	public static final int NOTIFICATION_ID = 1;
 	
@@ -175,35 +134,35 @@ public class StateManager extends BroadcastReceiver {
 
 		if (bundle != null) {
 
-			if (intent.getAction().equals(PREDICTION_INTENT)) {
+			if (intent.getAction().equals(Globals.PREDICTION_INTENT)) {
 
-				int resultCode = bundle.getInt(RESULTCODE);
+				int resultCode = bundle.getInt(Globals.RESULTCODE);
 
 				if (resultCode == Activity.RESULT_OK) {
 					
 					// The following lines have to be in exactly the same order as the were put on the bundle (in the AudioWorker):
 
-					currentPrediction = bundle.getInt(PREDICTION_INT);
-					currentEntropy = bundle.getDouble(PREDICTION_ENTROPY);
-					predictionString = bundle.getString(PREDICTION_STRING);
+					currentPrediction = bundle.getInt(Globals.PREDICTION_INT);
+					currentEntropy = bundle.getDouble(Globals.PREDICTION_ENTROPY);
+					predictionString = bundle.getString(Globals.PREDICTION_STRING);
 					
-					classNameArray = bundle.getStringArray(CLASS_STRINGS);
+					classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
 //					Log.i(TAG, classNameArray[0]);
 					
 					bufferStatus = bundle
-							.getBoolean(BUFFER_STATUS);
+							.getBoolean(Globals.BUFFER_STATUS);
 //					Log.i(TAG, String.valueOf(bufferStatus));
 					
-					Serializable s1 = bundle.getSerializable(BUFFER);
+					Serializable s1 = bundle.getSerializable(Globals.BUFFER);
 					if (waitingForFeedback == false) {
 						buffer = (ArrayList<double[]>) s1;
 					}
 //					Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 
-					gmm = bundle.getParcelable(GMM_OBJECT); // Needed??
+					gmm = bundle.getParcelable(Globals.GMM_OBJECT); // Needed??
 
 					Serializable s2 = new HashMap<String, Integer>();
-					s2 = bundle.getSerializable(CLASSES_DICT);
+					s2 = bundle.getSerializable(Globals.CLASSES_DICT);
 //					classesDict = (HashMap<String, Integer>) s2;
 					
 					if (testBool == false) {
@@ -257,7 +216,7 @@ public class StateManager extends BroadcastReceiver {
 					}
 
 					// For each class buffer the last (30) entropy values
-					if (queryBuffer.size() < QUERY_BUFFER_SIZE) {
+					if (queryBuffer.size() < Globals.QUERY_BUFFER_SIZE) {
 						
 						queryBuffer.add(currentEntropy);
 						predBuffer.add(currentPrediction);
@@ -272,7 +231,7 @@ public class StateManager extends BroadcastReceiver {
 					
 					// ----- Set initial threshold -----
 					if (initThresSet.get(currentPrediction) == false) {
-						if (initThresBuffer.get(currentPrediction).size() < INIT_THRES_BUFFER_SIZE) {
+						if (initThresBuffer.get(currentPrediction).size() < Globals.INIT_THRES_BUFFER_SIZE) {
 							// Fill the buffer for the predicted class first:
 							ArrayList<Double> tmpList = initThresBuffer.get(currentPrediction);
 							tmpList.add(currentEntropy);
@@ -298,7 +257,7 @@ public class StateManager extends BroadcastReceiver {
 					if ((thresSet.get(currentPrediction) == false) && 
 							(feedbackReceived.get(currentPrediction) == true)) {
 						
-						if (thresBuffer.get(currentPrediction).size() < THRES_BUFFER_SIZE) {
+						if (thresBuffer.get(currentPrediction).size() < Globals.THRES_BUFFER_SIZE) {
 							// Fill the threshold buffer for the predicted class first:
 							ArrayList<Double> tmpList = thresBuffer.get(currentPrediction);
 							tmpList.add(currentEntropy);
@@ -331,7 +290,7 @@ public class StateManager extends BroadcastReceiver {
 					
 					// ----- Check if we want to query -----
 					if ((thresSet.get(currentPrediction) == true) && 
-							(queryBuffer.size() == QUERY_BUFFER_SIZE)) {
+							(queryBuffer.size() == Globals.QUERY_BUFFER_SIZE)) {
 						
 						Integer[] ds = predBuffer.toArray(new Integer[predBuffer.size()]);							
 						int[] d = ArrayUtils.toPrimitive(ds);
@@ -344,7 +303,7 @@ public class StateManager extends BroadcastReceiver {
 						 * later...
 						 */
 						ArrayList<Double> majElements = new ArrayList<Double>();
-						for (int i=0; i<PRED_BUFFER_SIZE; i++) {
+						for (int i=0; i<Globals.PRED_BUFFER_SIZE; i++) {
 							if (predBuffer.get(i) == mostFreq) {
 								majElements.add(queryBuffer.get(i));
 							}
@@ -362,7 +321,7 @@ public class StateManager extends BroadcastReceiver {
 							
 							//(queryCrit > threshold.get(currentPrediction)) //TODO: xxxxxxxxxxxxxxxx
 							if ((queryCrit > 0) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
-									((System.currentTimeMillis() - prevTime) > minBreak)) {
+									((System.currentTimeMillis() - prevTime) > Globals.minBreak)) {
 								
 								Log.i(TAG, "Threshold exceeded, user queried for current context");
 
@@ -406,9 +365,9 @@ public class StateManager extends BroadcastReceiver {
 					// Send broadcast to change text, if prediction has changed
 					if (!predictionString.equals(prevPredictionString)) {
 						
-						Intent i = new Intent(StateManager.PREDICTION_CHANGED_INTENT);
+						Intent i = new Intent(Globals.PREDICTION_CHANGED_INTENT);
 						Bundle b = new Bundle();
-						b.putString(NEW_PREDICTION_STRING, predictionString);
+						b.putString(Globals.NEW_PREDICTION_STRING, predictionString);
 						i.putExtras(b);
 						context.sendBroadcast(i);
 						
@@ -424,25 +383,25 @@ public class StateManager extends BroadcastReceiver {
 
 			}
 		
-			else if (intent.getAction().equals(MODEL_ADAPTION_EXISTING_INTENT)) {
+			else if (intent.getAction().equals(Globals.MODEL_ADAPTION_EXISTING_INTENT)) {
 				
-				int label = bundle.getInt(LABEL);
+				int label = bundle.getInt(Globals.LABEL);
 				callModelAdaption(label);
 
 			} else if (intent.getAction().equals(
-					MODEL_ADAPTION_FINISHED_INTENT)) {
+					Globals.MODEL_ADAPTION_FINISHED_INTENT)) {
 
 //				Toast.makeText(getBaseContext(),
 //						(String) "Model adaptation finished",
 //						Toast.LENGTH_SHORT).show();
 
-			} else if (intent.getAction().equals(MODEL_ADAPTION_NEW_INTENT)) {
+			} else if (intent.getAction().equals(Globals.MODEL_ADAPTION_NEW_INTENT)) {
 				
-				String newClassName = bundle.getString(NEW_CLASS_NAME);
+				String newClassName = bundle.getString(Globals.NEW_CLASS_NAME);
 
 				requestNewClassFromServer(newClassName);
 				
-			} else if (intent.getAction().equals(CALL_CONTEXT_SELECTION_INTENT)) {
+			} else if (intent.getAction().equals(Globals.CALL_CONTEXT_SELECTION_INTENT)) {
 				
 				callContextSelectionActivity(context);
 				
@@ -450,7 +409,7 @@ public class StateManager extends BroadcastReceiver {
 
 		}
 		
-		if (intent.getAction().equals(DISMISS_NOTIFICATION)) {
+		if (intent.getAction().equals(Globals.DISMISS_NOTIFICATION)) {
 			
 			dismissNotifitcation(context);
 			
@@ -458,14 +417,14 @@ public class StateManager extends BroadcastReceiver {
 			
 		}
 		
-		if (intent.getAction().equals(REGISTER_QUERY_NUMBER_RESET)) {
+		if (intent.getAction().equals(Globals.REGISTER_QUERY_NUMBER_RESET)) {
 			
 			Calendar updateTime = Calendar.getInstance();
 		    updateTime.setTimeZone(TimeZone.getTimeZone("GMT"));
 		    updateTime.set(Calendar.HOUR_OF_DAY, 23);
 		    updateTime.set(Calendar.MINUTE, 59);			
 		    
-		    Intent resetIntent = new Intent(RESET_MAX_QUERY_NUMBER);
+		    Intent resetIntent = new Intent(Globals.RESET_MAX_QUERY_NUMBER);
 	        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
 	        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, updateTime.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
@@ -474,7 +433,7 @@ public class StateManager extends BroadcastReceiver {
 	        
 		} 
 		
-		if (intent.getAction().equals(RESET_MAX_QUERY_NUMBER)) {
+		if (intent.getAction().equals(Globals.RESET_MAX_QUERY_NUMBER)) {
 
 			numQueriesLeft = Globals.MAX_QUERIES_PER_DAY;
 			
@@ -637,7 +596,7 @@ public class StateManager extends BroadcastReceiver {
 			if (gmm.get_string_array().length > 0) {
 				i = new Intent(context, ContextSelection.class);
 				Bundle b = new Bundle();
-				b.putStringArray(CLASS_NAMES, gmm.get_string_array());
+				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
 				i.putExtras(b);
 				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
 				context.startActivity(i);
@@ -663,7 +622,7 @@ public class StateManager extends BroadcastReceiver {
 			if (gmm.get_string_array().length > 0) {
 				i = new Intent(context, ContextSelection.class);
 				Bundle b = new Bundle();
-				b.putStringArray(CLASS_NAMES, gmm.get_string_array());
+				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
 				i.putExtras(b);
 				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
 			}
@@ -777,7 +736,7 @@ public class StateManager extends BroadcastReceiver {
 		long[] vibratePattern = {0, 500}; // Start with 0 delay and vibrate for 500ms
 		
 		// To cancel the query		
-		Intent dismissIntent = new Intent(DISMISS_NOTIFICATION);
+		Intent dismissIntent = new Intent(Globals.DISMISS_NOTIFICATION);
 		PendingIntent dismiss = PendingIntent.getBroadcast(context, 0, dismissIntent, 0);
 		
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(

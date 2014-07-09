@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.ejml.data.DenseMatrix64F;
 
+import com.example.contextrecognition.Globals;
+
 import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
@@ -191,27 +193,27 @@ public class AudioWorker extends IntentService {
 			String predicationString, HashMap<String, Integer> classesDict,
 			GMM gmm, boolean bufferStatus, LinkedList<double[]> buffer,
 			int resultCode) {
-		Intent intent = new Intent(StateManager.PREDICTION_INTENT);
+		Intent intent = new Intent(Globals.PREDICTION_INTENT);
 
 		Bundle bundle = new Bundle();
 
 		
-		bundle.putInt(StateManager.PREDICTION_INT, predictionInt);
-		bundle.putDouble(StateManager.PREDICTION_ENTROPY, predictionEntropy);
-		bundle.putString(StateManager.PREDICTION_STRING, predicationString);
+		bundle.putInt(Globals.PREDICTION_INT, predictionInt);
+		bundle.putDouble(Globals.PREDICTION_ENTROPY, predictionEntropy);
+		bundle.putString(Globals.PREDICTION_STRING, predicationString);
 		
 		//Log.i(TAG, "------------------");
 		//Log.i(TAG, gmm.get_string_array()[2]);
-		bundle.putStringArray(StateManager.CLASS_STRINGS,gmm.get_string_array());
+		bundle.putStringArray(Globals.CLASS_STRINGS,gmm.get_string_array());
 		
-		bundle.putBoolean(StateManager.BUFFER_STATUS, bufferStatus);
-		bundle.putSerializable(StateManager.BUFFER, buffer);
+		bundle.putBoolean(Globals.BUFFER_STATUS, bufferStatus);
+		bundle.putSerializable(Globals.BUFFER, buffer);
 		
-		bundle.putParcelable(StateManager.GMM_OBJECT, gmm); //Needed??
+		bundle.putParcelable(Globals.GMM_OBJECT, gmm); //Needed??
 		
-		bundle.putSerializable(StateManager.CLASSES_DICT, classesDict); //Needed??
+		bundle.putSerializable(Globals.CLASSES_DICT, classesDict); //Needed??
 
-		bundle.putInt(StateManager.RESULTCODE, code);
+		bundle.putInt(Globals.RESULTCODE, code);
 
 		intent.putExtras(bundle);
 		

@@ -81,7 +81,7 @@ public class MainActivity extends ActionBarActivity {
 		Log.i(TAG, "New status: init");
 		
 		// Register the daily reset of the maximum number of queries:
-		Intent i2 = new Intent(StateManager.REGISTER_QUERY_NUMBER_RESET);
+		Intent i2 = new Intent(Globals.REGISTER_QUERY_NUMBER_RESET);
 		context.sendBroadcast(i2);
 	}
 
@@ -91,7 +91,7 @@ public class MainActivity extends ActionBarActivity {
 
 		// Register the broadcast receiver of the MainAcitivity and intent filters:
 		IntentFilter filterMain = new IntentFilter();
-		filterMain.addAction(StateManager.PREDICTION_CHANGED_INTENT);
+		filterMain.addAction(Globals.PREDICTION_CHANGED_INTENT);
 		registerReceiver(receiverMainActivity, filterMain);
 	}
 
@@ -178,7 +178,7 @@ public class MainActivity extends ActionBarActivity {
 
 //				sendQuery(); //TODO
 				
-				Intent intent = new Intent(StateManager.CALL_CONTEXT_SELECTION_INTENT);
+				Intent intent = new Intent(Globals.CALL_CONTEXT_SELECTION_INTENT);
     			Bundle bundle = new Bundle();
     			intent.putExtras(bundle);
     			sendBroadcast(intent);
@@ -191,9 +191,9 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 
-				Intent intent = new Intent(StateManager.MODEL_ADAPTION_EXISTING_INTENT);
+				Intent intent = new Intent(Globals.MODEL_ADAPTION_EXISTING_INTENT);
     			Bundle bundle = new Bundle();
-    			bundle.putInt(StateManager.LABEL, 1);
+    			bundle.putInt(Globals.LABEL, 1);
     			intent.putExtras(bundle);
     			sendBroadcast(intent);
 
@@ -214,8 +214,8 @@ public class MainActivity extends ActionBarActivity {
 			Bundle bundle = intent.getExtras();
 			if (bundle != null) {
 				
-				if (intent.getAction().equals(StateManager.PREDICTION_CHANGED_INTENT)) {
-					setText(bundle.getString(StateManager.NEW_PREDICTION_STRING));
+				if (intent.getAction().equals(Globals.PREDICTION_CHANGED_INTENT)) {
+					setText(bundle.getString(Globals.NEW_PREDICTION_STRING));
 				}
 
 			}
