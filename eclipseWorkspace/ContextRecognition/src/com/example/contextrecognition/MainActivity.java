@@ -237,7 +237,7 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		
+
 		unregisterReceiver(receiverMainActivity);
 
 	}

@@ -320,7 +320,7 @@ public class StateManager extends BroadcastReceiver {
 						//if ((System.currentTimeMillis() - prevTime) > minBreak) {
 							
 							//(queryCrit > threshold.get(currentPrediction)) //TODO: xxxxxxxxxxxxxxxx
-							if ((queryCrit > 0) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
+							if ((queryCrit > threshold.get(currentPrediction)) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
 									((System.currentTimeMillis() - prevTime) > Globals.minBreak)) {
 								
 								Log.i(TAG, "Threshold exceeded, user queried for current context");

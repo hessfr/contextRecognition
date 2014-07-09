@@ -50,6 +50,7 @@ public class Settings extends ActionBarActivity {
         // SeekBar set-up
         querySeekBar = (SeekBar) findViewById(R.id.seekBar);
         querySeekBar.setMax(queryLimit);
+        querySeekBar.setProgress(mPrefs.getInt(Globals.MAX_NUM_QUERIES,10));
         
         querySeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             int newValue = 0;
