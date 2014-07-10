@@ -384,8 +384,10 @@ public class StateManager extends BroadcastReceiver {
 					//=================================================================================
 					//=================================================================================
 
-					// Send broadcast to change text, if prediction has changed
+					// Save to log file and send broadcast to change text, if prediction has changed
 					if (!predictionString.equals(prevPredictionString)) {
+						
+						appendToPredLog(predictionString);
 						
 						Intent i = new Intent(Globals.PREDICTION_CHANGED_INTENT);
 						Bundle b = new Bundle();
@@ -872,6 +874,20 @@ public class StateManager extends BroadcastReceiver {
 		
 		
 		
+	}
+	
+	private void appendToPredLog(String className) {
+		
+		Log.d(TAG, "Appending to prediction log file");
+		
+		try {
+			FileWriter f = new FileWriter(Globals.PRED_LOG_FILE, true);
+			f.write(System.currentTimeMillis() + "\t" + className + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to prediction log file failed");
+			e.printStackTrace();
+		}
 	}
 	
 	private void resetQueriesLeft(Context context) {

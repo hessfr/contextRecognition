@@ -24,6 +24,8 @@ public class Globals {
 	public static final File AL_LOG_FILE = new File(APP_PATH, "AL_Log.txt");
 	
 	public static final File GT_LOG_FILE = new File(APP_PATH, "GT_Log.txt");
+	
+	public static final File PRED_LOG_FILE = new File(APP_PATH, "PRED_Log.txt");
 	/*
 	 * App settings
 	 */
