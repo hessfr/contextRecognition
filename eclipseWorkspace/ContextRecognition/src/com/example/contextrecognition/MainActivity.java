@@ -44,7 +44,7 @@ public class MainActivity extends ActionBarActivity {
 	private Context context = this;
 
 	private String[] contextClasses;
-	private boolean[] currentGT; //same size as contextClasses string array
+	private static Boolean[] currentGT; //same size as contextClasses string array
 	static final String CURRENT_GT = "currentGT";
 	ImageButton changeButton;
 	ImageButton confirmButton;
@@ -82,9 +82,8 @@ public class MainActivity extends ActionBarActivity {
 		addListenerOnButton();
 		contextTV = (TextView) findViewById(R.id.contextTV);
 
-		Log.i(TAG, "--------------- " + FIRST_RUN);
-		
 		if (FIRST_RUN == true) {
+			Log.d(TAG, "First run of MainActivity");
 			
 			// Start the AudioWorker service:
 			Intent i = new Intent(this, AudioWorker.class);
@@ -110,7 +109,15 @@ public class MainActivity extends ActionBarActivity {
 			
 			// Append info to log when the app was started
 			appendToGTLog(true, false, "");
+			
 		} else {
+			
+			// Restore the value of the checkboxes according to the (static) currentGT array:
+			
+			
+			
+			
+			
 			contextTV.setText(CONTEXT_CLASS_STRING);
 		}
 
@@ -118,14 +125,22 @@ public class MainActivity extends ActionBarActivity {
 		
 		if (tmpStringArray != null) {
 			contextClasses = tmpStringArray;
-			currentGT = new boolean[contextClasses.length]; //TODO: only once!!!!!!!!!!!1
-			for(int j=0; j<currentGT.length; j++) {
-				currentGT[j] = false;
+			
+			/*
+			 *  Initialize the array containing the ground truth information (to set the check boxes
+			 *  correctly when we come back to this activity):
+			 */
+			if (FIRST_RUN == true) {
+				currentGT = new Boolean[contextClasses.length];
+				for(int j=0; j<currentGT.length; j++) {
+					currentGT[j] = false;
+				}
 			}
+			
 			createListView(contextClasses);
 			
 		} else {
-			//Set broadcast to request class names:
+			//Send broadcast to request class names:
 			Intent i3 = new Intent(Globals.REQUEST_CLASS_NAMES);
 			context.sendBroadcast(i3);
 		}
@@ -279,8 +294,9 @@ public class MainActivity extends ActionBarActivity {
 	
 	private void createListView(String[] stringArray) {
 		ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
+		ArrayList<Boolean> gtList = new ArrayList<Boolean>(Arrays.asList(currentGT));
 		
-		dataAdapter = new GtSelectorAdapter(this,R.layout.gt_selector_element, contextList);
+		dataAdapter = new GtSelectorAdapter(this,R.layout.gt_selector_element, contextList, gtList);
 		
 		ListView listView = (ListView) findViewById(R.id.gtSelector);
 		//final ArrayAdapter dataAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, stringArray);
@@ -313,7 +329,7 @@ public class MainActivity extends ActionBarActivity {
 				if (tmpStringArray != null) {
 
 					contextClasses = tmpStringArray;
-					currentGT = new boolean[contextClasses.length];
+					currentGT = new Boolean[contextClasses.length];
 					for(int i=0; i<currentGT.length; i++) {
 						currentGT[i] = false;
 					}
@@ -337,13 +353,17 @@ public class MainActivity extends ActionBarActivity {
 	private class GtSelectorAdapter extends ArrayAdapter<String>{
 
 		private ArrayList<String> contextList;
+		private ArrayList<Boolean> cbStatus;
 		
 		//Constructor:
-		public GtSelectorAdapter(Context context, int resourceId, ArrayList<String> contextList) {
+		public GtSelectorAdapter(Context context, int resourceId, ArrayList<String> contextList, 
+				ArrayList<Boolean> cbStatus) {
 			super(context, resourceId, contextList);
 			
 			this.contextList = new ArrayList<String>();
 			this.contextList.addAll(contextList);
+			this.cbStatus = new ArrayList<Boolean>();
+			this.cbStatus.addAll(cbStatus);
 		}
 		
 		private class ViewHolder {
@@ -363,8 +383,8 @@ public class MainActivity extends ActionBarActivity {
 			 
 			   holder = new ViewHolder();
 			   holder.checkBox = (CheckBox) convertView.findViewById(R.id.checkBox1);
-			   convertView.setTag(holder);
-			 
+			   convertView.setTag(holder);		   
+			   
 			   holder.checkBox.setOnClickListener( new View.OnClickListener() {  
 			    	
 				   public void onClick(View v) {  
@@ -414,6 +434,8 @@ public class MainActivity extends ActionBarActivity {
 
 		   String string = contextList.get(position);
 		   holder.checkBox.setText(string);
+		   
+		   holder.checkBox.setChecked(cbStatus.get(position));
 		 
 		   return convertView;
 		 
