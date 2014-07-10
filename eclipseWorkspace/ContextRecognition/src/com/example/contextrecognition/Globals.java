@@ -2,8 +2,15 @@ package com.example.contextrecognition;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 
 public class Globals {
 
@@ -16,6 +23,7 @@ public class Globals {
 
 	public static final File AL_LOG_FILE = new File(APP_PATH, "AL_Log.txt");
 	
+	public static final File GT_LOG_FILE = new File(APP_PATH, "GT_Log.txt");
 	/*
 	 * App settings
 	 */
@@ -29,7 +37,7 @@ public class Globals {
 	public static long minBreak = 10 * 60 * 1000;
 	
 	// Time after which the app data (buffers, threshold, ...) should be periodically persisted to external storage
-	public static long PERSIST_PERIOD = 5000;//10 * 60 * 1000;
+	public static long PERSIST_PERIOD = 10 * 60 * 1000;//10 * 60 * 1000;
 	
 	/*
 	 * Buffer lengthes for the threshold calculation
@@ -78,7 +86,7 @@ public class Globals {
 	public static final String BUFFER = "buffer";
 	
 
-	// Received by the state manager:
+	// Received by the StateManager:
 	public static final String MODEL_ADAPTION_EXISTING_INTENT = "action.modelAdaptionExisting";
 	public static final String LABEL = "label";
 	
@@ -104,4 +112,55 @@ public class Globals {
 	public static final String PREDICTION_CHANGED_INTENT = "predictionChangedIntent";
 	public static final String NEW_PREDICTION_STRING = "newPredictionString";
 	
+	public static final String REQUEST_CLASS_NAMES = "action.requestClassNames";
+	
+	public static final String CLASS_NAMES_SET = "classNamesSet";
+
+	public static final String CONTEXT_CLASSES = "contextClasses";
+	
+	public static final String FIRST_DATA_RECEIVED = "action.firstDataReceived";
+	
+	/*
+	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989
+	 */
+	public static void setStringArrayPref(Context context, String key, String[] array) {
+		ArrayList<String> values = new ArrayList<String>(Arrays.asList(array));
+	    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+	    SharedPreferences.Editor editor = prefs.edit();
+	    JSONArray a = new JSONArray();
+	    for (int i = 0; i < values.size(); i++) {
+	        a.put(values.get(i));
+	    }
+	    if (!values.isEmpty()) {
+	        editor.putString(key, a.toString());
+	    } else {
+	        editor.putString(key, null);
+	    }
+	    editor.commit();
+	}
+
+	/*
+	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989
+	 */
+	public static String[] getStringArrayPref(Context context, String key) {
+	    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+	    if (prefs.getString(key, null) == null) {
+	    	return null;
+	    }
+	    String json = prefs.getString(key, null);
+	    ArrayList<String> urls = new ArrayList<String>();
+	    if (json != null) {
+	        try {
+	            JSONArray a = new JSONArray(json);
+	            for (int i = 0; i < a.length(); i++) {
+	                String url = a.optString(i);
+	                urls.add(url);
+	            }
+	        } catch (JSONException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	    String[] stringArray = new String[urls.size()];
+	    return urls.toArray(stringArray);
+	}
 }

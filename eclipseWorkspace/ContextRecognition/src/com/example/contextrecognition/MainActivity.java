@@ -1,10 +1,10 @@
 package com.example.contextrecognition;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,40 +14,50 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tools.AudioWorker;
-//import com.example.tools.ClassesDictXXX;
-import com.example.tools.GMM;
-import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
-import com.example.tools.PostRequest;
-import com.example.tools.StateManager;
 import com.example.tools.appStatus;
 
 public class MainActivity extends ActionBarActivity {
 
 	private static final String TAG = "MainAcitivty";
 
+	/*
+	 * Indicates if activity is called the first time at this run, i.e.
+	 * it will be true again, when you completely restart the app
+	 */
+	private static boolean FIRST_RUN = true;
+	private static String CONTEXT_CLASS_STRING;
+	
 	private Context context = this;
 
-	public String[] contextClasses;
+	private String[] contextClasses;
+	private boolean[] currentGT; //same size as contextClasses string array
+	static final String CURRENT_GT = "currentGT";
 	ImageButton changeButton;
 	ImageButton confirmButton;
 	SharedPreferences mPrefs;
 	TextView contextTV;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
+	GtSelectorAdapter dataAdapter = null;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
 		Boolean welcomeScreenShown = mPrefs.getBoolean(welcomeScreenShownPref,
@@ -72,29 +82,55 @@ public class MainActivity extends ActionBarActivity {
 		addListenerOnButton();
 		contextTV = (TextView) findViewById(R.id.contextTV);
 
-		// Start the AudioWorker service:
-		Intent i = new Intent(this, AudioWorker.class);
-		startService(i);
-
-		// Set app status to initializing:
-		appStatus.getInstance().set(appStatus.INIT);
-		Log.i(TAG, "New status: init");
+		Log.i(TAG, "--------------- " + FIRST_RUN);
 		
-		// Register the daily reset of the maximum number of queries and periodic data backup:
-		Intent i2 = new Intent(Globals.REGISTER_RECURRING_TASKS);
-		context.sendBroadcast(i2);
-		
-		// Set preferences intitially if it hasn't been set already:
-		int tmp = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);	
-		if (tmp == -1) {
-			SharedPreferences.Editor editor = mPrefs.edit();
-			editor.putInt(Globals.MAX_NUM_QUERIES, 10);
-			editor.commit();
+		if (FIRST_RUN == true) {
 			
-			Log.i(TAG, "Preference commited");
+			// Start the AudioWorker service:
+			Intent i = new Intent(this, AudioWorker.class);
+			startService(i);
+
+			// Set app status to initializing:
+			appStatus.getInstance().set(appStatus.INIT);
+			Log.i(TAG, "New status: init");
+			
+			// Register the daily reset of the maximum number of queries and periodic data backup:
+			Intent i2 = new Intent(Globals.REGISTER_RECURRING_TASKS);
+			context.sendBroadcast(i2);
+			
+			// Set preferences initially if they haven't been set already:
+			int tmp = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);	
+			if (tmp == -1) {
+				SharedPreferences.Editor editor = mPrefs.edit();
+				editor.putInt(Globals.MAX_NUM_QUERIES, 10);
+				editor.commit();
+				
+				Log.i(TAG, "Preference commited");
+			}
+			
+			// Append info to log when the app was started
+			appendToGTLog(true, false, "");
+		} else {
+			contextTV.setText(CONTEXT_CLASS_STRING);
+		}
+
+		String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+		
+		if (tmpStringArray != null) {
+			contextClasses = tmpStringArray;
+			currentGT = new boolean[contextClasses.length]; //TODO: only once!!!!!!!!!!!1
+			for(int j=0; j<currentGT.length; j++) {
+				currentGT[j] = false;
+			}
+			createListView(contextClasses);
+			
+		} else {
+			//Set broadcast to request class names:
+			Intent i3 = new Intent(Globals.REQUEST_CLASS_NAMES);
+			context.sendBroadcast(i3);
 		}
 		
-		
+		setFirstRun();
 	}
 
 	@Override
@@ -104,8 +140,29 @@ public class MainActivity extends ActionBarActivity {
 		// Register the broadcast receiver of the MainAcitivity and intent filters:
 		IntentFilter filterMain = new IntentFilter();
 		filterMain.addAction(Globals.PREDICTION_CHANGED_INTENT);
+		filterMain.addAction(Globals.CLASS_NAMES_SET);
 		registerReceiver(receiverMainActivity, filterMain);
 	}
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+
+		unregisterReceiver(receiverMainActivity);
+
+	}
+	
+	@Override
+	public void onDestroy() {
+	    super.onDestroy();
+	}
+	
+	@Override
+	public void onStart() {
+	    super.onStart();
+	}
+	
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -215,8 +272,24 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
-	public void setText(String str) {
+	private void setText(String str) {
 		contextTV.setText(str);
+		CONTEXT_CLASS_STRING = str;
+	}
+	
+	private void createListView(String[] stringArray) {
+		ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
+		
+		dataAdapter = new GtSelectorAdapter(this,R.layout.gt_selector_element, contextList);
+		
+		ListView listView = (ListView) findViewById(R.id.gtSelector);
+		//final ArrayAdapter dataAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, stringArray);
+		
+		
+		// Assign adapter to ListView
+		listView.setAdapter(dataAdapter);
+		Log.d(TAG, "ListView for ground truth created");
+		
 	}
 
 	private BroadcastReceiver receiverMainActivity = new BroadcastReceiver() {
@@ -224,22 +297,168 @@ public class MainActivity extends ActionBarActivity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			Bundle bundle = intent.getExtras();
+			
 			if (bundle != null) {
 				
 				if (intent.getAction().equals(Globals.PREDICTION_CHANGED_INTENT)) {
 					setText(bundle.getString(Globals.NEW_PREDICTION_STRING));
 				}
 
+			} 
+			
+			if (intent.getAction().equals(Globals.CLASS_NAMES_SET)) {
+				
+				String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+				
+				if (tmpStringArray != null) {
+
+					contextClasses = tmpStringArray;
+					currentGT = new boolean[contextClasses.length];
+					for(int i=0; i<currentGT.length; i++) {
+						currentGT[i] = false;
+					}
+					createListView(contextClasses);
+
+				} else {
+					Log.e(TAG, "String array of context classes could not be read in MainActivity");
+				}
+				
 			}
+			
+			// TODO: when new context class added, rebuild the list view
 		}
 	};
+	
+	/*
+	 * Custom adaptaer for the ground truth selection list view
+	 * 
+	 * Code similar to: http://www.mysamplecode.com/2012/07/android-listview-checkbox-example.html
+	 */
+	private class GtSelectorAdapter extends ArrayAdapter<String>{
 
-	@Override
-	public void onPause() {
-		super.onPause();
+		private ArrayList<String> contextList;
+		
+		//Constructor:
+		public GtSelectorAdapter(Context context, int resourceId, ArrayList<String> contextList) {
+			super(context, resourceId, contextList);
+			
+			this.contextList = new ArrayList<String>();
+			this.contextList.addAll(contextList);
+		}
+		
+		private class ViewHolder {
+			CheckBox checkBox;
+		}
+		
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+		
+		   ViewHolder holder = null;
+		   Log.v("ConvertView", String.valueOf(position));
+		 
+		   if (convertView == null) {
+			   LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			   
+			   convertView = vi.inflate(R.layout.gt_selector_element, null);
+			 
+			   holder = new ViewHolder();
+			   holder.checkBox = (CheckBox) convertView.findViewById(R.id.checkBox1);
+			   convertView.setTag(holder);
+			 
+			   holder.checkBox.setOnClickListener( new View.OnClickListener() {  
+			    	
+				   public void onClick(View v) {  
+				    	 
+					   CheckBox cb = (CheckBox) v;
+					   String contextClass = cb.getText().toString();
+					   
+					   // Find position of this string in the contextClasses array:
+					   int idx = -1;
+					   for(int i=0; i<contextClasses.length; i++) {
+						   if (contextClass.equals(contextClasses[i])) {
+							   idx = i;
+						   }
+					   }
+					   if (cb.isChecked() == true) {
+						   // CheckBox got selected just now:
+						   appendToGTLog(false, true, contextClass);
+						   
+						   /*
+						    * Update this value also in the currentGT array, so that we can restore
+						    * the state of the checkboxes, when activity was closed:
+						    */
+						   if (idx != -1) {
+							   currentGT[idx] = true;
+						   }
+						   
+					   } else {
+						   // CheckBox got unselected just now:
+						   appendToGTLog(false, false, contextClass);
+						   
+						   /*
+						    * Update this value also in the currentGT array, so that we can restore
+						    * the state of the checkboxes, when activity was closed:
+						    */
+						   if (idx != -1) {
+							   currentGT[idx] = false;
+						   }
+						   
+					   }
+				      
+				   }  
+			   });  
+		   } 
+		   else {
+			   holder = (ViewHolder) convertView.getTag();
+		   }
 
-		unregisterReceiver(receiverMainActivity);
+		   String string = contextList.get(position);
+		   holder.checkBox.setText(string);
+		 
+		   return convertView;
+		 
+		  }
+	}
+	
+	private void appendToGTLog(boolean recordingInitialized, boolean isStart, String contextClass) {
+		
+		Log.d(TAG, "Appending to ground truth log");
 
+		if (recordingInitialized == false) {
+			String startOrEnd = null;
+			if (isStart == true) {
+				startOrEnd = "start";
+			} else {
+				startOrEnd = "end";
+			}
+				
+			
+			try {
+				FileWriter f = new FileWriter(Globals.GT_LOG_FILE, true);
+				f.write(System.currentTimeMillis() + "\t" + contextClass + "\t" +  startOrEnd + "\n");
+				f.close();
+			} catch (IOException e) {
+				Log.e(TAG, "Writing to GT log file failed");
+				e.printStackTrace();
+			}
+		} else {
+			
+			try {
+				FileWriter f = new FileWriter(Globals.GT_LOG_FILE, true);
+				f.write(System.currentTimeMillis() + "\t" + "RECORDING_STARTED" + "\t" +  "start" + "\n");
+				f.close();
+			} catch (IOException e) {
+				Log.e(TAG, "Writing to GT log file failed");
+				e.printStackTrace();
+			}
+		}
+
+	}
+	
+	private void setFirstRun() {
+		if(FIRST_RUN == true) {
+			FIRST_RUN = false;
+		}
 	}
 
 }

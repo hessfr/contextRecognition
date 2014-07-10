@@ -1,7 +1,6 @@
 package com.example.tools;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -9,10 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.Timer;
@@ -35,6 +32,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.contextrecognition.ContextSelection;
 import com.example.contextrecognition.Globals;
@@ -114,6 +112,8 @@ public class StateManager extends BroadcastReceiver {
 	// -------------------------------------------------------------
 	
 	private static boolean testBool = false; // for testing only
+	
+	private static boolean classNamesRequested = false; 
 	
 	private static long startTime;
 	private static long endTime;
@@ -219,12 +219,28 @@ public class StateManager extends BroadcastReceiver {
 							
 							resetQueriesLeft(context);
 							
+							Log.e(TAG, "eeeeeeeeeeeeeeeee");
+							Intent i = new Intent(Globals.CLASS_NAMES_SET);
+							context.sendBroadcast(i);
+							
 						}						
 						
 						// These buffers doesn't need to be taken from the last run:
 						queryBuffer = new ArrayList<Double>();
 						predBuffer = new ArrayList<Integer>();
+						
+						// Save String array of the context classes to preferences:
+						Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
 
+						if (classNamesRequested == true) {
+							Intent i = new Intent(Globals.CLASS_NAMES_SET);
+							context.sendBroadcast(i);
+							classNamesRequested = false;
+						}
+						
+						Intent i2 = new Intent(Globals.FIRST_DATA_RECEIVED);
+						context.sendBroadcast(i2);
+						
 						variablesInitialized = true;
 					}					
 					
@@ -375,8 +391,8 @@ public class StateManager extends BroadcastReceiver {
 						Bundle b = new Bundle();
 						b.putString(Globals.NEW_PREDICTION_STRING, predictionString);
 						i.putExtras(b);
-						context.sendBroadcast(i);
-						
+						context.sendBroadcast(i);					
+				
 						prevPredictionString = predictionString;
 					}
 					
@@ -392,14 +408,14 @@ public class StateManager extends BroadcastReceiver {
 			else if (intent.getAction().equals(Globals.MODEL_ADAPTION_EXISTING_INTENT)) {
 				
 				int label = bundle.getInt(Globals.LABEL);
-				callModelAdaption(label);
+				callModelAdaption(context, label);
 
 			} else if (intent.getAction().equals(
 					Globals.MODEL_ADAPTION_FINISHED_INTENT)) {
 
-//				Toast.makeText(getBaseContext(),
-//						(String) "Model adaptation finished",
-//						Toast.LENGTH_SHORT).show();
+				Toast.makeText(context,
+						(String) "Model adaptation finished",
+						Toast.LENGTH_SHORT).show();
 
 			} else if (intent.getAction().equals(Globals.MODEL_ADAPTION_NEW_INTENT)) {
 				
@@ -468,6 +484,12 @@ public class StateManager extends BroadcastReceiver {
 			
 		}
 		
+		if (intent.getAction().equals(Globals.REQUEST_CLASS_NAMES)) {
+
+			classNamesRequested = true;
+			
+		}
+		
 	}
 	
 	// ------------------ methods used for the threshold computation: ------------------
@@ -531,20 +553,20 @@ public class StateManager extends BroadcastReceiver {
 			
 			Log.i(TAG, "Model adation completed");
 
-//			Toast.makeText(getBaseContext(),
+//			Toast.makeText(context,
 //					(String) "Model adaption completed", Toast.LENGTH_SHORT)
 //					.show(); //TODO
 			
 		}
 	};
 	
-	private void callModelAdaption(int label) {
+	private void callModelAdaption(Context context, int label) {
 
 		// Log the AL feedback:
 		if (waitingForFeedback == true) {
-			appendToLog(true, label, currentPrediction, false, false);
+			appendToALLog(true, label, currentPrediction, false, false);
 		} else {
-			appendToLog(true, label, currentPrediction, false, true);
+			appendToALLog(true, label, currentPrediction, false, true);
 		}
 		
 		// Find index of the conversation class, as we do not want to adapt our model for these:
@@ -602,8 +624,8 @@ public class StateManager extends BroadcastReceiver {
 
 		
 		
-//		Toast.makeText(getBaseContext(), (String) "Model is being adapted",
-//				Toast.LENGTH_SHORT).show();
+		Toast.makeText(context, (String) "Model is being adapted",
+				Toast.LENGTH_SHORT).show();
 
 	}
 	
@@ -806,10 +828,10 @@ public class StateManager extends BroadcastReceiver {
 		notificationManager.cancel(NOTIFICATION_ID);
 	}
 	
-	private void appendToLog(boolean feedbackReceived, int contextClassGT, 
+	private void appendToALLog(boolean feedbackReceived, int contextClassGT, 
 			int contextClassPredicted, boolean isNewClass, boolean voluntaryFeedback) {
 		
-		Log.i(TAG, "appendToLog called");
+		Log.i(TAG, "Appending to AL log");
 		
 		String classNameGT = null;
 		String classNamePredicted = gmm.get_class_name(contextClassPredicted);
@@ -971,7 +993,7 @@ public class StateManager extends BroadcastReceiver {
 			
 				waitingForFeedback = false;
 
-				appendToLog(false, -1, currentPrediction, false, false);
+				appendToALLog(false, -1, currentPrediction, false, false);
 				
 				dismissNotifitcation(context);
 			
