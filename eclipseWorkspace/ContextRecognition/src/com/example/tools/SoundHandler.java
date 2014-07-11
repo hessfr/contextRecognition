@@ -3,7 +3,6 @@ package com.example.tools;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
 
 import android.media.AudioFormat;
@@ -11,6 +10,8 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.util.Log;
+
+import com.example.contextrecognition.Globals;
 
 public class SoundHandler extends Thread {
 	
@@ -51,8 +52,6 @@ public class SoundHandler extends Thread {
 		public int numSamplesRead;
 		public short[] data;
 	}
-	
-	private File mRecFile;
 	
 	private long prevTime;
 
@@ -121,12 +120,20 @@ public class SoundHandler extends Thread {
 				short[] dataShort = new short[BUFFER_LENGTH];
 				int nRead = rec.read(dataShort, 0, dataShort.length);
 				
+				byte[] dataByte = short2byte(dataShort);
+				appendToFile(dataByte, Globals.AUDIO_FILE);
+				
+				
+				
+				
 				//Log.i(TAG, "byte: " + data[0] + " " + data[1] + " " + data[2]);
 				//Log.i(TAG, "short: " + dataShort[0] + " " + dataShort[1] + " " + dataShort[2]);
 				//Log.i(TAG, "-------------");
 				
 				//Log.i(TAG, "nRead: " + nRead);
 
+				
+				
 				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
 						|| nRead == AudioRecord.ERROR_BAD_VALUE) {
 
@@ -139,8 +146,6 @@ public class SoundHandler extends Thread {
 				} else {
 					
 					// Write this chunk of data to a file (for evaluation only):
-					
-					//appendToFile(data, mRecFile);
 					
 					// Fill the prediction buffer ("ring-buffer": if full, overwrite the oldest elements...)
 					System.arraycopy(dataShort, 0, predictionBuffer, (pointer * dataShort.length), dataShort.length);
@@ -231,8 +236,6 @@ public class SoundHandler extends Thread {
 				}
 			}
 			
-			mRecFile = createFile("rawAudio");
-			
 			predictionBuffer = new short[PREDICTION_LENGTH];
 			
 			// Start the recording
@@ -250,23 +253,20 @@ public class SoundHandler extends Thread {
 		this.currentlyRecording = false;
 	}
 	
-	private File createFile(String filename) {
-		
-		File dir = Environment.getExternalStorageDirectory();
-		
-		File file;
-		
-		file = new File(dir, filename);
-		
-    	if (file.exists()) 
-    		file.delete();
-    	try {
-    		file.createNewFile();
-		} catch (IOException e) {
-			e.printStackTrace();
+	/*
+	 * Code from http://audiorecordandroid.blogspot.in/
+	 */
+	// Conversion of short to byte
+	private byte[] short2byte(short[] sData) {
+		int shortArrsize = sData.length;
+		byte[] bytes = new byte[shortArrsize * 2];
+
+		for (int i = 0; i < shortArrsize; i++) {
+			bytes[i * 2] = (byte) (sData[i] & 0x00FF);
+			bytes[(i * 2) + 1] = (byte) (sData[i] >> 8);
+			sData[i] = 0;
 		}
-    	
-    	return file;
+		return bytes;
 	}
 	
 	private void appendToFile(byte[] buffer, File file){

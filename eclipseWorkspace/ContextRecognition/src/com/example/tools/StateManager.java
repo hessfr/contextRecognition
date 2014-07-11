@@ -460,7 +460,7 @@ public class StateManager extends BroadcastReceiver {
 	        PendingIntent pendingPersistIntent = PendingIntent.getBroadcast(context, 0, persistIntent, 0);
 
 	        Calendar currentCal = Calendar.getInstance();
-	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, currentCal.getTimeInMillis(), 5000, pendingPersistIntent); //change to 10min or so
+	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, currentCal.getTimeInMillis(), Globals.PERSIST_PERIOD, pendingPersistIntent); //change to 10min or so
 		    
 	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
 

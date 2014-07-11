@@ -26,6 +26,8 @@ public class Globals {
 	public static final File GT_LOG_FILE = new File(APP_PATH, "GT_Log.txt");
 	
 	public static final File PRED_LOG_FILE = new File(APP_PATH, "PRED_Log.txt");
+	
+	public static final File AUDIO_FILE = new File(APP_PATH, "rawAudio");
 	/*
 	 * App settings
 	 */
@@ -39,7 +41,7 @@ public class Globals {
 	public static long minBreak = 10 * 60 * 1000;
 	
 	// Time after which the app data (buffers, threshold, ...) should be periodically persisted to external storage
-	public static long PERSIST_PERIOD = 10 * 60 * 1000;//10 * 60 * 1000;
+	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
 	/*
 	 * Buffer lengthes for the threshold calculation
