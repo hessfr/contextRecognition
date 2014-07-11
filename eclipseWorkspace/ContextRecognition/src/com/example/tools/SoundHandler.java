@@ -30,7 +30,7 @@ public class SoundHandler extends Thread {
 	 * Size of the buffer for the Audiorecord. This has to be larger than BUFFER_LENGTH to avoid potential
 	 * "over-running" and loss of data
 	 */
-	private static int AUDIORECORD_BUFFER = 4608 * 10; //10 * 4096;
+	private static int AUDIORECORD_BUFFER_LENGTH = 4608 * 2; //10 * 4096;
 	
 	/*
 	 * One 2s sequence contains 63 32ms windows, the prediction method is called with this buffer
@@ -113,26 +113,11 @@ public class SoundHandler extends Thread {
 			
 			//Log.e(TAG, "Queue length: " + queue.size());
 				
-			try{
-//				byte[] data = new byte[BUFFER_LENGTH];
-//				int nRead = rec.read(data, 0, data.length);
-				
+			try {
 				short[] dataShort = new short[BUFFER_LENGTH];
 				int nRead = rec.read(dataShort, 0, dataShort.length);
 				
-				byte[] dataByte = short2byte(dataShort);
-				appendToFile(dataByte, Globals.AUDIO_FILE);
-				
-				
-				
-				
-				//Log.i(TAG, "byte: " + data[0] + " " + data[1] + " " + data[2]);
-				//Log.i(TAG, "short: " + dataShort[0] + " " + dataShort[1] + " " + dataShort[2]);
-				//Log.i(TAG, "-------------");
-				
-				//Log.i(TAG, "nRead: " + nRead);
 
-				
 				
 				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
 						|| nRead == AudioRecord.ERROR_BAD_VALUE) {
@@ -145,10 +130,16 @@ public class SoundHandler extends Thread {
 
 				} else {
 					
-					// Write this chunk of data to a file (for evaluation only):
-					
 					// Fill the prediction buffer ("ring-buffer": if full, overwrite the oldest elements...)
 					System.arraycopy(dataShort, 0, predictionBuffer, (pointer * dataShort.length), dataShort.length);
+					
+					// Write this chunk of data to a file (for evaluation only):
+					// we have to convert short to byte array first, then we can use FileOutputStream:
+//					Log.w(TAG, "dataShort: " + dataShort[0]);
+					byte[] dataByte = short2byte(dataShort);
+//					Log.w(TAG, "dataShort: " + dataShort[0]);
+//					Log.w(TAG, "-------------------");
+					appendToFile(dataByte, Globals.AUDIO_FILE);
 					
 					if (pointer < 6) {
 						pointer++;
@@ -211,7 +202,7 @@ public class SoundHandler extends Thread {
 			int mono = AudioFormat.CHANNEL_IN_MONO;
 			int encoding = AudioFormat.ENCODING_PCM_16BIT;		
 			
-			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, AUDIORECORD_BUFFER);
+			this.rec = new AudioRecord(src, RECORDER_SAMPLERATE, mono,encoding, AUDIORECORD_BUFFER_LENGTH);
 			
 		} catch(IllegalArgumentException e){
 			Log.e(TAG, "Error occured while initializing AudioRecorder");

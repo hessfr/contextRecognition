@@ -218,8 +218,7 @@ public class StateManager extends BroadcastReceiver {
 							}
 							
 							resetQueriesLeft(context);
-							
-							Log.e(TAG, "eeeeeeeeeeeeeeeee");
+
 							Intent i = new Intent(Globals.CLASS_NAMES_SET);
 							context.sendBroadcast(i);
 							

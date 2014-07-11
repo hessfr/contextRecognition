@@ -27,7 +27,10 @@ public class Globals {
 	
 	public static final File PRED_LOG_FILE = new File(APP_PATH, "PRED_Log.txt");
 	
+	public static final File START_LOG_FILE = new File(APP_PATH, "START_LOG.txt");
+	
 	public static final File AUDIO_FILE = new File(APP_PATH, "rawAudio");
+	
 	/*
 	 * App settings
 	 */
@@ -66,7 +69,9 @@ public class Globals {
 	 * Client-server interaction
 	 */
 //	public static final String IP = "192.168.0.23";
-	public static final String IP = "172.30.152.238";
+	public static final String IP = "192.168.0.68";
+//	public static final String IP = "172.30.152.238";
+	
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/?";
 	

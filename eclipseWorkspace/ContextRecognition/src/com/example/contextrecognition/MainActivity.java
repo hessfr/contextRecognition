@@ -85,6 +85,8 @@ public class MainActivity extends ActionBarActivity {
 		if (FIRST_RUN == true) {
 			Log.d(TAG, "First run of MainActivity");
 			
+			appendToStartLog();
+			
 			// Start the AudioWorker service:
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);
@@ -111,13 +113,7 @@ public class MainActivity extends ActionBarActivity {
 			appendToGTLog(true, false, "");
 			
 		} else {
-			
-			// Restore the value of the checkboxes according to the (static) currentGT array:
-			
-			
-			
-			
-			
+
 			contextTV.setText(CONTEXT_CLASS_STRING);
 		}
 
@@ -475,6 +471,21 @@ public class MainActivity extends ActionBarActivity {
 			}
 		}
 
+	}
+	
+	private void appendToStartLog() {
+		
+		Log.d(TAG, "Appending to start time of the app to log");
+	
+		try {
+			FileWriter f = new FileWriter(Globals.START_LOG_FILE, true);
+			f.write(System.currentTimeMillis() + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to start log file failed");
+			e.printStackTrace();
+		}
+		
 	}
 	
 	private void setFirstRun() {

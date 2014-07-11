@@ -31,8 +31,6 @@ public class AudioWorker extends IntentService {
 	private String stringRes;
 
 	public static int code = Activity.RESULT_CANCELED;	
-			
-	private int testInt = 0;
 	
 	public AudioWorker() {
 		super("AudioWorker");
