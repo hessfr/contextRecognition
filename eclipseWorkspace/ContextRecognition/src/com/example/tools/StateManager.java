@@ -871,9 +871,6 @@ public class StateManager extends BroadcastReceiver {
 			Log.e(TAG, "Writing to AL log file failed");
 			e.printStackTrace();
 		}
-		
-		
-		
 	}
 	
 	private void appendToPredLog(String className) {
