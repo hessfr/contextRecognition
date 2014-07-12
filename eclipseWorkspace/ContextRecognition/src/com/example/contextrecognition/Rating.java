@@ -56,7 +56,7 @@ public class Rating extends ActionBarActivity {
         	callSettings();
         	return true;
         }
-        if (id == R.id.action_label) {
+        if (id == R.id.action_diary) {
             //Go to settings activity
         	callLabel();
         	return true;
@@ -81,7 +81,7 @@ public class Rating extends ActionBarActivity {
      * Launch Label activity
      * */
     private void callLabel() {
-        Intent i = new Intent(Rating.this, Label.class);
+        Intent i = new Intent(Rating.this, Diary.class);
         startActivity(i);
     }
     /**

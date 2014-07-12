@@ -125,8 +125,11 @@ public class Globals {
 	public static final String REQUEST_CLASS_NAMES = "action.requestClassNames";
 	
 	public static final String CLASS_NAMES_SET = "classNamesSet";
-
+	
+	// Preferences:
 	public static final String CONTEXT_CLASSES = "contextClasses";
+	
+	public static final String CLASS_COUNTS = "classCounts";
 	
 	/*
 	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989
@@ -170,5 +173,49 @@ public class Globals {
 	    }
 	    String[] stringArray = new String[urls.size()];
 	    return urls.toArray(stringArray);
+	}
+	
+	/*
+	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989
+	 */
+	public static void setIntListPref(Context context, String key, ArrayList<Integer> values) {
+		
+	    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+	    SharedPreferences.Editor editor = prefs.edit();
+	    JSONArray a = new JSONArray();
+	    for (int i = 0; i < values.size(); i++) {
+	        a.put(values.get(i));
+	    }
+	    if (!values.isEmpty()) {
+	        editor.putString(key, a.toString());
+	    } else {
+	        editor.putInt(key, -1);
+	    }
+	    editor.commit();
+	}
+
+	/*
+	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989
+	 */
+	public static ArrayList<Integer> getIntListPref(Context context, String key) {
+	    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+	    if (prefs.getString(key, null) == null) {
+	    	return null;
+	    }
+	    String json = prefs.getString(key, null);
+	    ArrayList<Integer> urls = new ArrayList<Integer>();
+	    if (json != null) {
+	        try {
+	            JSONArray a = new JSONArray(json);
+	            for (int i = 0; i < a.length(); i++) {
+	                Integer url = a.getInt(i);
+	                urls.add(url);
+	            }
+	        } catch (JSONException e) {
+	            e.printStackTrace();
+	        }
+	    }
+
+	    return urls;
 	}
 }

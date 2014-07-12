@@ -193,7 +193,7 @@ public class MainActivity extends ActionBarActivity {
 			callSettings();
 			return true;
 		}
-		if (id == R.id.action_label) {
+		if (id == R.id.action_diary) {
 			// Go to label activity
 			callLabel();
 			return true;
@@ -228,7 +228,7 @@ public class MainActivity extends ActionBarActivity {
 	 * Launch Label activity
 	 * */
 	private void callLabel() {
-		Intent i = new Intent(MainActivity.this, Label.class);
+		Intent i = new Intent(MainActivity.this, Diary.class);
 		startActivity(i);
 	}
 

@@ -38,7 +38,7 @@ public class Help extends ActionBarActivity {
         	callSettings();
         	return true;
         }
-        if (id == R.id.action_label) {
+        if (id == R.id.action_diary) {
         	//Go to rating activity
         	callLabel();
         	return true;
@@ -63,7 +63,7 @@ public class Help extends ActionBarActivity {
      * Launch Settings activity
      * */
     private void callLabel() {
-        Intent i = new Intent(Help.this, Label.class);
+        Intent i = new Intent(Help.this, Diary.class);
         startActivity(i);
     }
     /**

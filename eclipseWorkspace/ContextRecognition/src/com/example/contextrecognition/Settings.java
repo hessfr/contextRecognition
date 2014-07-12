@@ -100,7 +100,7 @@ public class Settings extends ActionBarActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
     	//Handle ActionBar clicks
         int id = item.getItemId();
-        if (id == R.id.action_label) {
+        if (id == R.id.action_diary) {
         	//Go to rating activity
         	callLabel();
         	return true;
@@ -123,7 +123,7 @@ public class Settings extends ActionBarActivity {
      * Launch Label activity
      * */
     private void callLabel() {
-        Intent i = new Intent(Settings.this, Label.class);
+        Intent i = new Intent(Settings.this, Diary.class);
         startActivity(i);
     }
     /**

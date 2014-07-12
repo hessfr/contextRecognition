@@ -34,7 +34,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.communication.CheckClassFeasibility;
 import com.example.communication.GetNewModel;
 import com.example.communication.IncorporateNewClass;
 import com.example.contextrecognition.ContextSelection;
@@ -44,7 +43,7 @@ import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
 import com.google.gson.Gson;
 
 /*
- * Handles all broadcasts and holds all prediction var	iables like current context, buffers, class names, ...
+ * Handles all broadcasts and holds all prediction variables like current context, buffers, class names, ...
  * 
  * AL Queries are also sent from here...
  */
@@ -67,6 +66,7 @@ public class StateManager extends BroadcastReceiver {
 //	private static String[] classNameArray;
 //	private static boolean bufferStatus;
 	private static GMM gmm; // Needed??
+	private static ArrayList<Integer> totalCount; // contains number of total predictions for each class (for plotting)
 	
 	// ----- Variables needed to calculate the queryCriteria: -----
 	private static long prevTime = -1000000;
@@ -168,20 +168,24 @@ public class StateManager extends BroadcastReceiver {
 					if (testBool == false) {
 						testBool = true;
 						
+						ArrayList<Integer> a = new ArrayList<Integer>();
+						a.add(11);
+						a.add(33);
+	
 						//requestNewClassFromServer("Restaurant");
 						
-						CheckClassFeasibility feasReq = new CheckClassFeasibility();
-						
-						try {
-							Boolean result = feasReq.execute("Restaurant").get();
-							
-							Log.w(TAG, "Result: " + result);
-							
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
-						}
+//						CheckClassFeasibility feasReq = new CheckClassFeasibility();
+//						
+//						try {
+//							Boolean result = feasReq.execute("Restaurant").get();
+//							
+//							Log.w(TAG, "Result: " + result);
+//							
+//						} catch (InterruptedException e) {
+//							e.printStackTrace();
+//						} catch (ExecutionException e) {
+//							e.printStackTrace();
+//						}
 						
 						
 					}
@@ -208,7 +212,7 @@ public class StateManager extends BroadcastReceiver {
 							initThresBuffer = appData.get_initThresBuffer();
 							thresBuffer = appData.get_thresBuffer();
 							thresQueriedInterval = appData.get_thresQueriedInterval();
-							numQueriesLeft = appData.get_numQueriesLeft();
+							numQueriesLeft = appData.get_numQueriesLeft();	
 
 						} else {
 							/*
@@ -235,7 +239,7 @@ public class StateManager extends BroadcastReceiver {
 								thresBuffer.add(new ArrayList<Double>());
 								thresQueriedInterval.add(-1.0);
 							}
-							
+
 							resetQueriesLeft(context);
 
 							Intent i = new Intent(Globals.CLASS_NAMES_SET);
@@ -256,6 +260,11 @@ public class StateManager extends BroadcastReceiver {
 							classNamesRequested = false;
 						}
 						
+						totalCount = new ArrayList<Integer>();
+						for(int i=0; i<gmm.get_n_classes(); i++) {
+							totalCount.add(0);
+						}
+
 						variablesInitialized = true;
 					}					
 					
@@ -399,6 +408,15 @@ public class StateManager extends BroadcastReceiver {
 					//=================================================================================
 					//=================================================================================
 
+					/*
+					 * Increase the total number of predictions per class to 
+					 * for the predicted one and save to preferences (for plotting)
+					 */
+					
+					totalCount.set(currentPrediction, (totalCount.get(currentPrediction) + 1));
+					Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount); //TODO: this can also be done every minute instead of every 2sec
+					
+					
 					// Save to log file and send broadcast to change text, if prediction has changed
 					if (!predictionString.equals(prevPredictionString)) {
 						
@@ -910,6 +928,7 @@ public class StateManager extends BroadcastReceiver {
 		initThresBuffer.add(new ArrayList<Double>());
 		thresBuffer.add(new ArrayList<Double>());
 		thresQueriedInterval.add(-1.0);
+		totalCount.add(0);
 		
 		// Save String array of the context classes to preferences:
 		Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
