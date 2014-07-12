@@ -39,6 +39,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	
 	private ArrayList<double[]> buffer;
 	private int label;
+	private Context context;
 	
 
 	private static final String TAG = "ModelAdaptor";
@@ -61,14 +62,16 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	}
 
 	public interface onModelAdaptionCompleted{
-        void onModelAdaptionCompleted(GMM newGMM);
+        void onModelAdaptionCompleted(Context context, GMM newGMM);
     }
 
     private onModelAdaptionCompleted listener;	
 	
 	@Override
-	protected GMM doInBackground(Context... arg0) {
+	protected GMM doInBackground(Context... params) {
 
+		context = params[0];
+		
 		GMM oldGMM = new GMM("GMM.json");
 
 		GMM newGMM = null;
@@ -92,11 +95,6 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 			e.printStackTrace();
 		}
 
-		// } else {
-		// Log.e(TAG, "Buffer not ready yet, aborting the adaptation");
-		// return null;
-		// }
-
 		return newGMM;
 	}
 
@@ -107,7 +105,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 				+ newGMM.clf(label).get_n_components() + " components");
 
 		if (listener != null)
-            listener.onModelAdaptionCompleted(newGMM);
+            listener.onModelAdaptionCompleted(context, newGMM);
 		
 		// Save the new GMM to the SD-card and reset the app status to initializing
 		newGMM.dumpJSON();

@@ -566,14 +566,13 @@ public class StateManager extends BroadcastReceiver {
 	private onModelAdaptionCompleted listener = new onModelAdaptionCompleted() {
 
 		@Override
-		
-		public void onModelAdaptionCompleted(GMM newGMM) {
+		public void onModelAdaptionCompleted(Context context, GMM newGMM) {
 			
 			Log.i(TAG, "Model adation completed");
 
-//			Toast.makeText(context,
-//					(String) "Model adaption completed", Toast.LENGTH_SHORT)
-//					.show(); //TODO
+			Toast.makeText(context,
+					(String) "Model adaption completed", Toast.LENGTH_SHORT)
+					.show();
 		}
 	};
 	
