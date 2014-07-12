@@ -15,7 +15,6 @@ import java.util.Map.Entry;
 
 import org.ejml.data.DenseMatrix64F;
 
-import android.os.Environment;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -56,13 +55,14 @@ public class GMM implements Parcelable {
 	}
 	
 	// Parcelable Constructor:
+	@SuppressWarnings("unchecked")
 	public GMM(Parcel in) {
-		this.clfs = in.readArrayList(null); //in.readArrayList(ContextClassModel.class.getClassLoader())
+		this.clfs = in.readArrayList(null);
 		in.readMap(this.classesDict, Map.class.getClassLoader());
 		this.n_classes = in.readInt();
 		this.n_features = in.readInt();
-		this.scale_means = (DenseMatrix64F) in.readSerializable();		//does this work??????????
-		this.scale_stddevs = (DenseMatrix64F) in.readSerializable(); 	//does this work??????????
+		this.scale_means = (DenseMatrix64F) in.readSerializable();
+		this.scale_stddevs = (DenseMatrix64F) in.readSerializable();
 	}
 	
     public static final Parcelable.Creator<GMM> CREATOR = new Parcelable.Creator<GMM>() {
@@ -77,7 +77,7 @@ public class GMM implements Parcelable {
 	
 	@Override
 	public int describeContents() {
-		// TODO Auto-generated method stub
+
 		return 0;
 	}
 
@@ -154,7 +154,7 @@ public class GMM implements Parcelable {
 			}
 
 		} else {
-			//TODO:
+			Log.e(TAG, "Error converting JSON to GMM object: JSON object is empty");
 		}
 	}
 
@@ -171,7 +171,6 @@ public class GMM implements Parcelable {
 		try {
 			f = new FileOutputStream(file);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -179,7 +178,6 @@ public class GMM implements Parcelable {
 			f.write(str.getBytes());
 			f.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

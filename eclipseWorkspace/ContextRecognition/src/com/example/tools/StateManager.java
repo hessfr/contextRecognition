@@ -64,8 +64,8 @@ public class StateManager extends BroadcastReceiver {
 	private static String predictionString;
 	private static String prevPredictionString = "";
 	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
-	private static String[] classNameArray;
-	private static boolean bufferStatus;
+//	private static String[] classNameArray;
+//	private static boolean bufferStatus;
 	private static GMM gmm; // Needed??
 	
 	// ----- Variables needed to calculate the queryCriteria: -----
@@ -118,13 +118,14 @@ public class StateManager extends BroadcastReceiver {
 	
 	private static boolean classNamesRequested = false; 
 	
-	private static long startTime;
-	private static long endTime;
+	//private static long startTime;
+	//private static long endTime;
 	
 	SharedPreferences mPrefs;
 	
 	public static final int NOTIFICATION_ID = 1;
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		
@@ -144,11 +145,11 @@ public class StateManager extends BroadcastReceiver {
 					currentEntropy = bundle.getDouble(Globals.PREDICTION_ENTROPY);
 					predictionString = bundle.getString(Globals.PREDICTION_STRING);
 					
-					classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
+//					classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
 //					Log.i(TAG, classNameArray[0]);
 					
-					bufferStatus = bundle
-							.getBoolean(Globals.BUFFER_STATUS);
+//					bufferStatus = bundle
+//							.getBoolean(Globals.BUFFER_STATUS);
 //					Log.i(TAG, String.valueOf(bufferStatus));
 					
 					Serializable s1 = bundle.getSerializable(Globals.BUFFER);
@@ -159,8 +160,8 @@ public class StateManager extends BroadcastReceiver {
 
 					gmm = bundle.getParcelable(Globals.GMM_OBJECT); // Needed??
 
-					Serializable s2 = new HashMap<String, Integer>();
-					s2 = bundle.getSerializable(Globals.CLASSES_DICT);
+//					Serializable s2 = new HashMap<String, Integer>();
+//					s2 = bundle.getSerializable(Globals.CLASSES_DICT);
 //					classesDict = (HashMap<String, Integer>) s2;
 					
 					// For testing only:
@@ -177,10 +178,8 @@ public class StateManager extends BroadcastReceiver {
 							Log.w(TAG, "Result: " + result);
 							
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (ExecutionException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						
@@ -193,7 +192,7 @@ public class StateManager extends BroadcastReceiver {
 					//============ Handle sending of query, threshold calculations, ... ===============
 					//=================================================================================
 					
-					startTime = System.currentTimeMillis();
+					//startTime = System.currentTimeMillis();
 					
 					// Initialize the variable when receiving the first set of data:
 					if(variablesInitialized == false) {
@@ -385,11 +384,11 @@ public class StateManager extends BroadcastReceiver {
 							}						
 					}
 								
-					long sincePrevEndTime = System.currentTimeMillis() - endTime;
+					//long sincePrevEndTime = System.currentTimeMillis() - endTime;
 					
-					endTime = System.currentTimeMillis();
+					//endTime = System.currentTimeMillis();
 					
-					long diff = endTime-startTime;
+					//long diff = endTime-startTime;
 					
 					//Log.w(TAG, "Time: " + startTime);
 					//Log.w(TAG, "Time: " + endTime);
@@ -413,8 +412,7 @@ public class StateManager extends BroadcastReceiver {
 				
 						prevPredictionString = predictionString;
 					}
-					
-					//setText(predictionString); //TODO
+
 				} else {
 					Log.i(TAG,
 							"Received prediction result not okay, result code "

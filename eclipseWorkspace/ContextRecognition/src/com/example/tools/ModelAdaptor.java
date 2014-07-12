@@ -470,7 +470,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		DenseMatrix64F Sinv = new DenseMatrix64F(n_features, n_features);
 		CommonOps.invert(S, Sinv);
 
-		// TODO: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+		// TODO: XXXXXXXXXXXXXXXXXXXXXXXXX implement mean test here XXXXXXXXXXXxXXXXX
 
 		return false;
 	}
@@ -1054,7 +1054,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 				// matrix:
 				CommonOps.extract(featValues, 0, featValues.numRows, 0, 1,
 						distMean, 0, f);
-			} // TODO: Schauen ob diese Klammer richtig gesetzt!!!
+			}
 
 			DenseMatrix64F distMeanTransp = new DenseMatrix64F(n_features,
 					n_samples);
@@ -1182,7 +1182,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 
 		// Calculate sum for every column
 		DenseMatrix64F colSum = new DenseMatrix64F(1, n_samples);
-		CommonOps.sumCols(exp, colSum); // TODO: verify that exp is not modified
+		CommonOps.sumCols(exp, colSum);
 
 		// Calculate log for each element:
 		DenseMatrix64F logs = new DenseMatrix64F(1, n_samples);
@@ -1202,8 +1202,6 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	 */
 	private DenseMatrix64F lpr(DenseMatrix64F X, DenseMatrix64F weights,
 			DenseMatrix64F means, DenseMatrix64F[] covars) {
-
-		// TODO: test if working properly
 
 		if (X.numCols != means.numCols) {
 			Log.e(TAG, "X has wrong shape" + "\n");

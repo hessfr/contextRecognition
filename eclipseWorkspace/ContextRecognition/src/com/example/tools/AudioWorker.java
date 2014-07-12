@@ -1,20 +1,17 @@
 package com.example.tools;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
 import org.ejml.data.DenseMatrix64F;
-
-import com.example.contextrecognition.Globals;
 
 import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.ResultReceiver;
 import android.util.Log;
+
+import com.example.contextrecognition.Globals;
 
 public class AudioWorker extends IntentService {
 
@@ -38,14 +35,14 @@ public class AudioWorker extends IntentService {
 	
 	@Override
     public void onCreate() {
-        // TODO Auto-generated method stub
+		
         super.onCreate();
         Log.d(TAG, "AudioWorker created");
     }
 	
 	@Override
     public void onDestroy() {
-        // TODO Auto-generated method stub
+		
         super.onDestroy();
         Log.d(TAG, "AudioWorker destroyed");
     }
@@ -59,7 +56,7 @@ public class AudioWorker extends IntentService {
 		featuresExtractor = new FeaturesExtractor();
 		soundHandler = new SoundHandler();
 		clf = new Classifier();
-		gmm = new GMM("GMM.json"); //TODO
+		gmm = new GMM("GMM.json");
 		
 		// Initialize the data handling
 		initializeDataHandling();
@@ -93,7 +90,7 @@ public class AudioWorker extends IntentService {
 					// Call handle data from SoundHandler class
 					super.handleData(data, length, frameLength);
 					
-					long startTimeFX = System.currentTimeMillis();
+					//long startTimeFX = System.currentTimeMillis();
 					
 					// Loop through the audio data and extract our features for each 32ms window
 					for(int i=0; i<63; i++) {
@@ -130,16 +127,16 @@ public class AudioWorker extends IntentService {
 						}	
 					}
 					
-					long endTimeFX = System.currentTimeMillis();
+					//long endTimeFX = System.currentTimeMillis();
 					//Log.i(TAG, "Feature extraction duration: " + (endTimeFX-startTimeFX)); //~2s
 					
 					// If we have 2 seconds of data, call our prediction method and clear the list afterwards again 
 					if (mfccList.size() == 63) {
 						
-						long startTimeClf = System.currentTimeMillis();
+						//long startTimeClf = System.currentTimeMillis();
 						
 						// Convert data to DenseMatrix:
-						double[][] array = new double[mfccList.size()][12]; // TODO: n_features instead of 12
+						double[][] array = new double[mfccList.size()][12];
 						for (int i=0; i<mfccList.size(); i++) {
 						    array[i] = mfccList.get(i);
 						}
@@ -168,7 +165,7 @@ public class AudioWorker extends IntentService {
 							Log.i(TAG, "New status: normal classification");
 						}
 						
-						long endTimeClf = System.currentTimeMillis();
+						//long endTimeClf = System.currentTimeMillis();
 						//Log.i(TAG, "Classification duration: " + (endTimeClf-startTimeClf)); // ~0.5s
 												
 					} else {
@@ -217,28 +214,6 @@ public class AudioWorker extends IntentService {
 		
 		sendBroadcast(intent);
 
-		//Log.i(TAG, "Prediction broadcasted");
-	}
-	
-	/*
-	 *  Converts an LinkedList of double arrays into a EJML DenseMatrix64F
-	 */
-	private DenseMatrix64F convertToEJML(LinkedList<double[]> in) {
-		
-		int nRows = in.size();
-		int nCols = in.get(0).length;
-		
-		DenseMatrix64F out = new DenseMatrix64F(nRows, nCols);
-		
-		for(int r=0; r<nRows; r++) {
-			for(int c=0; c<nCols; c++) {
-				out.set(r, c, in.get(r)[c]);
-			}
-			
-		}
-		
-		return out;
-		
-	}
-	
+		//Log.d(TAG, "Prediction broadcasted");
+	}	
 }

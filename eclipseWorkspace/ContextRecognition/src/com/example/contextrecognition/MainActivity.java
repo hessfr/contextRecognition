@@ -25,7 +25,6 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.tools.AudioWorker;
 import com.example.tools.appStatus;
@@ -308,7 +307,6 @@ public class MainActivity extends ActionBarActivity {
 	}
 
 	private BroadcastReceiver receiverMainActivity = new BroadcastReceiver() {
-		@SuppressWarnings("unchecked")
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			Bundle bundle = intent.getExtras();
@@ -339,13 +337,11 @@ public class MainActivity extends ActionBarActivity {
 				}
 				
 			}
-			
-			// TODO: when new context class added, rebuild the list view
 		}
 	};
 	
 	/*
-	 * Custom adaptaer for the ground truth selection list view
+	 * Custom adapter for the ground truth selection list view
 	 * 
 	 * Code similar to: http://www.mysamplecode.com/2012/07/android-listview-checkbox-example.html
 	 */

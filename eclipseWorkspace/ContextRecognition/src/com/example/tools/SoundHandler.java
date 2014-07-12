@@ -8,7 +8,6 @@ import java.util.LinkedList;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.os.Environment;
 import android.util.Log;
 
 import com.example.contextrecognition.Globals;
@@ -20,9 +19,6 @@ public class SoundHandler extends Thread {
 	private AudioRecord rec = null;
 	
 	private boolean currentlyRecording = false;
-	
-	// If there is more than one sample in the queue, do not continue the recording and process all elements first:
-	private boolean processQueueFirst = false; 
 
 	private static int BUFFER_LENGTH = 4608; //4096; // Size of the chunks of data we read in using AudioRecord.read()
 	
@@ -45,15 +41,13 @@ public class SoundHandler extends Thread {
 	
 	private Object blockSync = new Object();
 	
-	public static final int RECORDER_SAMPLERATE = 16000; //TODO: better define this somewhere else??
+	public static final int RECORDER_SAMPLERATE = 16000;
 	
 	private LinkedList<queueElement> queue = new LinkedList<queueElement>(); // contains the raw audio data, each element is 2 seconds long
 	private class queueElement{
 		public int numSamplesRead;
 		public short[] data;
 	}
-	
-	private long prevTime;
 
 	// Constructor:
 	public SoundHandler(){		

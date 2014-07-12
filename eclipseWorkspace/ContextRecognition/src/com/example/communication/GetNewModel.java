@@ -21,7 +21,6 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 
 import com.example.contextrecognition.Globals;

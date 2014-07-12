@@ -12,8 +12,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 
-import com.example.tools.StateManager;
-
 public class ContextSelection extends ListActivity {
     
 	private static final String TAG = "ContextSelection";
@@ -54,7 +52,8 @@ public class ContextSelection extends ListActivity {
       
     }
     
-    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
       String item = (String) getListAdapter().getItem(position);
       

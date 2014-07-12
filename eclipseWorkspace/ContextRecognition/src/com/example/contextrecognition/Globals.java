@@ -13,7 +13,6 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 
 public class Globals {
-
 	
 	public static final String APP_FOLDER = "ContextRecognition";
 	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
