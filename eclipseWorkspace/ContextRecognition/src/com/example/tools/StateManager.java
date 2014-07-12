@@ -34,6 +34,9 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.communication.CheckClassFeasibility;
+import com.example.communication.GetNewModel;
+import com.example.communication.IncorporateNewClass;
 import com.example.contextrecognition.ContextSelection;
 import com.example.contextrecognition.Globals;
 import com.example.contextrecognition.R;
@@ -160,12 +163,29 @@ public class StateManager extends BroadcastReceiver {
 					s2 = bundle.getSerializable(Globals.CLASSES_DICT);
 //					classesDict = (HashMap<String, Integer>) s2;
 					
-					// For testing: send query just at the start:
-//					if (testBool == false) {
-//						testBool = true;
-//						sendQuery(context);
-//						//requestNewClassFromServer("Restaurant");
-//					}
+					// For testing only:
+					if (testBool == false) {
+						testBool = true;
+						
+						//requestNewClassFromServer("Restaurant");
+						
+						CheckClassFeasibility feasReq = new CheckClassFeasibility();
+						
+						try {
+							Boolean result = feasReq.execute("Restaurant").get();
+							
+							Log.w(TAG, "Result: " + result);
+							
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						
+					}
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 
@@ -236,9 +256,6 @@ public class StateManager extends BroadcastReceiver {
 							context.sendBroadcast(i);
 							classNamesRequested = false;
 						}
-						
-						Intent i2 = new Intent(Globals.FIRST_DATA_RECEIVED);
-						context.sendBroadcast(i2);
 						
 						variablesInitialized = true;
 					}					
@@ -422,7 +439,7 @@ public class StateManager extends BroadcastReceiver {
 				
 				String newClassName = bundle.getString(Globals.NEW_CLASS_NAME);
 
-				requestNewClassFromServer(newClassName);
+				requestNewClassFromServer(context, newClassName);
 				
 			} else if (intent.getAction().equals(Globals.CALL_CONTEXT_SELECTION_INTENT)) {
 				
@@ -557,7 +574,6 @@ public class StateManager extends BroadcastReceiver {
 //			Toast.makeText(context,
 //					(String) "Model adaption completed", Toast.LENGTH_SHORT)
 //					.show(); //TODO
-			
 		}
 	};
 	
@@ -580,54 +596,42 @@ public class StateManager extends BroadcastReceiver {
 		
 		if (label != conversationIdx) {
 			
-			Log.i(TAG, "Model adaption called for class " + String.valueOf(label));	
-			Log.i(TAG, "waitingForFeedback: " + waitingForFeedback);
+			Log.i(TAG, "Model adaption called for class " + String.valueOf(label));
+			
+			waitingForFeedback = false;
 			
 			new ModelAdaptor(buffer, label, listener).execute();
 			
-			// If the feedback is a response to a query the system sent out, clear all buffer values etc.
-			if (waitingForFeedback == true) {
+			// Clear all buffer values etc.
 				
-				feedbackReceived.set(label, true);
+			feedbackReceived.set(label, true);
+			
+			// Calculate first part of the new threshold
+			thresQueriedInterval.set(label, tmpQueryCrit);
+			
+			// Flush the buffers
+			queryBuffer.clear();
+			predBuffer.clear();
+			for(int i=0; i<gmm.get_n_classes(); i++) {
+				ArrayList<Double> tmp = thresBuffer.get(i);
+				tmp.clear();
+				thresBuffer.set(i, tmp);
 				
-				// Calculate first part of the new threshold
-				thresQueriedInterval.set(label, tmpQueryCrit);
+				thresSet.set(i, false);
 				
-				// Flush the buffers
-				queryBuffer.clear();
-				predBuffer.clear();
-				for(int i=0; i<gmm.get_n_classes(); i++) {
-					ArrayList<Double> tmp = thresBuffer.get(i);
-					tmp.clear();
-					thresBuffer.set(i, tmp);
-					
-					thresSet.set(i, false);
-					
-					if (feedbackReceived.get(i) == false) {
-						ArrayList<Double> tmp2 = initThresBuffer.get(i);
-						tmp2.clear();
-						initThresBuffer.set(i, tmp2);
-					}
+				if (feedbackReceived.get(i) == false) {
+					ArrayList<Double> tmp2 = initThresBuffer.get(i);
+					tmp2.clear();
+					initThresBuffer.set(i, tmp2);
 				}
-
-			} else {
-				
-				//TODO: do we have to flush all buffers as well here ???
-				
-				
 			}
+
+			Toast.makeText(context, (String) "Model is being adapted",
+					Toast.LENGTH_SHORT).show();
 			
 		} else {
 			Log.i(TAG, "Conversation class will not be incorporated into our model");
 		}
-		
-		waitingForFeedback = false; //TODO: better here, or before the model adaption is beign executed??
-
-		
-		
-		Toast.makeText(context, (String) "Model is being adapted",
-				Toast.LENGTH_SHORT).show();
-
 	}
 	
 	/*
@@ -683,36 +687,63 @@ public class StateManager extends BroadcastReceiver {
 		return i;
 	}
 	
-	private void requestNewClassFromServer(String newClassName) {
-
+	private void requestNewClassFromServer(Context context, String newClassName) {
+	
 		Log.i(TAG, "Requesting new context class " + newClassName
 				+ " from server");
+		
+		waitingForFeedback = false;
 
-		PostRequest postReq = new PostRequest();
+		IncorporateNewClass postReq = new IncorporateNewClass();
 		//String filenameOnServer = null;
 		
 		try {
 
 			String filenameOnServer = postReq.execute(newClassName).get();
 
-//			// Remove quotation marks:
-//			filenameOnServer = filenameOnServer.substring(1, filenameOnServer.length()-1);
-			Log.i(TAG, "xxxxxxxxxxxxxx Filename on server: " + filenameOnServer);
-
-			GetRequest getReq = new GetRequest();
-			String tmp = getReq.execute(filenameOnServer).get();			
-	        
 			// Now check periodically if the computation on server is finished
-//		    Timer t = new Timer();
-//		    t.schedule(new TimerTask() {
-//
-//		        public void run() {
-//
-//
-//		            //Your code will be here 
-//
-//		        }
-//		      }, 1000);
+			TimerTaskGet task = new TimerTaskGet(context, filenameOnServer) {
+				
+				private int counter;
+				
+				public void run() {
+		        	
+		        	GetNewModel getReq = new GetNewModel();
+					Boolean res = false;
+					
+					try {
+						
+						res = getReq.execute(filenameOnServer).get();
+						
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+					}
+					
+					if (res == true) {
+						
+						// Model received from the server:
+						Log.i(TAG, "New classifier received from server");
+						onNewClassIncorporated(context);
+						this.cancel();
+
+					}
+					
+					if(++counter == Globals.MAX_RETRY_NEW_CLASS) {
+						Log.e(TAG, "Server timeout, model adaption failed, as server didn't provide new classifier"
+								+ "with the specified time limit");
+						this.cancel();
+					}
+
+
+					Log.i(TAG, "Waiting for new classifier from server");
+		        }
+			};
+			
+		    Timer timer = new Timer();
+	        timer.schedule(task, 0, Globals.POLLING_INTERVAL_NEW_CLASS);
+		  
 
 		} catch (InterruptedException e) {
 
@@ -722,58 +753,26 @@ public class StateManager extends BroadcastReceiver {
 			e.printStackTrace();
 		}
 		
-		// If the feedback is a response to a query the system sent out, clear all buffer values etc. first
-		if (waitingForFeedback == true) {
+		/*
+		 *  If the feedback is a response to a query the system sent out, clear all buffer values
+		 *  immediately (even before we actually incorporate the new class into the model):
+		 */
+		// Flush the buffers...
+		queryBuffer.clear();
+		predBuffer.clear();
+		for (int i = 0; i < gmm.get_n_classes(); i++) {
+			ArrayList<Double> tmp = thresBuffer.get(i);
+			tmp.clear();
+			thresBuffer.set(i, tmp);
 
-			// Flush the buffers
-			queryBuffer.clear();
-			predBuffer.clear();
-			for (int i = 0; i < gmm.get_n_classes(); i++) {
-				ArrayList<Double> tmp = thresBuffer.get(i);
-				tmp.clear();
-				thresBuffer.set(i, tmp);
+			thresSet.set(i, false);
 
-				thresSet.set(i, false);
-
-				if (feedbackReceived.get(i) == false) {
-					ArrayList<Double> tmp2 = initThresBuffer.get(i);
-					tmp2.clear();
-					initThresBuffer.set(i, tmp2);
-				}
+			if (feedbackReceived.get(i) == false) {
+				ArrayList<Double> tmp2 = initThresBuffer.get(i);
+				tmp2.clear();
+				initThresBuffer.set(i, tmp2);
 			}
-			
-			
-			//TODO: xxxxxxxxxx
-			
-			waitingForFeedback = false;
-
-		} else {
-			
-			//TODO: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-			
-			// Update the number of queries (for evaluation only)
-//			numQueries.set(label, (numQueries.get(label) + 1));
-//
-//			feedbackReceived.set(label, true);
-//
-//			// Calculate first part of the new threshold
-//			thresQueriedInterval.set(label, tmpQueryCrit);
-
-			
 		}
-		
-		
-		
-		
-		//TODO: increase all the ArrayLists etc. in this class!!!
-		
-		
-		
-		
-		
-		
-		
-
 	}
 	
 	private void sendQuery(Context context) {
@@ -898,6 +897,28 @@ public class StateManager extends BroadcastReceiver {
 			Log.e(TAG, "Got invalid value from preference, could not reset reset max number of queries");
 		}
 
+	}
+	
+	/*
+	 * When a new context class was added to the model, we have to incorporate the new class into
+	 * the threshold buffers, class names, ...
+	 */
+	private void onNewClassIncorporated(Context context) {
+		
+		// Create entry for the new class at all lists used for the threshold computation:
+		initThresSet.add(false);
+		thresSet.add(false);
+		feedbackReceived.add(false);
+		threshold.add(-1.0);
+		initThresBuffer.add(new ArrayList<Double>());
+		thresBuffer.add(new ArrayList<Double>());
+		thresQueriedInterval.add(-1.0);
+		
+		// Save String array of the context classes to preferences:
+		Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
+		
+		Intent i = new Intent(Globals.CLASS_NAMES_SET);
+		context.sendBroadcast(i);		
 	}
 	
 	/* 

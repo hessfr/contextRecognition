@@ -1,4 +1,4 @@
-package com.example.tools;
+package com.example.communication;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -26,16 +26,24 @@ import android.util.Log;
 
 import com.example.contextrecognition.Globals;
 
-public class GetRequest extends AsyncTask<String, Void, String> {
+/*
+ * This is the HTTP GET request to download the new model under the given URL. It
+ * replaces the current JSON classifier object with the new classifier. The 
+ * IncorporateNewClass request has to be call first, in order to initiate the training
+ * on the server
+ */
+public class GetNewModel extends AsyncTask<String, Void, Boolean> {
 	
 	private static final String TAG = "GetRequest";
 	
+	private Boolean result = false;
+	
 	@Override
-	protected String doInBackground(String... params) {
+	protected Boolean doInBackground(String... params) {
 		
 		String filenameOnServer = params[0];
 		
-		Log.i(TAG,"GetRequest called");
+		Log.d(TAG,"GetRequest called");
 
 	    //Add parameters to URL
 	    List<NameValuePair> par = new LinkedList<NameValuePair>();
@@ -53,16 +61,29 @@ public class GetRequest extends AsyncTask<String, Void, String> {
 		HttpClient client = new DefaultHttpClient(httpParameters);
         HttpGet get = new HttpGet(URL);
         
-		// Send the POST request:
 	    try {
 	    	HttpResponse response = client.execute(get);
 
 	    	if (response.getStatusLine().getStatusCode() == 200) {
 	    		// This is our new classifier. Overwrite the existing one:
 	    		
-	    		String jsonString = EntityUtils.toString(response.getEntity());
+	    		String receveivedString = EntityUtils.toString(response.getEntity());
+	    		String jsonString = null;
+
+	    		// Abort and return false if computation on server not finished yet:
+	    		if (receveivedString.equals("-1")) {
+
+	    			return false;
+	    			
+	    		} else {
+	    			
+	    			jsonString = receveivedString;
+	    			
+	    		}
+
+	    		//TODO: stop prediction here
 	    		
-	    		//String filename = "111_newGMM_test.json";
+	    		// Replace the current GMM with the new one:
 	    		String filename = "GMM.json";
 	    		
 	    		File file = new File(Globals.APP_PATH,filename);
@@ -71,12 +92,14 @@ public class GetRequest extends AsyncTask<String, Void, String> {
 	    			FileWriter out = new FileWriter(file);
 	                out.write(jsonString);
 	                out.close();
+	                
+	                //TODO send broadcast that new class incorporated and start prediction again
 	    	    }
 	    	    catch (IOException e) {
 	    	        Log.e("Exception", "File write failed: " + e.toString());
 	    	    } 
 	    		
-//	    		Log.i(TAG,EntityUtils.toString(response.getEntity()));
+	    		result = true;
 	    		
 	    	} else {
 	    		Log.e(TAG, "Invalid response received after GET request");
@@ -93,19 +116,19 @@ public class GetRequest extends AsyncTask<String, Void, String> {
 	        e.printStackTrace();
 	    }
 
-	    return null; //TODO
+	    return result;
 	}
 	
 	@Override
-    protected void onPostExecute(String result) {
+    protected void onPostExecute(Boolean result) {
     	//super.onPostExecute(result);
-    	
-    	returnResults();
+		
+		returnResults();
     }
     
-    public String returnResults() {
+    public Boolean returnResults() {
 
-    	return null;
+    	return result;
     }
 
 }

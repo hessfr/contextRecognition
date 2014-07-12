@@ -75,6 +75,8 @@ public class Globals {
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/?";
 	
+	public static final long POLLING_INTERVAL_NEW_CLASS = 60 * 1000; // = 1min
+	public static final long MAX_RETRY_NEW_CLASS = 2 * 60; // = 2h
 	
 	
 	/*
@@ -126,8 +128,6 @@ public class Globals {
 	public static final String CLASS_NAMES_SET = "classNamesSet";
 
 	public static final String CONTEXT_CLASSES = "contextClasses";
-	
-	public static final String FIRST_DATA_RECEIVED = "action.firstDataReceived";
 	
 	/*
 	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989

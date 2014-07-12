@@ -141,6 +141,9 @@ public class MainActivity extends ActionBarActivity {
 			context.sendBroadcast(i3);
 		}
 		
+		
+		
+		
 		setFirstRun();
 	}
 
@@ -370,7 +373,6 @@ public class MainActivity extends ActionBarActivity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 		
 		   ViewHolder holder = null;
-		   Log.v("ConvertView", String.valueOf(position));
 		 
 		   if (convertView == null) {
 			   LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);

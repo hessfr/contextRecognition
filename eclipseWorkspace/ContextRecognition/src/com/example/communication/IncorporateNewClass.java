@@ -1,4 +1,4 @@
-package com.example.tools;
+package com.example.communication;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,7 +28,12 @@ import android.util.Log;
 
 import com.example.contextrecognition.Globals;
 
-public class PostRequest extends AsyncTask<String, Void, String> {
+/*
+ * This is a HTTP POST request to request a new context class from the server. Once the server
+ * receives this request, it will start training the new class and return a URL, where the
+ * new classifier can be downloaded when the training is completed
+ */
+public class IncorporateNewClass extends AsyncTask<String, Void, String> {
 	
 	private static final String TAG = "PostRequest";
 
