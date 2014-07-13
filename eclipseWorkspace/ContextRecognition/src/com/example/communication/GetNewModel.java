@@ -66,7 +66,7 @@ public class GetNewModel extends AsyncTask<String, Void, Boolean> {
 	    	if (response.getStatusLine().getStatusCode() == 200) {
 	    		// This is our new classifier. Overwrite the existing one:
 	    		
-	    		String receveivedString = EntityUtils.toString(response.getEntity());
+	    		String receveivedString = EntityUtils.toString(response.getEntity());	    		
 	    		String jsonString = null;
 
 	    		// Abort and return false if computation on server not finished yet:

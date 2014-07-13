@@ -5,6 +5,7 @@ import subprocess
 import os
 from random import randint
 from feasibilityCheck import feasibilityCheck
+from GetKnownClasses import GetKnownClassesJSON
 
 class AddContextClass():
 
@@ -71,6 +72,22 @@ class FeasibilityCheck():
         res = feasibilityCheck(classname)
         
         return res
+        
+class GetKnownClasses():
+    
+    exposed = True    
+    
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def POST(self):
+        
+        print("--- GetKnownClasses POST request ---")
+        
+        classList = GetKnownClassesJSON()
+        
+        json_string = json.dumps(classList)
+
+        return json_string
 
 """ Mount the classes to the right URL: """
 
@@ -86,6 +103,14 @@ cherrypy.tree.mount(FeasibilityCheck(), '/feasibilitycheck',  {
     '/': {
         'request.dispatch': cherrypy.dispatch.MethodDispatcher()
         }})
+        
+cherrypy.tree.mount(GetKnownClasses(), '/getknownclasses', {
+    '/': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'tools.json_out.on': True,
+        'tools.response_headers.on': True,
+        }})
+        
 
 conf_global = {
     '/': { 'request.dispatch': cherrypy.dispatch.MethodDispatcher() },

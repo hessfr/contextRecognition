@@ -35,6 +35,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.communication.CheckClassFeasibility;
+import com.example.communication.GetKnownClasses;
 import com.example.communication.GetNewModel;
 import com.example.communication.IncorporateNewClass;
 import com.example.contextrecognition.ContextSelection;
@@ -389,13 +390,26 @@ public class StateManager extends BroadcastReceiver {
 
 					
 					// For testing only:
-//					if (testBool == false) {
-//						testBool = true;
-//	
-//						requestNewClassFromServer(context, "Restaurant");
-//						
-//						
-//					}
+					if (testBool == false) {
+						testBool = true;
+	
+						GetKnownClasses getKnownClasses = new GetKnownClasses();
+						
+						String[] knownClasses = null;
+						
+						try {
+							knownClasses = getKnownClasses.execute().get();
+							
+							Log.i(TAG, "xxxxxxxx " + knownClasses[0]);
+							
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							e.printStackTrace();
+						}
+						
+						
+					}
 					
 					
 					/*

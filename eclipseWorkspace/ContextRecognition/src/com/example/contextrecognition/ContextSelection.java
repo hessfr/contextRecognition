@@ -1,5 +1,8 @@
 package com.example.contextrecognition;
 
+import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
@@ -11,6 +14,8 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
+
+import com.example.communication.GetKnownClasses;
 
 public class ContextSelection extends ListActivity {
     
@@ -83,10 +88,43 @@ public class ContextSelection extends ListActivity {
 			final AutoCompleteTextView autoCompleteTV = new AutoCompleteTextView(this);
 			alertDialogBuilder.setView(autoCompleteTV);
 			
-			String[] contextClassesFromServer = getResources().
-					   getStringArray(R.array.context_classes_from_server);
+			GetKnownClasses getKnownClasses = new GetKnownClasses();
 			
-			final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, contextClassesFromServer);
+			String[] contextClassesFromServer = null;
+			String[] validSuggestions = null; // without the already trained classes
+			
+			try {
+				contextClassesFromServer = getKnownClasses.execute().get();
+				
+				// Remove the already trained classes from the array:
+				String[] trainedClasses = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
+				ArrayList<String> tmp = new ArrayList<String>();
+				
+				for(int j=0; j<contextClassesFromServer.length; j++) {
+					boolean classAlreadyTrained = false;
+					for(int k=0; k<trainedClasses.length; k++) {
+						if (contextClassesFromServer[j].equals(trainedClasses[k])) {
+							classAlreadyTrained = true;
+						}
+					}
+					
+					if (classAlreadyTrained == false) {
+						tmp.add(contextClassesFromServer[j]);
+					}
+				}
+				
+				// Convert the ArrayList to a String array:
+				validSuggestions = new String[tmp.size()];
+				validSuggestions = tmp.toArray(validSuggestions);
+				
+				
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+			
+			final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, validSuggestions);
 			
 			autoCompleteTV.setOnClickListener(new OnClickListener() {
 

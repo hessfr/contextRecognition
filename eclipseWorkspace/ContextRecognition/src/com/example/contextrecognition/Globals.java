@@ -74,6 +74,7 @@ public class Globals {
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/";
 	public static final String ADD_CLASS_URL = BASE_URL + "addclass/?";
+	public static final String GET_KNOWN_CLASSES_URL = BASE_URL + "getknownclasses/?";
 	public static final String FEASIBILITY_CHECK_URL = BASE_URL + "feasibilitycheck/?";
 	
 	// Results of the feasibility check (String have to match results from server):
