@@ -98,7 +98,7 @@ public class Diary extends ActionBarActivity {
 			j++;
 		}
             
-        pg.setDuration(1000);
+        pg.setDuration(2000);
         pg.setInterpolator(new AccelerateDecelerateInterpolator());
         pg.animateToGoalValues();
         

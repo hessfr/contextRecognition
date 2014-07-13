@@ -34,6 +34,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.communication.CheckClassFeasibility;
 import com.example.communication.GetNewModel;
 import com.example.communication.IncorporateNewClass;
 import com.example.contextrecognition.ContextSelection;
@@ -164,31 +165,7 @@ public class StateManager extends BroadcastReceiver {
 //					s2 = bundle.getSerializable(Globals.CLASSES_DICT);
 //					classesDict = (HashMap<String, Integer>) s2;
 					
-					// For testing only:
-					if (testBool == false) {
-						testBool = true;
-						
-						ArrayList<Integer> a = new ArrayList<Integer>();
-						a.add(11);
-						a.add(33);
-	
-						//requestNewClassFromServer("Restaurant");
-						
-//						CheckClassFeasibility feasReq = new CheckClassFeasibility();
-//						
-//						try {
-//							Boolean result = feasReq.execute("Restaurant").get();
-//							
-//							Log.w(TAG, "Result: " + result);
-//							
-//						} catch (InterruptedException e) {
-//							e.printStackTrace();
-//						} catch (ExecutionException e) {
-//							e.printStackTrace();
-//						}
-						
-						
-					}
+
 					
 					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 
@@ -212,7 +189,9 @@ public class StateManager extends BroadcastReceiver {
 							initThresBuffer = appData.get_initThresBuffer();
 							thresBuffer = appData.get_thresBuffer();
 							thresQueriedInterval = appData.get_thresQueriedInterval();
-							numQueriesLeft = appData.get_numQueriesLeft();	
+							numQueriesLeft = appData.get_numQueriesLeft();
+							
+							totalCount = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
 
 						} else {
 							/*
@@ -239,6 +218,11 @@ public class StateManager extends BroadcastReceiver {
 								thresBuffer.add(new ArrayList<Double>());
 								thresQueriedInterval.add(-1.0);
 							}
+							
+							totalCount = new ArrayList<Integer>();
+							for(int i=0; i<gmm.get_n_classes(); i++) {
+								totalCount.add(0);
+							}
 
 							resetQueriesLeft(context);
 
@@ -258,11 +242,6 @@ public class StateManager extends BroadcastReceiver {
 							Intent i = new Intent(Globals.CLASS_NAMES_SET);
 							context.sendBroadcast(i);
 							classNamesRequested = false;
-						}
-						
-						totalCount = new ArrayList<Integer>();
-						for(int i=0; i<gmm.get_n_classes(); i++) {
-							totalCount.add(0);
 						}
 
 						variablesInitialized = true;
@@ -408,6 +387,17 @@ public class StateManager extends BroadcastReceiver {
 					//=================================================================================
 					//=================================================================================
 
+					
+					// For testing only:
+//					if (testBool == false) {
+//						testBool = true;
+//	
+//						requestNewClassFromServer(context, "Restaurant");
+//						
+//						
+//					}
+					
+					
 					/*
 					 * Increase the total number of predictions per class to 
 					 * for the predicted one and save to preferences (for plotting)
@@ -449,7 +439,7 @@ public class StateManager extends BroadcastReceiver {
 
 				Toast.makeText(context,
 						(String) "Model adaptation finished",
-						Toast.LENGTH_SHORT).show();
+						Toast.LENGTH_LONG).show();
 
 			} else if (intent.getAction().equals(Globals.MODEL_ADAPTION_NEW_INTENT)) {
 				
@@ -587,7 +577,7 @@ public class StateManager extends BroadcastReceiver {
 			Log.i(TAG, "Model adation completed");
 
 			Toast.makeText(context,
-					(String) "Model adaption completed", Toast.LENGTH_SHORT)
+					(String) "Model adaption completed", Toast.LENGTH_LONG)
 					.show();
 		}
 	};
@@ -642,7 +632,7 @@ public class StateManager extends BroadcastReceiver {
 			}
 
 			Toast.makeText(context, (String) "Model is being adapted",
-					Toast.LENGTH_SHORT).show();
+					Toast.LENGTH_LONG).show();
 			
 		} else {
 			Log.i(TAG, "Conversation class will not be incorporated into our model");
@@ -704,9 +694,82 @@ public class StateManager extends BroadcastReceiver {
 	
 	private void requestNewClassFromServer(Context context, String newClassName) {
 	
+		// Check if our classifier is already trained with this class:
+		
+		String[] cc = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+		
+		boolean found = false;
+		for(int i=0; i<cc.length; i++) {
+			if (newClassName.equals(cc[i])) {
+				found = true;
+			}
+		}
+		if (found == true) {
+			String msg = newClassName + " in already included";
+			
+			Log.i(TAG, msg);
+			
+			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+
+			// Stop here:
+			return;
+		}
+
 		Log.i(TAG, "Requesting new context class " + newClassName
 				+ " from server");
 		
+		CheckClassFeasibility feasReq = new CheckClassFeasibility();
+		
+		String feasibile = null;
+		
+		try {
+			feasibile = feasReq.execute(newClassName).get();
+			
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		
+		if (feasibile != null) {
+			if (feasibile.equals(Globals.FEASIBILITY_NOT_FEASIBLE)) {
+				
+				String msg = "It is not feasible to train the class " + newClassName
+						+ " as not enough sound files available on freesound";
+				Log.i(TAG, msg);
+				
+				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+				
+				// Don't send request to server to add the class:
+				return;
+				
+			} else if (feasibile.equals(Globals.FEASIBILITY_FEASIBLE)) {
+				
+				String msg = "Including the class " + newClassName
+						+ " might take a while since we need to download new files to our server";
+				Log.i(TAG, msg);
+				
+				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+				
+			} else if (feasibile.equals(Globals.FEASIBILITY_DOWNLOADED)) {
+				
+				String msg = "The class " + newClassName + " will be available in some minutes";
+				
+				Log.i(TAG, msg);
+				
+				Toast.makeText(context, msg , Toast.LENGTH_LONG).show();
+			} else {
+				
+				Log.e(TAG, ""); //TODO
+			}
+		} else {
+			
+			Log.w(TAG, "Could not reach server");
+			
+			//TODO: handle this!!!!
+		}
+
+
 		waitingForFeedback = false;
 
 		IncorporateNewClass postReq = new IncorporateNewClass();

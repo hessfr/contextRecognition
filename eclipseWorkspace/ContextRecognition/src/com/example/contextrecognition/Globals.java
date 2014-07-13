@@ -67,12 +67,19 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-//	public static final String IP = "192.168.0.23";
-	public static final String IP = "192.168.0.68";
+	public static final String IP = "192.168.0.23";
+//	public static final String IP = "192.168.0.68";
 //	public static final String IP = "172.30.152.238";
 	
 	public static final String PORT = "8080";
-	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/?";
+	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/";
+	public static final String ADD_CLASS_URL = BASE_URL + "addclass/?";
+	public static final String FEASIBILITY_CHECK_URL = BASE_URL + "feasibilitycheck/?";
+	
+	// Results of the feasibility check (String have to match results from server):
+	public static final String FEASIBILITY_DOWNLOADED = "downloaded";
+	public static final String FEASIBILITY_FEASIBLE = "feasible";
+	public static final String FEASIBILITY_NOT_FEASIBLE = "not_feasible";
 	
 	public static final long POLLING_INTERVAL_NEW_CLASS = 60 * 1000; // = 1min
 	public static final long MAX_RETRY_NEW_CLASS = 2 * 60; // = 2h

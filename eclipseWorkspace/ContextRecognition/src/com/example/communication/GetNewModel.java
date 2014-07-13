@@ -48,7 +48,7 @@ public class GetNewModel extends AsyncTask<String, Void, Boolean> {
 	    List<NameValuePair> par = new LinkedList<NameValuePair>();
         par.add(new BasicNameValuePair("filename", filenameOnServer));
         String paramString = URLEncodedUtils.format(par, "utf-8");
-        String URL = Globals.BASE_URL + paramString;
+        String URL = Globals.ADD_CLASS_URL + paramString;
         
         //Set timeout parameters:
         HttpParams httpParameters = new BasicHttpParams();

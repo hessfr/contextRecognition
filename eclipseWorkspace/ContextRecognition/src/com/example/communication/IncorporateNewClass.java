@@ -48,10 +48,9 @@ public class IncorporateNewClass extends AsyncTask<String, Void, String> {
 	    
 	    //Add parameters to URL
 	    List<NameValuePair> par = new LinkedList<NameValuePair>();
-        par.add(new BasicNameValuePair("request_type", "addContextClass"));
         par.add(new BasicNameValuePair("new_classname", newClassName));
         String paramString = URLEncodedUtils.format(par, "utf-8");
-        String URL = Globals.BASE_URL + paramString;     
+        String URL = Globals.ADD_CLASS_URL + paramString;     
         
         //Log.i(TAG, URL);
         
@@ -65,8 +64,8 @@ public class IncorporateNewClass extends AsyncTask<String, Void, String> {
         HttpClient client = new DefaultHttpClient(httpParameters);
 	    HttpPost post = new HttpPost(URL);
 	    
-	    //Add headers to URL
-	    //post.setHeader("Content-type", "text/plain");
+//	    //Add headers to URL
+//	    //post.setHeader("Content-type", "text/plain");
 	    post.setHeader("Accept", "application/json");
     	post.setHeader("Content-type", "application/json");
     	

@@ -11,7 +11,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
@@ -29,14 +28,14 @@ import com.example.contextrecognition.Globals;
  * if there are enough sound file available on freesound to create a trained classifier
  */
 
-public class CheckClassFeasibility extends AsyncTask<String, Void, Boolean> {
+public class CheckClassFeasibility extends AsyncTask<String, Void, String> {
 
 	private static final String TAG = "PostRequest";
 
-	private Boolean result;
+	private String result=null;
 
 	@Override
-	protected Boolean doInBackground(String... params) {
+	protected String doInBackground(String... params) {
 
 		String newClassName = params[0];
 
@@ -44,10 +43,9 @@ public class CheckClassFeasibility extends AsyncTask<String, Void, Boolean> {
 
 		// Add parameters to URL
 		List<NameValuePair> par = new LinkedList<NameValuePair>();
-		par.add(new BasicNameValuePair("request_type", "checkFeasibility"));
-		par.add(new BasicNameValuePair("new_classname", newClassName));
+		par.add(new BasicNameValuePair("classname", newClassName));
 		String paramString = URLEncodedUtils.format(par, "utf-8");
-		String URL = Globals.BASE_URL + paramString;
+		String URL = Globals.FEASIBILITY_CHECK_URL + paramString;
 
 		// Log.i(TAG, URL);
 
@@ -62,26 +60,17 @@ public class CheckClassFeasibility extends AsyncTask<String, Void, Boolean> {
 		HttpClient client = new DefaultHttpClient(httpParameters);
 		HttpPost post = new HttpPost(URL);
 
-		// Add headers to URL
-//		post.setHeader("Content-type", "text/plain");
-//		post.setHeader("Accept", "text/plain");
-		post.setHeader("Accept", "application/json");
-		post.setHeader("Content-type", "application/json");
-
-
 		// Send the POST request:
 		try {
 			
-			post.setEntity(new StringEntity("{'sender': 'Alice', 'receiver': 'Bob', 'message': 'We did it!'}"));
-
 			HttpResponse response = client.execute(post);
 
 			Log.i(TAG, "POST request sent");
 
 			if (response.getStatusLine().getStatusCode() == 200) {
-				String res = EntityUtils.toString(response.getEntity());
+				result = EntityUtils.toString(response.getEntity());
 				
-				Log.w(TAG, "Resultttttt" + res);
+				Log.d(TAG, "Result of feasibility check: " + result);
 
 			} else {
 				Log.e(TAG, "Invalid response received after POST request");
@@ -101,13 +90,13 @@ public class CheckClassFeasibility extends AsyncTask<String, Void, Boolean> {
 	}
 
 	@Override
-	protected void onPostExecute(Boolean result) {
+	protected void onPostExecute(String result) {
 		// super.onPostExecute(result);
 
 		returnResults();
 	}
 
-	public Boolean returnResults() {
+	public String returnResults() {
 
 		return result;
 	}
