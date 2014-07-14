@@ -67,9 +67,9 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-	public static final String IP = "192.168.0.23";
+	//public static final String IP = "192.168.0.23";
+	public static final String IP = "10.2.119.175";
 //	public static final String IP = "192.168.0.68";
-//	public static final String IP = "172.30.152.238";
 	
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/";

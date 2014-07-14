@@ -95,42 +95,49 @@ public class ContextSelection extends ListActivity {
 			
 			try {
 				contextClassesFromServer = getKnownClasses.execute().get();
-				
-				// Remove the already trained classes from the array:
-				String[] trainedClasses = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
-				ArrayList<String> tmp = new ArrayList<String>();
-				
-				for(int j=0; j<contextClassesFromServer.length; j++) {
-					boolean classAlreadyTrained = false;
-					for(int k=0; k<trainedClasses.length; k++) {
-						if (contextClassesFromServer[j].equals(trainedClasses[k])) {
-							classAlreadyTrained = true;
+				if (contextClassesFromServer != null) {
+					// Remove the already trained classes from the array:
+					String[] trainedClasses = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
+					ArrayList<String> tmp = new ArrayList<String>();
+					
+					for(int j=0; j<contextClassesFromServer.length; j++) {
+						boolean classAlreadyTrained = false;
+						for(int k=0; k<trainedClasses.length; k++) {
+							if (contextClassesFromServer[j].equals(trainedClasses[k])) {
+								classAlreadyTrained = true;
+							}
+						}
+						
+						if (classAlreadyTrained == false) {
+							tmp.add(contextClassesFromServer[j]);
 						}
 					}
 					
-					if (classAlreadyTrained == false) {
-						tmp.add(contextClassesFromServer[j]);
-					}
+					// Convert the ArrayList to a String array:
+					validSuggestions = new String[tmp.size()];
+					validSuggestions = tmp.toArray(validSuggestions);
 				}
-				
-				// Convert the ArrayList to a String array:
-				validSuggestions = new String[tmp.size()];
-				validSuggestions = tmp.toArray(validSuggestions);
-				
-				
+	
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
 			
-			final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, validSuggestions);
+			// If no data could be received from the server, initialize empty array:
+			if (validSuggestions == null) {
+				validSuggestions = new String[0];
+			}
 			
+			final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, validSuggestions);
+
 			autoCompleteTV.setOnClickListener(new OnClickListener() {
 
 	            @Override
 	            public void onClick(View arg0) {
-	            	autoCompleteTV.setAdapter(adapter);
+	            	if (adapter != null) {
+	            		autoCompleteTV.setAdapter(adapter);
+	            	}
 	            }
 	        });
 			

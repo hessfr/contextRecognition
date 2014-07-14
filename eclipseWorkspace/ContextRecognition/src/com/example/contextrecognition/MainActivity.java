@@ -139,10 +139,7 @@ public class MainActivity extends ActionBarActivity {
 			Intent i3 = new Intent(Globals.REQUEST_CLASS_NAMES);
 			context.sendBroadcast(i3);
 		}
-		
-		
-		
-		
+
 		setFirstRun();
 	}
 
@@ -321,6 +318,9 @@ public class MainActivity extends ActionBarActivity {
 			
 			if (intent.getAction().equals(Globals.CLASS_NAMES_SET)) {
 				
+				Log.i(TAG, "Class names changed, update the GT Logger");
+				
+				// Rebuild the GT Logger when a new class was incorporated:
 				String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
 				
 				if (tmpStringArray != null) {

@@ -32,7 +32,7 @@ def feasibilityCheck(className, minResults=25):
     else:
         return "feasible"
 
-def checkDownloaded(className, minNumber=10):
+def checkDownloaded(className, minNumber=0):
     """
     Check if at least minNumber of files exists for the given class in the sound/className/
     @param className: name of the class that should be checked

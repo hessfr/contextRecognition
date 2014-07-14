@@ -29,13 +29,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.example.communication.CheckClassFeasibility;
-import com.example.communication.GetKnownClasses;
 import com.example.communication.GetNewModel;
 import com.example.communication.IncorporateNewClass;
 import com.example.contextrecognition.ContextSelection;
@@ -168,7 +168,7 @@ public class StateManager extends BroadcastReceiver {
 					
 
 					
-					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
+//					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 
 					//=================================================================================
 					//============ Handle sending of query, threshold calculations, ... ===============
@@ -390,26 +390,25 @@ public class StateManager extends BroadcastReceiver {
 
 					
 					// For testing only:
-					if (testBool == false) {
-						testBool = true;
-	
-						GetKnownClasses getKnownClasses = new GetKnownClasses();
-						
-						String[] knownClasses = null;
-						
-						try {
-							knownClasses = getKnownClasses.execute().get();
-							
-							Log.i(TAG, "xxxxxxxx " + knownClasses[0]);
-							
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
-						}
-						
-						
-					}
+//					if (testBool == false) {
+//						testBool = true;
+//	
+//						GetKnownClasses getKnownClasses = new GetKnownClasses();
+//						
+//						String[] knownClasses = null;
+//						
+//						try {
+//							knownClasses = getKnownClasses.execute().get();
+//							
+//							Log.i(TAG, "xxxxxxxx " + knownClasses[0]);
+//							
+//						} catch (InterruptedException e) {
+//							e.printStackTrace();
+//						} catch (ExecutionException e) {
+//							e.printStackTrace();
+//						}
+//						
+//					}
 					
 					
 					/*
@@ -799,7 +798,8 @@ public class StateManager extends BroadcastReceiver {
 				private int counter;
 				
 				public void run() {
-		        	
+					//Looper.prepare();
+					
 		        	GetNewModel getReq = new GetNewModel();
 					Boolean res = false;
 					
@@ -830,6 +830,8 @@ public class StateManager extends BroadcastReceiver {
 
 
 					Log.i(TAG, "Waiting for new classifier from server");
+					
+					//Looper.loop();
 		        }
 			};
 			
@@ -1010,6 +1012,12 @@ public class StateManager extends BroadcastReceiver {
 		// Save String array of the context classes to preferences:
 		Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
 		
+		//Show toast:
+//		Toast.makeText(context,
+//				(String) "New class successfully incorporated",
+//				Toast.LENGTH_LONG).show();
+		
+		// Broadcast this message, that other activities can rebuild their views:
 		Intent i = new Intent(Globals.CLASS_NAMES_SET);
 		context.sendBroadcast(i);		
 	}

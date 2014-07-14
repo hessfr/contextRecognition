@@ -2,16 +2,28 @@ package com.example.contextrecognition;
 
 //import android.app.ActionBar;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
+import org.apache.commons.lang3.ArrayUtils;
+
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
@@ -21,6 +33,8 @@ import com.echo.holographlibrary.PieSlice;
 public class Diary extends ActionBarActivity {
 	
 	private static final String TAG = "DiaryAcitivty";
+	
+	ListView legend;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +53,8 @@ public class Diary extends ActionBarActivity {
         Integer[] totalCounts = new Integer[t.size()];
         t.toArray(totalCounts);
 
+        legend = (ListView) findViewById(R.id.listView1);
+        
         createChart(totalCounts, contextClasses);
 
     }
@@ -73,13 +89,41 @@ public class Diary extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
     
-    private void createChart(Integer[] totalCounts, String[] contextClasses) {
+    private void createChart(final Integer[] t, String[] c) {
     	
     	String[] colors = {"#41A317", "#CC6600", "#1569C7", "#008080", "#FFF380"}; //TODO
     	
-    	// Sort the arrays:
-    	//TODO
+    	Integer[] sorted = new Integer[t.length];
     	
+    	// http://stackoverflow.com/questions/112234/sorting-matched-arrays-in-java
+    	Integer[] idx = new Integer[t.length];
+    	for( int i = 0 ; i < idx.length; i++ ) idx[i] = i;              
+    	Arrays.sort(idx, new Comparator<Integer>() {
+    	    public int compare(Integer i1, Integer i2) {                        
+    	        return Double.compare(t[i1], t[i2]);
+    	    }                   
+    	});
+    	ArrayUtils.reverse(idx);
+    	
+    	Integer[] totalCounts = new Integer[t.length];
+    	String[] contextClasses = new String[t.length];
+    	
+    	
+    	for(int i=0; i<totalCounts.length; i++) {
+    		totalCounts[i] = t[idx[i]];
+    		contextClasses[i] = c[idx[i]];
+    	}
+    	
+    	// Calculate the percentage of each context and append it to the strings:
+    	int totalSum = 0;
+    	for(int i=0; i<t.length; i++) {
+    		totalSum += totalCounts[i];
+    	}
+    	for(int i=0; i<t.length; i++) {
+    		double percentage = 100 * totalCounts[i] / ((double) totalSum);
+    		contextClasses[i] = contextClasses[i] + " " + String.format("%.1f",percentage) + "%";
+    	}
+
     	PieGraph pg = (PieGraph) findViewById(R.id.piegraph);
     	
     	for(int i=0; i<totalCounts.length; i++) {
@@ -102,7 +146,16 @@ public class Diary extends ActionBarActivity {
         pg.setInterpolator(new AccelerateDecelerateInterpolator());
         pg.animateToGoalValues();
         
-        //TODO: create legend
+        
+        // Create legend ListView:
+        final ArrayList<String> list = new ArrayList<String>();
+        for (int i = 0; i < contextClasses.length; ++i) {
+          list.add(contextClasses[i]);
+        }
+        
+        CustomListAdapter listAdapter = new CustomListAdapter(this, 
+        		R.layout.legend_list_element, list, colors);
+        legend.setAdapter(listAdapter);        
     }
     
     /**
@@ -125,6 +178,50 @@ public class Diary extends ActionBarActivity {
     private void callHelp() {
         Intent i = new Intent(Diary.this, Help.class);
         startActivity(i);
+    }
+    
+    
+    /*
+     * Code from: http://stackoverflow.com/questions/7361135/how-to-change-color-and-font-on-listview
+     */
+    private class CustomListAdapter extends ArrayAdapter {
+
+        private Context mContext;
+        private int id;
+        private List <String>items ;
+        private String[] mColors;
+
+        public CustomListAdapter(Context context, int textViewResourceId , List<String> list, String[] colors) 
+        {
+            super(context, textViewResourceId, list);      
+            mColors = colors;
+            mContext = context;
+            id = textViewResourceId;
+            items = list ;
+        }
+
+        @Override
+        public View getView(int position, View v, ViewGroup parent)
+        {
+            View mView = v ;
+            if(mView == null){
+                LayoutInflater vi = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                mView = vi.inflate(id, null);
+            }
+
+            TextView text = (TextView) mView.findViewById(R.id.textView);
+            
+            if(items.get(position) != null )
+            {
+                text.setTextColor(Color.WHITE);
+                text.setText(items.get(position));
+                text.setBackgroundColor(Color.parseColor(mColors[position]));
+                text.setTextSize(18);
+            }
+
+            return mView;
+        }
+
     }
     
 }
