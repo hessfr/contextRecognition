@@ -180,8 +180,6 @@ public class AudioWorker extends IntentService {
 		};
 
 		soundHandler.beginRec();	
-		
-	
 	}
 	
 	private void publishResult(int predictionInt, double predictionEntropy,

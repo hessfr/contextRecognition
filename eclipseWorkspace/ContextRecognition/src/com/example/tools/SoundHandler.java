@@ -50,7 +50,7 @@ public class SoundHandler extends Thread {
 	}
 
 	// Constructor:
-	public SoundHandler(){		
+	public SoundHandler(){
 		super();
 	}
 	

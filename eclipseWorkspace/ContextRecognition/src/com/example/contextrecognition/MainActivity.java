@@ -108,6 +108,11 @@ public class MainActivity extends ActionBarActivity {
 				Log.i(TAG, "Preference commited");
 			}
 			
+			// Reset the current context stored in the preferences to null:
+			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putString(Globals.CURRENT_CONTEXT, "");
+			editor.commit();
+			
 			// Append info to log when the app was started
 			appendToGTLog(true, false, "");
 			
@@ -152,6 +157,13 @@ public class MainActivity extends ActionBarActivity {
 		filterMain.addAction(Globals.PREDICTION_CHANGED_INTENT);
 		filterMain.addAction(Globals.CLASS_NAMES_SET);
 		registerReceiver(receiverMainActivity, filterMain);
+		
+		Log.i(TAG, "-------------- onResume -------");
+		
+		// Set the prediction TextView to the current prediction (workaround!)
+		String s = mPrefs.getString(Globals.CURRENT_CONTEXT, "");
+		Log.i(TAG, "-------------- " + s + " -------");
+		setText(s);
 	}
 	
 	@Override

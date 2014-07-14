@@ -65,8 +65,6 @@ public class StateManager extends BroadcastReceiver {
 	private static String predictionString;
 	private static String prevPredictionString = "";
 	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
-//	private static String[] classNameArray;
-//	private static boolean bufferStatus;
 	private static GMM gmm; // Needed??
 	private static ArrayList<Integer> totalCount; // contains number of total predictions for each class (for plotting)
 	
@@ -419,6 +417,11 @@ public class StateManager extends BroadcastReceiver {
 					totalCount.set(currentPrediction, (totalCount.get(currentPrediction) + 1));
 					Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount); //TODO: this can also be done every minute instead of every 2sec
 					
+					// Put the current prediction string to the preferences (workaround!):
+					mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+					SharedPreferences.Editor editor = mPrefs.edit();
+					editor.putString(Globals.CURRENT_CONTEXT, predictionString);
+					editor.commit();
 					
 					// Save to log file and send broadcast to change text, if prediction has changed
 					if (!predictionString.equals(prevPredictionString)) {
@@ -429,7 +432,7 @@ public class StateManager extends BroadcastReceiver {
 						Bundle b = new Bundle();
 						b.putString(Globals.NEW_PREDICTION_STRING, predictionString);
 						i.putExtras(b);
-						context.sendBroadcast(i);					
+						context.sendBroadcast(i);
 				
 						prevPredictionString = predictionString;
 					}

@@ -135,6 +135,8 @@ public class Globals {
 	public static final String CLASS_NAMES_SET = "classNamesSet";
 	
 	// Preferences:
+	public static final String CURRENT_CONTEXT = "currentContext";
+	
 	public static final String CONTEXT_CLASSES = "contextClasses";
 	
 	public static final String CLASS_COUNTS = "classCounts";
