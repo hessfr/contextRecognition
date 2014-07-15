@@ -23,29 +23,33 @@ public class Globals {
 	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 			+ "/" + APP_FOLDER);
 	
-	Calendar cal = Calendar.getInstance();
-	Date currentLocalTime = cal.getTime();
-	@SuppressLint("SimpleDateFormat")
-	DateFormat date = new SimpleDateFormat("yyyMMdd");
-	String dateString = date.format(currentLocalTime);
 	
-	public static File getLogPath(String dateString) {
+	
+	public static File getLogPath() {
+		Calendar cal = Calendar.getInstance();
+		Date currentLocalTime = cal.getTime();
+		DateFormat date = new SimpleDateFormat("yyyMMdd");
+		String dateString = date.format(currentLocalTime);
 		File f = new File(APP_PATH, "/Logs_" + dateString);
+		
+		if (!f.exists()) {
+		    f.mkdir();
+		}
 		
 		return f;
 	}
 	
 	//public static final File CURRENT_LOG_FOLDER = new File(APP_PATH, "/Logs_" + dateString);
 
-	public static final String START_LOG_FILE = "START_LOG.txt";
+	public static final String START_LOG_FILENAME = "START_LOG.txt";
 	
-//	public static final String AL_LOG_FILENAME = "AL_Log.txt";
-//	
-//	public static final File GT_LOG_FILE = new File(CURRENT_LOG_FOLDER, "GT_Log.txt");
-//	
-//	public static final File PRED_LOG_FILE = new File(CURRENT_LOG_FOLDER, "PRED_Log.txt");
-//	
-//	public static final File AUDIO_FILE = new File(CURRENT_LOG_FOLDER, "rawAudio");
+	public static final String AL_LOG_FILENAME = "AL_Log.txt";
+	
+	public static final String GT_LOG_FILENAME = "GT_Log.txt";
+	
+	public static final String PRED_LOG_FILENAME = "PRED_Log.txt";
+	
+	public static final String AUDIO_FILENAME = "rawAudio";
 	
 	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");
 	

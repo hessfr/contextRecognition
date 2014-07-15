@@ -146,7 +146,8 @@ public class SoundHandler extends Thread {
 					byte[] dataByte = short2byte(dataShort);
 //					Log.w(TAG, "dataShort: " + dataShort[0]);
 //					Log.w(TAG, "-------------------");
-					appendToFile(dataByte, Globals.AUDIO_FILE);
+					File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
+					appendToFile(dataByte, file);
 					
 					if (pointer < 6) {
 						pointer++;

@@ -1,5 +1,6 @@
 package com.example.contextrecognition;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -487,7 +488,8 @@ public class MainActivity extends ActionBarActivity {
 				
 			
 			try {
-				FileWriter f = new FileWriter(Globals.GT_LOG_FILE, true);
+				File file = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
+				FileWriter f = new FileWriter(file, true);
 				f.write(System.currentTimeMillis() + "\t" + contextClass + "\t" +  startOrEnd + "\n");
 				f.close();
 			} catch (IOException e) {
@@ -497,7 +499,8 @@ public class MainActivity extends ActionBarActivity {
 		} else {
 			
 			try {
-				FileWriter f = new FileWriter(Globals.GT_LOG_FILE, true);
+				File file = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
+				FileWriter f = new FileWriter(file, true);
 				f.write(System.currentTimeMillis() + "\t" + "RECORDING_STARTED" + "\t" +  "start" + "\n");
 				f.close();
 			} catch (IOException e) {
@@ -513,7 +516,8 @@ public class MainActivity extends ActionBarActivity {
 		Log.d(TAG, "Appending to start time of the app to log");
 	
 		try {
-			FileWriter f = new FileWriter(Globals.START_LOG_FILE, true);
+			File file = new File(Globals.getLogPath(), Globals.START_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
 			f.write(System.currentTimeMillis() + "\n");
 			f.close();
 		} catch (IOException e) {
