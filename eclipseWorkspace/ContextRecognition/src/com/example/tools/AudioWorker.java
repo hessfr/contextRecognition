@@ -74,7 +74,7 @@ public class AudioWorker extends IntentService {
 		soundHandler = new SoundHandler() {
 			
 			@Override
-			protected void handleData(short[] data, int length, int frameLength) {
+			protected void handleData(short[] data, boolean[] silenceBuffer) {
 				
 				// Only handle new data if we are in init or normal classification status:
 				if ((appStatus.getInstance().get() == appStatus.NORMAL_CLASSIFICATION) ||
@@ -88,89 +88,107 @@ public class AudioWorker extends IntentService {
 					}
 					
 					// Call handle data from SoundHandler class
-					super.handleData(data, length, frameLength);
-					
-					//long startTimeFX = System.currentTimeMillis();
-					
-					// Loop through the audio data and extract our features for each 32ms window
-					for(int i=0; i<63; i++) {
-						
-						// Split the data into 32ms chunks (equals 1024 (??) elements)
-//						short[] tmpData = new short[1024];
-//						System.arraycopy(data, i*1024, tmpData, 0, 1024);
-						
-						short[] tmpData = new short[512];
-						System.arraycopy(data, i*512, tmpData, 0, 512);
+					super.handleData(data, silenceBuffer);
 
-						Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
-						mfccList.add(currentMFCCs.get());
-
-						// Also add the MFCCs to the 1min data buffer:
-						if (dataBuffer.size() < DATA_BUFFER_SIZE) {
-							// Add new feature point:
-							dataBuffer.add(currentMFCCs.get());
+					// Check if loudness of all chunks in the 2s sequence is below silence threshold:
+					int silenceCount=0;
+					for(int i=0; i<silenceBuffer.length; i++) {
+						if(silenceBuffer[i] == true) {
+							silenceCount++;
+						}
+					}
+					boolean isSilent = false;
+					if (silenceCount == (silenceBuffer.length)) {
+						isSilent = true;
+					}
+					
+					// Only call our prediction method if loadness on this 2s interval is above the silence threshold
+					if (isSilent == false) {
+						//long startTimeFX = System.currentTimeMillis();
+						
+						// Loop through the audio data and extract our features for each 32ms window
+						for(int i=0; i<63; i++) {
 							
-							//Update buffer status:
-							if (bufferStatus != false) {
-								bufferStatus = false;
-							}
+							// Split the data into 32ms chunks (equals 1024 (??) elements)
+//							short[] tmpData = new short[1024];
+//							System.arraycopy(data, i*1024, tmpData, 0, 1024);
+							
+							short[] tmpData = new short[512];
+							System.arraycopy(data, i*512, tmpData, 0, 512);
 
+							Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
+							mfccList.add(currentMFCCs.get());
+
+							// Also add the MFCCs to the 1min data buffer:
+							if (dataBuffer.size() < DATA_BUFFER_SIZE) {
+								// Add new feature point:
+								dataBuffer.add(currentMFCCs.get());
+								
+								//Update buffer status:
+								if (bufferStatus != false) {
+									bufferStatus = false;
+								}
+
+							} else {
+								// Add new feature point and remove the oldest one:
+								dataBuffer.add(currentMFCCs.get());
+								dataBuffer.remove(0);
+								
+								//Update buffer status:
+								if (bufferStatus != true) {
+									bufferStatus = true;
+								}
+							}	
+						}
+						
+						//long endTimeFX = System.currentTimeMillis();
+						//Log.i(TAG, "Feature extraction duration: " + (endTimeFX-startTimeFX)); //~2s
+						
+						// If we have 2 seconds of data, call our prediction method and clear the list afterwards again 
+						if (mfccList.size() == 63) {
+							
+							//long startTimeClf = System.currentTimeMillis();
+							
+							// Convert data to DenseMatrix:
+							double[][] array = new double[mfccList.size()][12];
+							for (int i=0; i<mfccList.size(); i++) {
+							    array[i] = mfccList.get(i);
+							}
+							DenseMatrix64F samples = new DenseMatrix64F(array);
+							//Log.i(TAG, samples.toString());
+
+							PredictionResult predictionResult = clf.predict(gmm, samples);
+							int currentResult = predictionResult.get_class();
+							double currentEntropy = predictionResult.get_entropy();
+							
+							stringRes = gmm.get_class_name(currentResult);
+							
+							// Set result code to okay and publish the result
+							code = Activity.RESULT_OK;
+							HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
+							publishResult(currentResult, currentEntropy, stringRes, hm, gmm, bufferStatus, dataBuffer, code);
+							
+							//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
+							
+							// Delete all elements of the list afterwards
+							mfccList.clear();
+							
+							// If we were in init status, change to normal classification now:
+							if (appStatus.getInstance().get() == appStatus.INIT) {
+								appStatus.getInstance().set(appStatus.NORMAL_CLASSIFICATION);
+								Log.i(TAG, "New status: normal classification");
+							}
+							
+							//long endTimeClf = System.currentTimeMillis();
+							//Log.i(TAG, "Classification duration: " + (endTimeClf-startTimeClf)); // ~0.5s
+													
 						} else {
-							// Add new feature point and remove the oldest one:
-							dataBuffer.add(currentMFCCs.get());
-							dataBuffer.remove(0);
-							
-							//Update buffer status:
-							if (bufferStatus != true) {
-								bufferStatus = true;
-							}
-						}	
-					}
-					
-					//long endTimeFX = System.currentTimeMillis();
-					//Log.i(TAG, "Feature extraction duration: " + (endTimeFX-startTimeFX)); //~2s
-					
-					// If we have 2 seconds of data, call our prediction method and clear the list afterwards again 
-					if (mfccList.size() == 63) {
-						
-						//long startTimeClf = System.currentTimeMillis();
-						
-						// Convert data to DenseMatrix:
-						double[][] array = new double[mfccList.size()][12];
-						for (int i=0; i<mfccList.size(); i++) {
-						    array[i] = mfccList.get(i);
+							Log.e(TAG, "mfccList has wrong size of " + mfccList.size() + "instead of 63");
 						}
-						DenseMatrix64F samples = new DenseMatrix64F(array);
-						//Log.i(TAG, samples.toString());
-
-						PredictionResult predictionResult = clf.predict(gmm, samples);
-						int currentResult = predictionResult.get_class();
-						double currentEntropy = predictionResult.get_entropy();
-						
-						stringRes = gmm.get_class_name(currentResult);
-						
-						// Set result code to okay and publish the result
-						code = Activity.RESULT_OK;
-						HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
-						publishResult(currentResult, currentEntropy, stringRes, hm, gmm, bufferStatus, dataBuffer, code);
-						
-						//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
-						
-						// Delete all elements of the list afterwards
-						mfccList.clear();
-						
-						// If we were in init status, change to normal classification now:
-						if (appStatus.getInstance().get() == appStatus.INIT) {
-							appStatus.getInstance().set(appStatus.NORMAL_CLASSIFICATION);
-							Log.i(TAG, "New status: normal classification");
-						}
-						
-						//long endTimeClf = System.currentTimeMillis();
-						//Log.i(TAG, "Classification duration: " + (endTimeClf-startTimeClf)); // ~0.5s
-												
 					} else {
-						Log.e(TAG, "mfccList has wrong size of " + mfccList.size() + "instead of 63");
+						Log.i(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
 					}
+					
 					
 					
 				}

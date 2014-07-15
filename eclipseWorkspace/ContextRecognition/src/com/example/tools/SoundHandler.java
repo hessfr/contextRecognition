@@ -11,6 +11,7 @@ import android.media.MediaRecorder;
 import android.util.Log;
 
 import com.example.contextrecognition.Globals;
+import com.google.common.primitives.Shorts;
 
 public class SoundHandler extends Thread {
 	
@@ -20,13 +21,13 @@ public class SoundHandler extends Thread {
 	
 	private boolean currentlyRecording = false;
 
-	private static int BUFFER_LENGTH = 4608; //4096; // Size of the chunks of data we read in using AudioRecord.read()
+	private static int BUFFER_LENGTH = 4608; // Size of the chunks of data we read in using AudioRecord.read()
 	
 	/*
 	 * Size of the buffer for the Audiorecord. This has to be larger than BUFFER_LENGTH to avoid potential
 	 * "over-running" and loss of data
 	 */
-	private static int AUDIORECORD_BUFFER_LENGTH = 4608 * 2; //10 * 4096;
+	private static int AUDIORECORD_BUFFER_LENGTH = 4608 * 2;
 	
 	/*
 	 * One 2s sequence contains 63 32ms windows, the prediction method is called with this buffer
@@ -34,7 +35,9 @@ public class SoundHandler extends Thread {
 	 * 63 * 512 ~= 2s
 	 */
 	private static int PREDICTION_LENGTH = 32256;
+	private static int CHUNKS_PER_PREDICTION = PREDICTION_LENGTH/BUFFER_LENGTH;
 	private short[] predictionBuffer;
+	private boolean[] silenceDetectionBuffer = new boolean[CHUNKS_PER_PREDICTION]; // true means silent
 	private boolean predictionDataAvailable = false;
 	
 	private int pointer = 0; // to fill the sequence for the prediction with the recorded data
@@ -47,6 +50,7 @@ public class SoundHandler extends Thread {
 	private class queueElement{
 		public int numSamplesRead;
 		public short[] data;
+		public boolean[] silenceBuffer;
 	}
 
 	// Constructor:
@@ -75,7 +79,7 @@ public class SoundHandler extends Thread {
 				// If element is not null process the new data
 				if(newEL != null) {
 
-					handleData(newEL.data, newEL.numSamplesRead, newEL.data.length);
+					handleData(newEL.data, newEL.silenceBuffer);
 
 					//Log.i(TAG, "Length: " + String.valueOf(newEL.sampleRead));
 					//Log.i(TAG, "Framelength: " + String.valueOf(newEL.buffer.length));
@@ -111,7 +115,6 @@ public class SoundHandler extends Thread {
 				short[] dataShort = new short[BUFFER_LENGTH];
 				int nRead = rec.read(dataShort, 0, dataShort.length);
 				
-
 				
 				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
 						|| nRead == AudioRecord.ERROR_BAD_VALUE) {
@@ -124,8 +127,18 @@ public class SoundHandler extends Thread {
 
 				} else {
 					
+					// Log.i(TAG, "Loudness: " + Shorts.max(dataShort));
+					
 					// Fill the prediction buffer ("ring-buffer": if full, overwrite the oldest elements...)
 					System.arraycopy(dataShort, 0, predictionBuffer, (pointer * dataShort.length), dataShort.length);
+					
+					// Fill the silence detection buffer:
+					if (Shorts.max(dataShort) > Globals.SILENCE_DETECTION_THRESHOLD) {
+						silenceDetectionBuffer[pointer] = false;
+					} else {
+						silenceDetectionBuffer[pointer] = true;
+					}
+					
 					
 					// Write this chunk of data to a file (for evaluation only):
 					// we have to convert short to byte array first, then we can use FileOutputStream:
@@ -154,6 +167,7 @@ public class SoundHandler extends Thread {
 							// Add the new element to the queue:
 							newEL.data = predictionBuffer;
 							newEL.numSamplesRead = nRead;
+							newEL.silenceBuffer = silenceDetectionBuffer;
 
 							//Log.dTAG, "Queue length: " + queue.size());
 
@@ -268,7 +282,7 @@ public class SoundHandler extends Thread {
 	/*
 	 * Override this method in AudioWorker
 	 */
-	protected void handleData(short[] data, int length, int frameLength) {
+	protected void handleData(short[] data, boolean[] silenceBuffer) {
 		//Log.d(TAG, "handleData called");
 		
 	}

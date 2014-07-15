@@ -45,6 +45,9 @@ public class Globals {
 	// Time after which the app data (buffers, threshold, ...) should be periodically persisted to external storage
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
+	// Silence detection threshold:
+	public static short SILENCE_DETECTION_THRESHOLD = 300; //TODO: find good value
+	
 	/*
 	 * Buffer lengthes for the threshold calculation
 	 */

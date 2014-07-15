@@ -43,7 +43,7 @@ class AddContextClass():
 
         notReadyCode = -1
 
-        # Convert unicode to string: #TODO: check if we also need this when reveiving data from Android!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Convert unicode to string:
         filename = str(filename)
         filename = filename[1:-1]
 
@@ -57,7 +57,7 @@ class AddContextClass():
             return js
         
         else:
-            # Classifier not available yet, tell client that we are not ready yet
+            # Classifier not available yet, tell client that we are not ready yet:
             return notReadyCode
         
 class FeasibilityCheck():

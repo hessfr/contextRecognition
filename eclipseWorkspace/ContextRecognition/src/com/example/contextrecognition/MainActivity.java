@@ -158,11 +158,8 @@ public class MainActivity extends ActionBarActivity {
 		filterMain.addAction(Globals.CLASS_NAMES_SET);
 		registerReceiver(receiverMainActivity, filterMain);
 		
-		Log.i(TAG, "-------------- onResume -------");
-		
 		// Set the prediction TextView to the current prediction (workaround!)
 		String s = mPrefs.getString(Globals.CURRENT_CONTEXT, "");
-		Log.i(TAG, "-------------- " + s + " -------");
 		setText(s);
 	}
 	
@@ -171,7 +168,6 @@ public class MainActivity extends ActionBarActivity {
 		super.onPause();
 
 		unregisterReceiver(receiverMainActivity);
-
 	}
 	
 	@Override
@@ -287,9 +283,7 @@ public class MainActivity extends ActionBarActivity {
     			bundle.putInt(Globals.LABEL, 1);
     			intent.putExtras(bundle);
     			sendBroadcast(intent);
-
 			}
-
 		});
 
 	}
@@ -325,7 +319,6 @@ public class MainActivity extends ActionBarActivity {
 				if (intent.getAction().equals(Globals.PREDICTION_CHANGED_INTENT)) {
 					setText(bundle.getString(Globals.NEW_PREDICTION_STRING));
 				}
-
 			} 
 			
 			if (intent.getAction().equals(Globals.CLASS_NAMES_SET)) {
@@ -440,6 +433,7 @@ public class MainActivity extends ActionBarActivity {
 
 		   String string = contextList.get(position);
 		   holder.checkBox.setText(string);
+		   holder.checkBox.setTextSize(18);
 		   
 		   holder.checkBox.setChecked(cbStatus.get(position));
 		 
