@@ -7,8 +7,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -20,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
@@ -27,9 +31,12 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -38,6 +45,7 @@ import android.widget.Toast;
 import com.example.communication.CheckClassFeasibility;
 import com.example.communication.GetNewModel;
 import com.example.communication.IncorporateNewClass;
+import com.example.communication.SendRawAudio;
 import com.example.contextrecognition.ContextSelection;
 import com.example.contextrecognition.Globals;
 import com.example.contextrecognition.R;
@@ -49,6 +57,7 @@ import com.google.gson.Gson;
  * 
  * AL Queries are also sent from here...
  */
+@SuppressLint("SimpleDateFormat")
 public class StateManager extends BroadcastReceiver {
 
 	private static final String TAG = "StateManager";
@@ -138,7 +147,7 @@ public class StateManager extends BroadcastReceiver {
 				int resultCode = bundle.getInt(Globals.RESULTCODE);
 
 				if (resultCode == Activity.RESULT_OK) {
-
+					
 					// The following lines have to be in exactly the same order as the were put on the bundle (in the AudioWorker):
 
 					currentPrediction = bundle.getInt(Globals.PREDICTION_INT);
@@ -388,25 +397,15 @@ public class StateManager extends BroadcastReceiver {
 
 					
 					// For testing only:
-//					if (testBool == false) {
-//						testBool = true;
-//	
-//						GetKnownClasses getKnownClasses = new GetKnownClasses();
-//						
-//						String[] knownClasses = null;
-//						
-//						try {
-//							knownClasses = getKnownClasses.execute().get();
-//							
-//							Log.i(TAG, "xxxxxxxx " + knownClasses[0]);
-//							
-//						} catch (InterruptedException e) {
-//							e.printStackTrace();
-//						} catch (ExecutionException e) {
-//							e.printStackTrace();
-//						}
-//						
-//					}
+					if (testBool == false) {
+						testBool = true;
+
+
+						
+						
+//						transferRawAudio(context);
+					
+					}
 					
 					
 					/*
@@ -486,7 +485,7 @@ public class StateManager extends BroadcastReceiver {
 		    updateTime.set(Calendar.HOUR_OF_DAY, 23);
 		    updateTime.set(Calendar.MINUTE, 59);			
 		    
-		    Intent resetIntent = new Intent(Globals.RESET_MAX_QUERY_NUMBER);
+		    Intent resetIntent = new Intent(Globals.END_OF_DAY_TASKS);
 	        PendingIntent pendingResetIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
 	        
 	        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -504,10 +503,26 @@ public class StateManager extends BroadcastReceiver {
 
 		} 
 		
-		if (intent.getAction().equals(Globals.RESET_MAX_QUERY_NUMBER)) {
+		if (intent.getAction().equals(Globals.END_OF_DAY_TASKS)) {
 
+			Calendar cal = Calendar.getInstance();
+			Date currentLocalTime = cal.getTime();
+			DateFormat date = new SimpleDateFormat("dd-MM-yyy HH:mm:ss z");
+			String timeAndDate = date.format(currentLocalTime);
+			try {
+				FileWriter f = new FileWriter(Globals.TEST_FILE, true);
+				f.write(timeAndDate + " end of day task called\n");
+				f.close();
+			} catch (IOException e) {
+				Log.e(TAG, "Writing to test file failed");
+				e.printStackTrace();
+			}
+			
+			// reset the max number of queries:
 			resetQueriesLeft(context);
 			
+			// initiate the transfer of the raw audio data to the server:
+			transferRawAudio(context);
 		}
 		
 		if (intent.getAction().equals(Globals.PERSIST_DATA)) {
@@ -994,6 +1009,72 @@ public class StateManager extends BroadcastReceiver {
 			Log.e(TAG, "Got invalid value from preference, could not reset reset max number of queries");
 		}
 
+	}
+	
+	/*
+	 * Transfer the raw audio data to the server. Only needed for the small scale experiment
+	 */
+	private void transferRawAudio(Context context) {
+		
+		
+		ConnectivityManager connManager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+		/*
+		 * Code from: http://stackoverflow.com/questions/5283491/android-check-if-device-is-plugged-in
+		 */
+		Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+		
+        String statusString = null; // For test only
+		
+		if (mWifi.isConnected()) {
+			if (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB) {
+				// WIFI connected and charging:
+				
+				SendRawAudio sendRawAudio = new SendRawAudio();
+				
+				Boolean result = null;
+				
+				try {
+					
+					result = sendRawAudio.execute().get();
+					
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+				
+				statusString = "WIFI connected and charging";
+			} else {
+				// WIFI connected but NOT charging:
+				
+				statusString = "WIFI connected but NOT charging";
+			}
+		} else {
+			// WIFI NOT connected:
+
+			statusString = "WIFI NOT connected";
+		}
+		
+		//TODO: inform user if we couldn't transfer the file
+		
+		Calendar cal = Calendar.getInstance();
+		Date currentLocalTime = cal.getTime();
+		DateFormat date = new SimpleDateFormat("dd-MM-yyy HH:mm:ss z");
+		String timeAndDate = date.format(currentLocalTime);
+		try {
+			FileWriter f = new FileWriter(Globals.TEST_FILE, true);
+			f.write(timeAndDate + " Transfer to server: " + statusString + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to test file failed");
+			e.printStackTrace();
+		}
+		
+		
+		
 	}
 	
 	/*

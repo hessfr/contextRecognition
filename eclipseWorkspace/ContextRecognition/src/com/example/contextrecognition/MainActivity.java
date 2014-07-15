@@ -12,7 +12,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
 import android.support.v7.app.ActionBarActivity;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -55,7 +57,8 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		
+		Log.i(TAG, "MainActivity OnCreate");
 		
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -63,20 +66,36 @@ public class MainActivity extends ActionBarActivity {
 				false);
 
 		if (!welcomeScreenShown) {
-			// Open the welcome activity if it hasn't been shown yet
-
-			Log.i(TAG,
-					"Welcome screen already shown before, going to MainActivity instead");
-
+			// Obtain a unique user ID and store it in the preferences:
+			final TelephonyManager mTelephony = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+			String tmpId = null;
+			if (mTelephony.getDeviceId() != null) {
+				tmpId = mTelephony.getDeviceId();
+			} else {
+				tmpId = Secure.getString(getApplicationContext()
+						.getContentResolver(), Secure.ANDROID_ID);
+			}
+			
 			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putString(Globals.USER_ID, tmpId);
 			editor.putBoolean(welcomeScreenShownPref, true);
 			editor.commit();
+			
+			Log.d(TAG, "User ID set to: " + tmpId);
+			Log.i(TAG, "Very first start of the app: displaying welcome screen first");
 
-			Intent i = new Intent(MainActivity.this, Welcome1.class);
-			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-					| Intent.FLAG_ACTIVITY_NO_ANIMATION);
+			// Open the welcome activity if it hasn't been shown yet (i.e. at the very first start):
+			Intent i = new Intent(this, Welcome1.class);
+			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
 			startActivity(i);
+			finish();
+			return;
+			
+			
+			
 		}
+		
+		setContentView(R.layout.activity_main);
 
 		addListenerOnButton();
 		contextTV = (TextView) findViewById(R.id.contextTV);
@@ -85,7 +104,7 @@ public class MainActivity extends ActionBarActivity {
 			Log.d(TAG, "First run of MainActivity");
 			
 			appendToStartLog();
-			
+
 			// Start the AudioWorker service:
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);
@@ -116,6 +135,8 @@ public class MainActivity extends ActionBarActivity {
 			// Append info to log when the app was started
 			appendToGTLog(true, false, "");
 			
+			setFirstRun();
+			
 		} else {
 
 			contextTV.setText(CONTEXT_CLASS_STRING);
@@ -124,28 +145,21 @@ public class MainActivity extends ActionBarActivity {
 		String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
 		
 		if (tmpStringArray != null) {
-			contextClasses = tmpStringArray;
 			
-			/*
-			 *  Initialize the array containing the ground truth information (to set the check boxes
-			 *  correctly when we come back to this activity):
-			 */
-			if (FIRST_RUN == true) {
-				currentGT = new Boolean[contextClasses.length];
-				for(int j=0; j<currentGT.length; j++) {
-					currentGT[j] = false;
-				}
-			}
+			contextClasses = tmpStringArray;
 			
 			createListView(contextClasses);
 			
 		} else {
 			//Send broadcast to request class names:
+			
+			Log.i(TAG, "contextClasses string array inthe preferences was empty, so StateManager is push to prefs again");
+			
 			Intent i3 = new Intent(Globals.REQUEST_CLASS_NAMES);
 			context.sendBroadcast(i3);
 		}
 
-		setFirstRun();
+		
 	}
 
 	@Override
@@ -294,18 +308,38 @@ public class MainActivity extends ActionBarActivity {
 	}
 	
 	private void createListView(String[] stringArray) {
-		ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
-		ArrayList<Boolean> gtList = new ArrayList<Boolean>(Arrays.asList(currentGT));
 		
-		dataAdapter = new GtSelectorAdapter(this,R.layout.gt_selector_element, contextList, gtList);
+		/*
+		 *  Initialize the array containing the ground truth information (to set the check boxes
+		 *  correctly when we come back to this activity):
+		 */		
 		
-		ListView listView = (ListView) findViewById(R.id.gtSelector);
-		//final ArrayAdapter dataAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, stringArray);
+		if (stringArray == null) {
+			Log.e(TAG, "Failed to create ListView for the GT logger, as stringArray is empty");
+			return;
+		}
 		
+		if (currentGT == null) {
+			Log.i(TAG, "Initializing currentGT array");
+			currentGT = new Boolean[stringArray.length];
+			for(int j=0; j<currentGT.length; j++) {
+				currentGT[j] = false;
+			}
+		}
 		
-		// Assign adapter to ListView
-		listView.setAdapter(dataAdapter);
-		Log.d(TAG, "ListView for ground truth created");
+		if (stringArray != null) {
+			ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
+			ArrayList<Boolean> gtList = new ArrayList<Boolean>(Arrays.asList(currentGT));
+			
+			dataAdapter = new GtSelectorAdapter(this,R.layout.gt_selector_element, contextList, gtList);
+			
+			ListView listView = (ListView) findViewById(R.id.gtSelector);
+			//final ArrayAdapter dataAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, stringArray);
+			
+			// Assign adapter to ListView
+			listView.setAdapter(dataAdapter);
+			Log.d(TAG, "ListView for ground truth created");
+		}
 		
 	}
 
@@ -331,10 +365,7 @@ public class MainActivity extends ActionBarActivity {
 				if (tmpStringArray != null) {
 
 					contextClasses = tmpStringArray;
-					currentGT = new Boolean[contextClasses.length];
-					for(int i=0; i<currentGT.length; i++) {
-						currentGT[i] = false;
-					}
+
 					createListView(contextClasses);
 
 				} else {

@@ -81,10 +81,7 @@ public class Settings extends ActionBarActivity {
     			
     			Intent intent = new Intent(Globals.MAX_QUERY_NUMBER_CHANGED);
     			
-    			sendBroadcast(intent);
-    			
-            	// TODO: call intent
-    			
+    			sendBroadcast(intent);    			
             }
         });
     }

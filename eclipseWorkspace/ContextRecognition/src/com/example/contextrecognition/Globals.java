@@ -1,12 +1,17 @@
 package com.example.contextrecognition;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
@@ -18,17 +23,36 @@ public class Globals {
 	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 			+ "/" + APP_FOLDER);
 	
-	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");
+	Calendar cal = Calendar.getInstance();
+	Date currentLocalTime = cal.getTime();
+	@SuppressLint("SimpleDateFormat")
+	DateFormat date = new SimpleDateFormat("yyyMMdd");
+	String dateString = date.format(currentLocalTime);
+	
+	public static File getLogPath(String dateString) {
+		File f = new File(APP_PATH, "/Logs_" + dateString);
+		
+		return f;
+	}
+	
+	//public static final File CURRENT_LOG_FOLDER = new File(APP_PATH, "/Logs_" + dateString);
 
-	public static final File AL_LOG_FILE = new File(APP_PATH, "AL_Log.txt");
+	public static final String START_LOG_FILE = "START_LOG.txt";
 	
-	public static final File GT_LOG_FILE = new File(APP_PATH, "GT_Log.txt");
+//	public static final String AL_LOG_FILENAME = "AL_Log.txt";
+//	
+//	public static final File GT_LOG_FILE = new File(CURRENT_LOG_FOLDER, "GT_Log.txt");
+//	
+//	public static final File PRED_LOG_FILE = new File(CURRENT_LOG_FOLDER, "PRED_Log.txt");
+//	
+//	public static final File AUDIO_FILE = new File(CURRENT_LOG_FOLDER, "rawAudio");
 	
-	public static final File PRED_LOG_FILE = new File(APP_PATH, "PRED_Log.txt");
+	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");
 	
-	public static final File START_LOG_FILE = new File(APP_PATH, "START_LOG.txt");
+	// Just for testing: to see if the scheduled "long-term" events like file transfer at the end of the day work
+	public static final File TEST_FILE = new File(APP_PATH, "scheduledTasks.txt");
 	
-	public static final File AUDIO_FILE = new File(APP_PATH, "rawAudio");
+	
 	
 	/*
 	 * App settings
@@ -65,13 +89,12 @@ public class Globals {
 	
 	public static String MAX_NUM_QUERIES = "maxNumQueries";
 	public static String PREV_MAX_NUM_QUERIES = "PrevMaxNumQueries";
-	
-	
+
 	/*
 	 * Client-server interaction
 	 */
-	//public static final String IP = "192.168.0.23";
-	public static final String IP = "10.2.119.175";
+	public static final String IP = "192.168.0.23";
+//	public static final String IP = "10.2.119.175";
 //	public static final String IP = "192.168.0.68";
 	
 	public static final String PORT = "8080";
@@ -79,6 +102,7 @@ public class Globals {
 	public static final String ADD_CLASS_URL = BASE_URL + "addclass/?";
 	public static final String GET_KNOWN_CLASSES_URL = BASE_URL + "getknownclasses/?";
 	public static final String FEASIBILITY_CHECK_URL = BASE_URL + "feasibilitycheck/?";
+	public static final String PUT_RAW_AUDIO = BASE_URL + "putrawaudio/?";
 	
 	// Results of the feasibility check (String have to match results from server):
 	public static final String FEASIBILITY_DOWNLOADED = "downloaded";
@@ -123,7 +147,7 @@ public class Globals {
 	
 	public static final String REGISTER_RECURRING_TASKS = "action.registerRecurringTasks";
 	
-	public static final String RESET_MAX_QUERY_NUMBER = "action.resetMaxQueryNumber";
+	public static final String END_OF_DAY_TASKS = "action.endOfDayTasks";
 	
 	public static final String PERSIST_DATA = "action.persistData";
 	
@@ -138,10 +162,9 @@ public class Globals {
 	public static final String CLASS_NAMES_SET = "classNamesSet";
 	
 	// Preferences:
+	public static final String USER_ID = "userId";
 	public static final String CURRENT_CONTEXT = "currentContext";
-	
 	public static final String CONTEXT_CLASSES = "contextClasses";
-	
 	public static final String CLASS_COUNTS = "classCounts";
 	
 	/*
@@ -184,6 +207,7 @@ public class Globals {
 	            e.printStackTrace();
 	        }
 	    }
+	    
 	    String[] stringArray = new String[urls.size()];
 	    return urls.toArray(stringArray);
 	}

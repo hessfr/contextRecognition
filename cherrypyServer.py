@@ -88,6 +88,37 @@ class GetKnownClasses():
         json_string = json.dumps(classList)
 
         return json_string
+        
+class PutRawAudio():
+    
+    exposed = True
+    
+    @cherrypy.expose
+    def PUT(self):
+        
+        print("--- PutRawAudio Put request ---")        
+        
+        data = cherrypy.request.body.read()
+        
+        f = open("rawAudio", 'wb')
+        f.write(data)
+        f.close()
+        
+        return "abc"
+        
+    @cherrypy.expose
+    def POST(self):
+        
+        print("--- PutRawAudio POST request ---")        
+        
+        data = cherrypy.request.body.read()
+        
+        f = open("rawAudio", 'wb')
+        f.write(data)
+        f.close()
+        
+        return "abc"
+        
 
 """ Mount the classes to the right URL: """
 
@@ -109,6 +140,11 @@ cherrypy.tree.mount(GetKnownClasses(), '/getknownclasses', {
         'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
         'tools.json_out.on': True,
         'tools.response_headers.on': True,
+        }})
+        
+cherrypy.tree.mount(PutRawAudio(), '/putrawaudio', {
+    '/': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher()
         }})
         
 
