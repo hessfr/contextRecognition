@@ -332,7 +332,7 @@ public class MainActivity extends ActionBarActivity {
 			ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
 			ArrayList<Boolean> gtList = new ArrayList<Boolean>(Arrays.asList(currentGT));
 			
-			dataAdapter = new GtSelectorAdapter(this,R.layout.gt_selector_element, contextList, gtList);
+			dataAdapter = new GtSelectorAdapter(this,R.layout.cb_listview_element, contextList, gtList);
 			
 			ListView listView = (ListView) findViewById(R.id.gtSelector);
 			//final ArrayAdapter dataAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, stringArray);
@@ -382,7 +382,7 @@ public class MainActivity extends ActionBarActivity {
 	 * 
 	 * Code similar to: http://www.mysamplecode.com/2012/07/android-listview-checkbox-example.html
 	 */
-	private class GtSelectorAdapter extends ArrayAdapter<String>{
+	private class GtSelectorAdapter extends ArrayAdapter<String> {
 
 		private ArrayList<String> contextList;
 		private ArrayList<Boolean> cbStatus;
@@ -410,7 +410,7 @@ public class MainActivity extends ActionBarActivity {
 		   if (convertView == null) {
 			   LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			   
-			   convertView = vi.inflate(R.layout.gt_selector_element, null);
+			   convertView = vi.inflate(R.layout.cb_listview_element, null);
 			 
 			   holder = new ViewHolder();
 			   holder.checkBox = (CheckBox) convertView.findViewById(R.id.checkBox1);
@@ -458,8 +458,7 @@ public class MainActivity extends ActionBarActivity {
 				      
 				   }  
 			   });  
-		   } 
-		   else {
+		   } else {
 			   holder = (ViewHolder) convertView.getTag();
 		   }
 

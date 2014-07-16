@@ -481,11 +481,13 @@ public class StateManager extends BroadcastReceiver {
 		}
 		
 		if (intent.getAction().equals(Globals.REGISTER_RECURRING_TASKS)) {
-			
+			/* 
+			 * Reset of max number of queries at the end of the day. The alarm manager wakes
+			 * up the device and calls the pending intent, even if the app itself is not opened.
+			 */
 			Calendar updateTime = Calendar.getInstance();
-		    updateTime.setTimeZone(TimeZone.getTimeZone("GMT"));
 		    updateTime.set(Calendar.HOUR_OF_DAY, 23);
-		    updateTime.set(Calendar.MINUTE, 59);			
+		    updateTime.set(Calendar.MINUTE, 59);
 		    
 		    Intent resetIntent = new Intent(Globals.END_OF_DAY_TASKS);
 	        PendingIntent pendingResetIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
@@ -495,18 +497,21 @@ public class StateManager extends BroadcastReceiver {
 		    
 	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
 	        
+	        // Persist data (thresholds, buffers, ...) continuously:
 	        Intent persistIntent = new Intent(Globals.PERSIST_DATA);
 	        PendingIntent pendingPersistIntent = PendingIntent.getBroadcast(context, 0, persistIntent, 0);
 
 	        Calendar currentCal = Calendar.getInstance();
-	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, currentCal.getTimeInMillis(), Globals.PERSIST_PERIOD, pendingPersistIntent); //change to 10min or so
+	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, currentCal.getTimeInMillis(), Globals.PERSIST_PERIOD, pendingPersistIntent);
 		    
-	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
+	        Log.d(TAG, "AlarmManager registered, to continuously persist data");
 
 		} 
 		
 		if (intent.getAction().equals(Globals.END_OF_DAY_TASKS)) {
 
+			Log.i(TAG, "--------- end of day tasks called");
+			
 			Calendar cal = Calendar.getInstance();
 			Date currentLocalTime = cal.getTime();
 			DateFormat date = new SimpleDateFormat("dd-MM-yyy HH:mm:ss z");

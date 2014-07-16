@@ -41,7 +41,7 @@ public class Welcome2 extends Activity {
 	        
 	        int currentValue = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
 			if (currentValue == -1) {
-				Log.e(TAG, "Got invalid value from preference, change to default value instead (only for GUI)");
+				Log.i(TAG, "Maximum number of queries set to default value, as there was not entry in the preferences yet");
 				currentValue = 10;
 			}        
 			

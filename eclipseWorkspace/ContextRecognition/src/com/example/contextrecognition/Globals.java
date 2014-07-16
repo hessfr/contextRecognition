@@ -76,6 +76,12 @@ public class Globals {
 	// Silence detection threshold:
 	public static short SILENCE_DETECTION_THRESHOLD = 300; //TODO: find good value
 	
+	// Array of context classes that can be selected initially:
+	public static String[] initialContextClasses = {"Office", "Restaurant", "Conversation", "Train"}; // TODO
+	// Array indicating if the context class should be selected initially:
+	public static Boolean[] defaultClasses = {true, true, true, false}; //TODO
+	
+	
 	/*
 	 * Buffer lengthes for the threshold calculation
 	 */
