@@ -2,6 +2,8 @@ package com.example.contextrecognition;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.concurrent.ExecutionException;
 
 import android.app.Activity;
 import android.content.Context;
@@ -19,6 +21,10 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 
+import com.example.communication.GetInitialModel;
+import com.example.communication.InitModel;
+import com.example.tools.TimerTaskGet;
+
 public class Welcome3 extends Activity {
 	
 	Button startButton;
@@ -26,6 +32,7 @@ public class Welcome3 extends Activity {
 	ContextSelectorAdapter dataAdapter;
 	ListView listView;
 	Boolean[] actualSelection;
+	Context context = this;
 	
 	private static final String TAG = "Welcome3";
 	SharedPreferences mPrefs;
@@ -69,9 +76,23 @@ public class Welcome3 extends Activity {
  
 				// Check if actualSelection array is different than the default array:
 				boolean isDifferent = false;
+				int numClasses = 0;
 				for(int i=0; i<Globals.defaultClasses.length; i++){
 					if (Globals.defaultClasses[i] != actualSelection[i]) {
 						isDifferent = true;
+					}
+					
+					if (actualSelection[i] == true) {
+						numClasses++;
+					}
+				}
+				
+				String[] classesToRequest = new String[numClasses];
+				int k=0;
+				for(int i=0; i<Globals.initialContextClasses.length; i++) {
+					if (actualSelection[i] == true) {
+						classesToRequest[k] = Globals.initialContextClasses[i];
+						k++;
 					}
 				}
 				
@@ -80,17 +101,81 @@ public class Welcome3 extends Activity {
 					Log.i(TAG, "New model will be requested from server as selected context"
 							+ "classes are different from the default ones");
 					
-					//TODO: call server
+					InitModel initReq = new InitModel();
+					
+					try {
+						
+						 String[] res = initReq.execute(classesToRequest).get();
+						 final String filenameOnServer = res[0];
+						 String wait = res[1];
+						 
+						 Log.i(TAG, "filenameOnServer: " + filenameOnServer);
+
+						// Now check periodically if the computation on server
+						// is finished
+						TimerTaskGet task = new TimerTaskGet(context, filenameOnServer) {
+
+							private int counter;
+
+							public void run() {
+
+								GetInitialModel getReq = new GetInitialModel();
+								Boolean resGet = false;
+
+								try {
+
+									resGet = getReq.execute(filenameOnServer).get();
+
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								} catch (ExecutionException e) {
+									e.printStackTrace();
+								}
+
+								if (resGet == true) {
+
+									// Model received from the server:
+									Log.i(TAG, "New classifier received from server");
+									
+									// Call the main activity:
+									Intent i = new Intent(Welcome3.this, MainActivity.class);
+									i.putExtra(Globals.WAIT_FOR_SERVER, true);
+									i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
+							        startActivity(i);
+									
+									this.cancel();
+
+								}
+
+								if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
+									Log.e(TAG,
+											"Server timeout");
+									this.cancel();
+								}
+
+								Log.i(TAG, "Waiting for new classifier from server");
+							}
+						};
+
+						Timer timer = new Timer();
+						timer.schedule(task, 0, Globals.POLLING_INTERVAL_INITIAL_MODEL);
+
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+					}
 					
 				} else {
 					Log.i(TAG, "Context classes not changed, using the default classifier");
+					
+					// Call the main activity:
+					Intent i = new Intent(Welcome3.this, MainActivity.class);
+					i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
+			        startActivity(i);
 				}
 				
 				
-				// Call the main activity:
-				Intent i = new Intent(Welcome3.this, MainActivity.class);
-				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
-		        startActivity(i);
  
 			}
  

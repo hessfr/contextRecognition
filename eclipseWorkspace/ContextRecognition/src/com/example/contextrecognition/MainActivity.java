@@ -91,9 +91,6 @@ public class MainActivity extends ActionBarActivity {
 			startActivity(i);
 			finish();
 			return;
-			
-			
-			
 		}
 		
 		setContentView(R.layout.activity_main);
@@ -105,7 +102,7 @@ public class MainActivity extends ActionBarActivity {
 			Log.d(TAG, "First run of MainActivity");
 			
 			appendToStartLog();
-
+			
 			// Start the AudioWorker service:
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);

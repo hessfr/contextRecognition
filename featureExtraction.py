@@ -77,12 +77,6 @@ def FX_multiFolders(classesList=None, saveFeatures=False, useJSON=True): #TODO: 
     
     return featureData
 
-
-    
-    
-    
-    
-
 def FX_Java(className):
     """
     Extract features of the given class and dump them in the extractedFeatures folder as a JSON File.

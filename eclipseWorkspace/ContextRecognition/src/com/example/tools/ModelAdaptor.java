@@ -342,7 +342,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		Log.i(TAG, n_added + " component(s) added and " + n_merged
 				+ " component(s) merged");
 
-		// ----- Merge statistically equivalent components: -----
+		// ----- Merge statistically equivalent components (compare each component with each other): -----
 		// TODO
 
 		// ----- Create and fill GMM object that should be returned: -----

@@ -19,7 +19,7 @@ import ipdb as pdb #pdb.set_trace()
 
 def dictToJSON(trainedGMM, returnGMM=False, filename=None):
     """
-    Deserialize the GMM object in Python and dump it into a JSON file. Final JSON structure looks like this:
+    Deserialize the GMM object (dict!) in Python and dump it into a JSON file. Final JSON structure looks like this:
     GMM[0]["classesDict"]
     GMM[0]["n_classes"]
     GMM[0]["scale_mean"]
@@ -59,7 +59,7 @@ def dictToJSON(trainedGMM, returnGMM=False, filename=None):
     # pdb.set_trace()
 
     if filename != None:
-        path = filename + ".json"
+        path = filename
     
         json.dump(seriGMM, open(path,"wb"))
     
@@ -68,7 +68,7 @@ def dictToJSON(trainedGMM, returnGMM=False, filename=None):
         
 def listToJSON(trainedGMM, returnGMM=False, filename=None):
     """
-    Deserialize the GMM list object ( in Python and dump it into a JSON file. Final JSON structure looks like this:
+    Deserialize the GMM object (list!) in Python and dump it into a JSON file. Final JSON structure looks like this:
     GMM[0]["classesDict"]
     GMM[0]["n_classes"]
     GMM[0]["scale_mean"]

@@ -232,7 +232,7 @@ def trainGMM(featureData):
 
     n_comp = 16 # number of components
 
-    print(str(n_classes) + " different classes")
+    print("Training classifier with " + str(n_classes) + " different classes")
 
     clfs = []
     n_train_list = []
@@ -254,101 +254,13 @@ def trainGMM(featureData):
 
         n_train_list.append(n_tmp)
 
-        print(n_train_list[-1])
+        print("Component trained with " + n_train_list[-1] + " sample points")
 
     # pdb.set_trace()
 
     trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'n_train': n_train_list, 'scaler': scaler}
 
     return trainedGMM
-
-def addNewClassGMM(jsonGMM, newClassName, newClassData=None):
-    """
-    Incorporate a new class into an existing GMM JSON model (i.e. list not dict!)
-    @param jsonGMM: List containing GMMs, see createJSON.py for exact structure
-    @param newClassName: Name of the new class. Has to match the name of the folder where the sound files are located
-    @param newClassData: Already extracted MFCC Features for the given newClassName. If not provided, a feature extraction will be performed
-    @return: List containing the added class as the last element
-    """
-    
-    jGMM = copy.deepcopy(jsonGMM)
-
-    if newClassData == None:
-        tmp = FX_multiFolders([newClassName]) # TODO: do this properly
-        newClassData = tmp["features"]
-
-    scaler = preprocessing.StandardScaler()
-    scaler.mean_ = jGMM[0]["scale_means"]
-    scaler.std_ = jGMM[0]["scale_stddevs"]
-    
-    X_train = scaler.transform(newClassData)
-
-    n_train_new = X_train.shape[0]
-    n_features = X_train.shape[1]
-    n_components = 16
-
-    newClf = GMM(n_components = n_components)
-    newClf.fit(X_train)
-
-    """ Update the dict containing mapping of class names: """
-    newClassDict = dict(jGMM[0]['classesDict'])
-    newClassDict[newClassName] = len(newClassDict.values())
-
-    new_n_classes = jGMM[0]["n_classes"] + 1
-    
-    """ Update classesDict and n_classes for all old classes: """
-    for i in range(len(jGMM)):
-        jGMM[i]["classesDict"] = newClassDict
-        jGMM[i]["n_classes"] = new_n_classes
-        
-
-    """ Add the new class to the list: """
-    jGMM.append({})   
-    
-    jGMM[-1]["classesDict"] = newClassDict
-    jGMM[-1]["n_classes"] = new_n_classes
-    jGMM[-1]["scale_mean"] = scaler.mean_
-    jGMM[-1]["scale_stddev"] = scaler.std_
-    jGMM[-1]["weights"] = newClf.weights_
-    jGMM[-1]["means"] = newClf.means_
-    jGMM[-1]["covars"] = newClf.covars_
-    jGMM[-1]["n_components"] = n_components
-    jGMM[-1]["n_features"] = n_features
-    jGMM[-1]["n_train"] = n_train_new
-
-    return jGMM
-    
-def OLD_addNewClassGMM(prevTrainedGMM, newClassName, newClassData=None):
-    """
-    Incorporate a new class into an existing GMM model
-    @param prevTrainedGMM: Dictionary containing results of previously trained GMM. Must contain classifiers in 'clfs' and mapping of
-    class names to numbers in 'classesDict'
-    @param newClassName: Name of the new class. Has to match the name of the folder where the sound files are located
-    @param newClassData: Already extracted MFCC Features for the given newClassName. If not provided, a feature extraction will be performed
-    @return: Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
-    """
-
-    if newClassData == None:
-        newClassData = FX_Folder(newClassName)
-
-    X_train = prevTrainedGMM['scaler'].transform(newClassData)
-
-    n_newClass = X_train.shape[0]
-
-    newClf = GMM(n_components = 16)
-    newClf.fit(X_train)
-
-    """ Update the dict containing mapping of class names: """
-    newClassDict = dict(prevTrainedGMM['classesDict'])
-    newClassDict[newClassName] = len(newClassDict.values())
-
-    allClfs = list(prevTrainedGMM['clfs'])
-    allClfs.append(newClf)
-
-    """ create new dictionary: """
-    updatedGMM = {'clfs': allClfs, 'classesDict': newClassDict}
-
-    return updatedGMM
     
 def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, showPlots=True):
     """

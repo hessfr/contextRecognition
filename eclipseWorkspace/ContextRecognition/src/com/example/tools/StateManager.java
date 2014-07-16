@@ -44,7 +44,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.communication.CheckClassFeasibility;
-import com.example.communication.GetNewModel;
+import com.example.communication.GetUpdatedModel;
 import com.example.communication.IncorporateNewClass;
 import com.example.communication.SendRawAudio;
 import com.example.contextrecognition.ContextSelection;
@@ -402,9 +402,6 @@ public class StateManager extends BroadcastReceiver {
 					if (testBool == false) {
 						testBool = true;
 
-
-						
-						
 //						transferRawAudio(context);
 					
 					}
@@ -487,7 +484,7 @@ public class StateManager extends BroadcastReceiver {
 			 */
 			Calendar updateTime = Calendar.getInstance();
 		    updateTime.set(Calendar.HOUR_OF_DAY, 23);
-		    updateTime.set(Calendar.MINUTE, 59);
+		    updateTime.set(Calendar.MINUTE, 55);
 		    
 		    Intent resetIntent = new Intent(Globals.END_OF_DAY_TASKS);
 	        PendingIntent pendingResetIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
@@ -506,6 +503,21 @@ public class StateManager extends BroadcastReceiver {
 		    
 	        Log.d(TAG, "AlarmManager registered, to continuously persist data");
 
+	        // Copy the classifier into the Log folder at the end of the day (for later evaluation):
+			Calendar cal = Calendar.getInstance();
+			Date currentLocalTime = cal.getTime();
+			DateFormat date = new SimpleDateFormat("yyyMMdd");
+			String dateString = date.format(currentLocalTime);
+
+			File destFile = new File(Globals.getLogPath(), "GMM_" + dateString);
+			
+			try {
+				Globals.copyFile(new File(Globals.APP_PATH, "GMM.json"), destFile);
+			} catch (IOException e) {
+				Log.e(TAG, "Failed to copy GMM into log folder");
+				e.printStackTrace();
+			}
+	        
 		} 
 		
 		if (intent.getAction().equals(Globals.END_OF_DAY_TASKS)) {
@@ -825,12 +837,14 @@ public class StateManager extends BroadcastReceiver {
 				public void run() {
 					//Looper.prepare();
 					
-		        	GetNewModel getReq = new GetNewModel();
+		        	GetUpdatedModel getReq = new GetUpdatedModel();
 					Boolean res = false;
 					
 					try {
 						
 						res = getReq.execute(filenameOnServer).get();
+						
+						Log.i(TAG,"----------- " + res);
 						
 					} catch (InterruptedException e) {
 						e.printStackTrace();

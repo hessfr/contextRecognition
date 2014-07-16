@@ -34,7 +34,7 @@ import com.example.contextrecognition.Globals;
  */
 public class IncorporateNewClass extends AsyncTask<String, Void, String> {
 	
-	private static final String TAG = "PostRequest";
+	private static final String TAG = "IncorporateNewClass";
 
     // Contains filename under which the adapted GMM can be requested from the server
     private String filenameOnServer;

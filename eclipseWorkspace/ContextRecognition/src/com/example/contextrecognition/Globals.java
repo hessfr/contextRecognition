@@ -1,6 +1,11 @@
 package com.example.contextrecognition;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,7 +16,6 @@ import java.util.Date;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
@@ -112,15 +116,23 @@ public class Globals {
 	public static final String ADD_CLASS_URL = BASE_URL + "addclass/?";
 	public static final String GET_KNOWN_CLASSES_URL = BASE_URL + "getknownclasses/?";
 	public static final String FEASIBILITY_CHECK_URL = BASE_URL + "feasibilitycheck/?";
-	public static final String PUT_RAW_AUDIO = BASE_URL + "putrawaudio/?";
+	public static final String PUT_RAW_AUDIO_URL = BASE_URL + "putrawaudio/?";
+	public static final String INIT_CLASSIFIER_URL = BASE_URL + "initclassifier/";
 	
 	// Results of the feasibility check (String have to match results from server):
 	public static final String FEASIBILITY_DOWNLOADED = "downloaded";
 	public static final String FEASIBILITY_FEASIBLE = "feasible";
 	public static final String FEASIBILITY_NOT_FEASIBLE = "not_feasible";
 	
+	// Results of the initClassifier (String have to match results from server):
+	public static final String WAIT = "wait";
+	public static final String NO_WAIT = "no_wait";
+	
 	public static final long POLLING_INTERVAL_NEW_CLASS = 60 * 1000; // = 1min
 	public static final long MAX_RETRY_NEW_CLASS = 2 * 60; // = 2h
+	
+	public static final long POLLING_INTERVAL_INITIAL_MODEL = 300;
+	public static final long MAX_RETRY_INITIAL_MODEL = 5;
 	
 	
 	/*
@@ -170,6 +182,9 @@ public class Globals {
 	public static final String REQUEST_CLASS_NAMES = "action.requestClassNames";
 	
 	public static final String CLASS_NAMES_SET = "classNamesSet";
+	
+	// Define if we wait for server response when calling MainActivity from welcome activity:
+	public static final String WAIT_FOR_SERVER = "waitForServer";
 	
 	// Preferences:
 	public static final String USER_ID = "userId";
@@ -264,5 +279,22 @@ public class Globals {
 	    }
 
 	    return urls;
+	}
+	
+	/*
+	 * http://stackoverflow.com/questions/9292954/how-to-make-a-copy-of-a-file-in-android
+	 */
+	public static void copyFile(File src, File dst) throws IOException {
+	    InputStream in = new FileInputStream(src);
+	    OutputStream out = new FileOutputStream(dst);
+
+	    // Transfer bytes from in to out
+	    byte[] buf = new byte[1024];
+	    int len;
+	    while ((len = in.read(buf)) > 0) {
+	        out.write(buf, 0, len);
+	    }
+	    in.close();
+	    out.close();
 	}
 }

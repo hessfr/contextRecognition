@@ -31,7 +31,7 @@ import com.example.contextrecognition.Globals;
  * IncorporateNewClass request has to be call first, in order to initiate the training
  * on the server
  */
-public class GetNewModel extends AsyncTask<String, Void, Boolean> {
+public class GetInitialModel extends AsyncTask<String, Void, Boolean> {
 	
 	private static final String TAG = "GetRequest";
 	
@@ -48,7 +48,7 @@ public class GetNewModel extends AsyncTask<String, Void, Boolean> {
 	    List<NameValuePair> par = new LinkedList<NameValuePair>();
         par.add(new BasicNameValuePair("filename", filenameOnServer));
         String paramString = URLEncodedUtils.format(par, "utf-8");
-        String URL = Globals.ADD_CLASS_URL + paramString;
+        String URL = Globals.INIT_CLASSIFIER_URL + paramString;
         
         //Set timeout parameters:
         HttpParams httpParameters = new BasicHttpParams();
@@ -71,7 +71,7 @@ public class GetNewModel extends AsyncTask<String, Void, Boolean> {
 
 	    		// Abort and return false if computation on server not finished yet:
 	    		if (receveivedString.equals("-1")) {
-
+	    			Log.w(TAG, "Server return not ready code");
 	    			return false;
 	    			
 	    		} else {
@@ -92,7 +92,6 @@ public class GetNewModel extends AsyncTask<String, Void, Boolean> {
 	                out.write(jsonString);
 	                out.close();
 	                
-	                //TODO send broadcast that new class incorporated and start prediction again
 	    	    }
 	    	    catch (IOException e) {
 	    	        Log.e("Exception", "File write failed: " + e.toString());

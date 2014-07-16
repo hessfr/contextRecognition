@@ -92,6 +92,14 @@ def getSoundBySingleTag(tag, maxNumber=30):
     @return: returns true when download is finished
     """
     
+    """ First of all check if the class requires an additional tag, e.g. searching for "Bus"+"Inside" instead of only "Bus" """
+    # list of context classes that need additional "inside" tag:
+    additionalTagNeeded = ["Train", "Car"]
+    
+    if tag in additionalTagNeeded:
+        getSoundByTags(tag, [tag, "inside"], maxNumber=maxNumber)
+        return True
+
     tagSearchString = "tag:" + tag + " "
     
     searchResults = Sound.search(f = tagSearchString,

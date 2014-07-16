@@ -6,6 +6,7 @@ import os
 from random import randint
 from feasibilityCheck import feasibilityCheck
 from GetKnownClasses import GetKnownClassesJSON
+from server_check_model_exists import check_model_exists
 
 class AddContextClass():
 
@@ -91,6 +92,8 @@ class GetKnownClasses():
         
 class PutRawAudio():
     
+    #TODO    
+    
     exposed = True
     
     @cherrypy.expose
@@ -119,6 +122,76 @@ class PutRawAudio():
         
         return "abc"
         
+class InitClassifier():
+
+    exposed = True
+
+    # TODO:
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    def POST(self):
+        
+        print("--- InitClassifier POST request ---")
+
+        json_data = cherrypy.request.json     
+        
+        # Remove unicode notation:
+        string_data = dict([(str(k), str(v)) for k, v in json_data.items()])
+        
+        classes_list = string_data.values()
+
+        model_exists_result = check_model_exists(classes_list)
+        
+        if model_exists_result == False:
+            # This model does not exists on server yet, so we have to build it:
+            
+            # Create random ID for this request:
+            id = str(randint(1e5,1e6))
+
+            # Create an id, where the client can get the new classifier when the calculation is done:  
+            filename_new_classifier = str(id) + ".json"            
+            
+            # Start training the classifier in the background (list is passed as String and converted back with Regex later):
+            subprocess.Popen(["python", "server_create_initial_model.py", str(classes_list), filename_new_classifier])
+            
+            dir = "classifiers/" + filename_new_classifier
+
+            response = {"wait": "wait", "filename": dir}
+   
+        else:
+            # The model already exisits and the location of the model can be send to server:
+            filename_exisiting = "classifiers/" + model_exists_result
+            response = {"wait": "no_wait", "filename": filename_exisiting}
+            
+        return response
+        
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def GET(self, filename):
+        print("--- InitClassifier GET request ---")        
+
+        notReadyCode = -1
+
+        # get the filename by removing the first part of the response ('filename=classifiers/625987.json'....)
+        filename = filename.split("=")[1]
+
+        if(os.path.isfile(filename)):
+            print("Filename " + filename + " found on disk, will be sent to client")
+        
+            js = json.load(open(filename, 'rb'))
+            
+            #os.remove(filename)
+            
+            return js
+        
+        else:
+            # Classifier not available yet, tell client that we are not ready yet:
+            return notReadyCode
+        
+
+        
 
 """ Mount the classes to the right URL: """
 
@@ -145,6 +218,14 @@ cherrypy.tree.mount(GetKnownClasses(), '/getknownclasses', {
 cherrypy.tree.mount(PutRawAudio(), '/putrawaudio', {
     '/': {
         'request.dispatch': cherrypy.dispatch.MethodDispatcher()
+        }})
+        
+cherrypy.tree.mount(InitClassifier(), '/initclassifier', {
+    '/': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'tools.json_in.on': True,
+        'tools.json_out.on': True,
+        'tools.response_headers.on': True,
         }})
         
 
