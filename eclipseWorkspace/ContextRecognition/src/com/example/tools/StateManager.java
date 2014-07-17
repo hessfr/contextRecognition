@@ -1142,14 +1142,12 @@ public class StateManager extends BroadcastReceiver {
 		if ((newValue != -1) && (prevValue != -1)) {
 			
 			int diff = newValue - prevValue;
-			
-			
+
 			numQueriesLeft = numQueriesLeft + diff;
 			
 			if (numQueriesLeft < 0) {
 				numQueriesLeft = 0;
 			}
-			
 			
 			Log.i(TAG, "Maximum number of queries changed to " + numQueriesLeft);
 		} else {

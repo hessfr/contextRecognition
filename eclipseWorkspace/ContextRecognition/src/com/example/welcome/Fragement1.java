@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -16,6 +17,7 @@ import com.example.contextrecognition.R;
 public class Fragement1 extends Fragment {
 
 	private static final String TAG = "Welcome1";
+	
 	SharedPreferences mPrefs;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
 
@@ -51,7 +53,6 @@ public class Fragement1 extends Fragment {
 			public void onClick(View arg0) {
 				
 				//TODO
-				
 				
 			}
 

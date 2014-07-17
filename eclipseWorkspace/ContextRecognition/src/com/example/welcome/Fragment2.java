@@ -71,17 +71,20 @@ public class Fragment2 extends Fragment {
             	currentValueTV.setText(String.valueOf(newValue));
             	
             	SharedPreferences.Editor editor = mPrefs.edit();
-            	int prev = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
-            	if (prev != -1) {
-            		editor.putInt(Globals.PREV_MAX_NUM_QUERIES, prev);
+
+            	int prevValue = mPrefs.getInt(Globals.PREV_MAX_NUM_QUERIES, -1);
+            	if (prevValue == -1) {
+            		// Set to zero after clicking the very first time, so that StateManager sets the new value properly
+            		editor.putInt(Globals.PREV_MAX_NUM_QUERIES, 0); 
             	} else {
-            		Log.e(TAG, "Could not get max number of queries from preferences");
+            		int newValue = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
+            		editor.putInt(Globals.PREV_MAX_NUM_QUERIES, newValue);
             	}
             	
     			editor.putInt(Globals.MAX_NUM_QUERIES, newValue);
     			editor.commit();
     			
-    			Log.d(TAG, "Preference commited, new value of MAX_NUM_QUERIES: " + newValue);
+    			Log.i(TAG, "Preference commited, new value of MAX_NUM_QUERIES: " + newValue);
     			
     			Intent intent = new Intent(Globals.MAX_QUERY_NUMBER_CHANGED);
     			
