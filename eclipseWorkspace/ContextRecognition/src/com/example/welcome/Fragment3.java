@@ -1,21 +1,20 @@
-package com.example.contextrecognition;
+package com.example.welcome;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.concurrent.ExecutionException;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -24,51 +23,64 @@ import android.widget.Toast;
 
 import com.example.communication.GetInitialModel;
 import com.example.communication.InitModel;
+import com.example.contextrecognition.Globals;
+import com.example.contextrecognition.MainActivity;
+import com.example.contextrecognition.R;
 import com.example.tools.TimerTaskGet;
 
-public class Welcome3 extends Activity {
-	
+public class Fragment3 extends Fragment {
+
 	Button startButton;
 	Button prevButton;
 	ContextSelectorAdapter dataAdapter;
 	ListView listView;
 	Boolean[] actualSelection;
-	Context context = this;
 	
 	private static final String TAG = "Welcome3";
 	SharedPreferences mPrefs;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
-
+	
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-	    super.onCreate(savedInstanceState);
-	    	this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-	    	
-	    	setContentView(R.layout.activity_welcome3);
-	    	
-	    	addListenerOnButton();
-	    	
-			ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(Globals.initialContextClasses));
-			ArrayList<Boolean> defaultList = new ArrayList<Boolean>(Arrays.asList(Globals.defaultClasses));
-			// The checkboxes that got selected by the user will be saved here:
-			actualSelection = new Boolean[Globals.initialContextClasses.length];
-			for(int i=0; i<defaultList.size(); i++) {
-				actualSelection[i] = defaultList.get(i);
-			}
-			
-			dataAdapter = new ContextSelectorAdapter(this,R.layout.cb_listview_element, contextList, defaultList);
-			
-			listView = (ListView) findViewById(R.id.contextSelector);
-			
-			// Assign adapter to ListView
-			listView.setAdapter(dataAdapter);
-			Log.d(TAG, "ListView for initial context selection created");
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.frag_welcome3, container, false);
+
+		addListenerOnButton(v);
+    	
+		ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(Globals.initialContextClasses));
+		ArrayList<Boolean> defaultList = new ArrayList<Boolean>(Arrays.asList(Globals.defaultClasses));
+		// The checkboxes that got selected by the user will be saved here:
+		actualSelection = new Boolean[Globals.initialContextClasses.length];
+		for(int i=0; i<defaultList.size(); i++) {
+			actualSelection[i] = defaultList.get(i);
+		}
+		
+		dataAdapter = new ContextSelectorAdapter(getActivity(), R.layout.cb_listview_element, contextList, defaultList);
+		
+		listView = (ListView) v.findViewById(R.id.contextSelector);
+		
+		// Assign adapter to ListView
+		listView.setAdapter(dataAdapter);
+		Log.d(TAG, "ListView for initial context selection created");
+		
+		return v;
+	}
+
+	public static Fragment3 newInstance(String text) {
+
+		Fragment3 f = new Fragment3();
+		Bundle b = new Bundle();
+		b.putString("msg", text);
+
+		f.setArguments(b);
+
+		return f;
 	}
 	
-	public void addListenerOnButton() {
+	public void addListenerOnButton(View v) {
 		 
-		startButton = (Button) findViewById(R.id.startButton);
-		prevButton = (Button) findViewById(R.id.prevButton);
+		startButton = (Button) v.findViewById(R.id.startButton);
+		prevButton = (Button) v.findViewById(R.id.prevButton);
  
 		startButton.setOnClickListener(new OnClickListener() {
 			 
@@ -116,7 +128,7 @@ public class Welcome3 extends Activity {
 
 							// Now check periodically if the computation on server
 							// is finished
-							TimerTaskGet task = new TimerTaskGet(context, filenameOnServer) {
+							TimerTaskGet task = new TimerTaskGet(getActivity(), filenameOnServer) {
 
 								private int counter;
 
@@ -150,11 +162,11 @@ public class Welcome3 extends Activity {
 									if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
 										Log.w(TAG, "Server not responded to GET request intitial model");
 										
-										runOnUiThread(new Runnable() {
+										getActivity().runOnUiThread(new Runnable() {
 										      @Override
 										          public void run() {
 										    	  Toast.makeText(
-															Welcome3.this,
+										    			  	getActivity(),
 															(String) "Server not reponding, deploying default model, user specific classes "
 																	+ "will be requested when server online again ",
 															Toast.LENGTH_LONG).show();
@@ -177,7 +189,7 @@ public class Welcome3 extends Activity {
 							 //TODO: start MainActivity, but set recurring task to request this model
 							 
 							Toast.makeText(
-									context,
+									getActivity(),
 									(String) "Server not reponding, deploying default model, user specific classes "
 											+ "will be requested when server online again ",
 									Toast.LENGTH_LONG).show();
@@ -210,18 +222,15 @@ public class Welcome3 extends Activity {
 			@Override
 			public void onClick(View arg0) {
  
-				Intent i = new Intent(Welcome3.this, Welcome2.class);
-				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
-		        startActivity(i);
+				//TODO
  
 			}
  
 		});
-		
 	}
 	
 	private void callMainActivity() {
-		Intent i = new Intent(Welcome3.this, MainActivity.class);
+		Intent i = new Intent(getActivity(), MainActivity.class);
 		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
         startActivity(i);
 	}
@@ -259,7 +268,7 @@ public class Welcome3 extends Activity {
 		   ViewHolder holder = null;
 		 
 		   if (convertView == null) {
-			   LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			   LayoutInflater vi = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			   
 			   convertView = vi.inflate(R.layout.cb_listview_element, null);
 			 

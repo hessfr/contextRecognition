@@ -31,6 +31,7 @@ import android.widget.TextView;
 
 import com.example.tools.AudioWorker;
 import com.example.tools.appStatus;
+import com.example.welcome.WelcomeActivity;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -86,7 +87,8 @@ public class MainActivity extends ActionBarActivity {
 			Log.i(TAG, "Very first start of the app: displaying welcome screen first");
 
 			// Open the welcome activity if it hasn't been shown yet (i.e. at the very first start):
-			Intent i = new Intent(this, Welcome1.class);
+//			Intent i = new Intent(this, Welcome1.class);
+			Intent i = new Intent(this, WelcomeActivity.class);
 			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
 			startActivity(i);
 			finish();
