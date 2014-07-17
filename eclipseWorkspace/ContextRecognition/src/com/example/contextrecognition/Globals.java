@@ -27,8 +27,6 @@ public class Globals {
 	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 			+ "/" + APP_FOLDER);
 	
-	
-	
 	public static File getLogPath() {
 		Calendar cal = Calendar.getInstance();
 		Date currentLocalTime = cal.getTime();
@@ -77,8 +75,8 @@ public class Globals {
 	// Time after which the app data (buffers, threshold, ...) should be periodically persisted to external storage
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
-	// Silence detection threshold:
-	public static short SILENCE_DETECTION_THRESHOLD = 300; //TODO: find good value
+	// Silence detection threshold (higher means more samples will be considered silent):
+	public static short SILENCE_DETECTION_THRESHOLD = 400; //TODO: find good value
 	
 	// Array of context classes that can be selected initially:
 	public static String[] initialContextClasses = {"Office", "Restaurant", "Conversation", "Train"}; // TODO
@@ -107,9 +105,9 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-	public static final String IP = "192.168.0.23";
+//	public static final String IP = "192.168.0.23";
 //	public static final String IP = "10.2.119.175";
-//	public static final String IP = "192.168.0.68";
+	public static final String IP = "192.168.0.68";
 	
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/";

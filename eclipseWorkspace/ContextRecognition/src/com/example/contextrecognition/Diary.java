@@ -91,7 +91,8 @@ public class Diary extends ActionBarActivity {
     
     private void createChart(final Integer[] t, String[] c) {
     	
-    	String[] colors = {"#41A317", "#CC6600", "#1569C7", "#008080", "#FFF380"}; //TODO
+    	String[] colors = {"#41A317", "#CC6600", "#1569C7", "#008080", "#A52A2A",
+    			"#438D80", "#827839", "#8C001A", "#8C001A", "#D462FF"}; //TODO: If >10 classes -> NullPointerException
     	
     	Integer[] sorted = new Integer[t.length];
     	

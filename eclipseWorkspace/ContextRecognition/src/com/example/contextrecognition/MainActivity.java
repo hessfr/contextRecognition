@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.FileObserver;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.support.v7.app.ActionBarActivity;
@@ -30,7 +31,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.tools.AudioWorker;
-import com.example.tools.appStatus;
+import com.example.tools.GMM;
+import com.example.tools.AppStatus;
 import com.example.welcome.WelcomeActivity;
 
 public class MainActivity extends ActionBarActivity {
@@ -110,7 +112,7 @@ public class MainActivity extends ActionBarActivity {
 			startService(i);
 
 			// Set app status to initializing:
-			appStatus.getInstance().set(appStatus.INIT);
+			AppStatus.getInstance().set(AppStatus.INIT);
 			Log.i(TAG, "New status: init");
 			
 			// Register the daily reset of the maximum number of queries and periodic data backup:
@@ -124,7 +126,7 @@ public class MainActivity extends ActionBarActivity {
 				editor.putInt(Globals.MAX_NUM_QUERIES, 10);
 				editor.commit();
 				
-				Log.i(TAG, "Preference commited");
+				Log.d(TAG, "Preference commited");
 			}
 			
 			// Reset the current context stored in the preferences to null:
@@ -158,8 +160,6 @@ public class MainActivity extends ActionBarActivity {
 			Intent i3 = new Intent(Globals.REQUEST_CLASS_NAMES);
 			context.sendBroadcast(i3);
 		}
-
-		
 	}
 
 	@Override
@@ -276,8 +276,6 @@ public class MainActivity extends ActionBarActivity {
 
 			@Override
 			public void onClick(View arg0) {
-
-//				sendQuery(); //TODO
 				
 				Intent intent = new Intent(Globals.CALL_CONTEXT_SELECTION_INTENT);
     			Bundle bundle = new Bundle();
@@ -318,14 +316,34 @@ public class MainActivity extends ActionBarActivity {
 			Log.e(TAG, "Failed to create ListView for the GT logger, as stringArray is empty");
 			return;
 		}
-		
+
+		// Initialize the ground truth array the very first time:
 		if (currentGT == null) {
-			Log.i(TAG, "Initializing currentGT array");
+			Log.d(TAG, "Initializing currentGT array");
 			currentGT = new Boolean[stringArray.length];
 			for(int j=0; j<currentGT.length; j++) {
 				currentGT[j] = false;
 			}
 		}
+		
+		// When a context class was added, increase the size of the currentGT array:
+		if (currentGT.length != stringArray.length) {
+			Boolean[] tmp = new Boolean[currentGT.length];
+			for(int i=0; i<currentGT.length; i++) {
+				tmp[i] = currentGT[i];
+			}
+			
+			currentGT = new Boolean[stringArray.length];
+			for(int i=0; i<stringArray.length ; i++) {
+				if (i<(currentGT.length-1)) {
+					currentGT[i] = tmp[i];
+				} else {
+					currentGT[i] = false;
+				}			
+			}
+		}
+		
+		Log.d(TAG, "increasing length of currentGT done");
 		
 		if (stringArray != null) {
 			ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
@@ -357,7 +375,7 @@ public class MainActivity extends ActionBarActivity {
 			
 			if (intent.getAction().equals(Globals.CLASS_NAMES_SET)) {
 				
-				Log.i(TAG, "Class names changed, update the GT Logger");
+				Log.d(TAG, "Class names changed, update the GT Logger");
 				
 				// Rebuild the GT Logger when a new class was incorporated:
 				String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);

@@ -1,5 +1,6 @@
 package com.example.tools;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -9,13 +10,14 @@ import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.FileObserver;
 import android.util.Log;
 
 import com.example.contextrecognition.Globals;
 
 public class AudioWorker extends IntentService {
 
-	private static final String TAG = "IntentService";
+	private static final String TAG = "AudioWorker";
 	
 	private GMM gmm;
 	private Classifier clf;
@@ -75,10 +77,19 @@ public class AudioWorker extends IntentService {
 			
 			@Override
 			protected void handleData(short[] data, boolean[] silenceBuffer) {
+
+				//Log.i(TAG, "Current app status: " + appStatus.getInstance().get());
+				
+				
+				if (AppStatus.getInstance().get() == AppStatus.MODEL_UPDATED) {
+					gmm = new GMM("GMM.json");
+					AppStatus.getInstance().set(AppStatus.NORMAL_CLASSIFICATION);
+					Log.i(TAG, "New classifier loaded after model adaption");
+				}
 				
 				// Only handle new data if we are in init or normal classification status:
-				if ((appStatus.getInstance().get() == appStatus.NORMAL_CLASSIFICATION) ||
-						appStatus.getInstance().get() == appStatus.INIT) {
+				if ((AppStatus.getInstance().get() == AppStatus.NORMAL_CLASSIFICATION) ||
+						AppStatus.getInstance().get() == AppStatus.INIT) {
 					
 					//Check if sequence length is 2 seconds (more precisely 63 32ms windows)
 					if (data.length != 32256) { //data.length != 64512
@@ -161,6 +172,8 @@ public class AudioWorker extends IntentService {
 							int currentResult = predictionResult.get_class();
 							double currentEntropy = predictionResult.get_entropy();
 							
+							Log.i(TAG, "currentEntropy: " + currentEntropy);
+							
 							stringRes = gmm.get_class_name(currentResult);
 							
 							// Set result code to okay and publish the result
@@ -174,8 +187,8 @@ public class AudioWorker extends IntentService {
 							mfccList.clear();
 							
 							// If we were in init status, change to normal classification now:
-							if (appStatus.getInstance().get() == appStatus.INIT) {
-								appStatus.getInstance().set(appStatus.NORMAL_CLASSIFICATION);
+							if (AppStatus.getInstance().get() == AppStatus.INIT) {
+								AppStatus.getInstance().set(AppStatus.NORMAL_CLASSIFICATION);
 								Log.i(TAG, "New status: normal classification");
 							}
 							
@@ -188,13 +201,8 @@ public class AudioWorker extends IntentService {
 					} else {
 						Log.i(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
 					}
-					
-					
-					
 				}
 			}
-			
-			
 		};
 
 		soundHandler.beginRec();	

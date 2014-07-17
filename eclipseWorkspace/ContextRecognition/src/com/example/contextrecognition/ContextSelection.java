@@ -22,8 +22,7 @@ public class ContextSelection extends ListActivity {
 	private static final String TAG = "ContextSelection";
 	
 	private String[] classNames;
-	
-	
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

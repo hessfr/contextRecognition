@@ -209,7 +209,7 @@ public class StateManager extends BroadcastReceiver {
 							 *  (same goes for the buffer containing the MFCC values)
 							 */
 							
-							Log.i(TAG, "Initializing empty app data, because no JSON file was created yet");
+							Log.i(TAG, "Initializing empty buffers and thresholds, because no JSON file was created yet");
 							
 							initThresSet = new ArrayList<Boolean>();
 							thresSet = new ArrayList<Boolean>();
@@ -254,6 +254,8 @@ public class StateManager extends BroadcastReceiver {
 							classNamesRequested = false;
 						}
 
+						Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
+						
 						variablesInitialized = true;
 					}					
 					
@@ -275,7 +277,7 @@ public class StateManager extends BroadcastReceiver {
 					if (initThresSet.get(currentPrediction) == false) {
 						if (initThresBuffer.get(currentPrediction).size() < Globals.INIT_THRES_BUFFER_SIZE) {
 							// Fill the buffer for the predicted class first:
-							ArrayList<Double> tmpList = initThresBuffer.get(currentPrediction);
+							ArrayList<Double> tmpList = initThresBuffer.get(currentPrediction);							
 							tmpList.add(currentEntropy);
 							initThresBuffer.set(currentPrediction, tmpList);
 							//Log.i(TAG, "initThresBuffer length: " + initThresBuffer.get(currentPrediction).size());
@@ -521,8 +523,6 @@ public class StateManager extends BroadcastReceiver {
 		} 
 		
 		if (intent.getAction().equals(Globals.END_OF_DAY_TASKS)) {
-
-			Log.i(TAG, "--------- end of day tasks called");
 			
 			Calendar cal = Calendar.getInstance();
 			Date currentLocalTime = cal.getTime();
@@ -707,7 +707,7 @@ public class StateManager extends BroadcastReceiver {
 			}
 			
 		} else {
-			// We cannot start ContextSelection activitiy if class names not yet available
+			// We cannot start ContextSelection activity if class names not yet available
 			i = null;
 
 			Log.w(TAG,
@@ -843,8 +843,6 @@ public class StateManager extends BroadcastReceiver {
 					try {
 						
 						res = getReq.execute(filenameOnServer).get();
-						
-						Log.i(TAG,"----------- " + res);
 						
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -1116,17 +1114,26 @@ public class StateManager extends BroadcastReceiver {
 		thresQueriedInterval.add(-1.0);
 		totalCount.add(0);
 		
+		gmm = new GMM("GMM.json");
+		
 		// Save String array of the context classes to preferences:
 		Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
+		
+		Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
 		
 		//Show toast:
 //		Toast.makeText(context,
 //				(String) "New class successfully incorporated",
 //				Toast.LENGTH_LONG).show();
+
+		// Set status to updated, so that the AudioWorker can load the new classifier
+		AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
+		Log.i(TAG, "New status: model updated");
+		
 		
 		// Broadcast this message, that other activities can rebuild their views:
-		Intent i = new Intent(Globals.CLASS_NAMES_SET);
-		context.sendBroadcast(i);		
+		Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
+		context.sendBroadcast(i2);
 	}
 	
 	/* 
@@ -1164,9 +1171,23 @@ public class StateManager extends BroadcastReceiver {
 		AppData appData = new AppData(initThresSet, thresSet, feedbackReceived, 
 				threshold, initThresBuffer, thresBuffer, thresQueriedInterval, numQueriesLeft);
 		
+		Log.i(TAG, "-- start persisting data: --");
+		
+//		for(int i=0; i<4; i++) {
+//			Log.i(TAG, "------- i=" + i);
+//			Log.i(TAG, "initThresSet: " + initThresSet.get(i));
+//			Log.i(TAG, "thresSet: " + thresSet.get(i));
+//			Log.i(TAG, "feedbackReceived: " + feedbackReceived.get(i));
+//			Log.i(TAG, "threshold: " + threshold.get(i));
+//			Log.i(TAG, "initThresBuffer: " + initThresBuffer.get(i));
+//			Log.i(TAG, "thresBuffer: " + thresBuffer.get(i));
+//			Log.i(TAG, "thresQueriedInterval: " + thresQueriedInterval.get(i));
+//		}
+		
+		
 		String str = new Gson().toJson(appData);
 		
-		if(!str.equals("{}")) { //Only write to file, if it is not empty
+		if(!str.equals("{}")) { //Only write to file, if string is not empty
 			FileOutputStream f = null;
 			try {
 				f = new FileOutputStream(Globals.APP_DATA_FILE);
@@ -1175,13 +1196,16 @@ public class StateManager extends BroadcastReceiver {
 				e.printStackTrace();
 			}
 			try {
-				Log.d(TAG, "App data persited to JSON file");
 				f.write(str.getBytes());
 				f.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}	
+		} else {
+			Log.e(TAG, "Data could not be persisted, as generated JSON string was empty");
+		}
+		
+		Log.i(TAG, "-------------- data persisted --------------");
 	}
 	
 	/*

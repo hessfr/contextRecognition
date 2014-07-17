@@ -76,9 +76,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 
 		GMM newGMM = null;
 
-		// if (buffer.size() == 1875) {
-
-		appStatus.getInstance().set(appStatus.MODEL_ADPATION);
+		AppStatus.getInstance().set(AppStatus.MODEL_ADPATION);
 
 		Log.i(TAG, "New status: model adaption");
 
@@ -110,7 +108,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		// Save the new GMM to the SD-card and reset the app status to initializing
 		newGMM.dumpJSON();
 		
-		appStatus.getInstance().set(appStatus.INIT);
+		AppStatus.getInstance().set(AppStatus.INIT);
 	}
 
 	public GMM adaptGMM(GMM oldGMM, DenseMatrix64F updatePoints, int label,
