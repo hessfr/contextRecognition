@@ -20,6 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.communication.GetInitialModel;
 import com.example.communication.InitModel;
@@ -106,59 +107,84 @@ public class Welcome3 extends Activity {
 					try {
 						
 						 String[] res = initReq.execute(classesToRequest).get();
-						 final String filenameOnServer = res[0];
-						 String wait = res[1];
 						 
-						 Log.i(TAG, "filenameOnServer: " + filenameOnServer);
+						 if (res != null) {
+							 final String filenameOnServer = res[0];
+							 String wait = res[1];
+							 
+							 Log.i(TAG, "filenameOnServer: " + filenameOnServer);
 
-						// Now check periodically if the computation on server
-						// is finished
-						TimerTaskGet task = new TimerTaskGet(context, filenameOnServer) {
+							// Now check periodically if the computation on server
+							// is finished
+							TimerTaskGet task = new TimerTaskGet(context, filenameOnServer) {
 
-							private int counter;
+								private int counter;
 
-							public void run() {
+								public void run() {
 
-								GetInitialModel getReq = new GetInitialModel();
-								Boolean resGet = false;
+									GetInitialModel getReq = new GetInitialModel();
+									Boolean resGet = false;
 
-								try {
+									try {
 
-									resGet = getReq.execute(filenameOnServer).get();
+										resGet = getReq.execute(filenameOnServer).get();
 
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								} catch (ExecutionException e) {
-									e.printStackTrace();
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									} catch (ExecutionException e) {
+										e.printStackTrace();
+									}
+
+									if (resGet == true) {
+
+										// Model received from the server:
+										Log.i(TAG, "New classifier received from server");
+										
+										// Call the main activity:
+										callMainActivity();
+										
+										this.cancel();
+
+									}
+
+									if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
+										Log.w(TAG, "Server not responded to GET request intitial model");
+										
+										runOnUiThread(new Runnable() {
+										      @Override
+										          public void run() {
+										    	  Toast.makeText(
+															Welcome3.this,
+															(String) "Server not reponding, deploying default model, user specific classes "
+																	+ "will be requested when server online again ",
+															Toast.LENGTH_LONG).show();
+										          }
+										   });
+										
+										callMainActivity();
+										this.cancel();
+									}
+
+									Log.i(TAG, "Waiting for new classifier from server");
 								}
+							};
 
-								if (resGet == true) {
-
-									// Model received from the server:
-									Log.i(TAG, "New classifier received from server");
-									
-									// Call the main activity:
-									Intent i = new Intent(Welcome3.this, MainActivity.class);
-									i.putExtra(Globals.WAIT_FOR_SERVER, true);
-									i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
-							        startActivity(i);
-									
-									this.cancel();
-
-								}
-
-								if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
-									Log.e(TAG,
-											"Server timeout");
-									this.cancel();
-								}
-
-								Log.i(TAG, "Waiting for new classifier from server");
-							}
-						};
-
-						Timer timer = new Timer();
-						timer.schedule(task, 0, Globals.POLLING_INTERVAL_INITIAL_MODEL);
+							Timer timer = new Timer();
+							timer.schedule(task, 0, Globals.POLLING_INTERVAL_INITIAL_MODEL);
+						 } else {
+							 Log.w(TAG, "Server not responded to POST request intitial model");
+							 
+							 //TODO: start MainActivity, but set recurring task to request this model
+							 
+							Toast.makeText(
+									context,
+									(String) "Server not reponding, deploying default model, user specific classes "
+											+ "will be requested when server online again ",
+									Toast.LENGTH_LONG).show();
+							 
+							 callMainActivity();
+						 }
+						 
 
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -170,9 +196,7 @@ public class Welcome3 extends Activity {
 					Log.i(TAG, "Context classes not changed, using the default classifier");
 					
 					// Call the main activity:
-					Intent i = new Intent(Welcome3.this, MainActivity.class);
-					i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
-			        startActivity(i);
+					callMainActivity();
 				}
 				
 				
@@ -194,6 +218,12 @@ public class Welcome3 extends Activity {
  
 		});
 		
+	}
+	
+	private void callMainActivity() {
+		Intent i = new Intent(Welcome3.this, MainActivity.class);
+		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
+        startActivity(i);
 	}
 	
 	/*
