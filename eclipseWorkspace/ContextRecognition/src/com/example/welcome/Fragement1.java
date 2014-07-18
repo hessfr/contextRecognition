@@ -26,8 +26,6 @@ public class Fragement1 extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.frag_welcome1, container, false);
-        
-        addListenerOnButton(v);
 
         return v;
     }
@@ -42,20 +40,4 @@ public class Fragement1 extends Fragment {
 
         return f;
     }
-    
-	public void addListenerOnButton(View v) {
-
-		nextButton = (Button) v.findViewById(R.id.nextButton);
-
-		nextButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View arg0) {
-				
-				//TODO
-				
-			}
-
-		});
-	}
 }

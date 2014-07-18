@@ -76,7 +76,7 @@ public class Globals {
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
 	// Silence detection threshold (higher means more samples will be considered silent):
-	public static short SILENCE_DETECTION_THRESHOLD = 400; //TODO: find good value
+	public static short SILENCE_DETECTION_THRESHOLD = 750; //TODO: find good value
 	
 	// Array of context classes that can be selected initially:
 	public static String[] initialContextClasses = {"Office", "Restaurant", "Conversation", "Train"}; // TODO
@@ -143,6 +143,7 @@ public class Globals {
 	public static final String PREDICTION_STRING = "predictionString";
 	public static final String CLASSES_DICT = "classesDict";
 	public static final String RESULTCODE = "resultcode";
+	public static final String SILENCE_PREDICTED = "action.silencePredicted";
 	
 	public static final String STATUS_INTENT = "action.status";
 	public static final String CLASS_STRINGS = "classesStrings";
@@ -180,6 +181,8 @@ public class Globals {
 	public static final String REQUEST_CLASS_NAMES = "action.requestClassNames";
 	
 	public static final String CLASS_NAMES_SET = "classNamesSet";
+	
+	public static final String SILENCE_PREDICTED_CHANGE_UI = "action.silencePredictedUI";
 	
 	// Define if we wait for server response when calling MainActivity from welcome activity:
 	public static final String WAIT_FOR_SERVER = "waitForServer";

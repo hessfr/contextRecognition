@@ -31,7 +31,6 @@ import com.example.tools.TimerTaskGet;
 public class Fragment3 extends Fragment {
 
 	Button startButton;
-	Button prevButton;
 	ContextSelectorAdapter dataAdapter;
 	ListView listView;
 	Boolean[] actualSelection;
@@ -80,7 +79,6 @@ public class Fragment3 extends Fragment {
 	public void addListenerOnButton(View v) {
 		 
 		startButton = (Button) v.findViewById(R.id.startButton);
-		prevButton = (Button) v.findViewById(R.id.prevButton);
  
 		startButton.setOnClickListener(new OnClickListener() {
 			 
@@ -210,20 +208,6 @@ public class Fragment3 extends Fragment {
 					// Call the main activity:
 					callMainActivity();
 				}
-				
-				
- 
-			}
- 
-		});
-		
-		prevButton.setOnClickListener(new OnClickListener() {
- 
-			@Override
-			public void onClick(View arg0) {
- 
-				//TODO
- 
 			}
  
 		});

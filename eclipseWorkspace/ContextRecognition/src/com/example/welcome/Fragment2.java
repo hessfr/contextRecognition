@@ -26,9 +26,6 @@ public class Fragment2 extends Fragment {
 	TextView currentValueTV;
 	private static final int queryLimit = 20;
 
-	Button prevButton;
-	Button nextButton;
-
 	SharedPreferences mPrefs;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
 
@@ -36,8 +33,6 @@ public class Fragment2 extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.frag_welcome2, container, false);
-
-		addListenerOnButton(v);
     	
         mPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         
@@ -105,34 +100,5 @@ public class Fragment2 extends Fragment {
 		f.setArguments(b);
 
 		return f;
-	}
-	
-	public void addListenerOnButton(View v) {
-		 
-		prevButton = (Button) v.findViewById(R.id.prevButton);
-		nextButton = (Button) v.findViewById(R.id.nextButton);
- 
-		prevButton.setOnClickListener(new OnClickListener() {
-			 
-			@Override
-			public void onClick(View arg0) {
- 
-				//TODO
- 
-			}
- 
-		});
-		
-		nextButton.setOnClickListener(new OnClickListener() {
- 
-			@Override
-			public void onClick(View arg0) {
- 
-				//TODO
- 
-			}
- 
-		});
- 
 	}
 }

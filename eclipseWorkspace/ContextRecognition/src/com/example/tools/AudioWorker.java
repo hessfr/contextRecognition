@@ -171,8 +171,7 @@ public class AudioWorker extends IntentService {
 							PredictionResult predictionResult = clf.predict(gmm, samples);
 							int currentResult = predictionResult.get_class();
 							double currentEntropy = predictionResult.get_entropy();
-							
-							Log.i(TAG, "currentEntropy: " + currentEntropy);
+							//Log.i(TAG, "currentEntropy: " + currentEntropy);
 							
 							stringRes = gmm.get_class_name(currentResult);
 							
@@ -199,7 +198,12 @@ public class AudioWorker extends IntentService {
 							Log.e(TAG, "mfccList has wrong size of " + mfccList.size() + "instead of 63");
 						}
 					} else {
-						Log.i(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
+						
+						Log.d(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
+						
+						Intent intent = new Intent(Globals.SILENCE_PREDICTED);
+						sendBroadcast(intent);
+						
 					}
 				}
 			}

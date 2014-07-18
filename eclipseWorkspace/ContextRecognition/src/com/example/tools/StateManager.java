@@ -411,9 +411,8 @@ public class StateManager extends BroadcastReceiver {
 					
 					/*
 					 * Increase the total number of predictions per class to 
-					 * for the predicted one and save to preferences (for plotting)
+					 * for the predicted one and save to preferences (for plotting):
 					 */
-					
 					totalCount.set(currentPrediction, (totalCount.get(currentPrediction) + 1));
 					Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount); //TODO: this can also be done every minute instead of every 2sec
 					
@@ -562,6 +561,15 @@ public class StateManager extends BroadcastReceiver {
 
 			classNamesRequested = true;
 			
+		}
+		
+		if (intent.getAction().equals(Globals.SILENCE_PREDICTED)) {
+
+			Log.d(TAG, "Silence predicted");
+			
+			// Send to MainActivity that we can make UI change
+			Intent i = new Intent(Globals.SILENCE_PREDICTED_CHANGE_UI);
+			context.sendBroadcast(i);
 		}
 		
 	}

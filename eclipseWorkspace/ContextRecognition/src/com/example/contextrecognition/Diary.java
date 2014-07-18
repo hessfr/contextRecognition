@@ -94,8 +94,6 @@ public class Diary extends ActionBarActivity {
     	String[] colors = {"#41A317", "#CC6600", "#1569C7", "#008080", "#A52A2A",
     			"#438D80", "#827839", "#8C001A", "#8C001A", "#D462FF"}; //TODO: If >10 classes -> NullPointerException
     	
-    	Integer[] sorted = new Integer[t.length];
-    	
     	// http://stackoverflow.com/questions/112234/sorting-matched-arrays-in-java
     	Integer[] idx = new Integer[t.length];
     	for( int i = 0 ; i < idx.length; i++ ) idx[i] = i;              

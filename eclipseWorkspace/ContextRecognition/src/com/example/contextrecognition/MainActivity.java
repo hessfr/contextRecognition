@@ -170,6 +170,7 @@ public class MainActivity extends ActionBarActivity {
 		IntentFilter filterMain = new IntentFilter();
 		filterMain.addAction(Globals.PREDICTION_CHANGED_INTENT);
 		filterMain.addAction(Globals.CLASS_NAMES_SET);
+		filterMain.addAction(Globals.SILENCE_PREDICTED_CHANGE_UI);
 		registerReceiver(receiverMainActivity, filterMain);
 		
 		// Set the prediction TextView to the current prediction (workaround!)
@@ -302,6 +303,7 @@ public class MainActivity extends ActionBarActivity {
 
 	private void setText(String str) {
 		contextTV.setText(str);
+		contextTV.setTextColor(getResources().getColor(R.color.normal_text_view));
 		CONTEXT_CLASS_STRING = str;
 	}
 	
@@ -390,7 +392,15 @@ public class MainActivity extends ActionBarActivity {
 					Log.e(TAG, "String array of context classes could not be read in MainActivity");
 				}
 				
+			} 
+			
+			if (intent.getAction().equals(Globals.SILENCE_PREDICTED_CHANGE_UI)) {
+
+				contextTV.setTextColor(getResources().getColor(R.color.silent_text_view));
+				Log.d(TAG, "Text color change to show silence");
 			}
+			
+			
 		}
 	};
 	
