@@ -15,8 +15,8 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
-import com.example.contextrecognition.Globals;
 import com.example.contextrecognition.R;
+import com.example.tools.Globals;
 
 public class Fragment2 extends Fragment {
 

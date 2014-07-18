@@ -21,11 +21,11 @@ import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.activities.MainActivity;
 import com.example.communication.GetInitialModel;
 import com.example.communication.InitModel;
-import com.example.contextrecognition.Globals;
-import com.example.contextrecognition.MainActivity;
 import com.example.contextrecognition.R;
+import com.example.tools.Globals;
 import com.example.tools.TimerTaskGet;
 
 public class Fragment3 extends Fragment {

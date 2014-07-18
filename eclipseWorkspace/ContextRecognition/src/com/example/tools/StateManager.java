@@ -15,7 +15,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
@@ -43,12 +42,12 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.activities.ContextSelection;
 import com.example.communication.CheckClassFeasibility;
 import com.example.communication.GetUpdatedModel;
 import com.example.communication.IncorporateNewClass;
+import com.example.communication.IncorporateNewClassIS;
 import com.example.communication.SendRawAudio;
-import com.example.contextrecognition.ContextSelection;
-import com.example.contextrecognition.Globals;
 import com.example.contextrecognition.R;
 import com.example.tools.ModelAdaptor.onModelAdaptionCompleted;
 import com.google.gson.Gson;
@@ -75,7 +74,7 @@ public class StateManager extends BroadcastReceiver {
 	private static String predictionString;
 	private static String prevPredictionString = "";
 	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
-	private static GMM gmm; // Needed??
+	private static GMM gmm;
 	private static ArrayList<Integer> totalCount; // contains number of total predictions for each class (for plotting)
 	
 	// ----- Variables needed to calculate the queryCriteria: -----
@@ -403,8 +402,14 @@ public class StateManager extends BroadcastReceiver {
 					// For testing only:
 					if (testBool == false) {
 						testBool = true;
-
-//						transferRawAudio(context);
+						
+//						Intent ii = new Intent(context, CheckClassFeasibilityIS.class);
+//						ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "Train");
+//						context.startService(ii);
+						
+						Intent ii = new Intent(context, IncorporateNewClassIS.class);
+						ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, "Bus");
+						context.startService(ii);
 					
 					}
 					
@@ -570,7 +575,88 @@ public class StateManager extends BroadcastReceiver {
 			// Send to MainActivity that we can make UI change
 			Intent i = new Intent(Globals.SILENCE_PREDICTED_CHANGE_UI);
 			context.sendBroadcast(i);
+		} 
+		
+		// =====================================================================
+		// ============= Incorporate new class from server =====================
+		// =====================================================================
+		
+		/*
+		 * First get the result of the feasibility request from the server:
+		 */
+		if (intent.getAction().equals(Globals.CONN_CHECK_FEASIBILITY_RECEIVE)) {
+			
+			String feasibilityString = intent.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT);
+			String newClassName = intent.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME);
+			
+			
+			Log.i(TAG, "Received server response from feasibility request. Result: " + feasibilityString);
+
+			if (feasibilityString != null) {
+				if (feasibilityString.equals(Globals.FEASIBILITY_NOT_FEASIBLE)) {
+					
+					String msg = "It is not feasible to train the class " + newClassName
+							+ " as not enough sound files available on freesound";
+					Log.i(TAG, msg);
+					
+					Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+					
+					// Don't send request to server to add the class:
+					return;
+					
+				} else if (feasibilityString.equals(Globals.FEASIBILITY_FEASIBLE)) {
+					
+					String msg = "Including the class " + newClassName
+							+ " will take longer as we need to download new files to our server";
+					Log.i(TAG, msg);
+					
+					Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+					
+				} else if (feasibilityString.equals(Globals.FEASIBILITY_DOWNLOADED)) {
+					
+					String msg = "The class " + newClassName + " will be available in some minutes";
+					
+					Log.i(TAG, msg);
+					
+					Toast.makeText(context, msg , Toast.LENGTH_LONG).show();
+				} else {
+					
+					Log.e(TAG, ""); //TODO
+				}
+			} else {
+				
+				Log.w(TAG, "Could not reach server");
+				
+				//TODO: handle this!!!!
+			}
+			
+			waitingForFeedback = false;
+
+			// Send the the request to actually incorporate a new class:
+			
+			//TODO
+			
 		}
+		
+		if (intent.getAction().equals(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE)) {
+			
+			String filenameOnServer = intent.getStringExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME);
+			
+			Log.i(TAG, "xxxxxxxxxxxxxxxxxxxxxxxxxxx");
+			Log.i(TAG, "Filename on server: " + filenameOnServer);
+			Log.i(TAG, "xxxxxxxxxxxxxxxxxxxxxxxxxxx");
+			
+		}
+		
+		/*
+		 * Then receive the result of the request to incorporate a new class (i.e. the filename 
+		 * where the classifier can be downloaded when the training is done):
+		 */
+		
+		
+		//=================================================================================
+		//=================================================================================
+		//=================================================================================
 		
 	}
 	
@@ -750,6 +836,7 @@ public class StateManager extends BroadcastReceiver {
 		return i;
 	}
 	
+	//---------------------- OUTDATED REMOVE LATER -----------------------------------------
 	private void requestNewClassFromServer(Context context, String newClassName) {
 	
 		// Check if our classifier is already trained with this class:
@@ -779,15 +866,6 @@ public class StateManager extends BroadcastReceiver {
 		CheckClassFeasibility feasReq = new CheckClassFeasibility();
 		
 		String feasibile = null;
-		
-		try {
-			feasibile = feasReq.execute(newClassName).get();
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
 		
 		if (feasibile != null) {
 			if (feasibile.equals(Globals.FEASIBILITY_NOT_FEASIBLE)) {
@@ -913,6 +991,8 @@ public class StateManager extends BroadcastReceiver {
 			}
 		}
 	}
+	
+	//---------------------- OUTDATED REMOVE LATER -----------------------------------------
 	
 	private void sendQuery(Context context) {
 
@@ -1063,17 +1143,21 @@ public class StateManager extends BroadcastReceiver {
 				
 				SendRawAudio sendRawAudio = new SendRawAudio();
 				
-				Boolean result = null;
+//				Boolean result = sendRawAudio.executeContent();
+//				Log.i(TAG, "---------------- " + result);
 				
-				try {
-					
-					result = sendRawAudio.execute().get();
-					
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					e.printStackTrace();
-				}
+				
+				sendRawAudio.execute();
+				
+//				Boolean result = null;
+//				try {
+//					result = sendRawAudio.execute().get();
+//
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				} catch (ExecutionException e) {
+//					e.printStackTrace();
+//				}
 				
 				statusString = "WIFI connected and charging";
 			} else {
@@ -1179,8 +1263,6 @@ public class StateManager extends BroadcastReceiver {
 		AppData appData = new AppData(initThresSet, thresSet, feedbackReceived, 
 				threshold, initThresBuffer, thresBuffer, thresQueriedInterval, numQueriesLeft);
 		
-		Log.i(TAG, "-- start persisting data: --");
-		
 //		for(int i=0; i<4; i++) {
 //			Log.i(TAG, "------- i=" + i);
 //			Log.i(TAG, "initThresSet: " + initThresSet.get(i));
@@ -1212,8 +1294,6 @@ public class StateManager extends BroadcastReceiver {
 		} else {
 			Log.e(TAG, "Data could not be persisted, as generated JSON string was empty");
 		}
-		
-		Log.i(TAG, "-------------- data persisted --------------");
 	}
 	
 	/*

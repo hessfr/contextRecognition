@@ -13,8 +13,6 @@ import android.os.Bundle;
 import android.os.FileObserver;
 import android.util.Log;
 
-import com.example.contextrecognition.Globals;
-
 public class AudioWorker extends IntentService {
 
 	private static final String TAG = "AudioWorker";

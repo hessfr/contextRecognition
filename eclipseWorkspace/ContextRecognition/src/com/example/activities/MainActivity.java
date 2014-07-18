@@ -1,4 +1,4 @@
-package com.example.contextrecognition;
+package com.example.activities;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -30,9 +30,12 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.communication.CheckClassFeasibilityIS;
+import com.example.contextrecognition.R;
 import com.example.tools.AudioWorker;
 import com.example.tools.GMM;
 import com.example.tools.AppStatus;
+import com.example.tools.Globals;
 import com.example.welcome.WelcomeActivity;
 
 public class MainActivity extends ActionBarActivity {

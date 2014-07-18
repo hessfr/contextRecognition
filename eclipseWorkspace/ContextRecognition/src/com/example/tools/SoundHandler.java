@@ -10,7 +10,6 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 
-import com.example.contextrecognition.Globals;
 import com.google.common.primitives.Shorts;
 
 public class SoundHandler extends Thread {

@@ -21,7 +21,7 @@ import org.apache.http.util.EntityUtils;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.example.contextrecognition.Globals;
+import com.example.tools.Globals;
 
 /*
  * This request initiates the server to check if it is feasible to train the given context class name, i.e.
@@ -30,7 +30,7 @@ import com.example.contextrecognition.Globals;
 
 public class CheckClassFeasibility extends AsyncTask<String, Void, String> {
 
-	private static final String TAG = "PostRequest";
+	private static final String TAG = "CheckClassFeasibility";
 
 	private String result=null;
 
@@ -86,12 +86,12 @@ public class CheckClassFeasibility extends AsyncTask<String, Void, String> {
 			e.printStackTrace();
 		}
 
-		return result;
+		//return result;
+		return null;
 	}
 
 	@Override
 	protected void onPostExecute(String result) {
-		// super.onPostExecute(result);
 
 		returnResults();
 	}

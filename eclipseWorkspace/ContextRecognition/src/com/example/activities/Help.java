@@ -1,6 +1,8 @@
-package com.example.contextrecognition;
+package com.example.activities;
 
 //import android.app.ActionBar;
+import com.example.contextrecognition.R;
+
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;

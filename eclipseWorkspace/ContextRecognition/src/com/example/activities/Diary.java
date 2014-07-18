@@ -1,4 +1,4 @@
-package com.example.contextrecognition;
+package com.example.activities;
 
 //import android.app.ActionBar;
 import java.util.ArrayList;
@@ -27,6 +27,8 @@ import android.widget.TextView;
 
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
+import com.example.contextrecognition.R;
+import com.example.tools.Globals;
 
 
 

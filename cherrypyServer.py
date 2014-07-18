@@ -90,7 +90,7 @@ class GetKnownClasses():
 
         return json_string
         
-class PutRawAudio():
+class RawAudio():
     
     #TODO    
     
@@ -99,7 +99,7 @@ class PutRawAudio():
     @cherrypy.expose
     def PUT(self):
         
-        print("--- PutRawAudio Put request ---")        
+        print("--- RawAudio Put request ---")        
         
         data = cherrypy.request.body.read()
         
@@ -112,7 +112,7 @@ class PutRawAudio():
     @cherrypy.expose
     def POST(self):
         
-        print("--- PutRawAudio POST request ---")        
+        print("--- RawAudio POST request ---")        
         
         data = cherrypy.request.body.read()
         
@@ -215,7 +215,7 @@ cherrypy.tree.mount(GetKnownClasses(), '/getknownclasses', {
         'tools.response_headers.on': True,
         }})
         
-cherrypy.tree.mount(PutRawAudio(), '/putrawaudio', {
+cherrypy.tree.mount(RawAudio(), '/rawaudio', {
     '/': {
         'request.dispatch': cherrypy.dispatch.MethodDispatcher()
         }})
@@ -231,7 +231,11 @@ cherrypy.tree.mount(InitClassifier(), '/initclassifier', {
 
 conf_global = {
     '/': { 'request.dispatch': cherrypy.dispatch.MethodDispatcher() },
-    'global': {'server.socket_host': '0.0.0.0','server.socket_port': 8080}
+    'global': {'server.socket_host': '0.0.0.0',
+               'server.socket_port': 8080,
+               'max_request_body_size': 0, # zero removes the limit
+               'max_request_header_size': 0
+               }
 }
 
 """ Start the server: """

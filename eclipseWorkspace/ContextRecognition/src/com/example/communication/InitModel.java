@@ -21,7 +21,7 @@ import org.json.JSONObject;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.example.contextrecognition.Globals;
+import com.example.tools.Globals;
 
 /*
  * When the selected context classes at the very first start are different then the default

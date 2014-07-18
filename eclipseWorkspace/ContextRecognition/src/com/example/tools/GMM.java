@@ -19,7 +19,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-import com.example.contextrecognition.Globals;
 import com.google.gson.Gson;
 /*
 Contains parameters for the Gaussian mixture of all context classes

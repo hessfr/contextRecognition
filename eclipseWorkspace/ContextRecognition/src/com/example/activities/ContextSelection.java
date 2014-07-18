@@ -1,4 +1,4 @@
-package com.example.contextrecognition;
+package com.example.activities;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
@@ -16,6 +16,8 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 
 import com.example.communication.GetKnownClasses;
+import com.example.contextrecognition.R;
+import com.example.tools.Globals;
 
 public class ContextSelection extends ListActivity {
     

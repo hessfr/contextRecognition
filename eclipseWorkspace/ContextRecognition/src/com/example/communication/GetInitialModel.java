@@ -23,7 +23,7 @@ import org.apache.http.util.EntityUtils;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.example.contextrecognition.Globals;
+import com.example.tools.Globals;
 
 /*
  * This is the HTTP GET request to download the new model under the given URL. It

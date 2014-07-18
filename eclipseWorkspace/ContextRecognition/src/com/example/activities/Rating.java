@@ -1,6 +1,8 @@
-package com.example.contextrecognition;
+package com.example.activities;
 
 //import android.app.ActionBar;
+import com.example.contextrecognition.R;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;

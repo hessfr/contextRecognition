@@ -254,7 +254,7 @@ def trainGMM(featureData):
 
         n_train_list.append(n_tmp)
 
-        print("Component trained with " + n_train_list[-1] + " sample points")
+        print("Component trained with " + str(n_train_list[-1]) + " sample points")
 
     # pdb.set_trace()
 

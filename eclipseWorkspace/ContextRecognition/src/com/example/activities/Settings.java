@@ -1,6 +1,9 @@
-package com.example.contextrecognition;
+package com.example.activities;
 
 //import android.app.ActionBar;
+import com.example.contextrecognition.R;
+import com.example.tools.Globals;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
