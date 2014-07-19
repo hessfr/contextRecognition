@@ -143,7 +143,7 @@ public class MainActivity extends ActionBarActivity {
 			setFirstRun();
 			
 		} else {
-
+			
 			contextTV.setText(CONTEXT_CLASS_STRING);
 		}
 
@@ -305,9 +305,16 @@ public class MainActivity extends ActionBarActivity {
 	}
 
 	private void setText(String str) {
-		contextTV.setText(str);
-		contextTV.setTextColor(getResources().getColor(R.color.normal_text_view));
-		CONTEXT_CLASS_STRING = str;
+		
+		if (str.equals(Globals.SILENCE)) {
+			contextTV.setText("-");
+			contextTV.setTextColor(getResources().getColor(R.color.silent_text_view));
+			CONTEXT_CLASS_STRING = str;
+		} else {
+			contextTV.setText(str);
+			contextTV.setTextColor(getResources().getColor(R.color.normal_text_view));
+			CONTEXT_CLASS_STRING = str;
+		}
 	}
 	
 	private void createListView(String[] stringArray) {
@@ -397,11 +404,11 @@ public class MainActivity extends ActionBarActivity {
 				
 			} 
 			
-			if (intent.getAction().equals(Globals.SILENCE_PREDICTED_CHANGE_UI)) {
-
-				contextTV.setTextColor(getResources().getColor(R.color.silent_text_view));
-				Log.d(TAG, "Text color change to show silence");
-			}
+//			if (intent.getAction().equals(Globals.SILENCE_PREDICTED_CHANGE_UI)) {
+//
+//				contextTV.setTextColor(getResources().getColor(R.color.silent_text_view));
+//				Log.d(TAG, "Text color change to show silence");
+//			}
 			
 			
 		}

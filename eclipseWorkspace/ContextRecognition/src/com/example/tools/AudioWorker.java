@@ -111,7 +111,7 @@ public class AudioWorker extends IntentService {
 						isSilent = true;
 					}
 					
-					// Only call our prediction method if loadness on this 2s interval is above the silence threshold
+					// Only call our prediction method if loudness on this 2s interval is above the silence threshold
 					if (isSilent == false) {
 						//long startTimeFX = System.currentTimeMillis();
 						
@@ -197,10 +197,9 @@ public class AudioWorker extends IntentService {
 						}
 					} else {
 						
-						Log.d(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
+						publishResultSilence();
 						
-						Intent intent = new Intent(Globals.SILENCE_PREDICTED);
-						sendBroadcast(intent);
+
 						
 					}
 				}
@@ -214,6 +213,7 @@ public class AudioWorker extends IntentService {
 			String predicationString, HashMap<String, Integer> classesDict,
 			GMM gmm, boolean bufferStatus, LinkedList<double[]> buffer,
 			int resultCode) {
+		
 		Intent intent = new Intent(Globals.PREDICTION_INTENT);
 
 		Bundle bundle = new Bundle();
@@ -235,6 +235,8 @@ public class AudioWorker extends IntentService {
 		bundle.putSerializable(Globals.CLASSES_DICT, classesDict); //Needed??
 
 		bundle.putInt(Globals.RESULTCODE, code);
+		
+		bundle.putBoolean(Globals.SILENCE, false);
 
 		intent.putExtras(bundle);
 		
@@ -242,4 +244,20 @@ public class AudioWorker extends IntentService {
 
 		//Log.d(TAG, "Prediction broadcasted");
 	}	
+	
+	private void publishResultSilence() {
+		
+		Log.d(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
+		
+		Intent intent = new Intent(Globals.PREDICTION_INTENT);
+
+		Bundle bundle = new Bundle();
+		
+		bundle.putInt(Globals.RESULTCODE, code);
+		
+		bundle.putBoolean(Globals.SILENCE, true);
+		
+		intent.putExtras(bundle);
+		sendBroadcast(intent);
+	}
 }

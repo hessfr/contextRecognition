@@ -143,307 +143,328 @@ public class StateManager extends BroadcastReceiver {
 			if (intent.getAction().equals(Globals.PREDICTION_INTENT)) {
 
 				int resultCode = bundle.getInt(Globals.RESULTCODE);
+				boolean silence = bundle.getBoolean(Globals.SILENCE);
 
 				if (resultCode == Activity.RESULT_OK) {
 					
-					// The following lines have to be in exactly the same order as the were put on the bundle (in the AudioWorker):
-
-					currentPrediction = bundle.getInt(Globals.PREDICTION_INT);
-					currentEntropy = bundle.getDouble(Globals.PREDICTION_ENTROPY);
-					predictionString = bundle.getString(Globals.PREDICTION_STRING);
-					
-//					classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
-//					Log.i(TAG, classNameArray[0]);
-					
-//					bufferStatus = bundle
-//							.getBoolean(Globals.BUFFER_STATUS);
-//					Log.i(TAG, String.valueOf(bufferStatus));
-					
-					Serializable s1 = bundle.getSerializable(Globals.BUFFER);
-					if (waitingForFeedback == false) {
-						buffer = (ArrayList<double[]>) s1;
-					}
-//					Log.i(TAG, String.valueOf(buffer.get(0)[0]));
-
-					gmm = bundle.getParcelable(Globals.GMM_OBJECT); // Needed??
-
-//					Serializable s2 = new HashMap<String, Integer>();
-//					s2 = bundle.getSerializable(Globals.CLASSES_DICT);
-//					classesDict = (HashMap<String, Integer>) s2;
-					
-
-					
-//					Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
-
-					//=================================================================================
-					//============ Handle sending of query, threshold calculations, ... ===============
-					//=================================================================================
-					
-					//startTime = System.currentTimeMillis();
-					
-					// Initialize the variable when receiving the first set of data:
-					if(variablesInitialized == false) {
-						// Load data from JSON file from external storage if it already exists:
-
-						if (Globals.APP_DATA_FILE.exists()) {
-							Log.i(TAG, "Loading app data from JSON file");
-							
-							AppData appData = readAppData();
-							initThresSet = appData.get_initThresSet();
-							thresSet = appData.get_thresSet();
-							feedbackReceived = appData.get_feedbackReceived();
-							threshold = appData.get_threshold();
-							initThresBuffer = appData.get_initThresBuffer();
-							thresBuffer = appData.get_thresBuffer();
-							thresQueriedInterval = appData.get_thresQueriedInterval();
-							numQueriesLeft = appData.get_numQueriesLeft();
-							
-							totalCount = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
-
-						} else {
-							/*
-							 *  If it doesn't exists (i.e. at the very first start) initialize variables empty:
-							 *  (same goes for the buffer containing the MFCC values)
-							 */
-							
-							Log.i(TAG, "Initializing empty buffers and thresholds, because no JSON file was created yet");
-							
-							initThresSet = new ArrayList<Boolean>();
-							thresSet = new ArrayList<Boolean>();
-							feedbackReceived = new ArrayList<Boolean>();
-							threshold = new ArrayList<Double>();
-							initThresBuffer = new ArrayList<ArrayList<Double>>();
-							thresBuffer = new ArrayList<ArrayList<Double>>();
-							thresQueriedInterval = new ArrayList<Double>();
-							
-							for(int i=0; i<gmm.get_n_classes(); i++) {
-								initThresSet.add(false);
-								thresSet.add(false);
-								feedbackReceived.add(false);
-								threshold.add(-1.0);
-								initThresBuffer.add(new ArrayList<Double>());
-								thresBuffer.add(new ArrayList<Double>());
-								thresQueriedInterval.add(-1.0);
-							}
-							
-							totalCount = new ArrayList<Integer>();
-							for(int i=0; i<gmm.get_n_classes(); i++) {
-								totalCount.add(0);
-							}
-
-							resetQueriesLeft(context);
-
-							Intent i = new Intent(Globals.CLASS_NAMES_SET);
-							context.sendBroadcast(i);
-							
-						}						
+					if (silence == false) {
 						
-						// These buffers doesn't need to be taken from the last run:
-						queryBuffer = new ArrayList<Double>();
-						predBuffer = new ArrayList<Integer>();
-						
-						// Save String array of the context classes to preferences:
-						Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
+						// The following lines have to be in exactly the same order as the were put on the bundle (in the AudioWorker):
 
-						if (classNamesRequested == true) {
-							Intent i = new Intent(Globals.CLASS_NAMES_SET);
-							context.sendBroadcast(i);
-							classNamesRequested = false;
+						currentPrediction = bundle.getInt(Globals.PREDICTION_INT);
+						currentEntropy = bundle.getDouble(Globals.PREDICTION_ENTROPY);
+						predictionString = bundle.getString(Globals.PREDICTION_STRING);
+						
+//						classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
+//						Log.i(TAG, classNameArray[0]);
+						
+//						bufferStatus = bundle
+//								.getBoolean(Globals.BUFFER_STATUS);
+//						Log.i(TAG, String.valueOf(bufferStatus));
+						
+						Serializable s1 = bundle.getSerializable(Globals.BUFFER);
+						if (waitingForFeedback == false) {
+							buffer = (ArrayList<double[]>) s1;
 						}
+//						Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 
-						Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
+						gmm = bundle.getParcelable(Globals.GMM_OBJECT); // Needed??
+
+//						Serializable s2 = new HashMap<String, Integer>();
+//						s2 = bundle.getSerializable(Globals.CLASSES_DICT);
+//						classesDict = (HashMap<String, Integer>) s2;
+		
+//						Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
+
+						//=================================================================================
+						//============ Handle sending of query, threshold calculations, ... ===============
+						//=================================================================================
 						
-						variablesInitialized = true;
-					}					
-					
-					// For each class buffer the last (30) entropy values
-					if (queryBuffer.size() < Globals.QUERY_BUFFER_SIZE) {
+						//startTime = System.currentTimeMillis();
 						
-						queryBuffer.add(currentEntropy);
-						predBuffer.add(currentPrediction);
+						// Initialize the variable when receiving the first set of data:
+						if(variablesInitialized == false) {
+							// Load data from JSON file from external storage if it already exists:
+
+							if (Globals.APP_DATA_FILE.exists()) {
+								Log.i(TAG, "Loading app data from JSON file");
+								
+								AppData appData = readAppData();
+								initThresSet = appData.get_initThresSet();
+								thresSet = appData.get_thresSet();
+								feedbackReceived = appData.get_feedbackReceived();
+								threshold = appData.get_threshold();
+								initThresBuffer = appData.get_initThresBuffer();
+								thresBuffer = appData.get_thresBuffer();
+								thresQueriedInterval = appData.get_thresQueriedInterval();
+								numQueriesLeft = appData.get_numQueriesLeft();
+								
+								totalCount = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
+
+							} else {
+								/*
+								 *  If it doesn't exists (i.e. at the very first start) initialize variables empty:
+								 *  (same goes for the buffer containing the MFCC values)
+								 */
+								
+								Log.i(TAG, "Initializing empty buffers and thresholds, because no JSON file was created yet");
+								
+								initThresSet = new ArrayList<Boolean>();
+								thresSet = new ArrayList<Boolean>();
+								feedbackReceived = new ArrayList<Boolean>();
+								threshold = new ArrayList<Double>();
+								initThresBuffer = new ArrayList<ArrayList<Double>>();
+								thresBuffer = new ArrayList<ArrayList<Double>>();
+								thresQueriedInterval = new ArrayList<Double>();
+								
+								for(int i=0; i<gmm.get_n_classes(); i++) {
+									initThresSet.add(false);
+									thresSet.add(false);
+									feedbackReceived.add(false);
+									threshold.add(-1.0);
+									initThresBuffer.add(new ArrayList<Double>());
+									thresBuffer.add(new ArrayList<Double>());
+									thresQueriedInterval.add(-1.0);
+								}
+								
+								totalCount = new ArrayList<Integer>();
+								for(int i=0; i<gmm.get_n_classes(); i++) {
+									totalCount.add(0);
+								}
+
+								resetQueriesLeft(context);
+
+								Intent i = new Intent(Globals.CLASS_NAMES_SET);
+								context.sendBroadcast(i);
+								
+							}						
+							
+							// These buffers doesn't need to be taken from the last run:
+							queryBuffer = new ArrayList<Double>();
+							predBuffer = new ArrayList<Integer>();
+							
+							// Save String array of the context classes to preferences:
+							Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
+
+							if (classNamesRequested == true) {
+								Intent i = new Intent(Globals.CLASS_NAMES_SET);
+								context.sendBroadcast(i);
+								classNamesRequested = false;
+							}
+
+							Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
+							
+							variablesInitialized = true;
+						}					
 						
-					} else {
-						
-						queryBuffer.add(currentEntropy);
-						queryBuffer.remove(0);
-						predBuffer.add(currentPrediction);
-						predBuffer.remove(0);
-					}
-					
-					// ----- Set initial threshold -----
-					if (initThresSet.get(currentPrediction) == false) {
-						if (initThresBuffer.get(currentPrediction).size() < Globals.INIT_THRES_BUFFER_SIZE) {
-							// Fill the buffer for the predicted class first:
-							ArrayList<Double> tmpList = initThresBuffer.get(currentPrediction);							
-							tmpList.add(currentEntropy);
-							initThresBuffer.set(currentPrediction, tmpList);
-							//Log.i(TAG, "initThresBuffer length: " + initThresBuffer.get(currentPrediction).size());
+						// For each class buffer the last (30) entropy values
+						if (queryBuffer.size() < Globals.QUERY_BUFFER_SIZE) {
+							
+							queryBuffer.add(currentEntropy);
+							predBuffer.add(currentPrediction);
+							
 						} else {
-							// As soon as the buffer is full, set the initial threshold for this class:
-							Double[] ds = initThresBuffer.get(currentPrediction).toArray(new Double[initThresBuffer.get(currentPrediction).size()]);							
-							double[] d = ArrayUtils.toPrimitive(ds);
-							double mean = meanCalc.evaluate(d);
-							double std = stdCalc.evaluate(d);
 							
-							threshold.set(currentPrediction, initMetric(mean, std));
-							Log.i(TAG, "Initial threshold for class " + gmm.get_class_name(currentPrediction) +
-									" set to " + initMetric(mean, std));
-							
-							thresSet.set(currentPrediction, true);
-							initThresSet.set(currentPrediction, true);	
+							queryBuffer.add(currentEntropy);
+							queryBuffer.remove(0);
+							predBuffer.add(currentPrediction);
+							predBuffer.remove(0);
 						}
-					}
-					
-					// ----- Set threshold (not initial one...) -----
-					if ((thresSet.get(currentPrediction) == false) && 
-							(feedbackReceived.get(currentPrediction) == true)) {
 						
-						if (thresBuffer.get(currentPrediction).size() < Globals.THRES_BUFFER_SIZE) {
-							// Fill the threshold buffer for the predicted class first:
-							ArrayList<Double> tmpList = thresBuffer.get(currentPrediction);
-							tmpList.add(currentEntropy);
-							thresBuffer.set(currentPrediction, tmpList);
-						} else {
-							/*
-							 * Threshold buffer full for the predicted class -> set new threshold
-							 * for this class:
-							 */
-							if (initThresSet.get(currentPrediction) == true) {
-								Double[] ds = thresBuffer.get(currentPrediction).toArray(new Double[thresBuffer.get(currentPrediction).size()]);							
+						// ----- Set initial threshold -----
+						if (initThresSet.get(currentPrediction) == false) {
+							if (initThresBuffer.get(currentPrediction).size() < Globals.INIT_THRES_BUFFER_SIZE) {
+								// Fill the buffer for the predicted class first:
+								ArrayList<Double> tmpList = initThresBuffer.get(currentPrediction);							
+								tmpList.add(currentEntropy);
+								initThresBuffer.set(currentPrediction, tmpList);
+								//Log.i(TAG, "initThresBuffer length: " + initThresBuffer.get(currentPrediction).size());
+							} else {
+								// As soon as the buffer is full, set the initial threshold for this class:
+								Double[] ds = initThresBuffer.get(currentPrediction).toArray(new Double[initThresBuffer.get(currentPrediction).size()]);							
 								double[] d = ArrayUtils.toPrimitive(ds);
 								double mean = meanCalc.evaluate(d);
 								double std = stdCalc.evaluate(d);
-								double newThreshold = (metricAfterFeedback(mean, std) + thresQueriedInterval.get(currentPrediction)) / 2.0;
 								
-								threshold.set(currentPrediction, newThreshold);
-								
-								Log.i(TAG, "Threshold for class " + gmm.get_class_name(currentPrediction) +
-										" updated to " + newThreshold);
+								threshold.set(currentPrediction, initMetric(mean, std));
+								Log.i(TAG, "Initial threshold for class " + gmm.get_class_name(currentPrediction) +
+										" set to " + initMetric(mean, std));
 								
 								thresSet.set(currentPrediction, true);
+								initThresSet.set(currentPrediction, true);	
+							}
+						}
+						
+						// ----- Set threshold (not initial one...) -----
+						if ((thresSet.get(currentPrediction) == false) && 
+								(feedbackReceived.get(currentPrediction) == true)) {
+							
+							if (thresBuffer.get(currentPrediction).size() < Globals.THRES_BUFFER_SIZE) {
+								// Fill the threshold buffer for the predicted class first:
+								ArrayList<Double> tmpList = thresBuffer.get(currentPrediction);
+								tmpList.add(currentEntropy);
+								thresBuffer.set(currentPrediction, tmpList);
+							} else {
+								/*
+								 * Threshold buffer full for the predicted class -> set new threshold
+								 * for this class:
+								 */
+								if (initThresSet.get(currentPrediction) == true) {
+									Double[] ds = thresBuffer.get(currentPrediction).toArray(new Double[thresBuffer.get(currentPrediction).size()]);							
+									double[] d = ArrayUtils.toPrimitive(ds);
+									double mean = meanCalc.evaluate(d);
+									double std = stdCalc.evaluate(d);
+									double newThreshold = (metricAfterFeedback(mean, std) + thresQueriedInterval.get(currentPrediction)) / 2.0;
+									
+									threshold.set(currentPrediction, newThreshold);
+									
+									Log.i(TAG, "Threshold for class " + gmm.get_class_name(currentPrediction) +
+											" updated to " + newThreshold);
+									
+									thresSet.set(currentPrediction, true);
+								}
+								
+							}
+
+							Log.i(TAG, "thresBuffer length: " + thresBuffer.get(currentPrediction).size());
+
+						}
+						
+						// ----- Check if we want to query -----
+						if ((thresSet.get(currentPrediction) == true) && 
+								(queryBuffer.size() == Globals.QUERY_BUFFER_SIZE)) {
+							
+							Integer[] ds = predBuffer.toArray(new Integer[predBuffer.size()]);							
+							int[] d = ArrayUtils.toPrimitive(ds);
+							int mostFreq = getMostFrequent(d);
+							
+							/*
+							 * Make a majority vote on the last minute and only consider elements
+							 * (2sec windows) equal to the majority in this minute.
+							 * Regardless of this, all feature points will be used to adapt the model
+							 * later...
+							 */
+							ArrayList<Double> majElements = new ArrayList<Double>();
+							for (int i=0; i<Globals.PRED_BUFFER_SIZE; i++) {
+								if (predBuffer.get(i) == mostFreq) {
+									majElements.add(queryBuffer.get(i));
+								}
 							}
 							
+							// Use mean entropy value of the last last 30 2sec windows as query criteria
+							Double[] ms = majElements.toArray(new Double[majElements.size()]);							
+							double[] m = ArrayUtils.toPrimitive(ms);
+							double queryCrit = meanCalc.evaluate(m);
+							double std = stdCalc.evaluate(m);
+							
+							//Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
+
+								if ((queryCrit > threshold.get(currentPrediction)) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
+										((System.currentTimeMillis() - prevTime) > Globals.minBreak)) {
+									
+									Log.i(TAG, "Threshold exceeded, user queried for current context");
+
+									sendQuery(context);
+
+									prevTime = System.currentTimeMillis();
+									
+									/*
+									 * Contributing to the query criteria that is computed on the interval where the query was sent.
+									 * We can only assign this value to the correct class, once we received the ground truth from
+									 * the user:
+									 */
+									tmpQueryCrit = metricBeforeFeedback(queryCrit, std); // queryCrit is just value of the mean
+
+									/*
+									 * The model adaption is handled in the callModelAdaption, that is always being called
+									 * from the ContextSelection Activity
+									 */
+								}						
 						}
-
-						Log.i(TAG, "thresBuffer length: " + thresBuffer.get(currentPrediction).size());
-
-					}
-					
-					// ----- Check if we want to query -----
-					if ((thresSet.get(currentPrediction) == true) && 
-							(queryBuffer.size() == Globals.QUERY_BUFFER_SIZE)) {
+									
+						//long sincePrevEndTime = System.currentTimeMillis() - endTime;
 						
-						Integer[] ds = predBuffer.toArray(new Integer[predBuffer.size()]);							
-						int[] d = ArrayUtils.toPrimitive(ds);
-						int mostFreq = getMostFrequent(d);
+						//endTime = System.currentTimeMillis();
+						
+						//long diff = endTime-startTime;
+						
+						//Log.w(TAG, "Time: " + startTime);
+						//Log.w(TAG, "Time: " + endTime);
+						//Log.w(TAG, "Time for one computation: " + diff);
+						//Log.w(TAG, "Time since last cycle: " + sincePrevEndTime);
+						
+						//=================================================================================
+						//=================================================================================
+						//=================================================================================
+
+						
+						// For testing only:
+						if (testBool == false) {
+							testBool = true;
+							
+//							Intent ii = new Intent(context, CheckClassFeasibilityIS.class);
+//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "Train");
+//							context.startService(ii);
+							
+//							Intent ii = new Intent(context, IncorporateNewClassIS.class);
+//							ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, "Bus");
+//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_DOWNLOADED);
+//							context.startService(ii);
+							
+//							Intent iii = new Intent(context, GetUpdatedModelIS.class);
+//							iii.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, "22.json");
+//							iii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_FEASIBLE);
+//							context.startService(iii);
+						
+						}
+						
 						
 						/*
-						 * Make a majority vote on the last minute and only consider elements
-						 * (2sec windows) equal to the majority in this minute.
-						 * Regardless of this, all feature points will be used to adapt the model
-						 * later...
+						 * Increase the total number of predictions per class to 
+						 * for the predicted one and save to preferences (for plotting):
 						 */
-						ArrayList<Double> majElements = new ArrayList<Double>();
-						for (int i=0; i<Globals.PRED_BUFFER_SIZE; i++) {
-							if (predBuffer.get(i) == mostFreq) {
-								majElements.add(queryBuffer.get(i));
-							}
+						totalCount.set(currentPrediction, (totalCount.get(currentPrediction) + 1));
+						Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount); //TODO: this can also be done every minute instead of every 2sec
+						
+						// Put the current prediction string to the preferences (workaround!):
+						mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+						SharedPreferences.Editor editor = mPrefs.edit();
+						editor.putString(Globals.CURRENT_CONTEXT, predictionString);
+						editor.commit();
+						
+						// Save to log file and send broadcast to change text, if prediction has changed
+						if (!predictionString.equals(prevPredictionString)) {
+							
+							appendToPredLog(predictionString);
+							
+							Intent i = new Intent(Globals.PREDICTION_CHANGED_INTENT);
+							Bundle b = new Bundle();
+							b.putString(Globals.NEW_PREDICTION_STRING, predictionString);
+							i.putExtras(b);
+							context.sendBroadcast(i);
+					
+							prevPredictionString = predictionString;
 						}
+					} else {
 						
-						// Use mean entropy value of the last last 30 2sec windows as query criteria
-						Double[] ms = majElements.toArray(new Double[majElements.size()]);							
-						double[] m = ArrayUtils.toPrimitive(ms);
-						double queryCrit = meanCalc.evaluate(m);
-						double std = stdCalc.evaluate(m);
+						predictionString = Globals.SILENCE; 
 						
-						//Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
-
-							if ((queryCrit > threshold.get(currentPrediction)) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
-									((System.currentTimeMillis() - prevTime) > Globals.minBreak)) {
-								
-								Log.i(TAG, "Threshold exceeded, user queried for current context");
-
-								sendQuery(context);
-
-								prevTime = System.currentTimeMillis();
-								
-								/*
-								 * Contributing to the query criteria that is computed on the interval where the query was sent.
-								 * We can only assign this value to the correct class, once we received the ground truth from
-								 * the user:
-								 */
-								tmpQueryCrit = metricBeforeFeedback(queryCrit, std); // queryCrit is just value of the mean
-
-								/*
-								 * The model adaption is handled in the callModelAdaption, that is always being called
-								 * from the ContextSelection Activity
-								 */
-							}						
-					}
-								
-					//long sincePrevEndTime = System.currentTimeMillis() - endTime;
+						// Save to log file and send broadcast to change text, if prediction has changed
+						if (!predictionString.equals(prevPredictionString)) {
+							
+							appendToPredLog(predictionString);
+							
+							Intent i = new Intent(Globals.PREDICTION_CHANGED_INTENT);
+							Bundle b = new Bundle();
+							b.putString(Globals.NEW_PREDICTION_STRING, predictionString);
+							i.putExtras(b);
+							context.sendBroadcast(i);
 					
-					//endTime = System.currentTimeMillis();
-					
-					//long diff = endTime-startTime;
-					
-					//Log.w(TAG, "Time: " + startTime);
-					//Log.w(TAG, "Time: " + endTime);
-					//Log.w(TAG, "Time for one computation: " + diff);
-					//Log.w(TAG, "Time since last cycle: " + sincePrevEndTime);
-					
-					//=================================================================================
-					//=================================================================================
-					//=================================================================================
-
-					
-					// For testing only:
-					if (testBool == false) {
-						testBool = true;
-						
-//						Intent ii = new Intent(context, CheckClassFeasibilityIS.class);
-//						ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "Train");
-//						context.startService(ii);
-						
-//						Intent ii = new Intent(context, IncorporateNewClassIS.class);
-//						ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, "Bus");
-//						ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_DOWNLOADED);
-//						context.startService(ii);
-						
-//						Intent iii = new Intent(context, GetUpdatedModelIS.class);
-//						iii.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, "22.json");
-//						iii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_FEASIBLE);
-//						context.startService(iii);
-					
+							prevPredictionString = Globals.SILENCE;
+						}
 					}
 					
-					
-					/*
-					 * Increase the total number of predictions per class to 
-					 * for the predicted one and save to preferences (for plotting):
-					 */
-					totalCount.set(currentPrediction, (totalCount.get(currentPrediction) + 1));
-					Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount); //TODO: this can also be done every minute instead of every 2sec
-					
-					// Put the current prediction string to the preferences (workaround!):
-					mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-					SharedPreferences.Editor editor = mPrefs.edit();
-					editor.putString(Globals.CURRENT_CONTEXT, predictionString);
-					editor.commit();
-					
-					// Save to log file and send broadcast to change text, if prediction has changed
-					if (!predictionString.equals(prevPredictionString)) {
-						
-						appendToPredLog(predictionString);
-						
-						Intent i = new Intent(Globals.PREDICTION_CHANGED_INTENT);
-						Bundle b = new Bundle();
-						b.putString(Globals.NEW_PREDICTION_STRING, predictionString);
-						i.putExtras(b);
-						context.sendBroadcast(i);
-				
-						prevPredictionString = predictionString;
-					}
+
 
 				} else {
 					Log.i(TAG,
@@ -571,15 +592,6 @@ public class StateManager extends BroadcastReceiver {
 			classNamesRequested = true;
 			
 		}
-		
-		if (intent.getAction().equals(Globals.SILENCE_PREDICTED)) {
-
-			Log.d(TAG, "Silence predicted");
-			
-			// Send to MainActivity that we can make UI change
-			Intent i = new Intent(Globals.SILENCE_PREDICTED_CHANGE_UI);
-			context.sendBroadcast(i);
-		} 
 		
 		// =====================================================================
 		// ============= Incorporate new class from server =====================
