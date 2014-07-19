@@ -71,15 +71,15 @@ def listToJSON(trainedGMM, returnGMM=False, filename=None):
     Deserialize the GMM object (list!) in Python and dump it into a JSON file. Final JSON structure looks like this:
     GMM[0]["classesDict"]
     GMM[0]["n_classes"]
-    GMM[0]["scale_mean"]
-    GMM[0]["scale_stddev"]
+    GMM[0]["scale_means"]
+    GMM[0]["scale_stddevs"]
     GMM[0]["weights"]
     GMM[0]["means"]
     GMM[0]["covars"]
     GMM[0]["n_components"]
     GMM[0]["n_features"]
     GMM[0]["n_train"]
-    GMM[1]["weights"]
+    GMM[1]["classesDict"]
     .
     .
     .
@@ -115,6 +115,52 @@ def listToJSON(trainedGMM, returnGMM=False, filename=None):
     
     if returnGMM == True:
         return seriGMM
+        
+def JSONToDict(filename):
+    """
+    Convert the JSON classifier (i.e. the list in python) back into a dictionary, were we can use our normal methods on
+    
+    @param filename: path to the json classifier
+    @return: classifier as dictionary
+    """
+    
+    jsonGMM = np.array(json.load(open(filename,"rb")))
+    n_classes = len(jsonGMM)
+    n_components = jsonGMM[0]["n_components"]
+    classesDict = jsonGMM[0]["classesDict"]
+    
+    clfs = []
+    n_train_list = []    
+    
+    for i in range(n_classes):
+        tmpClf = GMM(n_components=n_components, covariance_type='full')
+        dummy = np.random.random((100,12))
+        tmpClf.fit(dummy) # workaround, as sklearn requires that .fit is called before using this GMM. All values are overwritten later anyway  
+    
+        tmpClf.weights_ = np.array(jsonGMM[i]["weights"])
+        tmpClf.means_ = np.array(jsonGMM[i]["means"])
+        tmpClf.covars_ = np.array(jsonGMM[i]["covars"])
+        
+        n_train_list.append(jsonGMM[i]["n_train"])        
+        
+        clfs.append(tmpClf)
+    
+    
+    
+    scaler = preprocessing.StandardScaler()
+    scaler.mean_ = jsonGMM[0]["scale_means"]
+    scaler.std_ = jsonGMM[0]["scale_stddevs"]
+    
+    dictGMM = {'clfs': clfs, 'classesDict': classesDict, 'n_train': n_train_list, 'scaler': scaler}
+    
+    return dictGMM
+    
+    
+    
+    
+    
+    
+    
 
 def pointsToJSON(data, filename):
     """

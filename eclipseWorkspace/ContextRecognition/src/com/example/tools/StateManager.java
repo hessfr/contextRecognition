@@ -402,20 +402,9 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-//							Intent ii = new Intent(context, CheckClassFeasibilityIS.class);
-//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "Train");
-//							context.startService(ii);
-							
-//							Intent ii = new Intent(context, IncorporateNewClassIS.class);
-//							ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, "Bus");
-//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_DOWNLOADED);
-//							context.startService(ii);
-							
-//							Intent iii = new Intent(context, GetUpdatedModelIS.class);
-//							iii.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, "22.json");
-//							iii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_FEASIBLE);
-//							context.startService(iii);
-						
+							Intent ii = new Intent(context, SendRawAudio.class);
+							context.startService(ii);
+
 						}
 						
 						
@@ -590,6 +579,14 @@ public class StateManager extends BroadcastReceiver {
 		if (intent.getAction().equals(Globals.REQUEST_CLASS_NAMES)) {
 
 			classNamesRequested = true;
+			
+		}
+		
+		if (intent.getAction().equals(Globals.CONN_SEND_RAW_AUDIO_RECEIVE)) {
+			
+			Boolean result = intent.getBooleanExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, false);
+		
+			Log.i(TAG, "-------- sending of raw audio data finsished, result: " + result);
 			
 		}
 		
@@ -1055,23 +1052,8 @@ public class StateManager extends BroadcastReceiver {
 			if (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB) {
 				// WIFI connected and charging:
 				
-				SendRawAudio sendRawAudio = new SendRawAudio();
-				
-//				Boolean result = sendRawAudio.executeContent();
-//				Log.i(TAG, "---------------- " + result);
-				
-				
-				sendRawAudio.execute();
-				
-//				Boolean result = null;
-//				try {
-//					result = sendRawAudio.execute().get();
-//
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				} catch (ExecutionException e) {
-//					e.printStackTrace();
-//				}
+				Intent i = new Intent(context, SendRawAudio.class);
+				context.startService(i);
 				
 				statusString = "WIFI connected and charging";
 			} else {

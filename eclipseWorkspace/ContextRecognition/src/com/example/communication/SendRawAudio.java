@@ -5,44 +5,47 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.concurrent.ExecutionException;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.os.AsyncTask;
-import android.os.Build;
+import android.app.IntentService;
+import android.content.Intent;
 import android.util.Log;
 
 import com.example.tools.Globals;
 
-/*
- * This is the HTTP GET request to download the new model under the given URL. It
- * replaces the current JSON classifier object with the new classifier. The 
- * IncorporateNewClass request has to be call first, in order to initiate the training
- * on the server
- */
-@SuppressLint("NewApi")
-public class SendRawAudio extends AsyncTask<String, Void, Boolean> {
-	
+public class SendRawAudio extends IntentService {
+
 	private static final String TAG = "SendRawAudio";
 	
-	private Boolean result = false;
+	public SendRawAudio() {
+		super("SendRawAudio");
+		
+		Log.d(TAG, "Constructor");
+		
+	}
 	
 	@Override
-	protected Boolean doInBackground(String... params) {
+	protected void onHandleIntent(Intent arg0) {
+
+		boolean result = false;
 		
-		Log.i(TAG, "SendRawAudio called");
-		
+		Log.i(TAG, "onHandleIntent");
+
         String URL = Globals.RAW_AUDIO_URL;
         
         //Set timeout parameters:
@@ -74,7 +77,8 @@ public class SendRawAudio extends AsyncTask<String, Void, Boolean> {
         // Works, but is too slow:
         InputStreamEntity reqEntity = null;
 		try {
-			File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
+			//File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
+			File file = new File(Globals.APP_PATH, "rawAudio");
 			reqEntity = new InputStreamEntity(new FileInputStream(file), -1);
 			reqEntity.setContentType("binary/octet-stream");
 	        reqEntity.setChunked(true);
@@ -91,8 +95,9 @@ public class SendRawAudio extends AsyncTask<String, Void, Boolean> {
 
 	    	if (response.getStatusLine().getStatusCode() == 200) {
 	    		
+	    		result = true;
+	    		
 	    		Log.i(TAG, "SendRawAudio successful");
-	    		//TODO
 	    		
 	    	} else {
 	    		Log.e(TAG, "Invalid response received after sending the PUT request");
@@ -109,24 +114,17 @@ public class SendRawAudio extends AsyncTask<String, Void, Boolean> {
 	    } catch (IOException e) {
 	        e.printStackTrace();
 	    }
-
-	    return result;
+		
+		
+		
+		Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
+		i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, result);	
+		sendBroadcast(i);
+		
+		
+		Log.i(TAG, "IntentService finished");
+		
 	}
 	
-	@Override
-    protected void onPostExecute(Boolean result) {
-    	//super.onPostExecute(result);
-		
-		returnResults();
-    }
-    
-    public Boolean returnResults() {
 
-    	return result;
-    }
 }
-
-
-
-
-
