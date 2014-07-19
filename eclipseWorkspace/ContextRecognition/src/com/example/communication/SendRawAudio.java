@@ -5,6 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,10 +24,11 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.tools.Globals;
@@ -45,8 +50,27 @@ public class SendRawAudio extends IntentService {
 		boolean result = false;
 		
 		Log.i(TAG, "onHandleIntent");
+		
+		// Generate string of the current data, e.g. 20140720
+		Calendar cal = Calendar.getInstance();
+		Date currentLocalTime = cal.getTime();
+		DateFormat date = new SimpleDateFormat("yyyMMdd");
+		String dateString = date.format(currentLocalTime);
 
-        String URL = Globals.RAW_AUDIO_URL;
+		// Get the userID from the preferences:
+		SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		
+		String userId = mPrefs.getString(Globals.USER_ID, "");
+		if (userId.equals("")) {
+			Log.e(TAG, "Couldn't find valid user id in preferences, maybe the assignment method failed");
+		}
+		
+		// Add parameters to URL
+		List<NameValuePair> par = new LinkedList<NameValuePair>();
+		par.add(new BasicNameValuePair("user_id", userId));
+		par.add(new BasicNameValuePair("date", dateString));
+		String paramString = URLEncodedUtils.format(par, "utf-8");
+        String URL = Globals.RAW_AUDIO_URL + paramString;
         
         //Set timeout parameters:
         HttpParams httpParameters = new BasicHttpParams();

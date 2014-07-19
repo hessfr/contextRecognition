@@ -586,7 +586,14 @@ public class StateManager extends BroadcastReceiver {
 			
 			Boolean result = intent.getBooleanExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, false);
 		
-			Log.i(TAG, "-------- sending of raw audio data finsished, result: " + result);
+			Log.i(TAG, "Sending of raw audio data finsished, result: " + result);
+			if (result == true) {
+				Log.i(TAG, "Transferring of raw audio data to server was successful, "
+						+ "deleting local audio file");
+			}
+			
+			
+			//TODO
 			
 		}
 		
@@ -806,7 +813,7 @@ public class StateManager extends BroadcastReceiver {
 			
 			waitingForFeedback = false;
 			
-			new ModelAdaptor(buffer, label, listener).execute();
+			new ModelAdaptor(buffer, label, listener).execute(context);
 			
 			// Clear all buffer values etc.
 				

@@ -40,7 +40,6 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	private ArrayList<double[]> buffer;
 	private int label;
 	private Context context;
-	
 
 	private static final String TAG = "ModelAdaptor";
 	private static final double EPS = Double.MIN_VALUE;
@@ -108,7 +107,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		// Save the new GMM to the SD-card and reset the app status to initializing
 		newGMM.dumpJSON();
 		
-		AppStatus.getInstance().set(AppStatus.INIT);
+		AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
 	}
 
 	public GMM adaptGMM(GMM oldGMM, DenseMatrix64F updatePoints, int label,

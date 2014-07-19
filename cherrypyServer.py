@@ -92,37 +92,50 @@ class GetKnownClasses():
 
         return json_string
         
-class RawAudio():
-    
-    #TODO    
+class RawAudio():  
     
     exposed = True
-    
-    @cherrypy.expose
-    def PUT(self):
-        
-        print("--- RawAudio Put request ---")        
-        
-        data = cherrypy.request.body.read()
-        
-        f = open("rawAudio", 'wb')
-        f.write(data)
-        f.close()
-        
-        return "abc"
         
     @cherrypy.expose
-    def POST(self):
+    def POST(self, user_id, date):
         
         print("--- RawAudio POST request ---")        
         
         data = cherrypy.request.body.read()
         
-        f = open("rawAudio", 'wb')
+        # TODO: archive the raw audio files properly and make sure to NEVER overwrite any!!!        
+        
+        print("User ID: " + user_id)   
+        print("Date: " + date)
+        
+        baseFolder = "userAudioData/"
+        
+        full_filename = str(baseFolder + "RawAudio_" + user_id + "_" + date)
+
+        # If file already exists, display a warning:        
+        if(os.path.isfile(full_filename)):
+            print("File for that day and user already exists, overwritting file")
+        
+        f = open(full_filename, 'wb')
         f.write(data)
         f.close()
         
+        print("Writing raw audio file to disk finished")     
+
+
+
+
+
         return "abc"
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
 class InitClassifier():
 
@@ -230,13 +243,15 @@ cherrypy.tree.mount(InitClassifier(), '/initclassifier', {
         'tools.response_headers.on': True,
         }})
         
+sizeLimitGB = 3.5 # in Gigabytes
+
+fileSizeLimit = int(sizeLimitGB * 1024**3)
 
 conf_global = {
     '/': { 'request.dispatch': cherrypy.dispatch.MethodDispatcher() },
     'global': {'server.socket_host': '0.0.0.0',
                'server.socket_port': 8080,
-               'max_request_body_size': 0, # zero removes the limit
-               'max_request_header_size': 0
+               'server.max_request_body_size': fileSizeLimit
                }
 }
 
