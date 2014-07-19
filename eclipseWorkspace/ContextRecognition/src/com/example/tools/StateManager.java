@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -43,9 +42,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.activities.ContextSelection;
-import com.example.communication.CheckClassFeasibility;
-import com.example.communication.GetUpdatedModel;
-import com.example.communication.IncorporateNewClass;
+import com.example.communication.CheckClassFeasibilityIS;
+import com.example.communication.GetUpdatedModelIS;
 import com.example.communication.IncorporateNewClassIS;
 import com.example.communication.SendRawAudio;
 import com.example.contextrecognition.R;
@@ -407,9 +405,15 @@ public class StateManager extends BroadcastReceiver {
 //						ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "Train");
 //						context.startService(ii);
 						
-						Intent ii = new Intent(context, IncorporateNewClassIS.class);
-						ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, "Bus");
-						context.startService(ii);
+//						Intent ii = new Intent(context, IncorporateNewClassIS.class);
+//						ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, "Bus");
+//						ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_DOWNLOADED);
+//						context.startService(ii);
+						
+//						Intent iii = new Intent(context, GetUpdatedModelIS.class);
+//						iii.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, "22.json");
+//						iii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_FEASIBLE);
+//						context.startService(iii);
 					
 					}
 					
@@ -588,8 +592,7 @@ public class StateManager extends BroadcastReceiver {
 			
 			String feasibilityString = intent.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT);
 			String newClassName = intent.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME);
-			
-			
+
 			Log.i(TAG, "Received server response from feasibility request. Result: " + feasibilityString);
 
 			if (feasibilityString != null) {
@@ -609,16 +612,26 @@ public class StateManager extends BroadcastReceiver {
 					String msg = "Including the class " + newClassName
 							+ " will take longer as we need to download new files to our server";
 					Log.i(TAG, msg);
-					
 					Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 					
+					// Send the the request to actually train a new class on the server:
+					Intent ii = new Intent(context, IncorporateNewClassIS.class);
+					ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, newClassName);
+					ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_FEASIBLE);
+					context.startService(ii);
+
 				} else if (feasibilityString.equals(Globals.FEASIBILITY_DOWNLOADED)) {
 					
 					String msg = "The class " + newClassName + " will be available in some minutes";
-					
 					Log.i(TAG, msg);
-					
 					Toast.makeText(context, msg , Toast.LENGTH_LONG).show();
+					
+					// Send the the request to actually train a new class on the server:
+					Intent ii = new Intent(context, IncorporateNewClassIS.class);
+					ii.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME, newClassName);
+					ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, Globals.FEASIBILITY_DOWNLOADED);
+					context.startService(ii);
+					
 				} else {
 					
 					Log.e(TAG, ""); //TODO
@@ -631,29 +644,64 @@ public class StateManager extends BroadcastReceiver {
 			}
 			
 			waitingForFeedback = false;
-
-			// Send the the request to actually incorporate a new class:
 			
 			//TODO
-			
-		}
-		
-		if (intent.getAction().equals(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE)) {
-			
-			String filenameOnServer = intent.getStringExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME);
-			
-			Log.i(TAG, "xxxxxxxxxxxxxxxxxxxxxxxxxxx");
-			Log.i(TAG, "Filename on server: " + filenameOnServer);
-			Log.i(TAG, "xxxxxxxxxxxxxxxxxxxxxxxxxxx");
 			
 		}
 		
 		/*
 		 * Then receive the result of the request to incorporate a new class (i.e. the filename 
 		 * where the classifier can be downloaded when the training is done):
+		 */		
+		if (intent.getAction().equals(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE)) {
+			
+			String filenameOnServer = intent.getStringExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME);
+			String feasibilityString = intent.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT);
+			
+			Intent i = new Intent(context, GetUpdatedModelIS.class);
+			i.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, filenameOnServer);
+			i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, feasibilityString);
+			context.startService(i);
+
+		}
+		/*
+		 * Finally, after receiving the new classifier, update all buffers etc. to incorporate
+		 * the new class
 		 */
-		
-		
+		if (intent.getAction().equals(Globals.CONN_UPDATED_MODEL_RECEIVE)) {
+			
+			Boolean successful = intent.getBooleanExtra(Globals.CONN_UPDATED_MODEL_RESULT, false);
+			
+			if (successful == true) {
+				
+				onNewClassIncorporated(context);
+
+				/*
+				 *  If the feedback is a response to a query the system sent out, clear all buffer values
+				 *  immediately (even before we actually incorporate the new class into the model):
+				 */
+				// Flush the buffers...
+				queryBuffer.clear();
+				predBuffer.clear();
+				for (int i = 0; i < gmm.get_n_classes(); i++) {
+					ArrayList<Double> tmp = thresBuffer.get(i);
+					tmp.clear();
+					thresBuffer.set(i, tmp);
+
+					thresSet.set(i, false);
+
+					if (feedbackReceived.get(i) == false) {
+						ArrayList<Double> tmp2 = initThresBuffer.get(i);
+						tmp2.clear();
+						initThresBuffer.set(i, tmp2);
+					}
+				}
+			} else {
+				
+				Log.e(TAG, ""); //TODO
+
+			}
+		}
 		//=================================================================================
 		//=================================================================================
 		//=================================================================================
@@ -836,162 +884,173 @@ public class StateManager extends BroadcastReceiver {
 		return i;
 	}
 	
-	//---------------------- OUTDATED REMOVE LATER -----------------------------------------
+	/*
+	 * Initiate request of the new class by classing the feasibility check. Is this check is passed,
+	 * we tell the server to (download &) train the new model and finally transmit it to the client. (all
+	 * this is done sequentially when handling the intents in this BroadcastReceiver)
+	 */
 	private void requestNewClassFromServer(Context context, String newClassName) {
-	
-		// Check if our classifier is already trained with this class:
 		
-		String[] cc = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
-		
-		boolean found = false;
-		for(int i=0; i<cc.length; i++) {
-			if (newClassName.equals(cc[i])) {
-				found = true;
-			}
-		}
-		if (found == true) {
-			String msg = newClassName + " in already included";
-			
-			Log.i(TAG, msg);
-			
-			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-
-			// Stop here:
-			return;
-		}
-
-		Log.i(TAG, "Requesting new context class " + newClassName
-				+ " from server");
-		
-		CheckClassFeasibility feasReq = new CheckClassFeasibility();
-		
-		String feasibile = null;
-		
-		if (feasibile != null) {
-			if (feasibile.equals(Globals.FEASIBILITY_NOT_FEASIBLE)) {
-				
-				String msg = "It is not feasible to train the class " + newClassName
-						+ " as not enough sound files available on freesound";
-				Log.i(TAG, msg);
-				
-				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-				
-				// Don't send request to server to add the class:
-				return;
-				
-			} else if (feasibile.equals(Globals.FEASIBILITY_FEASIBLE)) {
-				
-				String msg = "Including the class " + newClassName
-						+ " might take a while since we need to download new files to our server";
-				Log.i(TAG, msg);
-				
-				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-				
-			} else if (feasibile.equals(Globals.FEASIBILITY_DOWNLOADED)) {
-				
-				String msg = "The class " + newClassName + " will be available in some minutes";
-				
-				Log.i(TAG, msg);
-				
-				Toast.makeText(context, msg , Toast.LENGTH_LONG).show();
-			} else {
-				
-				Log.e(TAG, ""); //TODO
-			}
-		} else {
-			
-			Log.w(TAG, "Could not reach server");
-			
-			//TODO: handle this!!!!
-		}
-
-
-		waitingForFeedback = false;
-
-		IncorporateNewClass postReq = new IncorporateNewClass();
-		//String filenameOnServer = null;
-		
-		try {
-
-			String filenameOnServer = postReq.execute(newClassName).get();
-
-			// Now check periodically if the computation on server is finished
-			TimerTaskGet task = new TimerTaskGet(context, filenameOnServer) {
-				
-				private int counter;
-				
-				public void run() {
-					//Looper.prepare();
-					
-		        	GetUpdatedModel getReq = new GetUpdatedModel();
-					Boolean res = false;
-					
-					try {
-						
-						res = getReq.execute(filenameOnServer).get();
-						
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} catch (ExecutionException e) {
-						e.printStackTrace();
-					}
-					
-					if (res == true) {
-						
-						// Model received from the server:
-						Log.i(TAG, "New classifier received from server");
-						onNewClassIncorporated(context);
-						this.cancel();
-
-					}
-					
-					if(++counter == Globals.MAX_RETRY_NEW_CLASS) {
-						Log.e(TAG, "Server timeout, model adaption failed, as server didn't provide new classifier"
-								+ "with the specified time limit");
-						this.cancel();
-					}
-
-
-					Log.i(TAG, "Waiting for new classifier from server");
-					
-					//Looper.loop();
-		        }
-			};
-			
-		    Timer timer = new Timer();
-	        timer.schedule(task, 0, Globals.POLLING_INTERVAL_NEW_CLASS);
-		  
-
-		} catch (InterruptedException e) {
-
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-
-			e.printStackTrace();
-		}
-		
-		/*
-		 *  If the feedback is a response to a query the system sent out, clear all buffer values
-		 *  immediately (even before we actually incorporate the new class into the model):
-		 */
-		// Flush the buffers...
-		queryBuffer.clear();
-		predBuffer.clear();
-		for (int i = 0; i < gmm.get_n_classes(); i++) {
-			ArrayList<Double> tmp = thresBuffer.get(i);
-			tmp.clear();
-			thresBuffer.set(i, tmp);
-
-			thresSet.set(i, false);
-
-			if (feedbackReceived.get(i) == false) {
-				ArrayList<Double> tmp2 = initThresBuffer.get(i);
-				tmp2.clear();
-				initThresBuffer.set(i, tmp2);
-			}
-		}
+		Intent i = new Intent(context, CheckClassFeasibilityIS.class);
+		i.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, newClassName);
+		context.startService(i);
 	}
 	
+	//---------------------- OUTDATED REMOVE LATER -----------------------------------------
+//	private void requestNewClassFromServerOLD(Context context, String newClassName) {
+//	
+//		// Check if our classifier is already trained with this class:
+//		
+//		String[] cc = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+//		
+//		boolean found = false;
+//		for(int i=0; i<cc.length; i++) {
+//			if (newClassName.equals(cc[i])) {
+//				found = true;
+//			}
+//		}
+//		if (found == true) {
+//			String msg = newClassName + " in already included";
+//			
+//			Log.i(TAG, msg);
+//			
+//			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+//
+//			// Stop here:
+//			return;
+//		}
+//
+//		Log.i(TAG, "Requesting new context class " + newClassName
+//				+ " from server");
+//		
+//		CheckClassFeasibility feasReq = new CheckClassFeasibility();
+//		
+//		String feasibile = null;
+//		
+//		if (feasibile != null) {
+//			if (feasibile.equals(Globals.FEASIBILITY_NOT_FEASIBLE)) {
+//				
+//				String msg = "It is not feasible to train the class " + newClassName
+//						+ " as not enough sound files available on freesound";
+//				Log.i(TAG, msg);
+//				
+//				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+//				
+//				// Don't send request to server to add the class:
+//				return;
+//				
+//			} else if (feasibile.equals(Globals.FEASIBILITY_FEASIBLE)) {
+//				
+//				String msg = "Including the class " + newClassName
+//						+ " might take a while since we need to download new files to our server";
+//				Log.i(TAG, msg);
+//				
+//				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+//				
+//			} else if (feasibile.equals(Globals.FEASIBILITY_DOWNLOADED)) {
+//				
+//				String msg = "The class " + newClassName + " will be available in some minutes";
+//				
+//				Log.i(TAG, msg);
+//				
+//				Toast.makeText(context, msg , Toast.LENGTH_LONG).show();
+//			} else {
+//				
+//				Log.e(TAG, ""); //TODO
+//			}
+//		} else {
+//			
+//			Log.w(TAG, "Could not reach server");
+//			
+//			//TODO: handle this!!!!
+//		}
+//
+//
+//		waitingForFeedback = false;
+//
+//		IncorporateNewClass postReq = new IncorporateNewClass();
+//		//String filenameOnServer = null;
+//		
+//		try {
+//
+//			String filenameOnServer = postReq.execute(newClassName).get();
+//
+//			// Now check periodically if the computation on server is finished
+//			TimerTaskGet task = new TimerTaskGet(context, filenameOnServer) {
+//				
+//				private int counter;
+//				
+//				public void run() {
+//					//Looper.prepare();
+//					
+//		        	GetUpdatedModel getReq = new GetUpdatedModel();
+//					Boolean res = false;
+//					
+//					try {
+//						
+//						res = getReq.execute(filenameOnServer).get();
+//						
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					} catch (ExecutionException e) {
+//						e.printStackTrace();
+//					}
+//					
+//					if (res == true) {
+//						
+//						// Model received from the server:
+//						Log.i(TAG, "New classifier received from server");
+//						onNewClassIncorporated(context);
+//						this.cancel();
+//
+//					}
+//					
+//					if(++counter == Globals.MAX_RETRY_NEW_CLASS) {
+//						Log.e(TAG, "Server timeout, model adaption failed, as server didn't provide new classifier"
+//								+ "with the specified time limit");
+//						this.cancel();
+//					}
+//
+//
+//					Log.i(TAG, "Waiting for new classifier from server");
+//					
+//					//Looper.loop();
+//		        }
+//			};
+//			
+//		    Timer timer = new Timer();
+//	        timer.schedule(task, 0, Globals.POLLING_INTERVAL_NEW_CLASS);
+//		  
+//
+//		} catch (InterruptedException e) {
+//
+//			e.printStackTrace();
+//		} catch (ExecutionException e) {
+//
+//			e.printStackTrace();
+//		}
+//		
+//		/*
+//		 *  If the feedback is a response to a query the system sent out, clear all buffer values
+//		 *  immediately (even before we actually incorporate the new class into the model):
+//		 */
+//		// Flush the buffers...
+//		queryBuffer.clear();
+//		predBuffer.clear();
+//		for (int i = 0; i < gmm.get_n_classes(); i++) {
+//			ArrayList<Double> tmp = thresBuffer.get(i);
+//			tmp.clear();
+//			thresBuffer.set(i, tmp);
+//
+//			thresSet.set(i, false);
+//
+//			if (feedbackReceived.get(i) == false) {
+//				ArrayList<Double> tmp2 = initThresBuffer.get(i);
+//				tmp2.clear();
+//				initThresBuffer.set(i, tmp2);
+//			}
+//		}
+//	}
 	//---------------------- OUTDATED REMOVE LATER -----------------------------------------
 	
 	private void sendQuery(Context context) {

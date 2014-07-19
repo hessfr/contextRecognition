@@ -94,7 +94,8 @@ public class Diary extends ActionBarActivity {
     private void createChart(final Integer[] t, String[] c) {
     	
     	String[] colors = {"#41A317", "#CC6600", "#1569C7", "#008080", "#A52A2A",
-    			"#438D80", "#827839", "#8C001A", "#8C001A", "#D462FF"}; //TODO: If >10 classes -> NullPointerException
+    			"#438D80", "#827839", "#571B7E", "#8C001A", "#D462FF", "#FFA500",
+    			"#3B3131", "#566D7E", "#7F525D", "#538074"}; //TODO
     	
     	// http://stackoverflow.com/questions/112234/sorting-matched-arrays-in-java
     	Integer[] idx = new Integer[t.length];

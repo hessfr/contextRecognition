@@ -48,6 +48,8 @@ class AddContextClass():
         filename = str(filename)
         filename = filename[1:-1]
 
+        print(filename)
+
         if(os.path.isfile(filename)):
             print("Filename " + filename + " found on disk, will be sent to client")
         

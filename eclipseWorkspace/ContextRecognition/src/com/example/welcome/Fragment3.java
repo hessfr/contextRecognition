@@ -126,7 +126,8 @@ public class Fragment3 extends Fragment {
 
 							// Now check periodically if the computation on server
 							// is finished
-							TimerTaskGet task = new TimerTaskGet(getActivity(), filenameOnServer) {
+							TimerTaskGet task = new TimerTaskGet(getActivity(), filenameOnServer, 
+									Globals.POLLING_INTERVAL_INITIAL_MODEL, Globals.MAX_RETRY_INITIAL_MODEL) {
 
 								private int counter;
 

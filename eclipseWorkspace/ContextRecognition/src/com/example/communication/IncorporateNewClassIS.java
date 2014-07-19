@@ -45,6 +45,7 @@ public class IncorporateNewClassIS extends IntentService {
 		Log.i(TAG, "onHandleIntent");
 		
 		String newClassName = arg0.getStringExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME);
+		String feasibilityCheckResult = arg0.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT);
 		String filenameOnServer = null;
 		
 		//Add parameters to URL
@@ -131,7 +132,8 @@ public class IncorporateNewClassIS extends IntentService {
 	    } 
 
 	    Intent i = new Intent(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE);
-		i.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME, filenameOnServer);		
+		i.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME, filenameOnServer);
+		i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT ,feasibilityCheckResult);
 		sendBroadcast(i);
 		
 		
