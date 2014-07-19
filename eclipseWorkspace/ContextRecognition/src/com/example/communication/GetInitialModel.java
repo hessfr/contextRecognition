@@ -33,7 +33,7 @@ import com.example.tools.Globals;
  */
 public class GetInitialModel extends AsyncTask<String, Void, Boolean> {
 	
-	private static final String TAG = "GetRequest";
+	private static final String TAG = "GetInitialModel";
 	
 	private Boolean result = false;
 	

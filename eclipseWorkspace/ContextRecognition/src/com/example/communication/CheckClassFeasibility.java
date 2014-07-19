@@ -18,32 +18,34 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
-import android.os.AsyncTask;
+import android.app.IntentService;
+import android.content.Intent;
 import android.util.Log;
-
 import com.example.tools.Globals;
 
-/*
- * This request initiates the server to check if it is feasible to train the given context class name, i.e.
- * if there are enough sound file available on freesound to create a trained classifier
- */
-
-public class CheckClassFeasibility extends AsyncTask<String, Void, String> {
+public class CheckClassFeasibility extends IntentService {
 
 	private static final String TAG = "CheckClassFeasibility";
-
-	private String result=null;
-
+	
+	public CheckClassFeasibility() {
+		super("CheckClassFeasibility");
+		
+		Log.d(TAG, "Constructor");
+		
+	}
+	
 	@Override
-	protected String doInBackground(String... params) {
+	protected void onHandleIntent(Intent arg0) {
 
-		String newClassName = params[0];
-
-		Log.i(TAG, "PostRequest called");
+		String className = arg0.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME);
+		
+		String result = null;
+		
+		Log.i(TAG, "onHandleIntent");
 
 		// Add parameters to URL
 		List<NameValuePair> par = new LinkedList<NameValuePair>();
-		par.add(new BasicNameValuePair("classname", newClassName));
+		par.add(new BasicNameValuePair("classname", className));
 		String paramString = URLEncodedUtils.format(par, "utf-8");
 		String URL = Globals.FEASIBILITY_CHECK_URL + paramString;
 
@@ -86,19 +88,15 @@ public class CheckClassFeasibility extends AsyncTask<String, Void, String> {
 			e.printStackTrace();
 		}
 
-		//return result;
-		return null;
+		Intent i = new Intent(Globals.CONN_CHECK_FEASIBILITY_RECEIVE);
+		i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, result);
+		i.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, className);		
+		sendBroadcast(i);
+		
+		
+		Log.i(TAG, "IntentService finished");
+		
 	}
-
-	@Override
-	protected void onPostExecute(String result) {
-
-		returnResults();
-	}
-
-	public String returnResults() {
-
-		return result;
-	}
+	
 
 }

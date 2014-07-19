@@ -22,31 +22,33 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
-import android.os.AsyncTask;
+import android.app.IntentService;
+import android.content.Intent;
 import android.util.Log;
 
 import com.example.tools.Globals;
 
-/*
- * This is a HTTP POST request to request a new context class from the server. Once the server
- * receives this request, it will start training the new class and return a URL, where the
- * new classifier can be downloaded when the training is completed
- */
-public class IncorporateNewClass extends AsyncTask<String, Void, String> {
-	
-	private static final String TAG = "IncorporateNewClass";
+public class IncorporateNewClass extends IntentService {
 
-    // Contains filename under which the adapted GMM can be requested from the server
-    private String filenameOnServer;
-    
+	private static final String TAG = "IncorporateNewClass";
+	
+	public IncorporateNewClass() {
+		super("CheckClassFeasibility");
+		
+		Log.d(TAG, "Constructor");
+		
+	}
+	
 	@Override
-	protected String doInBackground(String... params) {
+	protected void onHandleIntent(Intent arg0) {
+
+		Log.i(TAG, "onHandleIntent");
 		
-		String newClassName = params[0];
+		String newClassName = arg0.getStringExtra(Globals.CONN_INCORPORATE_NEW_CLASS_NAME);
+		String feasibilityCheckResult = arg0.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT);
+		String filenameOnServer = null;
 		
-		Log.i(TAG,"PostRequest called");
-	    
-	    //Add parameters to URL
+		//Add parameters to URL
 	    List<NameValuePair> par = new LinkedList<NameValuePair>();
         par.add(new BasicNameValuePair("new_classname", newClassName));
         String paramString = URLEncodedUtils.format(par, "utf-8");
@@ -127,25 +129,15 @@ public class IncorporateNewClass extends AsyncTask<String, Void, String> {
 	        e.printStackTrace();
 	    } catch (IOException e) {
 	        e.printStackTrace();
-	    }
+	    } 
 
-	    return filenameOnServer;
+	    Intent i = new Intent(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE);
+		i.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME, filenameOnServer);
+		i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT ,feasibilityCheckResult);
+		sendBroadcast(i);
+		
+		
+		Log.i(TAG, "IntentService finished");
 	}
-	
-	@Override
-    protected void onPostExecute(String result) {
-    	//super.onPostExecute(result);
-    	
-    	returnResults();
-    }
-    
-    public String returnResults() {
-
-    	return filenameOnServer;
-    }
 
 }
-
-
-
-

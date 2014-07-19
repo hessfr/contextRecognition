@@ -30,7 +30,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.communication.CheckClassFeasibilityIS;
+import com.example.communication.CheckClassFeasibility;
 import com.example.contextrecognition.R;
 import com.example.tools.AudioWorker;
 import com.example.tools.GMM;
