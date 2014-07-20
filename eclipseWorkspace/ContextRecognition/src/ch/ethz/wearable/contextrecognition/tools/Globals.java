@@ -145,13 +145,16 @@ public class Globals {
 	public static final String WAIT = "wait";
 	public static final String NO_WAIT = "no_wait";
 	
-	public static final long POLLING_INTERVAL_NEW_CLASS_ALREADY_DOWNLOADED = 10 * 1000; // 2 * 60 * 1000 = 2min
+	public static final long POLLING_INTERVAL_NEW_CLASS_ALREADY_DOWNLOADED = 10 * 60 * 1000; // 2 * 60 * 1000 = 2min
 	public static final long POLLING_INTERVAL_NEW_CLASS_NOT_DOWNLOADED = 15 * 60 * 1000; // 15 * 60 * 1000 = 15min
 	public static final long MAX_RETRY_NEW_CLASS_ALREADY_DOWNLOADED = 30; // 30 * 2min -> 1h
 	public static final long MAX_RETRY_NEW_CLASS_NOT_DOWNLOADED = 12; // 12 * 15min -> 3h
 	
 	public static final long POLLING_INTERVAL_INITIAL_MODEL = 300;
 	public static final long MAX_RETRY_INITIAL_MODEL = 5;
+	
+	public static final long POLLING_INTERVAL_UPLOAD = 5400 * 1000; // 5400 * 1000 = 1.5h
+	public static final long MAX_RETRY_UPLOAD = 3; //
 	
 	
 	/*

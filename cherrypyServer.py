@@ -100,13 +100,14 @@ class RawAudio():
     def POST(self, user_id, date):
         
         print("--- RawAudio POST request ---")        
-        
-        data = cherrypy.request.body.read()
-        
-        # TODO: archive the raw audio files properly and make sure to NEVER overwrite any!!!        
+
+        # Set timeout limit to 2h:
+        cherrypy.response.timeout = 7200
         
         print("User ID: " + user_id)   
-        print("Date: " + date)
+        print("Date: " + date)        
+        
+        data = cherrypy.request.body.read()
         
         baseFolder = "userAudioData/"
         

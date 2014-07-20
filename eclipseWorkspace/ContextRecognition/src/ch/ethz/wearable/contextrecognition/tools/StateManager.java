@@ -588,13 +588,8 @@ public class StateManager extends BroadcastReceiver {
 		
 			Log.i(TAG, "Sending of raw audio data finsished, result: " + result);
 			if (result == true) {
-				Log.i(TAG, "Transferring of raw audio data to server was successful, "
-						+ "deleting local audio file");
+				Log.i(TAG, "Transferring of raw audio data to server was successful");
 			}
-			
-			
-			//TODO
-			
 		}
 		
 		// =====================================================================
