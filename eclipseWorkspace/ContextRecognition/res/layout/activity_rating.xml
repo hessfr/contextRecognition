@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="10dp">
+    
+            <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent"
+		        android:layout_marginTop="20dp" >
+			    <TextView android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_centerHorizontal="True"
+			        android:text="@string/rating_accuracy_satisfaction"/>
+		    </RelativeLayout>
+		    
+            <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent" >
+            	<RatingBar
+			        android:id="@+id/ratingBarAccuracy"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_centerHorizontal="True"
+			        android:layout_alignParentTop="true" />
+            </RelativeLayout>
+            
+            <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent"
+		        android:layout_marginTop="20dp" >
+			    <TextView android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_centerHorizontal="True"
+			        android:text="@string/rating_useful"/>
+		    </RelativeLayout>
+		    
+            <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent" >
+            	<RatingBar
+			        android:id="@+id/ratingBarUsefulness"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_centerHorizontal="True"
+			        android:layout_alignParentTop="true" />
+            </RelativeLayout>
+            
+            <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent"
+		        android:layout_marginTop="20dp" >
+			    <TextView android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_centerHorizontal="True"
+			        android:text="@string/rating_free_text"/>
+			</RelativeLayout>
+		
+            <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent"
+		        android:layout_marginTop="10dp" >
+            	<EditText
+            	    android:id="@+id/feedbackText"
+            	    android:layout_width="wrap_content"
+            	    android:layout_height="wrap_content"
+            	    android:layout_centerHorizontal="True"
+            	    android:hint="@string/rating_hint"
+            	    android:ems="10" >
+            	    <requestFocus />
+            	</EditText>
+
+            </RelativeLayout>
+            
+            <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="match_parent"
+		        android:layout_marginTop="20dp" >
+		    <Button
+		        android:id="@+id/submitButton"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_centerHorizontal="True"
+		        android:text="@string/rating_submit_button" />
+		    </RelativeLayout>
+ 
+</LinearLayout>

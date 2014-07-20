@@ -1,0 +1,72 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_activity"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="ch.ethz.wearable.contextrecognition.activities.MainActivity"
+    tools:ignore="MergeRootFrame" >
+
+    <RelativeLayout
+        android:id="@+id/rel_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp" >
+
+        <TextView
+            android:id="@+id/contextTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text=""
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#008B8B"
+            android:textSize="54sp" />
+
+        <LinearLayout
+            android:id="@+id/lin_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/contextTV"
+            android:layout_centerHorizontal="True"
+            android:orientation="horizontal" >
+
+            <ImageButton
+                android:id="@+id/changeButton"
+                style="?android:attr/spinnerStyle"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_margin="10dp"
+                android:background="@drawable/ic_action_change" />
+
+            <ImageButton
+                android:id="@+id/confirmButton"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_margin="10dp"
+                android:background="@drawable/ic_stat_confirm_black" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="2dip"
+        android:layout_above="@+id/annotationTV"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="25dp"
+        android:background="#B6B6B4" />
+
+    <TextView
+        android:id="@+id/annotationTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/activity_annotation" />
+
+    <ListView
+        android:id="@+id/gtSelector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+    </ListView>
+
+</LinearLayout>

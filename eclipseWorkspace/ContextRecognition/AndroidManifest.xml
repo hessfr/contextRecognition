@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.contextrecognition"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="7"
+        android:targetSdkVersion="19" />
+
+    <!-- Launching -->
+    <uses-permission android:name="android.permission.BATTERY_STATS" />
+    <!-- All probes -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Storage -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <!-- Audio -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- For sending and receiving data -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Vibrate -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Check if wifi connected -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:hardwareAccelerated="True" >
+        
+        <!-- Main activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        
+        <activity 
+            android:name="ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        
+        
+        
+        <!-- Welcome activities -->
+        <activity 
+            android:name="ch.ethz.wearable.contextrecognition.activities.Welcome1"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity 
+            android:name="ch.ethz.wearable.contextrecognition.activities.Welcome2"
+            android:label="@string/app_name" >
+        </activity>
+        <activity 
+            android:name="ch.ethz.wearable.contextrecognition.activities.Welcome3"
+            android:label="@string/app_name" >
+        </activity>
+        
+        <!-- Context Selection activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.ContextSelection"
+            android:label="@string/label_context_selection" >
+        </activity>
+        
+        <!-- Settings activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.Settings"
+            android:label="@string/label_settings"
+            android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
+        </activity>
+        
+        <!-- Label activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.Diary"
+            android:label="@string/label_diary"
+            android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
+        </activity>
+        
+        <!-- Help activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.Help"
+            android:label="@string/label_help"
+            android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
+        </activity>
+        
+        <!-- Rating activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.Rating"
+            android:label="@string/label_rating"
+            android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
+        </activity>       
+    
+        <!-- AudioWorker Service -->
+       	<service android:name="ch.ethz.wearable.contextrecognition.tools.AudioWorker" />
+       	
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.SendRawAudio" />
+       	
+       	
+       	<!-- Register the broadcast receiver and all intent filters -->
+       	<receiver android:name="ch.ethz.wearable.contextrecognition.tools.StateManager"
+       	    android:enabled="true">
+  			<intent-filter>
+    			<action android:name="action.prediction" />
+    			<action android:name="action.modelAdaptionExisting" />
+    			<action android:name="action.modelAdaptionNew" />
+    			<action android:name="action.modelAdaptionFinished" />
+    			<action android:name="action.callContextSelection" />
+    			<action android:name="action.dismissNotification" />
+    			<action android:name="action.registerRecurringTasks" />
+    			<action android:name="action.endOfDayTasks" />
+    			<action android:name="action.persistData" />
+    			<action android:name="action.maxQueryNumberChanged" />
+    			<action android:name="action.requestClassNames" />
+    			<action android:name="action.silencePredicted" />
+    			<action android:name="action.connCheckFeasibilityReceive" />
+    			<action android:name="action.connIncorporateNewClassReceive" />
+    			<action android:name="action.connUpdatedModelReceive" />
+    			<action android:name="action.connSendRawAudioReceive" />
+    			
+    			
+  			</intent-filter>
+		</receiver>
+		
+        
+        
+    </application>
+
+</manifest>

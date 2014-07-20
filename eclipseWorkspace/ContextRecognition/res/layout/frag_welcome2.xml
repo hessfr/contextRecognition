@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:gravity="center" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/welcome_text_2" />
+
+        <TextView
+            android:id="@+id/currentSeekBarValue"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:gravity="center"
+            android:text=""
+            android:textSize="24sp" />
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:progress="10" />
+    </LinearLayout>
+
+    <!-- Horizontal line #488AC7 -->
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="2dip"
+        android:layout_above="@+id/bottomElements"
+        android:background="@color/horizontal_line_welcome" />
+
+    <RelativeLayout
+        android:id="@+id/bottomElements"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="10dp" >
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_action_forward" />
+
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="17dp"
+            android:src="@drawable/ic_action_back" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

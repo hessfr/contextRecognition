@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="normal_text_view">#008B8B</color>
+    <color name="silent_text_view">#837E7C</color>
+    <color name="horizontal_line_welcome">#008B8B</color>
+</resources>
