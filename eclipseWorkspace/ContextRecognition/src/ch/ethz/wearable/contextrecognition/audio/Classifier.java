@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.audio;
 
 import java.util.Arrays;
 
@@ -7,6 +7,9 @@ import org.ejml.data.DenseMatrix64F;
 import org.ejml.factory.CholeskyDecomposition;
 import org.ejml.factory.DecompositionFactory;
 import org.ejml.ops.CommonOps;
+
+import ch.ethz.wearable.contextrecognition.data.PredictionResult;
+import ch.ethz.wearable.contextrecognition.utils.GMM;
 
 public class Classifier {
 	

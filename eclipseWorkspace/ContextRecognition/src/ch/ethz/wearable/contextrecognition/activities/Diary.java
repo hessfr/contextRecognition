@@ -24,7 +24,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;

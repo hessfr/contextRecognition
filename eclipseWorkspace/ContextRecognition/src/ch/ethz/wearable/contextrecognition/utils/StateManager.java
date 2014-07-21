@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,11 +41,12 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
+import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor;
+import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor.onModelAdaptionCompleted;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
 import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
-import ch.ethz.wearable.contextrecognition.tools.ModelAdaptor.onModelAdaptionCompleted;
 
 import com.example.contextrecognition.R;
 import com.google.gson.Gson;

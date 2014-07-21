@@ -33,8 +33,8 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
-import ch.ethz.wearable.contextrecognition.tools.TimerTaskGet;
+import ch.ethz.wearable.contextrecognition.data.TimerTaskGet;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 public class SendRawAudio extends IntentService {
 

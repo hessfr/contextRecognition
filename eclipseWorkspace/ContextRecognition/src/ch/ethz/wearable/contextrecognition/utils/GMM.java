@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +18,8 @@ import org.ejml.data.DenseMatrix64F;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
+import ch.ethz.wearable.contextrecognition.data.ContextClassModel;
+import ch.ethz.wearable.contextrecognition.data.JsonModel;
 
 import com.google.gson.Gson;
 /*

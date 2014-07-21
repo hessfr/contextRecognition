@@ -1,11 +1,11 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.data;
 
 import java.io.Serializable;
 
 import org.ejml.data.DenseMatrix64F;
 
 /*
-Contains context class specific parameter of a single class:
+ * Contains context class specific parameter of a single class:
 */
 public class ContextClassModel implements Serializable {
 

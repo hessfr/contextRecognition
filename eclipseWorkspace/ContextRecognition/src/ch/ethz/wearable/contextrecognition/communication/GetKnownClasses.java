@@ -19,7 +19,7 @@ import org.json.JSONException;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
  * This request initiates the server to check if it is feasible to train the given context class name, i.e.

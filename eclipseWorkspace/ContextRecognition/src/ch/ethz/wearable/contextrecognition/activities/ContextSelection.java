@@ -15,7 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 import ch.ethz.wearable.contextrecognition.communication.GetKnownClasses;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.example.contextrecognition.R;
 

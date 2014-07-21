@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.data;
 
 /*
  * Class containing the prediction result and the mean entropy.

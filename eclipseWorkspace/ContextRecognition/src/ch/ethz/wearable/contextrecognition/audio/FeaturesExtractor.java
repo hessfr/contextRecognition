@@ -21,10 +21,11 @@
  * License along with Funf. If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.audio;
 
 import java.util.Arrays;
 
+import ch.ethz.wearable.contextrecognition.data.Mfccs;
 import ch.ethz.wearable.contextrecognition.math.FFT;
 import ch.ethz.wearable.contextrecognition.math.MFCC;
 import ch.ethz.wearable.contextrecognition.math.Window;

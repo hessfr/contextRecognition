@@ -1,10 +1,15 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.audio;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 
 import org.ejml.data.DenseMatrix64F;
 
+import ch.ethz.wearable.contextrecognition.data.Mfccs;
+import ch.ethz.wearable.contextrecognition.data.PredictionResult;
+import ch.ethz.wearable.contextrecognition.utils.AppStatus;
+import ch.ethz.wearable.contextrecognition.utils.GMM;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;

@@ -34,9 +34,9 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-import ch.ethz.wearable.contextrecognition.tools.AppStatus;
-import ch.ethz.wearable.contextrecognition.tools.AudioWorker;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
+import ch.ethz.wearable.contextrecognition.utils.AppStatus;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 import ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity;
 
 import com.example.contextrecognition.R;

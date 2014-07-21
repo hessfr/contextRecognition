@@ -23,8 +23,8 @@ import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.MainActivity;
 import ch.ethz.wearable.contextrecognition.communication.GetInitialModel;
 import ch.ethz.wearable.contextrecognition.communication.InitModel;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
-import ch.ethz.wearable.contextrecognition.tools.TimerTaskGet;
+import ch.ethz.wearable.contextrecognition.data.TimerTaskGet;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.example.contextrecognition.R;
 

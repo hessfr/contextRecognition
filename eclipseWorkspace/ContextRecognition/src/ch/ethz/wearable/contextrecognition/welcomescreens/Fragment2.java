@@ -14,7 +14,7 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.example.contextrecognition.R;
 

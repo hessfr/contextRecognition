@@ -1,12 +1,14 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
-import ch.ethz.wearable.contextrecognition.tools.AppStatus;
+import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
 /*
- * http://stackoverflow.com/questions/4758462/android-finish-all-activities
+ * This class is used to stop the recording and finish the activity
+ * 
+ * Idea from http://stackoverflow.com/questions/4758462/android-finish-all-activities
  */
 public class ShutdownActivity extends Activity {
 

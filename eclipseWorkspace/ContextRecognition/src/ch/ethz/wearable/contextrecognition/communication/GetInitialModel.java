@@ -22,7 +22,7 @@ import org.apache.http.util.EntityUtils;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
  * This is the HTTP GET request to download the new model under the given URL. It

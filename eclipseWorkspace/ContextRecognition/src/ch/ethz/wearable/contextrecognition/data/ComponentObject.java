@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.data;
 
 import org.ejml.data.DenseMatrix64F;
 

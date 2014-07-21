@@ -25,7 +25,7 @@ import org.apache.http.util.EntityUtils;
 import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 public class IncorporateNewClass extends IntentService {
 

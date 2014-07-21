@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

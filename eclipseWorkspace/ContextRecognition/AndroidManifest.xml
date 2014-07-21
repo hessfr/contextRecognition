@@ -112,7 +112,7 @@
         </activity>       
     
         <!-- AudioWorker Service -->
-       	<service android:name="ch.ethz.wearable.contextrecognition.tools.AudioWorker" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.audio.AudioWorker" />
        	
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass" />
@@ -121,7 +121,7 @@
        	
        	
        	<!-- Register the broadcast receiver and all intent filters -->
-       	<receiver android:name="ch.ethz.wearable.contextrecognition.tools.StateManager"
+       	<receiver android:name="ch.ethz.wearable.contextrecognition.utils.StateManager"
        	    android:enabled="true">
   			<intent-filter>
     			<action android:name="action.prediction" />

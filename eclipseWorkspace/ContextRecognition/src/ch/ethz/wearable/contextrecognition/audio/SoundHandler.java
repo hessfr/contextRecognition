@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.audio;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,6 +9,7 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.google.common.primitives.Shorts;
 

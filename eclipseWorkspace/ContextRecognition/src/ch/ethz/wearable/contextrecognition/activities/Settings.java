@@ -1,9 +1,9 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
 //import android.app.ActionBar;
-import ch.ethz.wearable.contextrecognition.tools.AppStatus;
-import ch.ethz.wearable.contextrecognition.tools.AudioWorker;
-import ch.ethz.wearable.contextrecognition.tools.Globals;
+import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
+import ch.ethz.wearable.contextrecognition.utils.AppStatus;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.example.contextrecognition.R;
 

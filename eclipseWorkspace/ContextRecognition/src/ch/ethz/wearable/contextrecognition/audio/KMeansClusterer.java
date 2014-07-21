@@ -1,5 +1,5 @@
 //Code from https://github.com/DSRC-GPU/CrowGenCpp
-package ch.ethz.wearable.contextrecognition.tools;
+package ch.ethz.wearable.contextrecognition.audio;
 
 import java.util.ArrayList;
 import java.util.List;
