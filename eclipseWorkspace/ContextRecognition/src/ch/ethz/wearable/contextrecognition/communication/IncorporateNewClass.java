@@ -32,7 +32,7 @@ public class IncorporateNewClass extends IntentService {
 	private static final String TAG = "IncorporateNewClass";
 	
 	public IncorporateNewClass() {
-		super("CheckClassFeasibility");
+		super("IncorporateNewClass");
 		
 		Log.d(TAG, "Constructor");
 		
@@ -110,7 +110,7 @@ public class IncorporateNewClass extends IntentService {
 
 	    	HttpResponse response = client.execute(post);
 	    	
-	    	Log.i(TAG, "POST request sent");
+	    	Log.i(TAG, "IncorporateNewClass request sent");
 
 	    	if (response.getStatusLine().getStatusCode() == 200) {
 	    		filenameOnServer = EntityUtils.toString(response.getEntity());

@@ -184,6 +184,7 @@ public class SendRawAudio extends IntentService {
 					    	        e.printStackTrace();
 					    	    }
 				    		} else {
+				    			
 				    			Log.e(TAG, "Wifi not connected / not charging. Files won't be transferred to server");
 				    			resultList.add(false);
 				    		}

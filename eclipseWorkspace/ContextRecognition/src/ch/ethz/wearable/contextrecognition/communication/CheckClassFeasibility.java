@@ -67,7 +67,7 @@ public class CheckClassFeasibility extends IntentService {
 			
 			HttpResponse response = client.execute(post);
 
-			Log.i(TAG, "POST request sent");
+			Log.i(TAG, "CheckClassFeasibility POST request sent");
 
 			if (response.getStatusLine().getStatusCode() == 200) {
 				result = EntityUtils.toString(response.getEntity());

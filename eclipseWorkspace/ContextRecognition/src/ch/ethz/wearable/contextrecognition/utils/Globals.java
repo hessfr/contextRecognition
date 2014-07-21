@@ -212,6 +212,10 @@ public class Globals {
 	// Define if we wait for server response when calling MainActivity from welcome activity:
 	public static final String WAIT_FOR_SERVER = "waitForServer";	
 	
+	// IDs for different notifications:
+	public static final int NOTIFICATION_ID_FILE_TRANSFER = 1;
+	public static final int NOTIFICATION_ID_QUERY = 2;
+	
 	// Preferences:
 	public static final String USER_ID = "userId";
 	public static final String CURRENT_CONTEXT = "currentContext";

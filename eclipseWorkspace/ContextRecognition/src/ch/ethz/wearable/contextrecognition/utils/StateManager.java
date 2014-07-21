@@ -30,11 +30,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
@@ -130,8 +126,6 @@ public class StateManager extends BroadcastReceiver {
 	//private static long endTime;
 	
 	SharedPreferences mPrefs;
-	
-	public static final int NOTIFICATION_ID = 1;
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -405,6 +399,11 @@ public class StateManager extends BroadcastReceiver {
 							
 //							Intent ii = new Intent(context, SendRawAudio.class);
 //							context.startService(ii);
+							
+//							Intent ii = new Intent(context, CheckClassFeasibility.class);
+//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "ergihe");
+//							context.startService(ii);
+							
 
 						}
 						
@@ -560,7 +559,8 @@ public class StateManager extends BroadcastReceiver {
 			resetQueriesLeft(context);
 			
 			// initiate the transfer of the raw audio data to the server:
-			transferRawAudio(context);
+			Intent i = new Intent(context, SendRawAudio.class);
+			context.startService(i);
 		}
 		
 		if (intent.getAction().equals(Globals.PERSIST_DATA)) {
@@ -590,6 +590,22 @@ public class StateManager extends BroadcastReceiver {
 			Log.i(TAG, "Sending of raw audio data finsished, result: " + result);
 			if (result == true) {
 				Log.i(TAG, "Transferring of raw audio data to server was successful");
+			} else {
+				
+				Log.w(TAG, "Transferring or raw audio data failed. Sending notification to user");
+				
+				NotificationCompat.Builder builder = new NotificationCompat.Builder(
+						context).setSmallIcon(R.drawable.ic_launcher)
+						.setContentTitle("Transferring audio data not successful")
+						.setAutoCancel(true)
+						.setWhen(System.currentTimeMillis())
+						.setTicker("Audio data could not be transfered");
+				
+				// TODO: got to activity to show user what to do
+
+				NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+				manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
+				
 			}
 		}
 		
@@ -938,7 +954,7 @@ public class StateManager extends BroadcastReceiver {
 
 
 		NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-		manager.notify(NOTIFICATION_ID, builder.build());
+		manager.notify(Globals.NOTIFICATION_ID_QUERY, builder.build());
 		
 		waitingForFeedback = true;
 		timeQuerySent = System.currentTimeMillis();
@@ -958,7 +974,7 @@ public class StateManager extends BroadcastReceiver {
 
 		NotificationManager notificationManager = (NotificationManager) context
 	            .getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel(NOTIFICATION_ID);
+		notificationManager.cancel(Globals.NOTIFICATION_ID_QUERY);
 	}
 	
 	private void appendToALLog(boolean feedbackReceived, int contextClassGT, 
@@ -1033,62 +1049,7 @@ public class StateManager extends BroadcastReceiver {
 		}
 
 	}
-	
-	/*
-	 * Transfer the raw audio data to the server. Only needed for the small scale experiment
-	 */
-	private void transferRawAudio(Context context) {
-		
-		
-		ConnectivityManager connManager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-		/*
-		 * Code from: http://stackoverflow.com/questions/5283491/android-check-if-device-is-plugged-in
-		 */
-		Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-		
-        String statusString = null; // For test only
-		
-		if (mWifi.isConnected()) {
-			if (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB) {
-				// WIFI connected and charging:
-				
-				Intent i = new Intent(context, SendRawAudio.class);
-				context.startService(i);
-				
-				statusString = "WIFI connected and charging";
-			} else {
-				// WIFI connected but NOT charging:
-				
-				statusString = "WIFI connected but NOT charging";
-			}
-		} else {
-			// WIFI NOT connected:
-
-			statusString = "WIFI NOT connected";
-		}
-		
-		//TODO: inform user if we couldn't transfer the file
-		
-		Calendar cal = Calendar.getInstance();
-		Date currentLocalTime = cal.getTime();
-		DateFormat date = new SimpleDateFormat("dd-MM-yyy HH:mm:ss z");
-		String timeAndDate = date.format(currentLocalTime);
-		try {
-			FileWriter f = new FileWriter(Globals.TEST_FILE, true);
-			f.write(timeAndDate + " Transfer to server: " + statusString + "\n");
-			f.close();
-		} catch (IOException e) {
-			Log.e(TAG, "Writing to test file failed");
-			e.printStackTrace();
-		}
-		
-		
-		
-	}
-	
 	/*
 	 * When a new context class was added to the model, we have to incorporate the new class into
 	 * the threshold buffers, class names, ...
