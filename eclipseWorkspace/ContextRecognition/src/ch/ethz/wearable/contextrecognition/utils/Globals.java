@@ -12,10 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-
 import org.json.JSONArray;
 import org.json.JSONException;
-
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
@@ -27,6 +26,7 @@ public class Globals {
 	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 			+ "/" + APP_FOLDER);
 	
+	@SuppressLint("SimpleDateFormat")
 	public static File getLogPath() {
 		Calendar cal = Calendar.getInstance();
 		Date currentLocalTime = cal.getTime();

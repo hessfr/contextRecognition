@@ -23,13 +23,10 @@ import org.ejml.simple.SimpleMatrix;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.audio.KMeansClusterer.Centroid;
 import ch.ethz.wearable.contextrecognition.data.ComponentObject;
 import ch.ethz.wearable.contextrecognition.data.ContextClassModel;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
-
-
 
 //import org.apache.commons.math3.linear.CholeskyDecomposition;
 import com.google.gson.Gson;

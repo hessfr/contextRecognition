@@ -177,6 +177,7 @@ public class MainActivity extends ActionBarActivity {
 		}
 	}
 
+	@SuppressWarnings("static-access")
 	@Override
 	protected void onResume() {
 		super.onResume();

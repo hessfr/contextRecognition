@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
 import org.apache.commons.lang3.ArrayUtils;
-
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +14,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,7 +25,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
 import com.example.contextrecognition.R;
@@ -43,6 +42,8 @@ public class Diary extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_diary);
  
+        Log.d(TAG, "onCreate");
+        
         // get action bar   
         ActionBar actionBar = getSupportActionBar();
  
@@ -188,7 +189,7 @@ public class Diary extends ActionBarActivity {
     /**
      * Launch Shutdown activity to close app and stop recording
      * */
-    private void callShutdown() {
+	private void callShutdown() {
 		Application app = getApplication();
 	    Intent intent = new Intent(app, ShutdownActivity.class);
 	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -200,14 +201,16 @@ public class Diary extends ActionBarActivity {
     /*
      * Code from: http://stackoverflow.com/questions/7361135/how-to-change-color-and-font-on-listview
      */
-    private class CustomListAdapter extends ArrayAdapter {
+    @SuppressWarnings("rawtypes")
+	private class CustomListAdapter extends ArrayAdapter {
 
         private Context mContext;
         private int id;
         private List <String>items ;
         private String[] mColors;
 
-        public CustomListAdapter(Context context, int textViewResourceId , List<String> list, String[] colors) 
+        @SuppressWarnings("unchecked")
+		public CustomListAdapter(Context context, int textViewResourceId , List<String> list, String[] colors) 
         {
             super(context, textViewResourceId, list);      
             mColors = colors;

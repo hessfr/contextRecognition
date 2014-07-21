@@ -1,12 +1,5 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
-//import android.app.ActionBar;
-import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
-import ch.ethz.wearable.contextrecognition.utils.AppStatus;
-import ch.ethz.wearable.contextrecognition.utils.Globals;
-
-import com.example.contextrecognition.R;
-
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +14,9 @@ import android.view.MenuItem;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
+
+import com.example.contextrecognition.R;
 
 public class Settings extends ActionBarActivity {
 	

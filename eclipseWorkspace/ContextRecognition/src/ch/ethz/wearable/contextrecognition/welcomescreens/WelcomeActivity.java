@@ -1,15 +1,13 @@
 package ch.ethz.wearable.contextrecognition.welcomescreens;
 
-import com.example.contextrecognition.R;
-import com.example.contextrecognition.R.id;
-import com.example.contextrecognition.R.layout;
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+
+import com.example.contextrecognition.R;
 
 public class WelcomeActivity extends FragmentActivity {
 

@@ -120,7 +120,6 @@ public class Fragment3 extends Fragment {
 						 
 						 if (res != null) {
 							 final String filenameOnServer = res[0];
-							 String wait = res[1];
 							 
 							 Log.i(TAG, "filenameOnServer: " + filenameOnServer);
 

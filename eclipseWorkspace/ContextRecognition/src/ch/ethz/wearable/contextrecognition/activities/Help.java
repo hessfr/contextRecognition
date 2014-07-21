@@ -1,19 +1,16 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
 //import android.app.ActionBar;
-import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
-import ch.ethz.wearable.contextrecognition.utils.AppStatus;
-
-import com.example.contextrecognition.R;
-
+import android.app.Application;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.app.Application;
-import android.content.Intent;
-import android.os.Bundle;
+
+import com.example.contextrecognition.R;
 
 public class Help extends ActionBarActivity {
 	
@@ -26,6 +23,8 @@ public class Help extends ActionBarActivity {
  
         ActionBar actionBar = getSupportActionBar();
  
+        Log.d(TAG, "onCreate");
+        
         // Enabling backwards navigation
         actionBar.setDisplayHomeAsUpEnabled(true);
     }    

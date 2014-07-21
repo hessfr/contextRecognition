@@ -1,11 +1,6 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
 //import android.app.ActionBar;
-import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
-import ch.ethz.wearable.contextrecognition.utils.AppStatus;
-
-import com.example.contextrecognition.R;
-
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
@@ -23,6 +18,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RatingBar;
 
+import com.example.contextrecognition.R;
+
 public class Rating extends ActionBarActivity {
     
 	private static final String TAG = "RatingActivity";
@@ -38,6 +35,8 @@ public class Rating extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
  
+        Log.d(TAG, "onCreate");
+        
         // get action bar   
         ActionBar actionBar = getSupportActionBar();
  

@@ -50,6 +50,7 @@ public class SoundHandler extends Thread {
 	
 	private LinkedList<queueElement> queue = new LinkedList<queueElement>(); // contains the raw audio data, each element is 2 seconds long
 	private class queueElement{
+		@SuppressWarnings("unused")
 		public int numSamplesRead;
 		public short[] data;
 		public boolean[] silenceBuffer;
