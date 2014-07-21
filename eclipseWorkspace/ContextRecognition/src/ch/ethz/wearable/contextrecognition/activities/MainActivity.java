@@ -1,8 +1,11 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -11,8 +14,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.os.Bundle;
-import android.os.FileObserver;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.support.v7.app.ActionBarActivity;
@@ -29,10 +33,8 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.tools.AppStatus;
 import ch.ethz.wearable.contextrecognition.tools.AudioWorker;
-import ch.ethz.wearable.contextrecognition.tools.GMM;
 import ch.ethz.wearable.contextrecognition.tools.Globals;
 import ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity;
 
@@ -83,6 +85,16 @@ public class MainActivity extends ActionBarActivity {
 						.getContentResolver(), Secure.ANDROID_ID);
 			}
 			
+			// Create folder on external storage is it doesn't exist already:
+			File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+					+ "/" + Globals.APP_FOLDER);
+			if (!f.exists()) {
+				Log.i(TAG, "Createing app folder on external storage");
+			    f.mkdir();
+			}
+			Log.i(TAG, "Copying asset data into external storage folder");
+			copyAssetFile("GMM.json");
+			
 			SharedPreferences.Editor editor = mPrefs.edit();
 			editor.putString(Globals.USER_ID, tmpId);
 			editor.putBoolean(welcomeScreenShownPref, true);
@@ -92,7 +104,6 @@ public class MainActivity extends ActionBarActivity {
 			Log.i(TAG, "Very first start of the app: displaying welcome screen first");
 
 			// Open the welcome activity if it hasn't been shown yet (i.e. at the very first start):
-//			Intent i = new Intent(this, Welcome1.class);
 			Intent i = new Intent(this, WelcomeActivity.class);
 			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
 			startActivity(i);
@@ -557,6 +568,38 @@ public class MainActivity extends ActionBarActivity {
 	private void setFirstRun() {
 		if(FIRST_RUN == true) {
 			FIRST_RUN = false;
+		}
+	}
+	
+	/*
+	 * Copy the JSON file containing the GMM to the external storage
+	 * 
+	 * Code from http://stackoverflow.com/questions/4447477/android-how-to-copy-files-in-assets-to-sdcard
+	 */
+	private void copyAssetFile(String filename) {
+		
+		AssetManager assetManager = getAssets();
+		InputStream in = null;
+		OutputStream out = null;
+		
+		try {
+			in = assetManager.open(filename);
+			File outFile = new File(Globals.APP_PATH, filename);
+			out = new FileOutputStream(outFile);
+
+			byte[] buffer = new byte[1024];
+			int read;
+			while ((read = in.read(buffer)) != -1) {
+				out.write(buffer, 0, read);
+			}
+
+			in.close();
+			in = null;
+			out.flush();
+			out.close();
+			out = null;
+		} catch (IOException e) {
+			Log.e(TAG, "Failed to copy asset file: " + filename, e);
 		}
 	}
 

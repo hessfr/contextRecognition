@@ -153,8 +153,8 @@ public class Globals {
 	public static final long POLLING_INTERVAL_INITIAL_MODEL = 300;
 	public static final long MAX_RETRY_INITIAL_MODEL = 5;
 	
-	public static final long POLLING_INTERVAL_UPLOAD = 5400 * 1000; // 5400 * 1000 = 1.5h
-	public static final long MAX_RETRY_UPLOAD = 3; //
+	public static final long POLLING_INTERVAL_UPLOAD = 1 * 3600 * 1000; // 1h
+	public static final long MAX_RETRY_UPLOAD = 5;
 	
 	
 	/*
