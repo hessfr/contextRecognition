@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -179,7 +180,7 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-
+		
 		// Register the broadcast receiver of the MainAcitivity and intent filters:
 		IntentFilter filterMain = new IntentFilter();
 		filterMain.addAction(Globals.PREDICTION_CHANGED_INTENT);
@@ -189,6 +190,17 @@ public class MainActivity extends ActionBarActivity {
 		// Set the prediction TextView to the current prediction (workaround!)
 		String s = mPrefs.getString(Globals.CURRENT_CONTEXT, "");
 		setText(s);
+		
+		/*
+		 * If we stopped the recording and left the app and come back now, we want to start
+		 * recording again:
+		 */
+		if (AppStatus.getInstance().get() == AppStatus.getInstance().STOP_RECORDING) {
+			Intent i = new Intent(this, AudioWorker.class);
+			startService(i);
+			AppStatus.getInstance().set(AppStatus.INIT);
+			Log.i(TAG, "New status: init");
+		}
 	}
 	
 	@Override
@@ -242,8 +254,8 @@ public class MainActivity extends ActionBarActivity {
 			return true;
 		}
 		if (id == R.id.action_exit) {
-			//stopRecording();
-			finish();
+			// Quit the app and stop the recording:
+			callShutdown();
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -280,6 +292,16 @@ public class MainActivity extends ActionBarActivity {
 		Intent i = new Intent(MainActivity.this, Help.class);
 		startActivity(i);
 	}
+    /**
+     * Launch Shutdown activity to close app and stop recording
+     * */
+    private void callShutdown() {
+		Application app = getApplication();
+	    Intent intent = new Intent(app, ShutdownActivity.class);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    app.startActivity(intent);
+    }
 
 	public void addListenerOnButton() {
 

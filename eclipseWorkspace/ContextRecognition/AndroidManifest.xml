@@ -35,7 +35,8 @@
         <!-- Main activity -->
         <activity
             android:name="ch.ethz.wearable.contextrecognition.activities.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -52,9 +53,14 @@
             </intent-filter>
         </activity>
         
+        <!-- Helper activity to close app -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.ShutdownActivity"
+            android:excludeFromRecents="true"
+            android:label="Exiting..."
+            android:theme="@style/Theme.Transparent" />
         
-        
-        <!-- Welcome activities -->
+		<!-- Welcome activities -->
         <activity 
             android:name="ch.ethz.wearable.contextrecognition.activities.Welcome1"
             android:label="@string/app_name" >

@@ -1,10 +1,13 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
 //import android.app.ActionBar;
+import ch.ethz.wearable.contextrecognition.tools.AppStatus;
+import ch.ethz.wearable.contextrecognition.tools.AudioWorker;
 import ch.ethz.wearable.contextrecognition.tools.Globals;
 
 import com.example.contextrecognition.R;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -116,6 +119,10 @@ public class Settings extends ActionBarActivity {
             callHelp();
         	return true;
         }
+		if (id == R.id.action_exit) {
+			// Quit the app and stop the recording:
+			callShutdown();
+		}
         
         return super.onOptionsItemSelected(item);
     }
@@ -140,5 +147,15 @@ public class Settings extends ActionBarActivity {
     private void callHelp() {
         Intent i = new Intent(Settings.this, Help.class);
         startActivity(i);
+    }
+    /**
+     * Launch Shutdown activity to close app and stop recording
+     * */
+    private void callShutdown() {
+		Application app = getApplication();
+	    Intent intent = new Intent(app, ShutdownActivity.class);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    app.startActivity(intent);
     }
 }

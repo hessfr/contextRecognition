@@ -12,6 +12,8 @@ public class AppStatus {
 	public static final int MODEL_ADPATION = 1;
 	public static final int INIT = 2;
 	public static final int MODEL_UPDATED = 3;
+	public static final int STOP_RECORDING = 4;
+	
 	
 	public static final int BUFFER_NOT_READY = 0;
 	public static final int BUFFER_READY = 1;

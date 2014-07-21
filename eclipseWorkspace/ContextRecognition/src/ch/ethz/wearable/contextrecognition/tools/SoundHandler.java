@@ -16,6 +16,8 @@ public class SoundHandler extends Thread {
 	
 	private final String TAG = "SoundHandler"; 
 	
+	public boolean isRunning = true;
+	
 	private AudioRecord rec = null;
 	
 	private boolean currentlyRecording = false;
@@ -58,9 +60,10 @@ public class SoundHandler extends Thread {
 	}
 	
 	private Thread recorderThread = new Thread() {
-		
-		public void run(){
-			while(true){
+
+		public void run() {
+			
+			while(true) {
 				
 				queueElement newEL = null;
 				synchronized(blockSync) {
@@ -93,6 +96,7 @@ public class SoundHandler extends Thread {
 				
 			}
 		}
+		
 	};
 	
 	public void run(){
@@ -249,6 +253,7 @@ public class SoundHandler extends Thread {
 	}
 	
 	public void endRec() {
+		Log.i(TAG, "endRec()");
 		this.currentlyRecording = false;
 	}
 	

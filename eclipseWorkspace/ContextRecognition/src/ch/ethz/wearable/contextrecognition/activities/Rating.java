@@ -1,15 +1,20 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
 //import android.app.ActionBar;
+import ch.ethz.wearable.contextrecognition.tools.AppStatus;
+import ch.ethz.wearable.contextrecognition.tools.AudioWorker;
+
 import com.example.contextrecognition.R;
 
 import android.app.AlertDialog;
+import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +25,8 @@ import android.widget.RatingBar;
 
 public class Rating extends ActionBarActivity {
     
+	private static final String TAG = "RatingActivity";
+	
 	Button submitButton;
 	RatingBar ratingBarAccuracy;
 	RatingBar ratingBarUsefulness;
@@ -38,8 +45,7 @@ public class Rating extends ActionBarActivity {
         actionBar.setDisplayHomeAsUpEnabled(true);
         
         addListenerOnButton();
-        
-        
+
     }
     
     @Override
@@ -68,6 +74,10 @@ public class Rating extends ActionBarActivity {
             callHelp();
         	return true;
         }
+		if (id == R.id.action_exit) {
+			// Quit the app and stop the recording:
+			callShutdown();
+		}
         
         return super.onOptionsItemSelected(item);
     }
@@ -92,6 +102,16 @@ public class Rating extends ActionBarActivity {
     private void callHelp() {
         Intent i = new Intent(Rating.this, Help.class);
         startActivity(i);
+    }
+    /**
+     * Launch Shutdown activity to close app and stop recording
+     * */
+    private void callShutdown() {
+		Application app = getApplication();
+	    Intent intent = new Intent(app, ShutdownActivity.class);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    app.startActivity(intent);
     }
     
 	public void addListenerOnButton() {

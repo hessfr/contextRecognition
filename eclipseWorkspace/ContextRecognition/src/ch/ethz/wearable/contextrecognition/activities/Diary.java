@@ -8,13 +8,13 @@ import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -87,6 +87,10 @@ public class Diary extends ActionBarActivity {
             callHelp();
         	return true;
         }
+		if (id == R.id.action_exit) {
+			// Quit the app and stop the recording:
+			callShutdown();
+		}
         
         return super.onOptionsItemSelected(item);
     }
@@ -180,6 +184,16 @@ public class Diary extends ActionBarActivity {
     private void callHelp() {
         Intent i = new Intent(Diary.this, Help.class);
         startActivity(i);
+    }
+    /**
+     * Launch Shutdown activity to close app and stop recording
+     * */
+    private void callShutdown() {
+		Application app = getApplication();
+	    Intent intent = new Intent(app, ShutdownActivity.class);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    app.startActivity(intent);
     }
     
     

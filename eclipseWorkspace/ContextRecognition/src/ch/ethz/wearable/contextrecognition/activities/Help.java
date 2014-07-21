@@ -1,16 +1,23 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
 //import android.app.ActionBar;
+import ch.ethz.wearable.contextrecognition.tools.AppStatus;
+import ch.ethz.wearable.contextrecognition.tools.AudioWorker;
+
 import com.example.contextrecognition.R;
 
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
 
 public class Help extends ActionBarActivity {
+	
+	private static final String TAG = "HelpActivity";
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,8 +28,7 @@ public class Help extends ActionBarActivity {
  
         // Enabling backwards navigation
         actionBar.setDisplayHomeAsUpEnabled(true);
-    }
-    
+    }    
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -50,6 +56,10 @@ public class Help extends ActionBarActivity {
         	callRating();
         	return true;
         }
+		if (id == R.id.action_exit) {
+			// Quit the app and stop the recording:
+			callShutdown();
+		}
 
         return super.onOptionsItemSelected(item);
     }
@@ -74,5 +84,15 @@ public class Help extends ActionBarActivity {
     private void callRating() {
         Intent i = new Intent(Help.this, Rating.class);
         startActivity(i);
+    }
+    /**
+     * Launch Shutdown activity to close app and stop recording
+     * */
+    private void callShutdown() {
+		Application app = getApplication();
+	    Intent intent = new Intent(app, ShutdownActivity.class);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    app.startActivity(intent);
     }
 }

@@ -1,6 +1,5 @@
 package ch.ethz.wearable.contextrecognition.tools;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -10,7 +9,6 @@ import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.FileObserver;
 import android.util.Log;
 
 public class AudioWorker extends IntentService {
@@ -44,8 +42,12 @@ public class AudioWorker extends IntentService {
     public void onDestroy() {
 		
         super.onDestroy();
-        Log.d(TAG, "AudioWorker destroyed");
+        Log.i(TAG, "AudioWorker destroyed");
     }
+	
+	public void endRec() {
+		soundHandler.endRec();
+	}
 
 	@Override
 	protected void onHandleIntent(Intent arg0) {
@@ -199,10 +201,14 @@ public class AudioWorker extends IntentService {
 						
 						publishResultSilence();
 						
-
-						
 					}
 				}
+				
+				if(AppStatus.getInstance().get() == AppStatus.STOP_RECORDING) {
+					Log.i(TAG, "AppStatus changed to STOP_RECORDING, stopping the SoundHandler now");
+					endRec();
+				}
+				
 			}
 		};
 

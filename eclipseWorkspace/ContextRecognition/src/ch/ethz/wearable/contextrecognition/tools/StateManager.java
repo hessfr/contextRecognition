@@ -402,8 +402,8 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-							Intent ii = new Intent(context, SendRawAudio.class);
-							context.startService(ii);
+//							Intent ii = new Intent(context, SendRawAudio.class);
+//							context.startService(ii);
 
 						}
 						
