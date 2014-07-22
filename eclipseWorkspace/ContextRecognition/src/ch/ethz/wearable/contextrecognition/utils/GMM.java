@@ -176,8 +176,10 @@ public class GMM implements Parcelable {
 		}
 
 		try {
+			Globals.readWriteLock.writeLock().lock();
 			f.write(str.getBytes());
 			f.close();
+			Globals.readWriteLock.writeLock().unlock();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

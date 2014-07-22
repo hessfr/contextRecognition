@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -32,6 +33,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -40,6 +42,7 @@ import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
 import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor;
 import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor.onModelAdaptionCompleted;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
+import ch.ethz.wearable.contextrecognition.communication.GetInitialModel;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
 import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
@@ -401,7 +404,7 @@ public class StateManager extends BroadcastReceiver {
 //							context.startService(ii);
 							
 //							Intent ii = new Intent(context, CheckClassFeasibility.class);
-//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "ergihe");
+//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "Bus");
 //							context.startService(ii);
 							
 
@@ -532,7 +535,9 @@ public class StateManager extends BroadcastReceiver {
 			File destFile = new File(Globals.getLogPath(), "GMM_" + dateString);
 			
 			try {
+				Globals.readWriteLock.readLock().lock();
 				Globals.copyFile(new File(Globals.APP_PATH, "GMM.json"), destFile);
+				Globals.readWriteLock.readLock().unlock();
 			} catch (IOException e) {
 				Log.e(TAG, "Failed to copy GMM into log folder");
 				e.printStackTrace();
@@ -609,6 +614,111 @@ public class StateManager extends BroadcastReceiver {
 			}
 		}
 		
+		if (intent.getAction().equals(Globals.CONN_INIT_MODEL_RECEIVE)) {
+			
+			String filenameOnServer = intent.getStringExtra(Globals.CONN_INIT_MODEL_RESULT_FILENAME);
+			String waitOrNoWait = intent.getStringExtra(Globals.CONN_INIT_MODEL_RESULT_WAIT);
+			
+			long pollingInteval;
+			long maxRetry;
+			
+			if (waitOrNoWait.equals(Globals.NO_WAIT)) {
+				pollingInteval = Globals.POLLING_INTERVAL_DEFAULT;
+				maxRetry = Globals.MAX_RETRY_DEFAULT;
+			} else {
+				pollingInteval = Globals.POLLING_INTERVAL_INITIAL_MODEL;
+				maxRetry = Globals.MAX_RETRY_INITIAL_MODEL;
+			}
+
+			 if (filenameOnServer != null) {
+				 
+				 Log.i(TAG, "filenameOnServer: " + filenameOnServer);
+
+				// Now check periodically if the computation on server is finished
+				CustomTimerTask task = new CustomTimerTask(context, filenameOnServer, 
+						pollingInteval, maxRetry, null, null, null) {
+
+					private int counter;
+
+					public void run() {
+						
+						Looper.prepare();
+
+						GetInitialModel getReq = new GetInitialModel();
+						Boolean resGet = false;
+
+						try {
+
+							resGet = getReq.execute(filenameOnServer).get();
+
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							e.printStackTrace();
+						}
+
+						if (resGet == true) {
+
+							// Model received from the server:
+							Log.i(TAG, "New classifier available on server");
+							
+							// Load the classifier temporarily here to store new context classes to preferences:
+							GMM tmpGMM = new GMM("GMM.json");
+							
+							// Save String array of the context classes to preferences:
+							Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, tmpGMM.get_string_array());
+							
+							Log.i(TAG, "Number of context classes: " + tmpGMM.get_n_classes());
+							
+							Toast.makeText(context, "Initial classifier loaded", Toast.LENGTH_LONG).show();
+
+							// Set status to updated, so that the AudioWorker can load the new classifier
+							AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
+							Log.i(TAG, "New status: model updated");
+
+							// Broadcast this message, that other activities can rebuild their views:
+							Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
+							context.sendBroadcast(i2);
+							
+							
+							
+							//TODO: check if this works
+							
+							
+							
+							
+							this.cancel();
+
+						}
+
+						if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
+							Log.w(TAG, "Server not responded to GET request intitial model");
+							
+							Toast.makeText(
+				    			  	context,
+									(String) "Server not reponding, deploying default model, user specific classes "
+											+ "will be requested when server online again ",
+									Toast.LENGTH_LONG).show();
+							
+							this.cancel();
+						}
+
+						Log.i(TAG, "Waiting for new classifier from server");
+						
+						Looper.loop();
+					}
+				};
+
+				Timer timer = new Timer();
+				timer.schedule(task, 0, pollingInteval);
+				
+			 } else {
+				 
+				 Log.e(TAG, "Unexpected server response: filename is null. Aborting request");
+				 
+			 }
+		}
+		
 		// =====================================================================
 		// ============= Incorporate new class from server =====================
 		// =====================================================================
@@ -662,19 +772,26 @@ public class StateManager extends BroadcastReceiver {
 					
 				} else {
 					
-					Log.e(TAG, ""); //TODO
+					Log.e(TAG, "Wrong result received after feasibility check");
 				}
 			} else {
 				
 				Log.w(TAG, "Could not reach server");
+
+				NotificationCompat.Builder builder = new NotificationCompat.Builder(
+						context).setSmallIcon(R.drawable.ic_launcher)
+						.setContentTitle("Server problems: new context class could not be added, "
+								+ "please try again later")
+						.setAutoCancel(true)
+						.setWhen(System.currentTimeMillis())
+						.setTicker("Server problems: new context class could not be added");
+
+				NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+				manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());				
 				
-				//TODO: handle this!!!!
 			}
 			
-			waitingForFeedback = false;
-			
-			//TODO
-			
+			waitingForFeedback = false;			
 		}
 		
 		/*
@@ -686,11 +803,28 @@ public class StateManager extends BroadcastReceiver {
 			String filenameOnServer = intent.getStringExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME);
 			String feasibilityString = intent.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT);
 			
-			Intent i = new Intent(context, GetUpdatedModel.class);
-			i.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, filenameOnServer);
-			i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, feasibilityString);
-			context.startService(i);
+			if (filenameOnServer != null) {
+				
+				Intent i = new Intent(context, GetUpdatedModel.class);
+				i.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, filenameOnServer);
+				i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, feasibilityString);
+				context.startService(i);
+			} else {
+				
+				Log.w(TAG, "Could not reach server");
 
+				NotificationCompat.Builder builder = new NotificationCompat.Builder(
+						context).setSmallIcon(R.drawable.ic_launcher)
+						.setContentTitle("Server problems: new context class could not be added, "
+								+ "please try again later")
+						.setAutoCancel(true)
+						.setWhen(System.currentTimeMillis())
+						.setTicker("Server problems: new context class could not be added");
+
+				NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+				manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
+				
+			}
 		}
 		/*
 		 * Finally, after receiving the new classifier, update all buffers etc. to incorporate
@@ -1066,12 +1200,14 @@ public class StateManager extends BroadcastReceiver {
 		thresQueriedInterval.add(-1.0);
 		totalCount.add(0);
 		
-		gmm = new GMM("GMM.json");
+		Globals.readWriteLock.readLock().lock();
+		GMM tmpGMM = new GMM("GMM.json");
+		Globals.readWriteLock.readLock().unlock();
 		
 		// Save String array of the context classes to preferences:
-		Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
+		Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, tmpGMM.get_string_array());
 		
-		Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
+		Log.i(TAG, "Number of context classes: " + tmpGMM.get_n_classes());
 		
 		//Show toast:
 //		Toast.makeText(context,

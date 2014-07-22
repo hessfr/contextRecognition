@@ -8,7 +8,6 @@
         android:minSdkVersion="7"
         android:targetSdkVersion="19" />
 
-    <!-- Launching -->
     <uses-permission android:name="android.permission.BATTERY_STATS" />
     <!-- All probes -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -118,6 +117,7 @@
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.SendRawAudio" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModel" />
        	
        	
        	<!-- Register the broadcast receiver and all intent filters -->
@@ -140,7 +140,7 @@
     			<action android:name="action.connIncorporateNewClassReceive" />
     			<action android:name="action.connUpdatedModelReceive" />
     			<action android:name="action.connSendRawAudioReceive" />
-    			
+    			<action android:name="action.connSendInitModelReceive" />    			
     			
   			</intent-filter>
 		</receiver>

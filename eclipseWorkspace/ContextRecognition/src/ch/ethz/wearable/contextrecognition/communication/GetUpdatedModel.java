@@ -24,8 +24,8 @@ import org.apache.http.util.EntityUtils;
 import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.data.TimerTaskGet;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
+import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 
 public class GetUpdatedModel extends IntentService {
 
@@ -73,7 +73,8 @@ public class GetUpdatedModel extends IntentService {
 		
 	    
 		// Now check periodically if the computation on server is finished
-		TimerTaskGet task = new TimerTaskGet(getBaseContext(), filenameOnServer, pollingInterval, maxRetries) {
+		CustomTimerTask task = new CustomTimerTask(getBaseContext(), filenameOnServer, 
+				pollingInterval, maxRetries, null, null, null) {
 
 			private int counter;
 
@@ -116,9 +117,6 @@ public class GetUpdatedModel extends IntentService {
 			    			
 			    			jsonString = receveivedString;
 			    			result = true;
-			    			
-				    		//TODO: stop prediction here
-				    		
 				    		
 				    		// Replace the current GMM with the new one:
 				    		String filename = "GMM.json";
@@ -129,8 +127,7 @@ public class GetUpdatedModel extends IntentService {
 				    			FileWriter out = new FileWriter(file);
 				                out.write(jsonString);
 				                out.close();
-				                
-				                //TODO send broadcast that new class incorporated and start prediction again
+
 				    	    }
 				    	    catch (IOException e) {
 				    	        Log.e("Exception", "File write failed: " + e.toString());
@@ -159,8 +156,7 @@ public class GetUpdatedModel extends IntentService {
 
 					// Model received from the server:
 					Log.i(TAG, "New classifier received from server");
-					
-					
+
 					Intent i = new Intent(Globals.CONN_UPDATED_MODEL_RECEIVE);
 					i.putExtra(Globals.CONN_UPDATED_MODEL_RESULT, true);
 					sendBroadcast(i);

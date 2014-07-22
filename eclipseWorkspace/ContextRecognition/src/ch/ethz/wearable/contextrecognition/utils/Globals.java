@@ -12,8 +12,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.json.JSONArray;
 import org.json.JSONException;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -107,8 +111,8 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-	public static final String IP = "192.168.0.23";
-//	public static final String IP = "10.2.119.175";
+//	public static final String IP = "192.168.0.23";
+	public static final String IP = "10.2.119.175";
 //	public static final String IP = "192.168.0.68";
 	
 	public static final String PORT = "8080";
@@ -136,6 +140,11 @@ public class Globals {
 	public static final String CONN_SEND_RAW_AUDIO_RECEIVE = "action.connSendRawAudioReceive";
 	public static final String CONN_SEND_RAW_AUDIO_RESULT = "action.connSendRawAudioResult";
 	
+	public static final String CONN_INIT_MODEL_RECEIVE = "action.connSendInitModelReceive";
+	public static final String CONN_INIT_MODEL_CLASSES = "action.connSendInitModelClasses";
+	public static final String CONN_INIT_MODEL_RESULT_FILENAME = "connSendInitModelResultFilename";
+	public static final String CONN_INIT_MODEL_RESULT_WAIT = "connSendInitModelResultWait";
+	
 	// Results of the feasibility check (String have to match results from server):
 	public static final String FEASIBILITY_DOWNLOADED = "downloaded";
 	public static final String FEASIBILITY_FEASIBLE = "feasible";
@@ -150,11 +159,18 @@ public class Globals {
 	public static final long MAX_RETRY_NEW_CLASS_ALREADY_DOWNLOADED = 30; // 30 * 2min -> 1h
 	public static final long MAX_RETRY_NEW_CLASS_NOT_DOWNLOADED = 12; // 12 * 15min -> 3h
 	
-	public static final long POLLING_INTERVAL_INITIAL_MODEL = 300;
-	public static final long MAX_RETRY_INITIAL_MODEL = 5;
+	public static final long POLLING_INTERVAL_INITIAL_MODEL = 10 * 60 * 1000; // 10 * 60 * 1000 = 10min
+	public static final long MAX_RETRY_INITIAL_MODEL = 10; // 10 * 10min = 2h
 	
 	public static final long POLLING_INTERVAL_UPLOAD = 1 * 3600 * 1000; // 1h
 	public static final long MAX_RETRY_UPLOAD = 5;
+	
+	// Values used is server is not responding:
+	public static final long POLLING_INTERVAL_DEFAULT = 2 * 60 * 1000; // 2 * 60 * 1000 = 2min
+	public static final long MAX_RETRY_DEFAULT = 10; // 10 * 2min = 20min
+	
+	
+	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	
 	
 	/*

@@ -23,7 +23,7 @@ import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.MainActivity;
 import ch.ethz.wearable.contextrecognition.communication.GetInitialModel;
 import ch.ethz.wearable.contextrecognition.communication.InitModel;
-import ch.ethz.wearable.contextrecognition.data.TimerTaskGet;
+import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.example.contextrecognition.R;
@@ -112,102 +112,17 @@ public class Fragment3 extends Fragment {
 					Log.i(TAG, "New model will be requested from server as selected context"
 							+ "classes are different from the default ones");
 					
-					InitModel initReq = new InitModel();
+					Intent i = new Intent(getActivity(), InitModel.class);
+					i.putExtra(Globals.CONN_INIT_MODEL_CLASSES, classesToRequest);
+					getActivity().startService(i);
 					
-					try {
-						
-						 String[] res = initReq.execute(classesToRequest).get();
-						 
-						 if (res != null) {
-							 final String filenameOnServer = res[0];
-							 
-							 Log.i(TAG, "filenameOnServer: " + filenameOnServer);
-
-							// Now check periodically if the computation on server
-							// is finished
-							TimerTaskGet task = new TimerTaskGet(getActivity(), filenameOnServer, 
-									Globals.POLLING_INTERVAL_INITIAL_MODEL, Globals.MAX_RETRY_INITIAL_MODEL) {
-
-								private int counter;
-
-								public void run() {
-
-									GetInitialModel getReq = new GetInitialModel();
-									Boolean resGet = false;
-
-									try {
-
-										resGet = getReq.execute(filenameOnServer).get();
-
-									} catch (InterruptedException e) {
-										e.printStackTrace();
-									} catch (ExecutionException e) {
-										e.printStackTrace();
-									}
-
-									if (resGet == true) {
-
-										// Model received from the server:
-										Log.i(TAG, "New classifier received from server");
-										
-										// Call the main activity:
-										callMainActivity();
-										
-										this.cancel();
-
-									}
-
-									if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
-										Log.w(TAG, "Server not responded to GET request intitial model");
-										
-										getActivity().runOnUiThread(new Runnable() {
-										      @Override
-										          public void run() {
-										    	  Toast.makeText(
-										    			  	getActivity(),
-															(String) "Server not reponding, deploying default model, user specific classes "
-																	+ "will be requested when server online again ",
-															Toast.LENGTH_LONG).show();
-										          }
-										   });
-										
-										callMainActivity();
-										this.cancel();
-									}
-
-									Log.i(TAG, "Waiting for new classifier from server");
-								}
-							};
-
-							Timer timer = new Timer();
-							timer.schedule(task, 0, Globals.POLLING_INTERVAL_INITIAL_MODEL);
-						 } else {
-							 Log.w(TAG, "Server not responded to POST request intitial model");
-							 
-							 //TODO: start MainActivity, but set recurring task to request this model
-							 
-							Toast.makeText(
-									getActivity(),
-									(String) "Server not reponding, deploying default model, user specific classes "
-											+ "will be requested when server online again ",
-									Toast.LENGTH_LONG).show();
-							 
-							 callMainActivity();
-						 }
-						 
-
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} catch (ExecutionException e) {
-						e.printStackTrace();
-					}
+//					InitModel initReq = new InitModel();
 					
 				} else {
 					Log.i(TAG, "Context classes not changed, using the default classifier");
-					
-					// Call the main activity:
-					callMainActivity();
 				}
+				
+				callMainActivity();
 			}
  
 		});

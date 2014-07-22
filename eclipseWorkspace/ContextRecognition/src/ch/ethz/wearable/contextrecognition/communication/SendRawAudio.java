@@ -33,8 +33,8 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.data.TimerTaskGet;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
+import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 
 public class SendRawAudio extends IntentService {
 
@@ -55,9 +55,8 @@ public class SendRawAudio extends IntentService {
 		final long pollingInterval = Globals.POLLING_INTERVAL_UPLOAD;
 		final long maxRetries = Globals.MAX_RETRY_UPLOAD;
 		
-		// Now check periodically if the computation on server is finished
-		TimerTaskGet task = new TimerTaskGet(getBaseContext(),
-				null, pollingInterval, maxRetries) {
+		CustomTimerTask task = new CustomTimerTask(getBaseContext(),
+				null, pollingInterval, maxRetries, null, null, null) {
 
 			private int counter;
 			ArrayList<Boolean> resultList = new ArrayList<Boolean>();
@@ -78,13 +77,14 @@ public class SendRawAudio extends IntentService {
 				    		NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
 				    		/*
-				    		 * Code from: http://stackoverflow.com/questions/5283491/android-check-if-device-is-plugged-in
+				    		 * Code for wifi and battery check from: 
+				    		 * http://stackoverflow.com/questions/5283491/android-check-if-device-is-plugged-in
 				    		 */
 				    		Intent intent = getBaseContext().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 				            int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
 				    		
 				            boolean wifiAndCharging = false;
-				    		
+				            
 				    		if (mWifi.isConnected()) {
 				    			if (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB) {
 				    				// WIFI connected and charging:
@@ -104,7 +104,6 @@ public class SendRawAudio extends IntentService {
 					    		
 					    		// Extract the date string from the folder name:
 					    		String dateString = inFile.toString().substring(inFile.toString().indexOf("_") + 1);
-					    		Log.d(TAG, "----- " + dateString);
 					    		
 					    		// Add parameters to URL
 					    		List<NameValuePair> par = new LinkedList<NameValuePair>();
@@ -216,8 +215,6 @@ public class SendRawAudio extends IntentService {
 				if (++counter == maxRetries) {
 					Log.e(TAG, "Raw audio data could not be transfer to server");
 					
-					// TODO: request user to archive audio etc....
-					
 					Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
 					i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
 					sendBroadcast(i);
@@ -232,9 +229,6 @@ public class SendRawAudio extends IntentService {
 		};
 		Timer timer = new Timer();
 		timer.schedule(task, 0, pollingInterval);
-
-		
-		
 	}
 	
 

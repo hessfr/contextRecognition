@@ -63,7 +63,10 @@ public class AudioWorker extends IntentService {
 		featuresExtractor = new FeaturesExtractor();
 		soundHandler = new SoundHandler();
 		clf = new Classifier();
+		
+		Globals.readWriteLock.readLock().lock();
 		gmm = new GMM("GMM.json");
+		Globals.readWriteLock.readLock().unlock();
 		
 		// Initialize the data handling
 		initializeDataHandling();
@@ -87,7 +90,9 @@ public class AudioWorker extends IntentService {
 				
 				
 				if (AppStatus.getInstance().get() == AppStatus.MODEL_UPDATED) {
+					Globals.readWriteLock.readLock().lock();
 					gmm = new GMM("GMM.json");
+					Globals.readWriteLock.readLock().unlock();
 					AppStatus.getInstance().set(AppStatus.NORMAL_CLASSIFICATION);
 					Log.i(TAG, "New classifier loaded after model adaption");
 				}

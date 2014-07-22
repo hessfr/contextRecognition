@@ -22,6 +22,7 @@ import org.apache.http.util.EntityUtils;
 
 import android.os.AsyncTask;
 import android.util.Log;
+import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
@@ -78,8 +79,6 @@ public class GetInitialModel extends AsyncTask<String, Void, Boolean> {
 	    			jsonString = receveivedString;
 	    			
 	    		}
-
-	    		//TODO: stop prediction here
 	    		
 	    		// Replace the current GMM with the new one:
 	    		String filename = "GMM.json";
@@ -87,10 +86,17 @@ public class GetInitialModel extends AsyncTask<String, Void, Boolean> {
 	    		File file = new File(Globals.APP_PATH,filename);
 	    		
 	    		try {
+	    			
+	    			
+	    			
+	    			Globals.readWriteLock.writeLock().lock();
 	    			FileWriter out = new FileWriter(file);
 	                out.write(jsonString);
 	                out.close();
+	                Globals.readWriteLock.writeLock().unlock();
 	                
+	                
+
 	    	    }
 	    	    catch (IOException e) {
 	    	        Log.e("Exception", "File write failed: " + e.toString());

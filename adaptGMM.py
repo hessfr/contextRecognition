@@ -24,6 +24,7 @@ def adaptGMM(trainedGMM, updatePoints, label):
     """
     Incorporate new (already scaled) data points of a single class into the already existing GMM model
     Implementation according to Song 2005
+    
     @param trainedGMM: Dictionary containing data of the GMM classifiers.
     @param updatePoints: Numpy array of new points of the same class, with which the model should be updated. Has to be scaled already
     @param label: Class label of the updatePoints.
