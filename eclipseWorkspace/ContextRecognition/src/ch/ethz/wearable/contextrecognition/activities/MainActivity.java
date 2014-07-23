@@ -392,7 +392,7 @@ public class MainActivity extends ActionBarActivity {
 			ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
 			ArrayList<Boolean> gtList = new ArrayList<Boolean>(Arrays.asList(currentGT));
 			
-			dataAdapter = new GtSelectorAdapter(this,R.layout.cb_listview_element, contextList, gtList);
+			dataAdapter = new GtSelectorAdapter(this,R.layout.listview_element_checkbox, contextList, gtList);
 			
 			ListView listView = (ListView) findViewById(R.id.gtSelector);
 			//final ArrayAdapter dataAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, stringArray);
@@ -470,7 +470,7 @@ public class MainActivity extends ActionBarActivity {
 		   if (convertView == null) {
 			   LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			   
-			   convertView = vi.inflate(R.layout.cb_listview_element, null);
+			   convertView = vi.inflate(R.layout.listview_element_checkbox, null);
 			 
 			   holder = new ViewHolder();
 			   holder.checkBox = (CheckBox) convertView.findViewById(R.id.checkBox1);

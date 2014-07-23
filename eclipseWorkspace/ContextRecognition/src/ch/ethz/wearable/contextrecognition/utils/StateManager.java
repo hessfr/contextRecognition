@@ -405,20 +405,20 @@ public class StateManager extends BroadcastReceiver {
 							
 							
 							
-							NotificationCompat.Builder builder = new NotificationCompat.Builder(
-									context).setSmallIcon(R.drawable.ic_launcher)
-									.setContentTitle("Transferring audio data not successful")
-									.setAutoCancel(true)
-									.setWhen(System.currentTimeMillis())
-									.setTicker("Audio data could not be transfered");
-							
-							Intent goToUploadActivity = new Intent(context, UploadActivity.class);
-							PendingIntent uploadIntent = PendingIntent.getActivity(context, 0, goToUploadActivity, 0);
-							builder.setContentIntent(uploadIntent);
-
-							NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-							manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
-							
+//							NotificationCompat.Builder builder = new NotificationCompat.Builder(
+//									context).setSmallIcon(R.drawable.ic_launcher)
+//									.setContentTitle("Transferring audio data not successful")
+//									.setAutoCancel(true)
+//									.setWhen(System.currentTimeMillis())
+//									.setTicker("Audio data could not be transfered");
+//							
+//							Intent goToUploadActivity = new Intent(context, UploadActivity.class);
+//							PendingIntent uploadIntent = PendingIntent.getActivity(context, 0, goToUploadActivity, 0);
+//							builder.setContentIntent(uploadIntent);
+//
+//							NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+//							manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
+//							
 							
 							
 
