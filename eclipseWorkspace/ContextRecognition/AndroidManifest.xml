@@ -108,7 +108,14 @@
             android:name="ch.ethz.wearable.contextrecognition.activities.RatingActivity"
             android:label="@string/label_rating"
             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
-        </activity>       
+        </activity>   
+        
+        <!-- Upload activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.UploadActivity"
+            android:label="@string/label_upload"
+            android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
+        </activity>  
     
         <!-- AudioWorker Service -->
        	<service android:name="ch.ethz.wearable.contextrecognition.audio.AudioWorker" />

@@ -39,6 +39,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
+import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor;
 import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor.onModelAdaptionCompleted;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
@@ -401,12 +402,24 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-//							Intent ii = new Intent(context, SendRawAudio.class);
-//							context.startService(ii);
 							
-//							Intent ii = new Intent(context, CheckClassFeasibility.class);
-//							ii.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, "Bus");
-//							context.startService(ii);
+							
+							
+							NotificationCompat.Builder builder = new NotificationCompat.Builder(
+									context).setSmallIcon(R.drawable.ic_launcher)
+									.setContentTitle("Transferring audio data not successful")
+									.setAutoCancel(true)
+									.setWhen(System.currentTimeMillis())
+									.setTicker("Audio data could not be transfered");
+							
+							Intent goToUploadActivity = new Intent(context, UploadActivity.class);
+							PendingIntent uploadIntent = PendingIntent.getActivity(context, 0, goToUploadActivity, 0);
+							builder.setContentIntent(uploadIntent);
+
+							NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+							manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
+							
+							
 							
 
 						}
@@ -607,7 +620,9 @@ public class StateManager extends BroadcastReceiver {
 						.setWhen(System.currentTimeMillis())
 						.setTicker("Audio data could not be transfered");
 				
-				// TODO: got to activity to show user what to do
+				Intent goToUploadActivity = new Intent(context, UploadActivity.class);
+				PendingIntent uploadIntent = PendingIntent.getActivity(context, 0, goToUploadActivity, 0);
+				builder.setContentIntent(uploadIntent);
 
 				NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 				manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
