@@ -1137,10 +1137,12 @@ public class StateManager extends BroadcastReceiver {
 			volFeedbackString = String.valueOf(-1);
 		}
 
+		double timeSinceStartRec = (System.currentTimeMillis() - Globals.RECORDING_START_TIME) / 1000.0;
+		
 		try {
 			File file = new File(Globals.getLogPath(), Globals.AL_LOG_FILENAME);
 			FileWriter f = new FileWriter(file, true);
-			f.write(System.currentTimeMillis() + "\t" + classNamePredicted + "\t" +  
+			f.write(timeSinceStartRec + "\t" + classNamePredicted + "\t" +  
 			classNameGT + "\t" + timePassed + "\t" + isNewClassString + "\t" + volFeedbackString + "\n");
 			f.close();
 		} catch (IOException e) {
@@ -1166,15 +1168,17 @@ public class StateManager extends BroadcastReceiver {
 		    }
 		    br.close();
 		    
+		    double timeSinceStartRec = (System.currentTimeMillis() - Globals.RECORDING_START_TIME) / 1000.0;
+		    
 		    if(lastLine.equals("RECORDING_STARTED")) {
 		    	
 				FileWriter f = new FileWriter(file, true);
-				f.write(className + "\t" + System.currentTimeMillis() + "\t");
+				f.write(className + "\t" + timeSinceStartRec + "\t");
 				f.close();
 		    } else {
 		    	
 				FileWriter f = new FileWriter(file, true);
-				f.write(System.currentTimeMillis() + "\n" + className + "\t" + System.currentTimeMillis() + "\t");
+				f.write(timeSinceStartRec + "\n" + className + "\t" + timeSinceStartRec + "\t");
 				f.close();
 				
 		    }

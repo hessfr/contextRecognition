@@ -1,5 +1,8 @@
 package ch.ethz.wearable.contextrecognition.audio;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -58,6 +61,9 @@ public class AudioWorker extends IntentService {
 	protected void onHandleIntent(Intent arg0) {
 		Log.i(TAG, "AudioWorker Service started");
 		
+		Globals.RECORDING_START_TIME = System.currentTimeMillis();
+		Log.d(TAG, "start recording at time " + Globals.RECORDING_START_TIME);
+		
 	    mfccList = new LinkedList<double[]>();
 	    dataBuffer = new LinkedList<double[]>();
 		featuresExtractor = new FeaturesExtractor();
@@ -67,6 +73,9 @@ public class AudioWorker extends IntentService {
 		Globals.readWriteLock.readLock().lock();
 		gmm = new GMM("GMM.json");
 		Globals.readWriteLock.readLock().unlock();
+		
+		// Add the event to the log files:
+		appendToLogStart();
 		
 		// Initialize the data handling
 		initializeDataHandling();
@@ -275,5 +284,48 @@ public class AudioWorker extends IntentService {
 		
 		intent.putExtras(bundle);
 		sendBroadcast(intent);
+	}
+	
+	/*
+	 * Add the time of the first application start to the startLog and the predctionLog files
+	 */
+	private void appendToLogStart() {
+		
+		
+	
+		double time = (System.currentTimeMillis() - Globals.RECORDING_START_TIME) / 1000.0;
+		
+		// TODO: do we still need this log file??
+		Log.d(TAG, "Appending to start time of the app to log");
+		try {
+			File file = new File(Globals.getLogPath(), Globals.START_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write(System.currentTimeMillis() + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to start log file failed");
+			e.printStackTrace();
+		}
+		
+		try {
+			File file = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write("\nRECORDING_STARTED" + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to prediction log file failed");
+			e.printStackTrace();
+		}
+		
+		try {
+			File file = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write(time + "\t" + "RECORDING_STARTED" + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to GT log file failed");
+			e.printStackTrace();
+		}
+		
 	}
 }

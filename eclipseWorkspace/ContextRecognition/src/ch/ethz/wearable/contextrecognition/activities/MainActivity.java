@@ -119,9 +119,7 @@ public class MainActivity extends ActionBarActivity {
 
 		if (FIRST_RUN == true) {
 			Log.i(TAG, "First run of MainActivity");
-			
-			appendToLogStart();
-			
+
 			// Start the AudioWorker service:
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);
@@ -539,7 +537,7 @@ public class MainActivity extends ActionBarActivity {
 		
 		Log.d(TAG, "Appending to ground truth log");
 
-		if (recordingInitialized == false) {
+		if (recordingInitialized == false) { // TODO: check if we still need this if clause!!
 			String startOrEnd = null;
 			if (isStart == true) {
 				startOrEnd = "start";
@@ -547,58 +545,18 @@ public class MainActivity extends ActionBarActivity {
 				startOrEnd = "end";
 			}
 				
+			double time = (System.currentTimeMillis() - Globals.RECORDING_START_TIME) / 1000.0;
 			
 			try {
 				File file = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
 				FileWriter f = new FileWriter(file, true);
-				f.write(System.currentTimeMillis() + "\t" + contextClass + "\t" +  startOrEnd + "\n");
-				f.close();
-			} catch (IOException e) {
-				Log.e(TAG, "Writing to GT log file failed");
-				e.printStackTrace();
-			}
-		} else {
-			
-			try {
-				File file = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
-				FileWriter f = new FileWriter(file, true);
-				f.write(System.currentTimeMillis() + "\t" + "RECORDING_STARTED" + "\t" +  "start" + "\n");
+				f.write(time + "\t" + contextClass + "\t" +  startOrEnd + "\n");
 				f.close();
 			} catch (IOException e) {
 				Log.e(TAG, "Writing to GT log file failed");
 				e.printStackTrace();
 			}
 		}
-
-	}
-	
-	/*
-	 * Add the time of the first application start to the startLog and the predctionLog files
-	 */
-	private void appendToLogStart() {
-		
-		Log.d(TAG, "Appending to start time of the app to log");
-	
-		try {
-			File file = new File(Globals.getLogPath(), Globals.START_LOG_FILENAME);
-			FileWriter f = new FileWriter(file, true);
-			f.write(System.currentTimeMillis() + "\n");
-			f.close();
-		} catch (IOException e) {
-			Log.e(TAG, "Writing to start log file failed");
-			e.printStackTrace();
-		}
-		
-		try {
-			File file = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
-			FileWriter f = new FileWriter(file, true);
-			f.write("RECORDING_STARTED" + "\n");
-			f.close();
-		} catch (IOException e) {
-			Log.e(TAG, "Writing to prediction log file failed");
-			e.printStackTrace();
-		}
-		
 	}
 	
 	private void setFirstRun() {

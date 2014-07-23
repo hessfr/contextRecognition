@@ -28,7 +28,7 @@ public class extractFeatures {
     	
     	int frameSize = (int)Math.round(SAMPLERATE * WINDOW_LENGTH);
         int totalSamplesRead = 0;
-        int numFrame = 0;
+//        int numFrame = 0;
         
 		featureFFT = new FFT(FFT_SIZE);
 	    featureWin = new Window(frameSize);
@@ -53,29 +53,50 @@ public class extractFeatures {
           } 
     
           int numBytes = frameSize * bytesPerFrame; 
-          byte[] audioBytes = new byte[numBytes]; //actual data will be written to this array later
+//          System.out.println("Number bytes: " + numBytes); //  = 1024
+          byte[] audioBytes = new byte[numBytes]; //data will be written to this array
+
+          /*
+           *  We need the data in short (16-bit) format instead of byte (8-bit), so
+           *  we have to convert each chunk of data
+           */
+          int shortBufferLength = (int) audioBytes.length/2;
+          short[] audioShorts = new short[shortBufferLength];
 
 		  int numBytesRead = 0;
-		  int numSamplesRead = 0;
+//		  int numSamplesRead = 0;
           
           boolean isValid = true;
           
           try {
             // Try to read numBytes bytes from the file.
             while ((numBytesRead = audioInputStream.read(audioBytes)) != -1) {
+    			
+            	/* 
+    			 * Convert to 16-bit (short) first:
+    			 * 
+    			 * Conversion formula from http://stackoverflow.com/questions/12314635/reading-wav-wave-file-into-short-array
+    			 */
+            	for(int i=0; i<shortBufferLength; i++) {
+            		
+        			audioShorts[i] = (short)(( audioBytes[i*2] & 0xff )|( audioBytes[i*2 + 1] << 8 ));
+            	}
             	
-				numSamplesRead = numBytesRead / bytesPerFrame;
-				totalSamplesRead += numSamplesRead;
-				numFrame += 1;
+//            	System.out.println("Length audioShorts: " + audioShorts.length);
+        	
+            	
+//				numSamplesRead = numBytesRead / bytesPerFrame;
+//				totalSamplesRead += numSamplesRead;
+//				numFrame += 1;
   
 				// Frequency analysis
 				Arrays.fill(fftBufferR, 0);
 				Arrays.fill(fftBufferI, 0);
 				
 				// Convert audio buffer to doubles
-				for (int i = 0; i < audioBytes.length; i++)
+				for (int i = 0; i < audioShorts.length; i++)
 						{
-					fftBufferR[i] = audioBytes[i];
+					fftBufferR[i] = audioShorts[i];
 				}
 				
 				// In-place windowing
@@ -90,7 +111,7 @@ public class extractFeatures {
 				isValid = true;
 				
 				for (int j = 0; j <= MFCCS_VALUE-1; j++) {
-					//featureCepstrum[0] = Double.POSITIVE_INFINITY;
+					
 					if (java.lang.Double.isInfinite(featureCepstrum[j])) {
 						System.out.println("Problems occurred when reading file " + fileName + " parts of the file were skipped.");
 						isValid = false;

@@ -62,7 +62,7 @@ public class Globals {
 	// Just for testing: to see if the scheduled "long-term" events like file transfer at the end of the day work
 	public static final File TEST_FILE = new File(APP_PATH, "scheduledTasks.txt");
 	
-	
+	public static long RECORDING_START_TIME = 0;
 	
 	/*
 	 * App settings
