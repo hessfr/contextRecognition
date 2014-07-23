@@ -84,28 +84,28 @@
         
         <!-- Settings activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.Settings"
+            android:name="ch.ethz.wearable.contextrecognition.activities.SettingsActivity"
             android:label="@string/label_settings"
             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
         </activity>
         
         <!-- Label activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.Diary"
+            android:name="ch.ethz.wearable.contextrecognition.activities.DiaryActivity"
             android:label="@string/label_diary"
             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
         </activity>
         
         <!-- Help activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.Help"
+            android:name="ch.ethz.wearable.contextrecognition.activities.HelpActivity"
             android:label="@string/label_help"
             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
         </activity>
         
         <!-- Rating activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.Rating"
+            android:name="ch.ethz.wearable.contextrecognition.activities.RatingActivity"
             android:label="@string/label_rating"
             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
         </activity>       

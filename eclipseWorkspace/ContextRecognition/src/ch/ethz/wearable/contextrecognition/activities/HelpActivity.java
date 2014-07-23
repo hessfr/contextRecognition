@@ -12,7 +12,7 @@ import android.view.MenuItem;
 
 import com.example.contextrecognition.R;
 
-public class Help extends ActionBarActivity {
+public class HelpActivity extends ActionBarActivity {
 	
 	private static final String TAG = "HelpActivity";
 	
@@ -67,21 +67,21 @@ public class Help extends ActionBarActivity {
      * Launch Settings activity
      * */
     private void callSettings() {
-        Intent i = new Intent(Help.this, Settings.class);
+        Intent i = new Intent(HelpActivity.this, SettingsActivity.class);
         startActivity(i);
     }
     /**
      * Launch Settings activity
      * */
     private void callLabel() {
-        Intent i = new Intent(Help.this, Diary.class);
+        Intent i = new Intent(HelpActivity.this, DiaryActivity.class);
         startActivity(i);
     }
     /**
      * Launch Rating activity
      * */
     private void callRating() {
-        Intent i = new Intent(Help.this, Rating.class);
+        Intent i = new Intent(HelpActivity.this, RatingActivity.class);
         startActivity(i);
     }
     /**

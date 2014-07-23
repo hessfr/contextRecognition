@@ -20,7 +20,7 @@ import android.widget.RatingBar;
 
 import com.example.contextrecognition.R;
 
-public class Rating extends ActionBarActivity {
+public class RatingActivity extends ActionBarActivity {
     
 	private static final String TAG = "RatingActivity";
 	
@@ -85,21 +85,21 @@ public class Rating extends ActionBarActivity {
      * Launch Settings activity
      * */
     private void callSettings() {
-        Intent i = new Intent(Rating.this, Settings.class);
+        Intent i = new Intent(RatingActivity.this, SettingsActivity.class);
         startActivity(i);
     }
     /**
      * Launch Label activity
      * */
     private void callLabel() {
-        Intent i = new Intent(Rating.this, Diary.class);
+        Intent i = new Intent(RatingActivity.this, DiaryActivity.class);
         startActivity(i);
     }
     /**
      * Launch Help activity
      * */
     private void callHelp() {
-        Intent i = new Intent(Rating.this, Help.class);
+        Intent i = new Intent(RatingActivity.this, HelpActivity.class);
         startActivity(i);
     }
     /**

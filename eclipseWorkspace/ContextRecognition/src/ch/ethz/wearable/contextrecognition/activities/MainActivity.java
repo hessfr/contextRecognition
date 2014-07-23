@@ -264,7 +264,7 @@ public class MainActivity extends ActionBarActivity {
 	 * Launch Settings activity
 	 * */
 	private void callSettings() {
-		Intent i = new Intent(MainActivity.this, Settings.class);
+		Intent i = new Intent(MainActivity.this, SettingsActivity.class);
 		startActivity(i);
 	}
 
@@ -272,7 +272,7 @@ public class MainActivity extends ActionBarActivity {
 	 * Launch Label activity
 	 * */
 	private void callLabel() {
-		Intent i = new Intent(MainActivity.this, Diary.class);
+		Intent i = new Intent(MainActivity.this, DiaryActivity.class);
 		startActivity(i);
 	}
 
@@ -280,7 +280,7 @@ public class MainActivity extends ActionBarActivity {
 	 * Launch Rating activity
 	 * */
 	private void callRating() {
-		Intent i = new Intent(MainActivity.this, Rating.class);
+		Intent i = new Intent(MainActivity.this, RatingActivity.class);
 		startActivity(i);
 	}
 
@@ -288,7 +288,7 @@ public class MainActivity extends ActionBarActivity {
 	 * Launch Help activity
 	 * */
 	private void callHelp() {
-		Intent i = new Intent(MainActivity.this, Help.class);
+		Intent i = new Intent(MainActivity.this, HelpActivity.class);
 		startActivity(i);
 	}
     /**

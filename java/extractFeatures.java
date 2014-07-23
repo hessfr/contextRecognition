@@ -82,8 +82,7 @@ public class extractFeatures {
         			audioShorts[i] = (short)(( audioBytes[i*2] & 0xff )|( audioBytes[i*2 + 1] << 8 ));
             	}
             	
-//            	System.out.println("Length audioShorts: " + audioShorts.length);
-        	
+//            	System.out.println("Length audioShorts: " + audioShorts.length);	
             	
 //				numSamplesRead = numBytesRead / bytesPerFrame;
 //				totalSamplesRead += numSamplesRead;

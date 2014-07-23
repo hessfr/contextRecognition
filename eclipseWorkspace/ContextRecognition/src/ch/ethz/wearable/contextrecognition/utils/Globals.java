@@ -76,15 +76,15 @@ public class Globals {
 	// Minimum time we has to wait between two queries:
 	public static long minBreak = 10 * 60 * 1000;
 	
-	// Time after which the app data (buffers, threshold, ...) should be periodically persisted to external storage
+	// Time after which the data (buffers, threshold, ...) should be periodically persisted to external storage
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
 	// Silence detection threshold (higher means more samples will be considered silent):
-	public static short SILENCE_DETECTION_THRESHOLD = 1100; //TODO: find good value
+	public static short SILENCE_DETECTION_THRESHOLD = 1200; //TODO: find good value
 	
 	// Array of context classes that can be selected initially:
 	public static String[] initialContextClasses = {"Office", "Conversation", "Restaurant",
-		"Car", "Bus", "Train", "Street", "Vacuuming", "Toilet", "Kitchen"}; //TODO: include sleeping
+		"Car", "Bus", "Train", "Street", "Vacuuming", "Toilet", "Kitchen"}; //TODO: include sleeping...
 	// Array indicating if the context class should be selected initially:
 	public static Boolean[] defaultClasses = {true, true, true, true, true,
 		true, true, true, true, true};

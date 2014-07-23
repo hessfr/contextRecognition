@@ -33,7 +33,7 @@ import com.example.contextrecognition.R;
 
 
 
-public class Diary extends ActionBarActivity {
+public class DiaryActivity extends ActionBarActivity {
 	
 	private static final String TAG = "DiaryAcitivty";
 	
@@ -191,21 +191,21 @@ public class Diary extends ActionBarActivity {
      * Launch Settings activity
      * */
     private void callSettings() {
-        Intent i = new Intent(Diary.this, Settings.class);
+        Intent i = new Intent(DiaryActivity.this, SettingsActivity.class);
         startActivity(i);
     }
     /**
      * Launch Rating activity
      * */
     private void callRating() {
-        Intent i = new Intent(Diary.this, Rating.class);
+        Intent i = new Intent(DiaryActivity.this, RatingActivity.class);
         startActivity(i);
     }
     /**
      * Launch Help activity
      * */
     private void callHelp() {
-        Intent i = new Intent(Diary.this, Help.class);
+        Intent i = new Intent(DiaryActivity.this, HelpActivity.class);
         startActivity(i);
     }
     /**

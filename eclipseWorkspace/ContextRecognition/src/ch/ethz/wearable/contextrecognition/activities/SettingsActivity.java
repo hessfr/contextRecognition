@@ -18,7 +18,7 @@ import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.example.contextrecognition.R;
 
-public class Settings extends ActionBarActivity {
+public class SettingsActivity extends ActionBarActivity {
 	
 	private static final String TAG = "SettingsAcitivty";
 	
@@ -127,21 +127,21 @@ public class Settings extends ActionBarActivity {
      * Launch Label activity
      * */
     private void callLabel() {
-        Intent i = new Intent(Settings.this, Diary.class);
+        Intent i = new Intent(SettingsActivity.this, DiaryActivity.class);
         startActivity(i);
     }
     /**
      * Launch Rating activity
      * */
     private void callRating() {
-        Intent i = new Intent(Settings.this, Rating.class);
+        Intent i = new Intent(SettingsActivity.this, RatingActivity.class);
         startActivity(i);
     }
     /**
      * Launch Help activity
      * */
     private void callHelp() {
-        Intent i = new Intent(Settings.this, Help.class);
+        Intent i = new Intent(SettingsActivity.this, HelpActivity.class);
         startActivity(i);
     }
     /**
