@@ -9,7 +9,7 @@ package ch.ethz.wearable.contextrecognition.utils;
  */
 public class AppStatus {
 	public static final int NORMAL_CLASSIFICATION = 0;
-	public static final int MODEL_ADPATION = 1;
+	public static final int MODEL_ADAPTION = 1; //TODO: delete??
 	public static final int INIT = 2;
 	public static final int MODEL_UPDATED = 3;
 	public static final int STOP_RECORDING = 4;	

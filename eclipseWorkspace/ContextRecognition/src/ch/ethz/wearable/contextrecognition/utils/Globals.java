@@ -80,7 +80,7 @@ public class Globals {
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
 	// Silence detection threshold (higher means more samples will be considered silent):
-	public static short SILENCE_DETECTION_THRESHOLD = 850; //TODO: find good value
+	public static short SILENCE_DETECTION_THRESHOLD = 1100; //TODO: find good value
 	
 	// Array of context classes that can be selected initially:
 	public static String[] initialContextClasses = {"Office", "Conversation", "Restaurant",

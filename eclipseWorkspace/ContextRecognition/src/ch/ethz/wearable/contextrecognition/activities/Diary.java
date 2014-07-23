@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+
 import org.apache.commons.lang3.ArrayUtils;
-import android.annotation.SuppressLint;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +26,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
+
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
 import com.example.contextrecognition.R;
@@ -142,11 +144,31 @@ public class Diary extends ActionBarActivity {
 
 		int holeSize = 100;
         pg.setInnerCircleRatio(holeSize);	
+		
+		/*
+		 *  Workaround to avoid the bug, that diagram is not displayed anymore,
+		 *  if only one class:
+		 */
+        for(int i=0; i<totalCounts.length; i++) {
+        	// Add a tiny dummy slice, if there would be only one class:
+    		if (totalCounts[i] == 1) {
+    			PieSlice slice = new PieSlice();
+    			slice.setColor(Color.parseColor("#ffffff"));
+    	        slice.setValue(0.001f);
+    	        pg.addSlice(slice);
+    		}
+        }
 
-        int j=0;
-		for (PieSlice s : pg.getSlices()) {
-			s.setGoalValue(totalCounts[j]);
-			j++;
+        
+		for(int i=0; i<pg.getSlices().size(); i++) {
+			PieSlice s = pg.getSlice(i);
+			if (i<totalCounts.length) {
+				s.setGoalValue(totalCounts[i]);
+			} else {
+				// The dummy slice:
+				s.setGoalValue(0.001f);
+			}
+			
 		}
             
         pg.setDuration(2000);

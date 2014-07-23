@@ -79,9 +79,8 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 
 		GMM newGMM = null;
 
-		AppStatus.getInstance().set(AppStatus.MODEL_ADPATION);
-
-		Log.i(TAG, "New status: model adaption");
+		// TODO: should we change the AppStatus? We just continue making predictions anyway,
+		// even if model adaption is running, so it's not really needed...
 
 		DenseMatrix64F updatePoints = convertToEJML(buffer);
 
