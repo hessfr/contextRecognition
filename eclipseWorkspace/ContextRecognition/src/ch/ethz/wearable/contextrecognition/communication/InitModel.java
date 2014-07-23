@@ -19,6 +19,7 @@ import org.json.JSONObject;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
@@ -52,6 +53,8 @@ public class InitModel extends IntentService {
 			String[] results = null;
 
 			public void run() {
+				
+				Looper.prepare();
 				
 				 String URL = Globals.INIT_CLASSIFIER_URL;     
 			        
@@ -140,6 +143,10 @@ public class InitModel extends IntentService {
 					Log.i(TAG, "IntentService finished");
 					
 					this.cancel();
+				} else {
+					
+					Toast.makeText( getBaseContext(), "Your selected classes will be available "
+									+ "in some minutes. Using default classes", Toast.LENGTH_LONG).show();
 				}
 				
 				if (++counter == maxRetries) {
@@ -154,7 +161,8 @@ public class InitModel extends IntentService {
 					
 					this.cancel();
 				}
-
+				
+				Looper.loop();
 			}
 		};
 		Timer timer = new Timer();

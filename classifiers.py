@@ -262,7 +262,7 @@ def trainGMM(featureData):
 
     return trainedGMM
     
-def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, showPlots=True):
+def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, showPlots=False):
     """
 
     @param trainedGMM: already trained GMM
@@ -568,7 +568,7 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
     @return:
     """
     """ Make predictions for the given test file: """
-    y_pred = testGMM(trainedGMM,featureData, useMajorityVote=True, showPlots=False)
+    y_pred = testGMM(trainedGMM,featureData, useMajorityVote=useMajorityVote                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        , showPlots=False)
 
     """ Preprocess ground truth labels: """
     with open(groundTruthLabels) as f:
@@ -835,6 +835,9 @@ def confusionMatrix(y_GT, y_pred, classesDict):
             pl.annotate(str(normalized[x][y]), xy=(y, x),
                         horizontalalignment='center',
                         verticalalignment='center')
+    
+    # Force the min and max value, so that the colors will have the full range from 0 to 1:
+    pl.clim(0,1)
 
     pl.colorbar()
 
@@ -851,9 +854,10 @@ def getIndex(timeStamp, windowLength=0.032):
 
     return int(timeStamp/windowLength)
 
-def k_FoldGMM(featureData,k):
+def k_FoldGMM(featureData, k):
     """
-    Calculate random k-fold cross-validation using GMM
+    Trains a GMM classifier and calculates the accuracy of a random k-fold cross-validation on the freesound data iteself
+    
     @param featureData: Dictionary containing 'features' and 'labels' as numpy array and 'classesDict' for mapping of class names to numbers
     @param k: Cross-validation parameter, defines in how many blocks the data should be divided
     """   
@@ -870,11 +874,33 @@ def k_FoldGMM(featureData,k):
     n_classes = len(np.unique(y_train))
     print str(n_classes) + " different classes"
     
+    
+    
+
     clfs = []
 
     for i in range(n_classes):
-        tmpClf = GMM(n_components = 16)
-        iTmp = (y_train == i) #iTmp = (y_train[:,0] == i)
+        
+        iTmp = (y_train == i)
+        
+#        """ Estimate number of components using BIC criteria: """
+#        n_components_list = range(1,17)
+#        bicList = []
+#        for c in n_components_list:
+#            tmpClf = GMM(n_components=c, covariance_type='full', n_iter=100)
+#            tmpClf.fit(X_train[iTmp])
+#            bicList.append(bic(X_train[iTmp], tmpClf.means_, tmpClf.covars_, tmpClf.weights_, c))
+#
+#            #print(str(c) + " components: " + " BIC = " + str(bicList[-1]))
+#
+#        # select that number of components that resulted in the best (lowest) BIC:
+#        val, n_components = min((val, idx) for (idx, val) in enumerate(bicList))
+#        n_components += 1
+#        print("Optimal number of components :" + str(n_components))
+        
+        n_components = 16
+        tmpClf = GMM(n_components = n_components, covariance_type='full', n_iter=100)
+        
         tmpClf.fit(X_train[iTmp])
         clfs.append(tmpClf)
         
@@ -884,16 +910,17 @@ def k_FoldGMM(featureData,k):
     for i in range(n_classes):
         likelihood[i] = clfs[i].score(X_test)
         
-    y_pred = \
-        np.argmax(likelihood, 0)
+    y_pred = np.argmax(likelihood, 0)
     
     """ Compare predictions to ground truth: """
     agreementCounter = 0
     for j in range(y_test.shape[0]):
         if y_test[j] == y_pred[j]:
-            agreementCounter = agreementCounter + 1
-    
+            agreementCounter += 1
+ 
     print str(100 * agreementCounter/y_test.shape[0]) + " % of all samples predicted correctly (without majority vote...)"
+    
+    confusionMatrix(y_test, y_pred, featureData["classesDict"])
 
 def pdf(data, means, covars):
     """
@@ -915,6 +942,25 @@ def pdf(data, means, covars):
     prob = np.exp(-0.5*prob) / float(np.sqrt((2*math.pi) ** n_features * (abs(np.linalg.det(covars)) + EPS)))
 
     return prob
+    
+def bic(data, means, covars, weights, n_comp):
+    """
+    Calculate BIC criteria (the lower this value, the better)
+    @param data: Numpy array - already scale. shape = (n_samples, n_features)
+    @param means: Means of one component only, shape = n_features
+    @param covars: Covars of one component ony, shape = (n_feature, n_features)
+    @return: BIC criteria (the lower this value, the better)
+    """
+    n_points = data.shape[0] #number of points
+    n_feat = data.shape[1] # number of features
+
+    logLik = -2.0 * logProb(data, weights, means, covars).sum()
+
+    complexity = ((n_comp/2.0 * (n_feat+1) * (n_feat+2)) - 1.0) * np.log(n_points)
+
+    # bic = (logLik + complexity)
+
+    return (logLik + complexity)
 
 from classifiers import *
 

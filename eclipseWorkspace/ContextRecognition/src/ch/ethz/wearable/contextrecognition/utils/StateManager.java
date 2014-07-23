@@ -46,6 +46,7 @@ import ch.ethz.wearable.contextrecognition.communication.GetInitialModel;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
 import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
+import ch.ethz.wearable.contextrecognition.data.AppData;
 
 import com.example.contextrecognition.R;
 import com.google.gson.Gson;
@@ -324,7 +325,7 @@ public class StateManager extends BroadcastReceiver {
 								
 							}
 
-							Log.i(TAG, "thresBuffer length: " + thresBuffer.get(currentPrediction).size());
+							//Log.i(TAG, "thresBuffer length: " + thresBuffer.get(currentPrediction).size());
 
 						}
 						
@@ -680,13 +681,6 @@ public class StateManager extends BroadcastReceiver {
 							Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
 							context.sendBroadcast(i2);
 							
-							
-							
-							//TODO: check if this works
-							
-							
-							
-							
 							this.cancel();
 
 						}
@@ -946,14 +940,14 @@ public class StateManager extends BroadcastReceiver {
 		}
 		
 		// Find index of the conversation class, as we do not want to adapt our model for these:
-		int conversationIdx = -1;
-		for(int i=0; i<gmm.get_n_classes(); i++) {
-			if (gmm.get_class_name(i).equals("Conversation")) {
-				conversationIdx = i;
-			}
-		}
+//		int conversationIdx = -1;
+//		for(int i=0; i<gmm.get_n_classes(); i++) {
+//			if (gmm.get_class_name(i).equals("Conversation")) {
+//				conversationIdx = i;
+//			}
+//		}
 		
-		if (label != conversationIdx) {
+//		if (label != conversationIdx) {
 			
 			Log.i(TAG, "Model adaption called for class " + String.valueOf(label));
 			
@@ -988,9 +982,9 @@ public class StateManager extends BroadcastReceiver {
 			Toast.makeText(context, (String) "Model is being adapted",
 					Toast.LENGTH_LONG).show();
 			
-		} else {
-			Log.i(TAG, "Conversation class will not be incorporated into our model");
-		}
+//		} else {
+//			Log.i(TAG, "Conversation class will not be incorporated into our model");
+//		}
 	}
 	
 	/*
@@ -1161,9 +1155,31 @@ public class StateManager extends BroadcastReceiver {
 		
 		try {
 			File file = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
-			FileWriter f = new FileWriter(file, true);
-			f.write(System.currentTimeMillis() + "\t" + className + "\n");
-			f.close();
+			
+			// TODO: is this too slow???
+			BufferedReader br = new BufferedReader(new FileReader(file));
+		    String lastLine = null;
+		    String tmpLine = null;
+
+		    while ((tmpLine = br.readLine()) != null) {
+		    	lastLine = tmpLine;
+		    }
+		    br.close();
+		    
+		    if(lastLine.equals("RECORDING_STARTED")) {
+		    	
+				FileWriter f = new FileWriter(file, true);
+				f.write(className + "\t" + System.currentTimeMillis() + "\t");
+				f.close();
+		    } else {
+		    	
+				FileWriter f = new FileWriter(file, true);
+				f.write(System.currentTimeMillis() + "\n" + className + "\t" + System.currentTimeMillis() + "\t");
+				f.close();
+				
+		    }
+			
+
 		} catch (IOException e) {
 			Log.e(TAG, "Writing to prediction log file failed");
 			e.printStackTrace();

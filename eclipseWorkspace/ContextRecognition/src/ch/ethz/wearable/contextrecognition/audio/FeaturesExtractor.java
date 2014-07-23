@@ -31,8 +31,7 @@ import ch.ethz.wearable.contextrecognition.math.MFCC;
 import ch.ethz.wearable.contextrecognition.math.Window;
 
 public class FeaturesExtractor {
-	
-	
+
 	private static int RECORDER_SAMPLERATE = 16000;
 	private static int FFT_SIZE = 8192;
 	private static int MFCCS_VALUE = 12;

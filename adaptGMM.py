@@ -8,7 +8,6 @@ import copy
 import math
 import matplotlib.pyplot as pl
 from sklearn.mixture import GMM
-from featureExtraction import FX_multiFolders
 from classifiers import trainGMMJava
 import ipdb as pdb #pdb.set_trace()
 

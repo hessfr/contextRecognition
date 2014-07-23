@@ -1,10 +1,12 @@
 import scipy.io.wavfile as wav
 import os
 from os import listdir
+import shutil
 import numpy as np
 import subprocess
 from subprocess import Popen, PIPE
 import time
+import ipdb as pdb #pdb.set_trace()
 
 def convertFolder(folderName):
     """
@@ -17,7 +19,8 @@ def convertFolder(folderName):
         return False
     else:        
         fileList = listdir(dir)
-        for file in fileList:
+        for file in fileList: 
+            
             file = str(dir + "/" + file)
             
             """ Check if file is audio file first: """
@@ -33,6 +36,9 @@ def convertFolder(folderName):
                 commandString = str("sox '" + file + "' -V1 -b 16 -c 1 -r 16000 '" + tmpFile + "'") #TODO: implement later that files without ending are also considered
                 p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 out, err = p.communicate()
+                
+               # pdb.set_trace()                
+                
                 if str(err) != "":
                     time.sleep(1)
                     " Conversion failed, so we move this folder to another folder, as we don't want to use it now"

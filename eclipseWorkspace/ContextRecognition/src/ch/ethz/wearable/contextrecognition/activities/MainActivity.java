@@ -118,9 +118,9 @@ public class MainActivity extends ActionBarActivity {
 		contextTV = (TextView) findViewById(R.id.contextTV);
 
 		if (FIRST_RUN == true) {
-			Log.d(TAG, "First run of MainActivity");
+			Log.i(TAG, "First run of MainActivity");
 			
-			appendToStartLog();
+			appendToLogStart();
 			
 			// Start the AudioWorker service:
 			Intent i = new Intent(this, AudioWorker.class);
@@ -572,7 +572,10 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 	
-	private void appendToStartLog() {
+	/*
+	 * Add the time of the first application start to the startLog and the predctionLog files
+	 */
+	private void appendToLogStart() {
 		
 		Log.d(TAG, "Appending to start time of the app to log");
 	
@@ -583,6 +586,16 @@ public class MainActivity extends ActionBarActivity {
 			f.close();
 		} catch (IOException e) {
 			Log.e(TAG, "Writing to start log file failed");
+			e.printStackTrace();
+		}
+		
+		try {
+			File file = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write("RECORDING_STARTED" + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to prediction log file failed");
 			e.printStackTrace();
 		}
 		

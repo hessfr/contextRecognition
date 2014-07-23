@@ -8,7 +8,6 @@ from subprocess import Popen, PIPE
 import wave
 import contextlib
 import json
-#from createInitialModel import checkDownloaded
 from getSound import getSoundBySingleTag
 from fileConversion import convertFolder
 from outlierDetection import removeOutliers

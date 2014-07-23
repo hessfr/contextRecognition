@@ -24,7 +24,7 @@ public class extractFeatures {
 	private transient MFCC featureMFCC = null;
 	private transient Window featureWin = null;
 
-    private ArrayList<double[]> extractFile(String fileName) {    	
+    private ArrayList<double[]> extractFile(String fileName) {
     	
     	int frameSize = (int)Math.round(SAMPLERATE * WINDOW_LENGTH);
         int totalSamplesRead = 0;
