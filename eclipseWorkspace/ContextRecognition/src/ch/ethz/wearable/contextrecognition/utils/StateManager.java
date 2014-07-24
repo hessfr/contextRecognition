@@ -47,6 +47,7 @@ import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.GetInitialModel;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
+import ch.ethz.wearable.contextrecognition.communication.ManageClasses;
 import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
 import ch.ethz.wearable.contextrecognition.data.AppData;
 
@@ -403,26 +404,26 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
+							String[] classArr = {"Office", "Train with spaces in between", "Conversation", "abcde"};
 							
-							
-							
-//							NotificationCompat.Builder builder = new NotificationCompat.Builder(
-//									context).setSmallIcon(R.drawable.ic_launcher)
-//									.setContentTitle("Transferring audio data not successful")
-//									.setAutoCancel(true)
-//									.setWhen(System.currentTimeMillis())
-//									.setTicker("Audio data could not be transfered");
-//							
-//							Intent goToUploadActivity = new Intent(context, UploadActivity.class);
-//							PendingIntent uploadIntent = PendingIntent.getActivity(context, 0, goToUploadActivity, 0);
-//							builder.setContentIntent(uploadIntent);
-//
-//							NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-//							manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
-//							
-							
-							
+							// Send the the request to actually train a new class on the server:
+							Intent ii = new Intent(context, ManageClasses.class);
+							ii.putExtra(Globals.CONN_MANAGE_CLASSES_ARRAY, classArr);
+							context.startService(ii);
 
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
 						}
 						
 						
@@ -606,6 +607,20 @@ public class StateManager extends BroadcastReceiver {
 		if (intent.getAction().equals(Globals.REQUEST_CLASS_NAMES)) {
 
 			classNamesRequested = true;
+			
+		}
+		
+		if (intent.getAction().equals(Globals.CONN_MANAGE_CLASSES_RECEIVE)) {
+
+			String[] invalidClasses = intent.getStringArrayExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS);
+			String filenameOnServer = intent.getStringExtra(Globals.CONN_MANAGE_CLASSES_FILENAME);
+			
+			
+			//TODO
+			
+			
+			
+			
 			
 		}
 		

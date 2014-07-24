@@ -53,7 +53,6 @@ public class Fragment3 extends Fragment {
 		ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(Globals.initialContextClasses));
 		ArrayList<Boolean> defaultList = new ArrayList<Boolean>(Arrays.asList(Globals.defaultClasses));
 		// The check boxes that got selected by the user will be saved here:
-		
 		currentStatuses = new ArrayList<Boolean>();
 		for(int i=0; i<defaultList.size(); i++) {
 			currentStatuses.add(defaultList.get(i));
@@ -344,18 +343,6 @@ public class Fragment3 extends Fragment {
 				return TYPE_TEXTVIEW;
 			}
         }
-		
-//		public void addContextClass(final String contextClass, final Boolean status) {
-//			contextList.add(contextClass);
-//			cbStatus.add(status);
-//            notifyDataSetChanged();
-//        }
-//		
-//		public void addDefineOwnClass() {
-//			contextList.add(DEFINE_OWN_CLASS);
-//			cbStatus.add(false);
-//            notifyDataSetChanged();
-//        }
 		
 		public String[] getStringArray() {
 			return contextList.toArray(new String[contextList.size()]);

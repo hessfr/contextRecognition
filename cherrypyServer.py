@@ -20,7 +20,7 @@ class AddContextClass():
 
         print("New class " + new_classname + " requested")
     
-        json_data = cherrypy.request.json      
+        json_data = cherrypy.request.json   
     
         # Create random ID for this request:
         id = str(randint(1e5,1e6))
@@ -127,7 +127,7 @@ class RawAudio():
 
 
 
-        return "abc"
+        return "abc" #TODO
         
         
         
@@ -141,8 +141,6 @@ class RawAudio():
 class InitClassifier():
 
     exposed = True
-
-    # TODO:
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
@@ -206,6 +204,84 @@ class InitClassifier():
             # Classifier not available yet, tell client that we are not ready yet:
             return notReadyCode
         
+        
+class ManageClasses():
+    """
+    Remove or add multiple context classes at once
+    
+    
+    """
+
+    exposed = True
+
+    @cherrypy.expose
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    def POST(self, context_classes):
+        
+        print("--- ManageClasses POST request ---")
+
+        context_classes_list = json.loads(context_classes)            
+        
+        #print(json.dumps(context_classes_list))        
+        
+        classifier_json = cherrypy.request.json     
+        
+        # Create random ID for this request:
+        id = str(randint(1e5,1e6))
+        
+        # Dump the GMM object we received from the client, as it is too large to parse as argument directly:
+        filename_old_classifier = "tmp_" + id + ".json"
+        json.dump(classifier_json, open(filename_old_classifier,"wb"))
+        
+        # Create an id, where the client can get the new classifier when the calculation is done:  
+        filename_new_classifier = "Classifier_" + id + ".json"
+        
+        valid_classes = []
+        invalid_classes = []
+        
+        for el in context_classes_list:
+            if (feasibilityCheck(el) != "not_feasible"):
+                valid_classes.append(el)
+            else:
+                invalid_classes.append(el)        
+        
+        # Start training the classifier in the background:
+        subprocess.Popen(["python", "server_manage_classes.py", json.dumps(valid_classes), filename_old_classifier, filename_new_classifier])
+        
+        # Return new filename and the list of invalid classes:
+        response = {"filename": filename_new_classifier, "invalid_classes": invalid_classes}
+        
+        return response
+        
+        
+        
+        
+        
+
+        
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def GET(self, filename):
+        print("--- ManageClasses GET request ---")        
+
+        notReadyCode = -1
+
+        # get the filename by removing the first part of the response ('filename=classifiers/625987.json'....)
+        filename = filename.split("=")[1]
+
+        if(os.path.isfile(filename)):
+            print("Filename " + filename + " found on disk, will be sent to client")
+        
+            js = json.load(open(filename, 'rb'))
+            
+            #os.remove(filename)
+            
+            return js
+        
+        else:
+            # Classifier not available yet, tell client that we are not ready yet:
+            return notReadyCode
 
         
 
@@ -243,6 +319,17 @@ cherrypy.tree.mount(InitClassifier(), '/initclassifier', {
         'tools.json_out.on': True,
         'tools.response_headers.on': True,
         }})
+        
+cherrypy.tree.mount(ManageClasses(), '/manageclasses', {
+    '/': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'tools.json_in.on': True,
+        'tools.json_out.on': True,
+        'tools.response_headers.on': True,
+        }})        
+        
+        
+        
         
 sizeLimitGB = 3.5 # in Gigabytes
 

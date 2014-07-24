@@ -5,6 +5,32 @@ import ipdb as pdb #pdb.set_trace()
 
 Freesound.set_api_key('ff15111274e84bebaba741b0aec023b0')
 
+def feasibilityCheckList(classesList, minResults=25):
+    """
+    Check if it is feasbile to train a classifier with the given context classes
+    @param classesList: List of the class names that should be checked
+    @param minResults: Minimum number of search results on freesound to train the classifier
+    @return:
+    """
+    
+    feasible_list = []
+    not_feasible_list = []
+    
+    for el in classesList:
+        if feasibilityCheck(el) == "downloaded":
+            feasible_list.append(el)
+        elif feasibilityCheck(el) == "feasible":
+            feasible_list.append(el)
+        elif feasibilityCheck(el) == "not_feasible": 
+            not_feasible_list.append(el)
+            
+    print(str(len(feasible_list)) + " classes feasible, " + str(len(not_feasible_list)) + " classes not feasible")
+    
+    resultDict = {"feasible_list": feasible_list, "not_feasible_list": not_feasible_list}
+    
+    return resultDict
+    
+
 def feasibilityCheck(className, minResults=25):
     """
     Check if it is feasbile to train a classifier with the given context class

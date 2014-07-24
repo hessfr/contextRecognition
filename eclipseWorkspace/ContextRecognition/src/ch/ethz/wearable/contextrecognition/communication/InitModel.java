@@ -105,7 +105,6 @@ public class InitModel extends IntentService {
 				    		Log.i(TAG, "ReceivedString: " + receivedString);
 				    		
 				    		JSONObject jsonObject = new JSONObject(receivedString);
-				    		
 				    		results = new String[2];
 				    		results[0] = jsonObject.getString("filename");
 				    		results[1] = jsonObject.getString("wait");

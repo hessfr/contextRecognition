@@ -111,8 +111,8 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-//	public static final String IP = "192.168.0.23";
-	public static final String IP = "10.2.119.175";
+	public static final String IP = "192.168.0.23";
+//	public static final String IP = "10.2.119.175";
 //	public static final String IP = "192.168.0.68";
 	
 	public static final String PORT = "8080";
@@ -122,6 +122,7 @@ public class Globals {
 	public static final String FEASIBILITY_CHECK_URL = BASE_URL + "feasibilitycheck/?";
 	public static final String RAW_AUDIO_URL = BASE_URL + "rawaudio/?";
 	public static final String INIT_CLASSIFIER_URL = BASE_URL + "initclassifier/";
+	public static final String MANAGE_CLASSES_URL = BASE_URL + "manageclasses/?";
 	
 	// IntentServices for communication:
 	//public static final String CONN_CHECK_FEASIBILITY_SEND = "action.connCheckFeasibilitySend";
@@ -144,6 +145,11 @@ public class Globals {
 	public static final String CONN_INIT_MODEL_CLASSES = "action.connSendInitModelClasses";
 	public static final String CONN_INIT_MODEL_RESULT_FILENAME = "connSendInitModelResultFilename";
 	public static final String CONN_INIT_MODEL_RESULT_WAIT = "connSendInitModelResultWait";
+	
+	public static final String CONN_MANAGE_CLASSES_RECEIVE = "action.connManageClassesReceive";
+	public static final String CONN_MANAGE_CLASSES_INVALIDS = "connManageClassesInvalids";	
+	public static final String CONN_MANAGE_CLASSES_FILENAME = "connManageClassesFilename";	
+	public static final String CONN_MANAGE_CLASSES_ARRAY = "connManageClassesArray";
 	
 	// Results of the feasibility check (String have to match results from server):
 	public static final String FEASIBILITY_DOWNLOADED = "downloaded";
