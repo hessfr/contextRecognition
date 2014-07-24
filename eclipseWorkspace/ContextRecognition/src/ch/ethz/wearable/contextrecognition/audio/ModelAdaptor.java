@@ -64,7 +64,7 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		this.listener = listener;
 	}
 
-	public interface onModelAdaptionCompleted{
+	public interface onModelAdaptionCompleted {
         void onModelAdaptionCompleted(Context context, GMM newGMM);
     }
 
