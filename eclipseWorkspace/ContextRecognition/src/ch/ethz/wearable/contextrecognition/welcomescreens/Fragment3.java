@@ -3,6 +3,8 @@ package ch.ethz.wearable.contextrecognition.welcomescreens;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,6 +25,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.activities.MainActivity;
 import ch.ethz.wearable.contextrecognition.communication.InitModel;
+import ch.ethz.wearable.contextrecognition.utils.DialogBuilder;
+import ch.ethz.wearable.contextrecognition.utils.DialogBuilder.onClickEvent;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.example.contextrecognition.R;
@@ -32,7 +36,7 @@ public class Fragment3 extends Fragment {
 	Button startButton;
 	ContextSelectorAdapter dataAdapter;
 	ListView listView;
-	Boolean[] actualSelection;
+	ArrayList<Boolean> currentStatuses;
 	static final String DEFINE_OWN_CLASS = "Define own context class";
 	
 	private static final String TAG = "Welcome3";
@@ -48,10 +52,11 @@ public class Fragment3 extends Fragment {
     	
 		ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(Globals.initialContextClasses));
 		ArrayList<Boolean> defaultList = new ArrayList<Boolean>(Arrays.asList(Globals.defaultClasses));
-		// The checkboxes that got selected by the user will be saved here:
-		actualSelection = new Boolean[Globals.initialContextClasses.length];
+		// The check boxes that got selected by the user will be saved here:
+		
+		currentStatuses = new ArrayList<Boolean>();
 		for(int i=0; i<defaultList.size(); i++) {
-			actualSelection[i] = defaultList.get(i);
+			currentStatuses.add(defaultList.get(i));
 		}
 		
 		contextList.add(DEFINE_OWN_CLASS);
@@ -68,12 +73,51 @@ public class Fragment3 extends Fragment {
 			      if (position == (listView.getCount()-1)) {
 			    	  Log.d(TAG, "Define own context class item was clicked");
 			    	  
-			    	  //TODO: call the corresponding method here
+						// Show the alert dialog to select custom context classes:
+						onClickEvent listener = new onClickEvent() {
+
+							/*
+							 * When clicking OK in the alert dialog, we add it to the list view
+							 * and check the feasibility later:
+							 */
+							@Override
+							public void onClick(Context context, String newClassName) {
+								
+								// Add the new item at the second last spot and set the check box to selected
+								ArrayList<String> stringList = dataAdapter.getStringArrayList();
+								stringList.add(stringList.get(stringList.size()-1));
+								
+								Log.i(TAG, "This should be define own context class: " + stringList.get(stringList.size()-1));
+								
+								stringList.set((stringList.size()-2), newClassName);
+								
+								ArrayList<Boolean> statusList = dataAdapter.getStatusList();
+								statusList.add(statusList.get(statusList.size()-1));
+								statusList.set((statusList.size()-2), true);
+								
+								currentStatuses.add(true);
+								
+								dataAdapter = new ContextSelectorAdapter(getActivity(), R.layout.listview_element_checkbox, stringList, statusList);
+								
+								listView.setAdapter(dataAdapter);
+								
+								Log.i(TAG, "New context class " + newClassName + " added to list");
+
+							}
+						};
+						
+						DialogBuilder dialogBuilder = new DialogBuilder(getActivity(), listener);
+						
+						AlertDialog alertDialog = dialogBuilder
+								.createDialog(dataAdapter.getStringArray());
+
+						alertDialog.show();
 			    	  
 			      }
 			      
 			   } 
 			});
+		
 		// Assign adapter to ListView
 		listView.setAdapter(dataAdapter);
 		Log.d(TAG, "ListView for initial context selection created");
@@ -105,23 +149,31 @@ public class Fragment3 extends Fragment {
 				boolean isDifferent = false;
 				int numClasses = 0;
 				for(int i=0; i<Globals.defaultClasses.length; i++){
-					if (Globals.defaultClasses[i] != actualSelection[i]) {
+					if (Globals.defaultClasses[i] != currentStatuses.get(i)) {
 						isDifferent = true;
 					}
 					
-					if (actualSelection[i] == true) {
+					if (currentStatuses.get(i) == true) {
 						numClasses++;
 					}
 				}
 				
-				String[] classesToRequest = new String[numClasses];
-				int k=0;
+				
+				ArrayList<String> classesToRequestList = new ArrayList<String>();
 				for(int i=0; i<Globals.initialContextClasses.length; i++) {
-					if (actualSelection[i] == true) {
-						classesToRequest[k] = Globals.initialContextClasses[i];
-						k++;
+					if (currentStatuses.get(i) == true) {
+						classesToRequestList.add(Globals.initialContextClasses[i]);
 					}
 				}
+				
+				// Add the classes we added on top of default classes:
+				for(int i=Globals.initialContextClasses.length; i<(dataAdapter.getStringArray().length-1); i++) {
+					if (currentStatuses.get(i) == true) {
+						classesToRequestList.add(dataAdapter.getStringArray()[i]);
+					}
+				}
+				
+				String[] classesToRequest = classesToRequestList.toArray(new String[classesToRequestList.size()]);
 				
 				if (isDifferent == true) {
 					// request model from server is it's not the default classifier:
@@ -222,14 +274,14 @@ public class Fragment3 extends Fragment {
 								   // CheckBox got selected just now:
 
 								   if (idx != -1) {
-									   actualSelection[idx] = true;
+									   currentStatuses.set(idx, true);
 								   }
 								   
 							   } else {
 								   // CheckBox got unselected just now:
 
 								   if (idx != -1) {
-									   actualSelection[idx] = false;
+									   currentStatuses.set(idx, false);
 								   }
 								   
 							   }
@@ -279,7 +331,7 @@ public class Fragment3 extends Fragment {
 
 		@Override
 		public int getViewTypeCount() {
-			return 2; // 1 or 2 ??
+			return 2;
 		}
 		
 		@Override
@@ -293,16 +345,28 @@ public class Fragment3 extends Fragment {
 			}
         }
 		
-		public void addContextClass(final String contextClass, final Boolean status) {
-			contextList.add(contextClass);
-			cbStatus.add(status);
-            notifyDataSetChanged();
-        }
+//		public void addContextClass(final String contextClass, final Boolean status) {
+//			contextList.add(contextClass);
+//			cbStatus.add(status);
+//            notifyDataSetChanged();
+//        }
+//		
+//		public void addDefineOwnClass() {
+//			contextList.add(DEFINE_OWN_CLASS);
+//			cbStatus.add(false);
+//            notifyDataSetChanged();
+//        }
 		
-		public void addDefineOwnClass() {
-			contextList.add(DEFINE_OWN_CLASS);
-			cbStatus.add(false);
-            notifyDataSetChanged();
-        }
+		public String[] getStringArray() {
+			return contextList.toArray(new String[contextList.size()]);
+		}
+		
+		public ArrayList<String> getStringArrayList() {
+			return contextList;
+		}
+		
+		public ArrayList<Boolean> getStatusList() {
+			return cbStatus;
+		}
 	}
 }

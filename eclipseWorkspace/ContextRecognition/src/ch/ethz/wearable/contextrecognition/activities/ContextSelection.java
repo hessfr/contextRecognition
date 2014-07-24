@@ -77,9 +77,11 @@ public class ContextSelection extends ListActivity {
 
 		} else { // "Define own context class" selected
 			
-			// Implement the interface to catch the on click event on the OK button
 			onClickEvent listener = new onClickEvent() {
 
+				/*
+				 * When clicking in the alert dialog OK, we directly call the model adaption
+				 */
 				@Override
 				public void onClick(Context context, String newClassName) {
 					

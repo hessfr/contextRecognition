@@ -43,10 +43,10 @@ public class GetKnownClasses extends AsyncTask<String, Void, String[]> {
 
 		// Set timeout parameters:
 		HttpParams httpParameters = new BasicHttpParams();
-		int timeoutConnection = 3000;
+		int timeoutConnection = 2000;
 		HttpConnectionParams.setConnectionTimeout(httpParameters,
 				timeoutConnection);
-		int timeoutSocket = 5000;
+		int timeoutSocket = 3000;
 		HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
 
 		HttpClient client = new DefaultHttpClient(httpParameters);
