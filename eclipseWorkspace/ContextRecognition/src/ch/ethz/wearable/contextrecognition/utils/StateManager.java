@@ -39,6 +39,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
+import ch.ethz.wearable.contextrecognition.activities.ManageClassesActivity;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor;
 import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor.onModelAdaptionCompleted;
@@ -502,6 +503,12 @@ public class StateManager extends BroadcastReceiver {
 				
 				callContextSelectionActivity(context);
 				
+			}
+
+			else if (intent.getAction().equals(Globals.CALL_MANAGE_CLASSES_INTENT)) {
+
+				callManageClassesActivity(context);
+
 			}
 
 		}
@@ -1053,6 +1060,32 @@ public class StateManager extends BroadcastReceiver {
 		}
 		
 		return i;
+	}
+	
+	/*
+	 * Go to the manage classes activity
+	 */
+	public void callManageClassesActivity(Context context) {		
+		
+		Intent i=null;
+		
+		if (gmm != null) {
+			if (gmm.get_string_array().length > 0) {
+				i = new Intent(context, ManageClassesActivity.class);
+				Bundle b = new Bundle();
+				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
+				i.putExtras(b);
+				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
+				context.startActivity(i);
+			}
+			
+		} else {
+			// We cannot start ContextSelection activity if class names not yet available
+			i = null;
+
+			Log.w(TAG,
+					"Not changing to manage classes activity, as class names not available yet.");
+		}
 	}
 	
 	/*

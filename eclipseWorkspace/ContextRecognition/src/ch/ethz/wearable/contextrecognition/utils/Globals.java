@@ -204,6 +204,7 @@ public class Globals {
 	
 	public static final String MODEL_ADAPTION_FINISHED_INTENT = "action.modelAdaptionFinished";
 	public static final String CALL_CONTEXT_SELECTION_INTENT = "action.callContextSelection";
+	public static final String CALL_MANAGE_CLASSES_INTENT = "action.callManageClasses";
 	
 	public static final String DISMISS_NOTIFICATION = "action.dismissNotification";
 	

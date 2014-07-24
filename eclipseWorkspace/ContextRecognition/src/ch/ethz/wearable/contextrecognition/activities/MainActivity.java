@@ -256,6 +256,10 @@ public class MainActivity extends ActionBarActivity {
 			// Quit the app and stop the recording:
 			callShutdown();
 		}
+		if (id == R.id.action_manage_classes) {
+			// Go to manage classes activity:
+			callManageClasses();
+		}
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -291,6 +295,15 @@ public class MainActivity extends ActionBarActivity {
 		Intent i = new Intent(MainActivity.this, HelpActivity.class);
 		startActivity(i);
 	}
+    /**
+     * Launch manage classes activity
+     * */
+    private void callManageClasses() {
+		Intent intent = new Intent(Globals.CALL_MANAGE_CLASSES_INTENT);
+		Bundle bundle = new Bundle();
+		intent.putExtras(bundle);
+		sendBroadcast(intent);
+    }
     /**
      * Launch Shutdown activity to close app and stop recording
      * */

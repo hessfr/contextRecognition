@@ -103,6 +103,13 @@
             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
         </activity>
         
+        <!-- Manage classes activity -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.ManageClassesActivity"
+            android:label="@string/label_manage_classes"
+            android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" >
+        </activity>   
+        
         <!-- Rating activity -->
         <activity
             android:name="ch.ethz.wearable.contextrecognition.activities.RatingActivity"
@@ -147,7 +154,8 @@
     			<action android:name="action.connIncorporateNewClassReceive" />
     			<action android:name="action.connUpdatedModelReceive" />
     			<action android:name="action.connSendRawAudioReceive" />
-    			<action android:name="action.connSendInitModelReceive" />    			
+    			<action android:name="action.connSendInitModelReceive" />
+    			<action android:name="action.callManageClasses" />		
     			
   			</intent-filter>
 		</receiver>

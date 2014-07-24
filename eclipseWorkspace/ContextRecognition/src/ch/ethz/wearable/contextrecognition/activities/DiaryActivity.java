@@ -94,6 +94,10 @@ public class DiaryActivity extends ActionBarActivity {
 			// Quit the app and stop the recording:
 			callShutdown();
 		}
+		if (id == R.id.action_manage_classes) {
+			// Quit the app and stop the recording:
+			callManageClasses();
+		}
         
         return super.onOptionsItemSelected(item);
     }
@@ -206,6 +210,13 @@ public class DiaryActivity extends ActionBarActivity {
      * */
     private void callHelp() {
         Intent i = new Intent(DiaryActivity.this, HelpActivity.class);
+        startActivity(i);
+    }
+    /**
+     * Launch manage classes activity
+     * */
+    private void callManageClasses() {
+        Intent i = new Intent(DiaryActivity.this, ManageClassesActivity.class);
         startActivity(i);
     }
     /**

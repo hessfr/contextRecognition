@@ -77,6 +77,10 @@ public class RatingActivity extends ActionBarActivity {
 			// Quit the app and stop the recording:
 			callShutdown();
 		}
+		if (id == R.id.action_manage_classes) {
+			// Go to manage classes activity:
+			callManageClasses();
+		}
         
         return super.onOptionsItemSelected(item);
     }
@@ -100,6 +104,13 @@ public class RatingActivity extends ActionBarActivity {
      * */
     private void callHelp() {
         Intent i = new Intent(RatingActivity.this, HelpActivity.class);
+        startActivity(i);
+    }
+    /**
+     * Launch manage classes activity
+     * */
+    private void callManageClasses() {
+        Intent i = new Intent(RatingActivity.this, ManageClassesActivity.class);
         startActivity(i);
     }
     /**

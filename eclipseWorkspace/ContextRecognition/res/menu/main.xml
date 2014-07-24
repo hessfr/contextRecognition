@@ -13,7 +13,11 @@
 	    android:orderInCategory="100"
 	    android:title="@string/action_diary"
 	    app:showAsAction="never"/>
-    
+    <item
+	    android:id="@+id/action_manage_classes"
+	    android:orderInCategory="100"
+	    android:title="@string/action_manage_classes"
+	    app:showAsAction="never"/>
     <item
         android:id="@+id/action_rating"
         android:orderInCategory="100"

@@ -7,12 +7,14 @@
     
     <string name="action_settings">Settings</string>
     <string name="action_diary">Diary</string>
+    <string name="action_manage_classes">Manage Classes</string>
     <string name="action_rating">Rate our app</string>
     <string name="action_help">Help</string>
     <string name="action_exit">Stop recording and exit</string>
     
     <string name="label_settings">Settings</string>
     <string name="label_diary">Diary</string>
+    <string name="label_manage_classes">Mange context classes</string>
     <string name="label_rating">Rate our app</string>
     <string name="label_help">Help</string>
     <string name="label_context_selection">Select correct context class</string>
@@ -46,44 +48,18 @@
         please try it again by pressing the button:</string>
     <string name="upload_again_button">Start upload</string>
     
+    <!-- Manage classes activity activity -->
+    <string name="manage_classes_text">Add new classes and remove 
+         by unselecting exsisting classes by unselecting:</string>
+    <string name="button_apply_changes">Apply changes</string>
+    
     <string name="test">Test123</string>
     <string name="test_office">Office</string>
-    
-    <string-array name="context_classes">
-      <item>Context Class 1</item>
-      <item>Context Class 2</item>
-      <item>Context Class 3</item>
-      <item>Context Class 4</item>
-      <item>Context Class 5</item>
-      <item>Define own context class</item>
-	</string-array>
-	
-    <string-array name="context_classes_from_server">
-      <item>abc class from Server</item>
-      <item>def class 2 from Server</item>
-      <item>123 class 3 from Server</item>
-	</string-array>
 	
     <string name="edit">Edit</string>
     <string name="save">Save</string>
     <string name="delete">Delete</string>
     <string name="view">View</string>
-    
-    <string name="default_pipeline">
-	{
-        "@type":"edu.mit.media.funf.pipeline.BasicPipeline",
-         "name":"default",
-         "version":1,
-         "dataRequests":{
-         	"edu.mit.media.funf.probe.builtin.AudioFeaturesProbe":[
-	         	{ 
-		            "DURATION":0.02, 
-		            "PERIOD":0.01 
-	         	}
-         	]
-        }
-	}
-    </string>
     
     
 </resources>
