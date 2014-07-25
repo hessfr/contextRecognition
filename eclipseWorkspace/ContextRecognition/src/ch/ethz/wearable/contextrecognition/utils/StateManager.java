@@ -404,7 +404,8 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-							String[] classArr = {"Office", "Train with spaces in between", "Conversation", "abcde"};
+							String[] classArr = {"Office", "Train with spaces in between", "Conversation", "Restaurant",
+									"Car", "Bus", "Street", "Toilet", "Kitchen", "Forest"}; // -> delete Train, Vacuum
 							
 							// Send the the request to actually train a new class on the server:
 							Intent ii = new Intent(context, ManageClasses.class);
@@ -615,8 +616,12 @@ public class StateManager extends BroadcastReceiver {
 			String[] invalidClasses = intent.getStringArrayExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS);
 			String filenameOnServer = intent.getStringExtra(Globals.CONN_MANAGE_CLASSES_FILENAME);
 			
-			
-			//TODO
+			// If some classes could not be trained, send a notification to the user
+			if (invalidClasses.length != 0) {
+				
+				//TODO
+				
+			}
 			
 			
 			
