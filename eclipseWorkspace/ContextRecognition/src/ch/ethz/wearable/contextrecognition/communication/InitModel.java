@@ -19,9 +19,7 @@ import org.json.JSONObject;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
@@ -53,8 +51,6 @@ public class InitModel extends IntentService {
 			String[] results = null;
 
 			public void run() {
-				
-				Looper.prepare();
 				
 				 String URL = Globals.INIT_CLASSIFIER_URL;     
 			        
@@ -144,24 +140,21 @@ public class InitModel extends IntentService {
 					this.cancel();
 				} else {
 					
-					Toast.makeText( getBaseContext(), "Your selected classes will be available "
-									+ "in some minutes. Using default classes", Toast.LENGTH_LONG).show();
+//					Toast.makeText( getBaseContext(), "Your selected classes will be available "
+//									+ "in some minutes. Using default classes", Toast.LENGTH_LONG).show();
 				}
 				
 				if (++counter == maxRetries) {
-					Log.e(TAG, "Server problems: initModel request not successful");				
 					
 					 Log.w(TAG, "Server not responded to initial model request");
 					 
-						Toast.makeText(
-								getBaseContext(),
-								(String) "Server not reponding, please try again later",
-								Toast.LENGTH_LONG).show();
+//						Toast.makeText(
+//								getBaseContext(),
+//								(String) "Server not reponding, please try again later",
+//								Toast.LENGTH_LONG).show();
 					
 					this.cancel();
 				}
-				
-				Looper.loop();
 			}
 		};
 		Timer timer = new Timer();

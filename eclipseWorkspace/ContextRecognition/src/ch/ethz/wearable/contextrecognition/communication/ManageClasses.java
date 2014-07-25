@@ -59,12 +59,11 @@ public class ManageClasses extends IntentService {
 
 			private int counter;
 			String filenameOnServer = null;
+			String waitOrNoWait = null;
 			String[] invalidClassesArray = null;
 
 			public void run() {
 
-				
-				
 				// Create JSON Array that will be passed as parameter:
 				JSONArray jsonArr = new JSONArray();
 				
@@ -152,6 +151,7 @@ public class ManageClasses extends IntentService {
 
 						jsonObject = new JSONObject(receivedString);
 			    		filenameOnServer = jsonObject.getString("filename");
+			    		waitOrNoWait = jsonObject.getString("wait");
 			    		JSONArray jsonArrayInvalidClasses = jsonObject.getJSONArray("invalid_classes");
 			    		
 			    		List<String> invalidClassesList = new ArrayList<String>();
@@ -185,6 +185,7 @@ public class ManageClasses extends IntentService {
 					
 				    Intent i = new Intent(Globals.CONN_MANAGE_CLASSES_RECEIVE);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS, invalidClassesArray);
+					i.putExtra(Globals.CONN_MANAGE_CLASSES_WAIT, waitOrNoWait);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_FILENAME ,filenameOnServer);
 					sendBroadcast(i);
 
@@ -198,10 +199,11 @@ public class ManageClasses extends IntentService {
 					
 					//TODO:
 					
-//					Intent i = new Intent(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE);
-//					i.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME, filenameOnServer);
-//					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT ,feasibilityCheckResult);
-//					sendBroadcast(i);					
+				    Intent i = new Intent(Globals.CONN_MANAGE_CLASSES_RECEIVE);
+					i.putExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS, invalidClassesArray);
+					i.putExtra(Globals.CONN_MANAGE_CLASSES_WAIT, waitOrNoWait);
+					i.putExtra(Globals.CONN_MANAGE_CLASSES_FILENAME ,filenameOnServer);
+					sendBroadcast(i);					
 					
 					Log.i(TAG, "IntentService finished");
 					

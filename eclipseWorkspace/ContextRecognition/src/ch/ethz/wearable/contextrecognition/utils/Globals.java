@@ -111,8 +111,8 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-//	public static final String IP = "192.168.0.23";
-	public static final String IP = "10.2.119.175";
+	public static final String IP = "192.168.0.23";
+//	public static final String IP = "10.2.119.175";
 //	public static final String IP = "192.168.0.68";
 	
 	public static final String PORT = "8080";
@@ -148,8 +148,15 @@ public class Globals {
 	
 	public static final String CONN_MANAGE_CLASSES_RECEIVE = "action.connManageClassesReceive";
 	public static final String CONN_MANAGE_CLASSES_INVALIDS = "connManageClassesInvalids";	
-	public static final String CONN_MANAGE_CLASSES_FILENAME = "connManageClassesFilename";	
+	public static final String CONN_MANAGE_CLASSES_FILENAME = "connManageClassesFilename";
+	public static final String CONN_MANAGE_CLASSES_WAIT = "connManageClassesWait";
 	public static final String CONN_MANAGE_CLASSES_ARRAY = "connManageClassesArray";
+	
+	public static final String CONN_MANAGE_CLASSES_FINISH = "action.connManageClassesFinish";
+	public static final String CONN_MANAGE_CLASSES_PREV_CLASSNAMES = "action.connManageClassesPrevClassnames";
+	
+	public static final String CONN_MANAGE_CLASSES_GET_FILENAME = "connManageClassesTimerFilename";
+	public static final String CONN_MANAGE_CLASSES_GET_WAIT = "connManageClassesTimerWait";
 	
 	// Results of the feasibility check (String have to match results from server):
 	public static final String FEASIBILITY_DOWNLOADED = "downloaded";
@@ -172,10 +179,9 @@ public class Globals {
 	public static final long MAX_RETRY_UPLOAD = 5;
 	
 	// Values used is server is not responding:
-	public static final long POLLING_INTERVAL_DEFAULT = 2 * 60 * 1000; // 2 * 60 * 1000 = 2min
-	public static final long MAX_RETRY_DEFAULT = 10; // 10 * 2min = 20min
-	
-	
+	public static final long POLLING_INTERVAL_DEFAULT = 3 * 60 * 1000; // 3 * 60 * 1000 = 3min
+	public static final long MAX_RETRY_DEFAULT = 15; // 15 * 3min = 75min
+
 	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	
 	
@@ -238,6 +244,8 @@ public class Globals {
 	// IDs for different notifications:
 	public static final int NOTIFICATION_ID_FILE_TRANSFER = 1;
 	public static final int NOTIFICATION_ID_QUERY = 2;
+	public static final int NOTIFICATION_ID_CLASSES_NOT_ADDED = 3;
+	public static final int NOTIFICATION_ID_STANDARD = 4;
 	
 	// Preferences:
 	public static final String USER_ID = "userId";

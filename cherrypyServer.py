@@ -149,12 +149,14 @@ class InitClassifier():
         
         print("--- InitClassifier POST request ---")
 
-        json_data = cherrypy.request.json     
+#        json_data = cherrypy.request.json     
+#        
+#        # Remove unicode notation:
+#        string_data = dict([(str(k), str(v)) for k, v in json_data.items()])
+#        
+#        classes_list = string_data.values()
         
-        # Remove unicode notation:
-        string_data = dict([(str(k), str(v)) for k, v in json_data.items()])
-        
-        classes_list = string_data.values()
+        classes_list = json.loads(cherrypy.request.json)
 
         model_exists_result = check_model_exists(classes_list)
         
@@ -168,7 +170,7 @@ class InitClassifier():
             filename_new_classifier = str(id) + ".json"            
             
             # Start training the classifier in the background (list is passed as String and converted back with Regex later):
-            subprocess.Popen(["python", "server_create_initial_model.py", str(classes_list), filename_new_classifier])
+            subprocess.Popen(["python", "server_create_initial_model.py", json.dumps(classes_list), filename_new_classifier])
             
             dir = "classifiers/" + filename_new_classifier
 
@@ -241,24 +243,29 @@ class ManageClasses():
         invalid_classes = []
         
         for el in context_classes_list:
-            if (feasibilityCheck(el) != "not_feasible"):
+            if (feasibilityCheck(el) == "not_feasible"): 
+                invalid_classes.append(el)
+                waitOrNoWait = "no_wait"
+                
+            elif (feasibilityCheck(el) == "downloaded"):
                 valid_classes.append(el)
+                waitOrNoWait = "no_wait"
+                
+            elif (feasibilityCheck(el) == "feasible"):
+                valid_classes.append(el)
+                waitOrNoWait = "wait"
+                
             else:
-                invalid_classes.append(el)        
+                print("feasibilityCheck returned invalid result")
+                waitOrNoWait = "no_wait"
         
         # Start training the classifier in the background:
         subprocess.Popen(["python", "server_manage_classes.py", json.dumps(valid_classes), filename_old_classifier, filename_new_classifier])
         
         # Return new filename and the list of invalid classes:
-        response = {"filename": filename_new_classifier, "invalid_classes": invalid_classes}
+        response = {"filename": filename_new_classifier, "wait": waitOrNoWait, "invalid_classes": invalid_classes}
         
         return response
-        
-        
-        
-        
-        
-
         
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -266,9 +273,6 @@ class ManageClasses():
         print("--- ManageClasses GET request ---")        
 
         notReadyCode = -1
-
-        # get the filename by removing the first part of the response ('filename=classifiers/625987.json'....)
-        filename = filename.split("=")[1]
 
         if(os.path.isfile(filename)):
             print("Filename " + filename + " found on disk, will be sent to client")

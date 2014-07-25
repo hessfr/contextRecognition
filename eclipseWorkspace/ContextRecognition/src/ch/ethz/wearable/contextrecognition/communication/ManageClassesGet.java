@@ -22,17 +22,28 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.utils.Globals;
+import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.GMM;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
-public class GetUpdatedModel extends IntentService {
+import com.example.contextrecognition.R;
 
-	private static final String TAG = "GetUpdatedModel";
+/*
+ * Intent service that regularly checks if the manage classes request is finished on the server and
+ * downloads the new classifiers if so
+ */
+public class ManageClassesGet extends IntentService {
+
+	private static final String TAG = "ManageClassesGet";
 	
-	public GetUpdatedModel() {
-		super("GetUpdatedModel");
+	public ManageClassesGet() {
+		super("ManageClassesGet");
 		
 		Log.d(TAG, "Constructor");
 		
@@ -41,52 +52,42 @@ public class GetUpdatedModel extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 
+		final String filenameOnServer = arg0.getStringExtra(Globals.CONN_MANAGE_CLASSES_GET_FILENAME);
+		final String waitOrNoWait = arg0.getStringExtra(Globals.CONN_MANAGE_CLASSES_GET_WAIT);
+
 		Log.i(TAG, "onHandleIntent");
+
+		long pollingInteval;
+		long maxRetry;
 		
-		final String filenameOnServer = arg0.getStringExtra(Globals.CONN_UPDATED_MODEL_FILENAME);
-		String feasibilityCheckResult = arg0.getStringExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT);
-		
-		final long maxRetries;
-		final long pollingInterval;
-		long delay = 200; // wait 200ms before starting the first execution
-		
-		if (feasibilityCheckResult.equals(Globals.FEASIBILITY_DOWNLOADED)) {
-			
-			Log.i(TAG, "Initialize TimerTask with shorter polling interval and timeout, "
-					+ "as class was downloaded already");
-			maxRetries = Globals.MAX_RETRY_NEW_CLASS_ALREADY_DOWNLOADED;
-			pollingInterval = Globals.POLLING_INTERVAL_NEW_CLASS_ALREADY_DOWNLOADED;
-			
-		} else if (feasibilityCheckResult.equals(Globals.FEASIBILITY_FEASIBLE)) {
-			
-			Log.i(TAG, "Initialize TimerTask with longer polling interval and timeout, "
-					+ "as class is not downloaded yet");
-			maxRetries = Globals.MAX_RETRY_NEW_CLASS_NOT_DOWNLOADED;
-			pollingInterval = Globals.POLLING_INTERVAL_NEW_CLASS_NOT_DOWNLOADED;
-			
+		if (waitOrNoWait.equals(Globals.NO_WAIT)) {
+			pollingInteval = Globals.POLLING_INTERVAL_DEFAULT;
+			maxRetry = Globals.MAX_RETRY_DEFAULT;
 		} else {
-			Log.e(TAG, "Wrong extra received for CONN_CHECK_FEASIBILITY_RESULT");
-			maxRetries = 0;
-			pollingInterval = 0;
+			pollingInteval = Globals.POLLING_INTERVAL_INITIAL_MODEL;
+			maxRetry = Globals.MAX_RETRY_INITIAL_MODEL;
 		}
 		
+		final Context context = getBaseContext();
 		
-	    
 		// Now check periodically if the computation on server is finished
-		CustomTimerTask task = new CustomTimerTask(getBaseContext(), filenameOnServer, 
-				pollingInterval, maxRetries, null, null, null) {
+		CustomTimerTask task = new CustomTimerTask(context, filenameOnServer, 
+				pollingInteval, maxRetry, null, null, null) {
 
 			private int counter;
 
 			public void run() {
 
-				boolean result = false;
+//				ManageClassesGet getReq = new ManageClassesGet();
+				Boolean resGet = false;
+
+				String[] prevClassnames=null;
 				
 				//Add parameters to URL
 			    List<NameValuePair> par = new LinkedList<NameValuePair>();
 		        par.add(new BasicNameValuePair("filename", filenameOnServer));
 		        String paramString = URLEncodedUtils.format(par, "utf-8");
-		        String URL = Globals.ADD_CLASS_URL + paramString;
+		        String URL = Globals.MANAGE_CLASSES_URL + paramString;
 		        
 		        //Set timeout parameters:
 		        HttpParams httpParameters = new BasicHttpParams();
@@ -97,8 +98,8 @@ public class GetUpdatedModel extends IntentService {
 		        
 				HttpClient client = new DefaultHttpClient(httpParameters);
 		        HttpGet get = new HttpGet(URL);
-				
-				try {
+		        
+			    try {
 			    	HttpResponse response = client.execute(get);
 
 			    	if (response.getStatusLine().getStatusCode() == 200) {
@@ -107,36 +108,44 @@ public class GetUpdatedModel extends IntentService {
 			    		String receveivedString = EntityUtils.toString(response.getEntity());	    		
 			    		String jsonString = null;
 
-			    		// Computation on server not finished yet:
+			    		//Log.i(TAG, "received string: " + receveivedString);	
+			    		
+			    		// Abort and return false if computation on server not finished yet:
 			    		if (receveivedString.equals("-1")) {
-
-			    			result = false;
+			    			Log.i(TAG, "Server return not ready code");
+			    			resGet = false;
 			    			
 			    		} else {
 			    			
 			    			jsonString = receveivedString;
-			    			result = true;
-				    		
+			    			
+			    			String filename = "GMM.json";
+			    			
+							// Save the previous class names, so that we can update buffers and threshold value later:
+							GMM prevGMM = new GMM("GMM.json");
+							prevClassnames = prevGMM.get_string_array();
+			    			
 				    		// Replace the current GMM with the new one:
-				    		String filename = "GMM.json";
-				    		
 				    		File file = new File(Globals.APP_PATH,filename);
 				    		
 				    		try {
+				    			Globals.readWriteLock.writeLock().lock();
 				    			FileWriter out = new FileWriter(file);
 				                out.write(jsonString);
 				                out.close();
-
+				                Globals.readWriteLock.writeLock().unlock();
 				    	    }
 				    	    catch (IOException e) {
 				    	        Log.e("Exception", "File write failed: " + e.toString());
 				    	    } 
-			    			
+
+			    			resGet = true;
 			    		}
+			    		
 
 			    		
 			    	} else {
-			    		Log.e(TAG, "Invalid response received after GetUpdatedModel request");
+			    		Log.e(TAG, "Invalid response received after GET request");
 			    		Log.e(TAG, String.valueOf(response.getStatusLine()));
 
 			    	}
@@ -150,41 +159,40 @@ public class GetUpdatedModel extends IntentService {
 			        e.printStackTrace();
 			    }
 
-
-				if (result == true) {
+				if (resGet == true) {
 
 					// Model received from the server:
-					Log.i(TAG, "New classifier received from server");
-
-					Intent i = new Intent(Globals.CONN_UPDATED_MODEL_RECEIVE);
-					i.putExtra(Globals.CONN_UPDATED_MODEL_RESULT, true);
-					sendBroadcast(i);
+					Log.i(TAG, "New classifier available on server");
 					
-					Log.i(TAG, "Finsishing IntentService");
+					Intent i = new Intent(Globals.CONN_MANAGE_CLASSES_FINISH);
+					i.putExtra(Globals.CONN_MANAGE_CLASSES_PREV_CLASSNAMES, prevClassnames);
+					sendBroadcast(i);
+
+					Log.i(TAG, "IntentService finished");
+
 					this.cancel();
 
-				} else {
-					
-					Log.i(TAG, "Waiting for new classifier from server");
 				}
 
-				if (++counter == maxRetries) {
-					Log.e(TAG,
-							"Server timeout, model adaption failed, as server didn't provide new classifier"
-									+ "with the specified time limit");
+				if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
+					Log.w(TAG, "Server not responded to GET request intitial model");
 					
-					Intent i = new Intent(Globals.CONN_UPDATED_MODEL_RECEIVE);
-					i.putExtra(Globals.CONN_UPDATED_MODEL_RESULT, false);
-					sendBroadcast(i);
+//					Toast.makeText( //-> Toast doesn't work like that! 
+//		    			  	context,
+//							(String) "Server not reponding, deploying default model, user specific classes "
+//									+ "will be requested when server online again ",
+//							Toast.LENGTH_LONG).show();
 					
-					Log.i(TAG, "Finsishing IntentService");
 					this.cancel();
 				}
+
+				Log.i(TAG, "Waiting for new classifier from server");
 			}
 		};
 
 		Timer timer = new Timer();
-		timer.schedule(task, delay, pollingInterval);
+		timer.schedule(task, 0, 20000);	//TODO: reset this to correct values!
 	}
+	
 
 }

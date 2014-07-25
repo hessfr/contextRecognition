@@ -1,11 +1,9 @@
-import pickle
 import json
 import sys
 import operator
 import copy
-from getFeatures import getFeaturesMultipleClasses
-from classifiers import trainGMM
-from createJSON import dictToJSON
+import os
+from addContextClass import addNewClass
 
 """ Script called by the server to add and/or remove classes of an
 existing model.
@@ -37,18 +35,18 @@ oldClasses = [str(k) for k in classesDict]
 
 #print(oldClasses)
 
+""" Delete classes that user deselected: """
 #classesToDelete = []
 indicesToDelete = []
 
 # Check which classes to remove from the existing classifier:
 for i in range(len(oldClasses)):
     if oldClasses[i] not in newClasses:
-        print("Remove " + oldClasses[i])
-        #classesToDelete.append(oldClasses[i])
         indicesToDelete.append(classesDict[oldClasses[i]])
    
 # Sort the indicesToDelete list:
 indicesToDelete = sorted(indicesToDelete)
+numberClassesDelete = len(indicesToDelete)
 
 #print(classesDict)
 #print(indicesToDelete)
@@ -93,20 +91,21 @@ for el in sortedList:
 for el in newGMM:
     el["classesDict"] = newClassesDict
 
-print(oldGMM[0]["classesDict"])
-print(newGMM[4]["classesDict"])
-print(newGMM[7]["weights"])
-print(oldGMM[9]["weights"])
 
-"""
-for el in oldGMM:
-    print(el["n_train"])
+""" Incorporate new classes: """
+classesToBeAdded = []
+for el in newClasses:
+    if el not in oldClasses:
+        classesToBeAdded.append(el)
+        
+for el in classesToBeAdded:
+    print("Adding class " + el)
+    newGMM = addNewClass(newGMM, el)
 
-print("--------")
-    
-for el in newGMM:
-    print(el["n_train"])
-"""
+json.dump(newGMM, open(new_filename, "wb"))
+os.remove(old_filename) 
+
+print("Manage classes finished: " + str(len(classesToBeAdded)) + " classes were added and " + str(numberClassesDelete) + " classes were deleted")
 
     
 
