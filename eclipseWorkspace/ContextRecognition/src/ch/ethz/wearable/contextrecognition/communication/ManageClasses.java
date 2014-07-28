@@ -92,7 +92,6 @@ public class ManageClasses extends IntentService {
 			    HttpPost post = new HttpPost(URL);
 			    
 //			    //Add headers to URL
-//			    //post.setHeader("Content-type", "text/plain");
 			    post.setHeader("Accept", "application/json");
 		    	post.setHeader("Content-type", "application/json");
 		    	
@@ -196,8 +195,6 @@ public class ManageClasses extends IntentService {
 				
 				if (++counter == maxRetries) {
 					Log.e(TAG, "Server problems: manage classes request not successful");
-					
-					//TODO:
 					
 				    Intent i = new Intent(Globals.CONN_MANAGE_CLASSES_RECEIVE);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS, invalidClassesArray);

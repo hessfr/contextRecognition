@@ -207,7 +207,7 @@ public class AudioWorker extends IntentService {
 							// If we were in init status, change to normal classification now:
 							if (AppStatus.getInstance().get() == AppStatus.INIT) {
 								AppStatus.getInstance().set(AppStatus.NORMAL_CLASSIFICATION);
-								Log.i(TAG, "New status: normal classification");
+								Log.i(TAG, "New status: normal classification (after status initializing)");
 							}
 							
 							//long endTimeClf = System.currentTimeMillis();

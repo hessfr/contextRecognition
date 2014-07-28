@@ -45,7 +45,7 @@ import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor.onModelAdaptionCom
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
-import ch.ethz.wearable.contextrecognition.communication.InitialModelGet;
+import ch.ethz.wearable.contextrecognition.communication.InitModelGet;
 import ch.ethz.wearable.contextrecognition.communication.ManageClasses;
 import ch.ethz.wearable.contextrecognition.communication.ManageClassesGet;
 import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
@@ -186,8 +186,8 @@ public class StateManager extends BroadcastReceiver {
 						
 						// Initialize the variable when receiving the first set of data:
 						if(variablesInitialized == false) {
+							
 							// Load data from JSON file from external storage if it already exists:
-
 							if (Globals.APP_DATA_FILE.exists()) {
 								Log.i(TAG, "Loading app data from JSON file");
 								
@@ -404,13 +404,13 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-							String[] classArr = {"Office", "INVALID_CLASS 123", "Conversation", "Restaurant",
-									"Car", "Bus", "Street", "Toilet", "Kitchen", "Forest"}; // -> delete Train, Vacuum
-							
-							// Send the the request to actually train a new class on the server:
-							Intent ii = new Intent(context, ManageClasses.class);
-							ii.putExtra(Globals.CONN_MANAGE_CLASSES_ARRAY, classArr);
-							context.startService(ii);
+//							String[] classArr = {"Office", "INVALID_CLASS 123", "Conversation", "Restaurant",
+//									"Car", "Bus", "Street", "Toilet", "Kitchen", "Forest"}; // -> delete Train, Vacuum
+//							
+//							// Send the the request to actually train a new class on the server:
+//							Intent ii = new Intent(context, ManageClasses.class);
+//							ii.putExtra(Globals.CONN_MANAGE_CLASSES_ARRAY, classArr);
+//							context.startService(ii);
 
 								
 							
@@ -660,23 +660,24 @@ public class StateManager extends BroadcastReceiver {
 			
 			String[] prevClassnames = intent.getStringArrayExtra(Globals.CONN_MANAGE_CLASSES_PREV_CLASSNAMES);
 			
+			onChangeClassesFinished(context, prevClassnames);
 			
-			
-			
-			onManageClassesFinished(context, prevClassnames);
-			
-			
-			//TODO: Flush buffers...
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+			// Flush buffers:
+			queryBuffer.clear();
+			predBuffer.clear();
+			for (int i = 0; i < gmm.get_n_classes(); i++) {
+				ArrayList<Double> tmp = thresBuffer.get(i);
+				tmp.clear();
+				thresBuffer.set(i, tmp);
+
+				thresSet.set(i, false);
+
+				if (feedbackReceived.get(i) == false) {
+					ArrayList<Double> tmp2 = initThresBuffer.get(i);
+					tmp2.clear();
+					initThresBuffer.set(i, tmp2);
+				}
+			}			
 		}
 		
 		if (intent.getAction().equals(Globals.CONN_SEND_RAW_AUDIO_RECEIVE)) {
@@ -709,96 +710,90 @@ public class StateManager extends BroadcastReceiver {
 		
 		if (intent.getAction().equals(Globals.CONN_INIT_MODEL_RECEIVE)) {
 			
+			String[] invalidClasses = intent.getStringArrayExtra(Globals.CONN_INIT_MODEL_INVALIDS);
 			String filenameOnServer = intent.getStringExtra(Globals.CONN_INIT_MODEL_RESULT_FILENAME);
 			String waitOrNoWait = intent.getStringExtra(Globals.CONN_INIT_MODEL_RESULT_WAIT);
-			
-			long pollingInteval;
-			long maxRetry;
-			
-			if (waitOrNoWait.equals(Globals.NO_WAIT)) {
-				pollingInteval = Globals.POLLING_INTERVAL_DEFAULT;
-				maxRetry = Globals.MAX_RETRY_DEFAULT;
-			} else {
-				pollingInteval = Globals.POLLING_INTERVAL_INITIAL_MODEL;
-				maxRetry = Globals.MAX_RETRY_INITIAL_MODEL;
-			}
 
-			 if (filenameOnServer != null) {
+			if (filenameOnServer != null) {
 				 
-				 Log.i(TAG, "filenameOnServer: " + filenameOnServer);
-
-				// Now check periodically if the computation on server is finished
-				CustomTimerTask task = new CustomTimerTask(context, filenameOnServer, 
-						pollingInteval, maxRetry, null, null, null) {
-
-					private int counter;
-
-					public void run() {
-
-						InitialModelGet getReq = new InitialModelGet();
-						Boolean resGet = false;
-
-						try {
-
-							resGet = getReq.execute(filenameOnServer).get();
-
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (ExecutionException e) {
-							e.printStackTrace();
+				Log.i(TAG, "filenameOnServer: " + filenameOnServer);
+				 
+				// If some classes could not be trained, send a notification to the user
+				if (invalidClasses.length != 0) {
+					
+					String contentText = "";
+					
+					if (invalidClasses.length == 1) {
+						contentText = contentText + "Class " + invalidClasses[0] + " could not be added";
+					} else {
+						contentText = contentText + "Classes ";
+						for(int i=0; i<invalidClasses.length; i++) {
+							contentText = contentText + invalidClasses[i] + ", ";
 						}
-
-						if (resGet == true) {
-
-							// Model received from the server:
-							Log.i(TAG, "New classifier available on server");
-							
-							// Load the classifier temporarily here to store new context classes to preferences:
-							GMM tmpGMM = new GMM("GMM.json");
-							
-							// Save String array of the context classes to preferences:
-							Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, tmpGMM.get_string_array());
-							
-							Log.i(TAG, "Number of context classes: " + tmpGMM.get_n_classes());
-							
-							Toast.makeText(context, "Initial classifier loaded", Toast.LENGTH_LONG).show();
-
-							// Set status to updated, so that the AudioWorker can load the new classifier
-							AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
-							Log.i(TAG, "New status: model updated");
-
-							// Broadcast this message, that other activities can rebuild their views:
-							Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
-							context.sendBroadcast(i2);
-							
-							this.cancel();
-
-						}
-
-						if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
-							Log.w(TAG, "Server not responded to GET request intitial model");
-							
-//							Toast.makeText( // -> Toast doesn't work like that
-//				    			  	context,
-//									(String) "Server not reponding, deploying default model, user specific classes "
-//											+ "will be requested when server online again ",
-//									Toast.LENGTH_LONG).show();
-							
-							this.cancel();
-						}
-
-						Log.i(TAG, "Waiting for new classifier from server");
+						contentText = contentText.substring(0, (contentText.length()-2)); //remove the comma
+						contentText = contentText + " could not be added";
 					}
-				};
+					
+					NotificationCompat.Builder builder = new NotificationCompat.Builder(
+							context).setSmallIcon(R.drawable.ic_launcher)
+							.setContentTitle("Classes could not be added")
+							.setContentText(contentText)
+							.setAutoCancel(true)
+							.setWhen(System.currentTimeMillis())
+							.setTicker("Classes could not be added");
 
-				Timer timer = new Timer();
-				timer.schedule(task, 0, 10000);
+					NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+					manager.notify(Globals.NOTIFICATION_ID_CLASSES_NOT_ADDED, builder.build());	
+				}
+				
+				// Start timer to periodically poll the server for the response:
+				Intent i = new Intent(context, InitModelGet.class);
+				i.putExtra(Globals.CONN_INIT_MODEL_GET_FILENAME, filenameOnServer);
+				i.putExtra(Globals.CONN_INIT_MODEL_GET_WAIT, waitOrNoWait);
+				context.startService(i);
+	
 				
 			 } else {
 				 
 				 Log.e(TAG, "Unexpected server response: filename is null. Aborting request");
 				 
 			 }
+		}
+		
+		if (intent.getAction().equals(Globals.CONN_INIT_MODEL_FINISH)) {
+			
+			String[] prevClassnames = intent.getStringArrayExtra(Globals.CONN_INIT_MODEL_PREV_CLASSNAMES);
+			
+			onChangeClassesFinished(context, prevClassnames);
+			
+			// Flush buffers:
+			if (variablesInitialized == true) {
+				
+				queryBuffer.clear();
+				predBuffer.clear();
+				for (int i = 0; i < gmm.get_n_classes(); i++) {
+					ArrayList<Double> tmp = thresBuffer.get(i);
+					tmp.clear();
+					thresBuffer.set(i, tmp);
+
+					thresSet.set(i, false);
+
+					if (feedbackReceived.get(i) == false) {
+						ArrayList<Double> tmp2 = initThresBuffer.get(i);
+						tmp2.clear();
+						initThresBuffer.set(i, tmp2);
+					}
+				}	
+				
+			}
+			
+			if (variablesInitialized == false) {
+				
+				//TODO: delete this
+			}
+			
+			
+
 		}
 		
 		// =====================================================================
@@ -1363,7 +1358,7 @@ public class StateManager extends BroadcastReceiver {
 	 * and new ones added, update the buffer, threshold... accordingly:
 	 */
 	@SuppressWarnings("unchecked")
-	private void onManageClassesFinished(Context context, String[] prevClassnames) {
+	private void onChangeClassesFinished(Context context, String[] prevClassnames) {
 	
 		Log.i(TAG, "onManageClassesFinished called");
 		
@@ -1383,87 +1378,152 @@ public class StateManager extends BroadcastReceiver {
 		AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
 		Log.i(TAG, "New status: model updated");
 
-		// Broadcast this message, that other activities can rebuild their views:
-		Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
-		context.sendBroadcast(i2);
-		
-		// Create temporary copies of all ArrayLists:
-		ArrayList<Boolean> initThresSetTmp = new ArrayList<Boolean>(initThresSet);
-		ArrayList<Boolean> thresSetTmp = new ArrayList<Boolean>(thresSet);
-		ArrayList<Boolean> feedbackReceivedTmp = new ArrayList<Boolean>(feedbackReceived);
-		ArrayList<Double> thresholdTmp = new ArrayList<Double>(threshold);
-		ArrayList<ArrayList<Double>> initThresBufferTmp = new ArrayList<ArrayList<Double>>(initThresBuffer);
-		ArrayList<ArrayList<Double>> thresBufferTmp = new ArrayList<ArrayList<Double>>(thresBuffer);
-		ArrayList<Double> thresQueriedIntervalTmp = new ArrayList<Double>(thresQueriedInterval);
-		ArrayList<Integer> totalCountTmp = new ArrayList<Integer>(totalCount);
-		
-		// Clear all ArrayLists:
-		initThresSet = new ArrayList<Boolean>();
-		thresSet = new ArrayList<Boolean>();
-		feedbackReceived = new ArrayList<Boolean>();
-		threshold = new ArrayList<Double>();
-		initThresBuffer = new ArrayList<ArrayList<Double>>();
-		thresBuffer = new ArrayList<ArrayList<Double>>();
-		thresQueriedInterval = new ArrayList<Double>();
-		totalCount = new ArrayList<Integer>();
-		
-		// And fill them again in the correct order:
-		for(int i=0; i<newClassnames.length; i++) {
+		/*
+		 *  Check first if the buffers... are already initialized at all (if not, it
+		 *  will be done automatically later...
+		 */
+		if (variablesInitialized == true) {
 			
-			// Index of this element in the String Array of 
-			int idx = ArrayUtils.indexOf(prevClassnames, newClassnames[i]);
+			// Broadcast this message, that other activities can rebuild their views:
+			Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
+			context.sendBroadcast(i2);
 			
-			if (idx == -1) {
-				// If the class is completely new, initialize empty ArrayLists for this class:
-				
-				initThresSet.add(false);
-				thresSet.add(false);
-				feedbackReceived.add(false);
-				threshold.add(-1.0);
-				initThresBuffer.add(new ArrayList<Double>());
-				thresBuffer.add(new ArrayList<Double>());
-				thresQueriedInterval.add(-1.0);
-				totalCount.add(0);
-				
-				Log.i(TAG, "Class " + newClassnames[i] + " was not found in old array");
-				
-			} else {
-				/*
-				 * If the class was already in the previous model, assign the already existing buffers
-				 * and thresholds to the class:
-				 */
-				initThresSet.add(initThresSetTmp.get(idx));
-				thresSet.add(thresSetTmp.get(idx));
-				feedbackReceived.add(feedbackReceivedTmp.get(idx));
-				threshold.add(thresholdTmp.get(idx));
-				initThresBuffer.add((ArrayList<Double>) initThresBufferTmp.get(idx).clone());
-				thresBuffer.add((ArrayList<Double>) thresBufferTmp.get(idx).clone());
-				thresQueriedInterval.add(thresQueriedIntervalTmp.get(idx));
-				totalCount.add(totalCountTmp.get(idx));
-				
-				
-				//TODO: test this!!!!!!!!!!!!!!!! and compare if values are really the same!!!
-				Log.i(TAG, "Name: " + prevClassnames[idx] + " = " + newClassnames[i]);
-				Log.i(TAG, "totalCount: " + totalCount.get(i));
-				Log.i(TAG, "totalCount: " + totalCountTmp.get(idx));
-				Log.i(TAG, "InitThresBufferLength: " + initThresBuffer.get(i).size());
-				Log.i(TAG, "InitThresBufferLength: " + initThresBufferTmp.get(idx).size());
-				Log.i(TAG, "-------------------");
-				
-			}
+			// Create temporary copies of all ArrayLists:
+			ArrayList<Boolean> initThresSetTmp = new ArrayList<Boolean>(initThresSet);
+			ArrayList<Boolean> thresSetTmp = new ArrayList<Boolean>(thresSet);
+			ArrayList<Boolean> feedbackReceivedTmp = new ArrayList<Boolean>(feedbackReceived);
+			ArrayList<Double> thresholdTmp = new ArrayList<Double>(threshold);
+			ArrayList<ArrayList<Double>> initThresBufferTmp = new ArrayList<ArrayList<Double>>(initThresBuffer);
+			ArrayList<ArrayList<Double>> thresBufferTmp = new ArrayList<ArrayList<Double>>(thresBuffer);
+			ArrayList<Double> thresQueriedIntervalTmp = new ArrayList<Double>(thresQueriedInterval);
+			ArrayList<Integer> totalCountTmp = new ArrayList<Integer>(totalCount);
 			
+			// Clear all ArrayLists:
+			initThresSet = new ArrayList<Boolean>();
+			thresSet = new ArrayList<Boolean>();
+			feedbackReceived = new ArrayList<Boolean>();
+			threshold = new ArrayList<Double>();
+			initThresBuffer = new ArrayList<ArrayList<Double>>();
+			thresBuffer = new ArrayList<ArrayList<Double>>();
+			thresQueriedInterval = new ArrayList<Double>();
+			totalCount = new ArrayList<Integer>();
 			
+			// And fill them again in the correct order:
+			for(int i=0; i<newClassnames.length; i++) {
+				
+				// Index of this element in the String Array of 
+				int idx = ArrayUtils.indexOf(prevClassnames, newClassnames[i]);
+				
+				if (idx == -1) {
+					// If the class is completely new, initialize empty ArrayLists for this class:
+					
+					initThresSet.add(false);
+					thresSet.add(false);
+					feedbackReceived.add(false);
+					threshold.add(-1.0);
+					initThresBuffer.add(new ArrayList<Double>());
+					thresBuffer.add(new ArrayList<Double>());
+					thresQueriedInterval.add(-1.0);
+					totalCount.add(0);
+					
+					Log.i(TAG, "Class " + newClassnames[i] + " was not found in old array");
+					
+				} else {
+					/*
+					 * If the class was already in the previous model, assign the already existing buffers
+					 * and thresholds to the class:
+					 */
+					initThresSet.add(initThresSetTmp.get(idx));
+					thresSet.add(thresSetTmp.get(idx));
+					feedbackReceived.add(feedbackReceivedTmp.get(idx));
+					threshold.add(thresholdTmp.get(idx));
+					initThresBuffer.add((ArrayList<Double>) initThresBufferTmp.get(idx).clone());
+					thresBuffer.add((ArrayList<Double>) thresBufferTmp.get(idx).clone());
+					thresQueriedInterval.add(thresQueriedIntervalTmp.get(idx));
+					totalCount.add(totalCountTmp.get(idx));				
+				}
 		}
 		
 		
-		
+		} else { // Initialize the buffers, ... if they are not initialized yet:
+			
+			Globals.readWriteLock.readLock().lock();
+			gmm = new GMM("GMM.json");
+			Globals.readWriteLock.readLock().unlock();
+			
+			// Load data from JSON file from external storage if it already exists:
+			if (Globals.APP_DATA_FILE.exists()) { //TODO: can this happen here???
+				Log.i(TAG, "Loading app data from JSON file");
+				
+				AppData appData = readAppData();
+				initThresSet = appData.get_initThresSet();
+				thresSet = appData.get_thresSet();
+				feedbackReceived = appData.get_feedbackReceived();
+				threshold = appData.get_threshold();
+				initThresBuffer = appData.get_initThresBuffer();
+				thresBuffer = appData.get_thresBuffer();
+				thresQueriedInterval = appData.get_thresQueriedInterval();
+				numQueriesLeft = appData.get_numQueriesLeft();
+				
+				totalCount = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
 
-		
-		
-		
+			} else {
+				/*
+				 *  If it doesn't exists (i.e. at the very first start) initialize variables empty:
+				 *  (same goes for the buffer containing the MFCC values)
+				 */
+				Log.i(TAG, "Initializing empty buffers and thresholds, because no JSON file was created yet");
+				
+				initThresSet = new ArrayList<Boolean>();
+				thresSet = new ArrayList<Boolean>();
+				feedbackReceived = new ArrayList<Boolean>();
+				threshold = new ArrayList<Double>();
+				initThresBuffer = new ArrayList<ArrayList<Double>>();
+				thresBuffer = new ArrayList<ArrayList<Double>>();
+				thresQueriedInterval = new ArrayList<Double>();
+				
+				for(int i=0; i<gmm.get_n_classes(); i++) {
+					initThresSet.add(false);
+					thresSet.add(false);
+					feedbackReceived.add(false);
+					threshold.add(-1.0);
+					initThresBuffer.add(new ArrayList<Double>());
+					thresBuffer.add(new ArrayList<Double>());
+					thresQueriedInterval.add(-1.0);
+				}
+				
+				totalCount = new ArrayList<Integer>();
+				for(int i=0; i<gmm.get_n_classes(); i++) {
+					totalCount.add(0);
+				}
 
+				resetQueriesLeft(context);
 
+				Intent i = new Intent(Globals.CLASS_NAMES_SET);
+				context.sendBroadcast(i);
+				
+			}						
+			
+			// These buffers doesn't need to be taken from the last run:
+			queryBuffer = new ArrayList<Double>();
+			predBuffer = new ArrayList<Integer>();
+			
+			// Save String array of the context classes to preferences:
+			Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
 
+			if (classNamesRequested == true) {
+				Intent i = new Intent(Globals.CLASS_NAMES_SET);
+				context.sendBroadcast(i);
+				classNamesRequested = false;
+			}
+
+			Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
+			
+			variablesInitialized = true;
+			
+		}
+		
+		// Display notification:
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(
 				context).setSmallIcon(R.drawable.ic_launcher)
 				.setContentTitle("Changed model successfully")
@@ -1474,21 +1534,7 @@ public class StateManager extends BroadcastReceiver {
 		NotificationManager manager = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 		manager.notify(Globals.NOTIFICATION_ID_STANDARD,
-				builder.build());
-		
-//		Toast.makeText(context, "Initial classifier loaded", Toast.LENGTH_LONG).show();
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+				builder.build());	
 	}
 	
 	/* 

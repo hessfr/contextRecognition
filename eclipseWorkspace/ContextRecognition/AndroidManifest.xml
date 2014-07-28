@@ -133,9 +133,9 @@
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.SendRawAudio" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModel" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModelGet" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.ManageClasses" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.ManageClassesGet" />
-       	
        	
        	<!-- Register the broadcast receiver and all intent filters -->
        	<receiver android:name="ch.ethz.wearable.contextrecognition.utils.StateManager"
@@ -158,11 +158,10 @@
     			<action android:name="action.connUpdatedModelReceive" />
     			<action android:name="action.connSendRawAudioReceive" />
     			<action android:name="action.connSendInitModelReceive" />
+    			<action android:name="action.connSendInitModelFinish" />
     			<action android:name="action.callManageClasses" />		
     			<action android:name="action.connManageClassesReceive" />
-    			<action android:name="action.connManageClassesFinish" />	
-    			
-    			
+    			<action android:name="action.connManageClassesFinish" />
     			
     			
   			</intent-filter>

@@ -22,28 +22,27 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.app.IntentService;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.NotificationCompat;
+import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
-import com.example.contextrecognition.R;
-
 /*
- * Intent service that regularly checks if the manage classes request is finished on the server and
- * downloads the new classifiers if so
+ * Intent service that regularly checks if the request to create the initial model on the server 
+ * is finished and downloads the new classifiers if so
  */
-public class ManageClassesGet extends IntentService {
 
-	private static final String TAG = "ManageClassesGet";
+public class InitModelGet extends IntentService {
+
+	private static final String TAG = "InitModelGet";
 	
-	public ManageClassesGet() {
-		super("ManageClassesGet");
+	public InitModelGet() {
+		super("InitModelGet");
 		
 		Log.d(TAG, "Constructor");
 		
@@ -52,8 +51,8 @@ public class ManageClassesGet extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 
-		final String filenameOnServer = arg0.getStringExtra(Globals.CONN_MANAGE_CLASSES_GET_FILENAME);
-		final String waitOrNoWait = arg0.getStringExtra(Globals.CONN_MANAGE_CLASSES_GET_WAIT);
+		final String filenameOnServer = arg0.getStringExtra(Globals.CONN_INIT_MODEL_GET_FILENAME);
+		final String waitOrNoWait = arg0.getStringExtra(Globals.CONN_INIT_MODEL_GET_WAIT);
 
 		Log.i(TAG, "onHandleIntent");
 
@@ -78,16 +77,17 @@ public class ManageClassesGet extends IntentService {
 
 			public void run() {
 
-//				ManageClassesGet getReq = new ManageClassesGet();
+				Log.i(TAG, "Waiting for new classifier from server");
+				
 				Boolean resGet = false;
-
+				
 				String[] prevClassnames=null;
 				
 				//Add parameters to URL
 			    List<NameValuePair> par = new LinkedList<NameValuePair>();
 		        par.add(new BasicNameValuePair("filename", filenameOnServer));
 		        String paramString = URLEncodedUtils.format(par, "utf-8");
-		        String URL = Globals.MANAGE_CLASSES_URL + paramString;
+		        String URL = Globals.INIT_CLASSIFIER_URL + paramString;
 		        
 		        //Set timeout parameters:
 		        HttpParams httpParameters = new BasicHttpParams();
@@ -142,14 +142,11 @@ public class ManageClassesGet extends IntentService {
 			    			resGet = true;
 			    		}
 			    		
-
-			    		
 			    	} else {
 			    		Log.e(TAG, "Invalid response received after GET request");
 			    		Log.e(TAG, String.valueOf(response.getStatusLine()));
 
 			    	}
-
 			    	
 			    } catch (UnsupportedEncodingException e) {
 			        e.printStackTrace();
@@ -164,10 +161,25 @@ public class ManageClassesGet extends IntentService {
 					// Model received from the server:
 					Log.i(TAG, "New classifier available on server");
 					
-					Intent i = new Intent(Globals.CONN_MANAGE_CLASSES_FINISH);
-					i.putExtra(Globals.CONN_MANAGE_CLASSES_PREV_CLASSNAMES, prevClassnames);
-					sendBroadcast(i);
+					// Load the classifier temporarily here to store new context classes to preferences:
+					GMM tmpGMM = new GMM("GMM.json");
+					
+					// Save String array of the context classes to preferences:
+					Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, tmpGMM.get_string_array());
+					
+					Log.i(TAG, "Number of context classes: " + tmpGMM.get_n_classes());
+					
+//					Toast.makeText(context, "Initial classifier loaded", Toast.LENGTH_LONG).show();
 
+					// Set status to updated, so that the AudioWorker can load the new classifier
+					AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
+					Log.i(TAG, "New status: model updated");
+
+					// Broadcast this message, that other activities can rebuild their views:
+					Intent i = new Intent(Globals.CONN_INIT_MODEL_FINISH);
+					i.putExtra(Globals.CONN_INIT_MODEL_PREV_CLASSNAMES, prevClassnames);
+					context.sendBroadcast(i);
+					
 					Log.i(TAG, "IntentService finished");
 
 					this.cancel();
@@ -175,6 +187,7 @@ public class ManageClassesGet extends IntentService {
 				}
 
 				if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
+					
 					Log.w(TAG, "Server not responded to GET request intitial model");
 					
 //					Toast.makeText( //-> Toast doesn't work like that! 
@@ -186,13 +199,17 @@ public class ManageClassesGet extends IntentService {
 					this.cancel();
 				}
 
-				Log.i(TAG, "Waiting for new classifier from server");
 			}
 		};
 
 		Timer timer = new Timer();
-		timer.schedule(task, 0, pollingInteval);
+		timer.schedule(task, 0, 20000);	//TODO: reset this to correct values!
 	}
 	
 
 }
+
+
+
+
+

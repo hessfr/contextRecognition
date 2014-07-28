@@ -130,12 +130,7 @@ class RawAudio():
         return "abc" #TODO
         
         
-        
-        
-        
-        
-        
-        
+         
         
         
 class InitClassifier():
@@ -145,7 +140,7 @@ class InitClassifier():
     @cherrypy.expose
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def POST(self):
+    def POST(self, context_classes):
         
         print("--- InitClassifier POST request ---")
 
@@ -156,7 +151,10 @@ class InitClassifier():
 #        
 #        classes_list = string_data.values()
         
-        classes_list = json.loads(cherrypy.request.json)
+        #classes_list = json.loads(cherrypy.request.json)
+        classes_list = json.loads(context_classes) 
+
+        #print(classes_list)
 
         model_exists_result = check_model_exists(classes_list)
         
@@ -167,19 +165,44 @@ class InitClassifier():
             id = str(randint(1e5,1e6))
 
             # Create an id, where the client can get the new classifier when the calculation is done:  
-            filename_new_classifier = str(id) + ".json"            
+            filename_new_classifier = str(id) + ".json"
             
-            # Start training the classifier in the background (list is passed as String and converted back with Regex later):
-            subprocess.Popen(["python", "server_create_initial_model.py", json.dumps(classes_list), filename_new_classifier])
+            valid_classes = []
+            invalid_classes = []
             
-            dir = "classifiers/" + filename_new_classifier
+            for el in classes_list:
+                if (feasibilityCheck(el) == "not_feasible"): 
+                    invalid_classes.append(el)
+                    waitOrNoWait = "no_wait"
+                    
+                elif (feasibilityCheck(el) == "downloaded"):
+                    valid_classes.append(el)
+                    waitOrNoWait = "no_wait"
+                    
+                elif (feasibilityCheck(el) == "feasible"):
+                    valid_classes.append(el)
+                    waitOrNoWait = "wait"
+                
+                else:
+                    print("feasibilityCheck returned invalid result")
+                    waitOrNoWait = "no_wait"
+            
+                # Start training the classifier in the background (list is passed as String and converted back with Regex later):
+                subprocess.Popen(["python", "server_create_initial_model.py", json.dumps(classes_list), filename_new_classifier])
+                
+           
+    
+            #response = {"wait": "wait", "filename": dir}
 
-            response = {"wait": "wait", "filename": dir}
+            # Return new filename and the list of invalid classes:
+            response = {"filename": filename_new_classifier, "wait": waitOrNoWait, "invalid_classes": invalid_classes}
    
         else:
             # The model already exisits and the location of the model can be send to server:
             filename_exisiting = "classifiers/" + model_exists_result
-            response = {"wait": "no_wait", "filename": filename_exisiting}
+            
+            #response = {"wait": "no_wait", "filename": filename_exisiting}
+            response = {"filename": filename_exisiting, "wait": "no_wait", "invalid_classes": []}
             
         return response
         
@@ -189,9 +212,6 @@ class InitClassifier():
         print("--- InitClassifier GET request ---")        
 
         notReadyCode = -1
-
-        # get the filename by removing the first part of the response ('filename=classifiers/625987.json'....)
-        filename = filename.split("=")[1]
 
         if(os.path.isfile(filename)):
             print("Filename " + filename + " found on disk, will be sent to client")
