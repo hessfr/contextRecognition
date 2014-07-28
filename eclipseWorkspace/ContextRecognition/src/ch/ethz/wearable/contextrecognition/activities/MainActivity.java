@@ -513,6 +513,7 @@ public class MainActivity extends ActionBarActivity {
 						    */
 						   if (idx != -1) {
 							   currentGT[idx] = true;
+							   cbStatus.set(idx, true);
 						   }
 						   
 					   } else {
@@ -525,6 +526,7 @@ public class MainActivity extends ActionBarActivity {
 						    */
 						   if (idx != -1) {
 							   currentGT[idx] = false;
+							   cbStatus.set(idx, false);
 						   }
 						   
 					   }

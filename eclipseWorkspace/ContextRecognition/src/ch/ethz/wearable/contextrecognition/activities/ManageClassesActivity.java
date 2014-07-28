@@ -220,6 +220,7 @@ public class ManageClassesActivity extends ActionBarActivity {
 
 									   if (idx != -1) {
 										   currentStatuses.set(idx, true);
+										   cbStatus.set(idx, true);
 									   }
 									   
 								   } else {
@@ -227,6 +228,7 @@ public class ManageClassesActivity extends ActionBarActivity {
 
 									   if (idx != -1) {
 										   currentStatuses.set(idx, false);
+										   cbStatus.set(idx, false);
 									   }
 									   
 								   }
