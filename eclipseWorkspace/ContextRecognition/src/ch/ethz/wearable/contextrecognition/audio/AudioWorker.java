@@ -10,6 +10,7 @@ import org.ejml.data.DenseMatrix64F;
 
 import ch.ethz.wearable.contextrecognition.data.Mfccs;
 import ch.ethz.wearable.contextrecognition.data.PredictionResult;
+import ch.ethz.wearable.contextrecognition.math.Classifier;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;

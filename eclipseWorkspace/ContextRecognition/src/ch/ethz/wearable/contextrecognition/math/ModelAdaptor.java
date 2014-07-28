@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.audio;
+package ch.ethz.wearable.contextrecognition.math;
 
 import java.io.FileWriter;
 import java.io.IOException;

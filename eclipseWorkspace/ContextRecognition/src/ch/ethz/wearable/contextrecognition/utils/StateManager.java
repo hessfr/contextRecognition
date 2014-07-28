@@ -40,8 +40,6 @@ import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
 import ch.ethz.wearable.contextrecognition.activities.ManageClassesActivity;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
-import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor;
-import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor.onModelAdaptionCompleted;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
@@ -50,6 +48,8 @@ import ch.ethz.wearable.contextrecognition.communication.ManageClasses;
 import ch.ethz.wearable.contextrecognition.communication.ManageClassesGet;
 import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
 import ch.ethz.wearable.contextrecognition.data.AppData;
+import ch.ethz.wearable.contextrecognition.math.ModelAdaptor;
+import ch.ethz.wearable.contextrecognition.math.ModelAdaptor.onModelAdaptionCompleted;
 
 import com.example.contextrecognition.R;
 import com.google.gson.Gson;

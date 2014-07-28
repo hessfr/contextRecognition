@@ -14,8 +14,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import ch.ethz.wearable.contextrecognition.audio.ModelAdaptor.onModelAdaptionCompleted;
 import ch.ethz.wearable.contextrecognition.communication.GetKnownClasses;
+import ch.ethz.wearable.contextrecognition.math.ModelAdaptor.onModelAdaptionCompleted;
 
 public class DialogBuilder {
 	
