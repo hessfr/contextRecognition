@@ -631,7 +631,7 @@ public class StateManager extends BroadcastReceiver {
 
 					
 					NotificationCompat.Builder builder = new NotificationCompat.Builder(
-							context).setSmallIcon(R.drawable.ic_launcher)
+							context).setSmallIcon(R.drawable.ic_action_warning)
 							.setContentTitle("Classes could not be added")
 							.setContentText(contentText)
 							.setAutoCancel(true)
@@ -692,7 +692,7 @@ public class StateManager extends BroadcastReceiver {
 				Log.w(TAG, "Transferring or raw audio data failed. Sending notification to user");
 				
 				NotificationCompat.Builder builder = new NotificationCompat.Builder(
-						context).setSmallIcon(R.drawable.ic_launcher)
+						context).setSmallIcon(R.drawable.ic_action_warning)
 						.setContentTitle("Transferring audio data not successful")
 						.setAutoCancel(true)
 						.setWhen(System.currentTimeMillis())
@@ -735,7 +735,7 @@ public class StateManager extends BroadcastReceiver {
 					}
 					
 					NotificationCompat.Builder builder = new NotificationCompat.Builder(
-							context).setSmallIcon(R.drawable.ic_launcher)
+							context).setSmallIcon(R.drawable.ic_action_warning)
 							.setContentTitle("Classes could not be added")
 							.setContentText(contentText)
 							.setAutoCancel(true)
@@ -856,7 +856,7 @@ public class StateManager extends BroadcastReceiver {
 				Log.w(TAG, "Could not reach server");
 
 				NotificationCompat.Builder builder = new NotificationCompat.Builder(
-						context).setSmallIcon(R.drawable.ic_launcher)
+						context).setSmallIcon(R.drawable.ic_action_warning)
 						.setContentTitle("Server problems: new context class could not be added, "
 								+ "please try again later")
 						.setAutoCancel(true)
@@ -891,7 +891,7 @@ public class StateManager extends BroadcastReceiver {
 				Log.w(TAG, "Could not reach server");
 
 				NotificationCompat.Builder builder = new NotificationCompat.Builder(
-						context).setSmallIcon(R.drawable.ic_launcher)
+						context).setSmallIcon(R.drawable.ic_action_warning)
 						.setContentTitle("Server problems: new context class could not be added, "
 								+ "please try again later")
 						.setAutoCancel(true)
@@ -1170,7 +1170,7 @@ public class StateManager extends BroadcastReceiver {
 		PendingIntent dismiss = PendingIntent.getBroadcast(context, 0, dismissIntent, 0);
 		
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(
-				context).setSmallIcon(R.drawable.ic_launcher)
+				context).setSmallIcon(R.drawable.ic_action_help)
 				.setContentTitle("What's your current context?")
 				.setAutoCancel(true)
 				.setWhen(System.currentTimeMillis())
@@ -1525,7 +1525,7 @@ public class StateManager extends BroadcastReceiver {
 		
 		// Display notification:
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(
-				context).setSmallIcon(R.drawable.ic_launcher)
+				context).setSmallIcon(R.drawable.ic_stat_confirm_black)
 				.setContentTitle("Changed model successfully")
 				.setAutoCancel(true)
 				.setWhen(System.currentTimeMillis())
