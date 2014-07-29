@@ -344,12 +344,10 @@ public class ManageClassesActivity extends ActionBarActivity {
 						Log.i(TAG, "New model will be requested from server as selected context"
 								+ "classes are different from the default ones");
 						
-						//TODO: create server request(s) for this xxxxxxxxxxxxxxxxxxxxxxxx
-						
-						//Intent i = new Intent(context, InitModel.class);
-						//i.putExtra(Globals.CONN_INIT_MODEL_CLASSES, classesToRequest);
-						//context.startService(i);
-						
+						//TODO: check if this is working:
+						Intent i = new Intent(context, InitModel.class);
+						i.putExtra(Globals.CONN_INIT_MODEL_CLASSES, classesToRequest);
+						context.startService(i);	
 						
 					} else {
 						Log.i(TAG, "Context classes not changed, using the default classifier");

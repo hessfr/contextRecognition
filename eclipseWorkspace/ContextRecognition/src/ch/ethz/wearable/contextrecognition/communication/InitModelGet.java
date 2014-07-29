@@ -56,14 +56,14 @@ public class InitModelGet extends IntentService {
 
 		Log.i(TAG, "onHandleIntent");
 
-		long pollingInteval;
+		long pollingInterval;
 		long maxRetry;
 		
 		if (waitOrNoWait.equals(Globals.NO_WAIT)) {
-			pollingInteval = Globals.POLLING_INTERVAL_DEFAULT;
+			pollingInterval = Globals.POLLING_INTERVAL_DEFAULT;
 			maxRetry = Globals.MAX_RETRY_DEFAULT;
 		} else {
-			pollingInteval = Globals.POLLING_INTERVAL_INITIAL_MODEL;
+			pollingInterval = Globals.POLLING_INTERVAL_INITIAL_MODEL;
 			maxRetry = Globals.MAX_RETRY_INITIAL_MODEL;
 		}
 		
@@ -71,7 +71,7 @@ public class InitModelGet extends IntentService {
 		
 		// Now check periodically if the computation on server is finished
 		CustomTimerTask task = new CustomTimerTask(context, filenameOnServer, 
-				pollingInteval, maxRetry, null, null, null) {
+				pollingInterval, maxRetry, null, null, null) {
 
 			private int counter;
 
@@ -203,7 +203,7 @@ public class InitModelGet extends IntentService {
 		};
 
 		Timer timer = new Timer();
-		timer.schedule(task, 0, 20000);	//TODO: reset this to correct values!
+		timer.schedule(task, 0, pollingInterval);
 	}
 	
 

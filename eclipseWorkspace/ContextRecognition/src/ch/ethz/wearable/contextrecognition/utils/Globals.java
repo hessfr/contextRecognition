@@ -111,9 +111,10 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-//	public static final String IP = "192.168.0.23";
-	public static final String IP = "10.2.119.175";
-//	public static final String IP = "192.168.0.68";
+//	public static final String IP = "192.168.0.23"; // wifi home
+	public static final String IP = "10.2.119.175"; // wifi ETH
+//	public static final String IP = "192.168.0.68"; // wifi home
+//	public static final String IP = "129.132.131.71"; // server eth
 	
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/";

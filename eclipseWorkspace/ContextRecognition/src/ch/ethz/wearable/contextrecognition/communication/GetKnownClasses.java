@@ -22,8 +22,8 @@ import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
- * This request initiates the server to check if it is feasible to train the given context class name, i.e.
- * if there are enough sound file available on freesound to create a trained classifier
+ * This request returns a list of all classes, that are known to the server (i.e. that were
+ * already trained previously). Used to suggest class names when adding a custom context class
  */
 
 public class GetKnownClasses extends AsyncTask<String, Void, String[]> {
@@ -38,9 +38,7 @@ public class GetKnownClasses extends AsyncTask<String, Void, String[]> {
 		Log.i(TAG, "GetKnownClasses called");
 
 		String URL = Globals.GET_KNOWN_CLASSES_URL;
-
-		// Log.i(TAG, URL);
-
+		
 		// Set timeout parameters:
 		HttpParams httpParameters = new BasicHttpParams();
 		int timeoutConnection = 2000;

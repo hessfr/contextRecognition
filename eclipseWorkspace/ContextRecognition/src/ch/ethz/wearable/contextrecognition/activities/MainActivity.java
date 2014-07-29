@@ -34,6 +34,7 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
@@ -325,10 +326,22 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 				
-				Intent intent = new Intent(Globals.CALL_CONTEXT_SELECTION_INTENT);
-    			Bundle bundle = new Bundle();
-    			intent.putExtras(bundle);
-    			sendBroadcast(intent);
+				if (AppStatus.getInstance().get() != AppStatus.getInstance().MODEL_ADAPTION) {
+					
+					Intent intent = new Intent(Globals.CALL_CONTEXT_SELECTION_INTENT);
+	    			Bundle bundle = new Bundle();
+	    			intent.putExtras(bundle);
+	    			sendBroadcast(intent);
+	    			
+				} else {
+					
+					Toast.makeText(context, (String) "Please wait until previous model adaption finished",
+							Toast.LENGTH_LONG).show();
+					
+					Log.i(TAG, "Model adaption request ignored, as previous model adaption still in progress");
+				}
+				
+
 			}
 
 		});
@@ -338,11 +351,21 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
 
-				Intent intent = new Intent(Globals.MODEL_ADAPTION_EXISTING_INTENT);
-    			Bundle bundle = new Bundle();
-    			bundle.putInt(Globals.LABEL, 1);
-    			intent.putExtras(bundle);
-    			sendBroadcast(intent);
+				if (AppStatus.getInstance().get() != AppStatus.getInstance().MODEL_ADAPTION) {
+					
+					Intent intent = new Intent(Globals.MODEL_ADAPTION_EXISTING_INTENT);
+	    			Bundle bundle = new Bundle();
+	    			bundle.putInt(Globals.LABEL, 1);
+	    			intent.putExtras(bundle);
+	    			sendBroadcast(intent);
+	    			
+				} else {
+					
+					Toast.makeText(context, (String) "Please wait until previous model adaption finished",
+							Toast.LENGTH_LONG).show();
+					
+					Log.i(TAG, "Model adaption request ignored, as previous model adaption still in progress");
+				}
 			}
 		});
 

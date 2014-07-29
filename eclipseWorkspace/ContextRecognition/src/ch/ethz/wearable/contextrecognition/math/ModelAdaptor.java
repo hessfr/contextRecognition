@@ -32,9 +32,7 @@ import ch.ethz.wearable.contextrecognition.utils.GMM;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-/*
- * GMM updatedGMM = inst.adaptGMM(gmm, X_train, 0, 3);
- */
+
 public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	/*
 	 * 1. argument: type of parameter 2. argument: type of progress unit
@@ -109,6 +107,8 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		
 		// Save the new GMM to the SD-card and reset the app status to initializing
 		newGMM.dumpJSON();
+		
+		Log.i(TAG, "New status: model updated");
 		
 		AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
 	}

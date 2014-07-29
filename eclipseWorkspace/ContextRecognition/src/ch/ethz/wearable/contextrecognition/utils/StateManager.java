@@ -17,13 +17,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.NotificationManager;
@@ -32,6 +32,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
@@ -44,7 +46,6 @@ import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
 import ch.ethz.wearable.contextrecognition.communication.InitModelGet;
-import ch.ethz.wearable.contextrecognition.communication.ManageClasses;
 import ch.ethz.wearable.contextrecognition.communication.ManageClassesGet;
 import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
 import ch.ethz.wearable.contextrecognition.data.AppData;
@@ -1006,68 +1007,94 @@ public class StateManager extends BroadcastReceiver {
 		public void onModelAdaptionCompleted(Context context, GMM newGMM) {
 			
 			Log.i(TAG, "Model adation completed");
-
+			
 			Toast.makeText(context,
 					(String) "Model adaption completed", Toast.LENGTH_LONG)
 					.show();
+			
+			
 		}
 	};
 	
 	private void callModelAdaption(Context context, int label) {
 
-		// Log the AL feedback:
-		if (waitingForFeedback == true) {
-			appendToALLog(true, label, currentPrediction, false, false);
-		} else {
-			appendToALLog(true, label, currentPrediction, false, true);
-		}
-		
-		// Find index of the conversation class, as we do not want to adapt our model for these:
-//		int conversationIdx = -1;
-//		for(int i=0; i<gmm.get_n_classes(); i++) {
-//			if (gmm.get_class_name(i).equals("Conversation")) {
-//				conversationIdx = i;
+		if (AppStatus.getInstance().get() != AppStatus.getInstance().MODEL_ADAPTION) {
+			
+			AppStatus.getInstance().set(AppStatus.getInstance().MODEL_ADAPTION);
+			Log.i(TAG, "New status: model adaption");
+			
+			// Find index of the conversation class, as we do not want to adapt our model for these:
+//			int conversationIdx = -1;
+//			for(int i=0; i<gmm.get_n_classes(); i++) {
+//				if (gmm.get_class_name(i).equals("Conversation")) {
+//					conversationIdx = i;
+//				}
 //			}
-//		}
-		
-//		if (label != conversationIdx) {
 			
-			Log.i(TAG, "Model adaption called for class " + String.valueOf(label));
+//			if (label != conversationIdx) {
 			
-			waitingForFeedback = false;
-			
-			new ModelAdaptor(buffer, label, listener).execute(context);
-			
-			// Clear all buffer values etc.
-				
-			feedbackReceived.set(label, true);
-			
-			// Calculate first part of the new threshold
-			thresQueriedInterval.set(label, tmpQueryCrit);
-			
-			// Flush the buffers
-			queryBuffer.clear();
-			predBuffer.clear();
-			for(int i=0; i<gmm.get_n_classes(); i++) {
-				ArrayList<Double> tmp = thresBuffer.get(i);
-				tmp.clear();
-				thresBuffer.set(i, tmp);
-				
-				thresSet.set(i, false);
-				
-				if (feedbackReceived.get(i) == false) {
-					ArrayList<Double> tmp2 = initThresBuffer.get(i);
-					tmp2.clear();
-					initThresBuffer.set(i, tmp2);
+				// Log the AL feedback:
+				if (waitingForFeedback == true) {
+					appendToALLog(true, label, currentPrediction, false, false);
+				} else {
+					appendToALLog(true, label, currentPrediction, false, true);
 				}
-			}
+				
+				Log.i(TAG, "Model adaption called for class " + String.valueOf(label));
+				
+				waitingForFeedback = false;
+				
+				
+				
+				
+//				new ModelAdaptor(buffer, label, listener).execute(context);
+				
+				
+				executeModelAdaption(context, buffer, label, listener); //TODO
+				
+				
+				
+				
+				
+				
+				// Clear all buffer values etc.
+					
+				feedbackReceived.set(label, true);
+				
+				// Calculate first part of the new threshold
+				thresQueriedInterval.set(label, tmpQueryCrit);
+				
+				// Flush the buffers
+				queryBuffer.clear();
+				predBuffer.clear();
+				for(int i=0; i<gmm.get_n_classes(); i++) {
+					ArrayList<Double> tmp = thresBuffer.get(i);
+					tmp.clear();
+					thresBuffer.set(i, tmp);
+					
+					thresSet.set(i, false);
+					
+					if (feedbackReceived.get(i) == false) {
+						ArrayList<Double> tmp2 = initThresBuffer.get(i);
+						tmp2.clear();
+						initThresBuffer.set(i, tmp2);
+					}
+				}
 
-			Toast.makeText(context, (String) "Model is being adapted",
+				Toast.makeText(context, (String) "Model is being adapted",
+						Toast.LENGTH_LONG).show();
+				
+//			} else {
+//				Log.i(TAG, "Conversation class will not be incorporated into our model");
+//			}
+		} else {
+			Toast.makeText(context, (String) "Please wait until previous model adaption finished",
 					Toast.LENGTH_LONG).show();
 			
-//		} else {
-//			Log.i(TAG, "Conversation class will not be incorporated into our model");
-//		}
+			Log.i(TAG, "Model adaption request ignored, as previous model adaption still in progress");
+		}
+		
+
 	}
 	
 	/*
@@ -1659,5 +1686,20 @@ public class StateManager extends BroadcastReceiver {
 			
 		}
 	}
+	
+	/*
+	 * Allow parallel execution for the AsyncTask
+	 * 
+	 * Code similar to http://stackoverflow.com/questions/4068984/running-multiple-asynctasks-at-the-same-time-not-possible/13800208#13800208
+	 */
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB) // API 11
+	public static <T> void executeModelAdaption(Context context, ArrayList<double[]> buffer, int label,
+			onModelAdaptionCompleted listener) {
+		ModelAdaptor modelAdaptor = new ModelAdaptor(buffer, label, listener);
+	    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+	    	modelAdaptor.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, context);
+	    else
+	    	modelAdaptor.execute(context);
+	} 
 	
 }

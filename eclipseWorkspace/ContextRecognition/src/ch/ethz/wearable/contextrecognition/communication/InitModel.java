@@ -205,7 +205,7 @@ public class InitModel extends IntentService {
 			}
 		};
 		Timer timer = new Timer();
-		timer.schedule(task, 0, 10000); //TODO: change back to correct value!!!
+		timer.schedule(task, 0, pollingInterval);
 		
 
 	}
