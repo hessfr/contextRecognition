@@ -168,10 +168,10 @@ public class MainActivity extends ActionBarActivity {
 			
 			createListView(contextClasses);
 			
-		} else {
+		} else { //TODO: do we still need this??
 			//Send broadcast to request class names:
 			
-			Log.i(TAG, "contextClasses string array inthe preferences was empty, so StateManager is push to prefs again");
+			Log.i(TAG, "ContextClasses string array in the preferences was empty, so StateManager is push to prefs again");
 			
 			Intent i3 = new Intent(Globals.REQUEST_CLASS_NAMES);
 			context.sendBroadcast(i3);
@@ -203,6 +203,15 @@ public class MainActivity extends ActionBarActivity {
 			startService(i);
 			AppStatus.getInstance().set(AppStatus.INIT);
 			Log.i(TAG, "New status: init");
+		}
+		
+		String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+		if (tmpStringArray != null) {
+
+			contextClasses = tmpStringArray;
+
+			createListView(contextClasses);
+
 		}
 	}
 	
@@ -303,10 +312,8 @@ public class MainActivity extends ActionBarActivity {
      * Launch manage classes activity
      * */
     private void callManageClasses() {
-		Intent intent = new Intent(Globals.CALL_MANAGE_CLASSES_INTENT);
-		Bundle bundle = new Bundle();
-		intent.putExtras(bundle);
-		sendBroadcast(intent);
+        Intent i = new Intent(MainActivity.this, ManageClassesActivity.class);
+        startActivity(i);
     }
     /**
      * Launch Shutdown activity to close app and stop recording
@@ -331,10 +338,14 @@ public class MainActivity extends ActionBarActivity {
 				
 				if (AppStatus.getInstance().get() != AppStatus.getInstance().MODEL_ADAPTION) {
 					
-					Intent intent = new Intent(Globals.CALL_CONTEXT_SELECTION_INTENT);
-	    			Bundle bundle = new Bundle();
-	    			intent.putExtras(bundle);
-	    			sendBroadcast(intent);
+//					Intent intent = new Intent(Globals.CALL_CONTEXT_SELECTION_INTENT);
+//	    			Bundle bundle = new Bundle();
+//	    			intent.putExtras(bundle);
+//	    			sendBroadcast(intent);
+					
+					Intent i = new Intent(MainActivity.this, ContextSelection.class);
+					startActivity(i);
+					
 	    			
 				} else {
 					

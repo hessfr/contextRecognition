@@ -505,17 +505,16 @@ public class StateManager extends BroadcastReceiver {
 
 				requestNewClassFromServer(context, newClassName);
 				
-			} else if (intent.getAction().equals(Globals.CALL_CONTEXT_SELECTION_INTENT)) {
-				
-				callContextSelectionActivity(context);
-				
-			}
-
-			else if (intent.getAction().equals(Globals.CALL_MANAGE_CLASSES_INTENT)) {
-
-				callManageClassesActivity(context);
-
-			}
+			} 
+//			else if (intent.getAction().equals(Globals.CALL_CONTEXT_SELECTION_INTENT)) {
+//				callContextSelectionActivity(context);
+//			}
+//
+//			else if (intent.getAction().equals(Globals.CALL_MANAGE_CLASSES_INTENT)) {
+//
+//				callManageClassesActivity(context);
+//
+//			}
 
 		}
 		
@@ -935,26 +934,6 @@ public class StateManager extends BroadcastReceiver {
 				
 				onNewClassIncorporated(context);
 
-				/*
-				 *  If the feedback is a response to a query the system sent out, clear all buffer values
-				 *  immediately (even before we actually incorporate the new class into the model):
-				 */
-				// Flush the buffers...
-				queryBuffer.clear();
-				predBuffer.clear();
-				for (int i = 0; i < gmm.get_n_classes(); i++) {
-					ArrayList<Double> tmp = thresBuffer.get(i);
-					tmp.clear();
-					thresBuffer.set(i, tmp);
-
-					thresSet.set(i, false);
-
-					if (feedbackReceived.get(i) == false) {
-						ArrayList<Double> tmp2 = initThresBuffer.get(i);
-						tmp2.clear();
-						initThresBuffer.set(i, tmp2);
-					}
-				}
 			} else {
 				
 				Log.e(TAG, ""); //TODO
@@ -1116,84 +1095,92 @@ public class StateManager extends BroadcastReceiver {
 
 	}
 	
-	/*
-	 * Go to the context selection activity
-	 */
-	public void callContextSelectionActivity(Context context) {		
-		
-		Intent i=null;
-		
-		if (gmm != null) {
-			if (gmm.get_string_array().length > 0) {
-				i = new Intent(context, ContextSelection.class);
-				Bundle b = new Bundle();
-				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
-				i.putExtras(b);
-				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
-				context.startActivity(i);
-			}
-			
-		} else {
-			// We cannot start ContextSelection activity if class names not yet available
-			i = null;
-
-			Log.w(TAG,
-					"Not changing to ContextSelection activity, as class names not available yet.");
-		}
-	}
+// outdated:
+//	/*
+//	 * Go to the context selection activity
+//	 */
+//	public void callContextSelectionActivity(Context context) {		
+//		
+//		Intent i=null;
+//		
+//		if (gmm != null) {
+//			if (gmm.get_string_array().length > 0) {
+//				i = new Intent(context, ContextSelection.class);
+//				Bundle b = new Bundle();
+//				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
+//				i.putExtras(b);
+//				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
+//				context.startActivity(i);
+//			}
+//			
+//		} else {
+//			// We cannot start ContextSelection activity if class names not yet available
+//			i = null;
+//
+//			Log.w(TAG,
+//					"Not changing to ContextSelection activity, as class names not available yet.");
+//		}
+//	}
+//	
 	
-	/*
-	 * Only return intent to the context selection activity (for pending intent of  the notification)
-	 */
-	public Intent getContextSelectionActivity(Context context) {		
-		
-		Intent i=null;
-		
-		if (gmm != null) {
-			if (gmm.get_string_array().length > 0) {
-				i = new Intent(context, ContextSelection.class);
-				Bundle b = new Bundle();
-				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
-				i.putExtras(b);
-				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
-			}
-			
-		} else {
-			// We cannot start ContextSelection activity if class names not yet available
-			i = null;
+// outdated:
+//	/*
+//	 * Only return intent to the context selection activity (for pending intent of  the notification)
+//	 */
+//	public Intent getContextSelectionActivity(Context context) {		
+//		
+//		Intent i = new Intent(context, ContextSelection.class);
+//		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//		context.startActivity(i);
+//		
+//		Intent i=null;
+//		
+//		if (gmm != null) {
+//			if (gmm.get_string_array().length > 0) {
+//				i = new Intent(context, ContextSelection.class);
+//				Bundle b = new Bundle();
+//				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
+//				i.putExtras(b);
+//				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
+//			}
+//			
+//		} else {
+//			// We cannot start ContextSelection activity if class names not yet available
+//			i = null;
+//
+//			Log.w(TAG,
+//					"Not changing to ContextSelection activity, as class names not available yet.");
+//		}
+//		
+//		return i;
+//	}
 
-			Log.w(TAG,
-					"Not changing to ContextSelection activity, as class names not available yet.");
-		}
-		
-		return i;
-	}
-	
-	/*
-	 * Go to the manage classes activity
-	 */
-	public void callManageClassesActivity(Context context) {		
-		
-		Intent i=null;
-		
-		if (gmm != null) {
-			if (gmm.get_string_array().length > 0) {
-				i = new Intent(context, ManageClassesActivity.class);
-				Bundle b = new Bundle();
-				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
-				i.putExtras(b);
-				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
-				context.startActivity(i);
-			}
-			
-		} else {
-			// We cannot start ContextSelection activity if class names not yet available
-			i = null;
-
-			Log.w(TAG,
-					"Not changing to manage classes activity, as class names not available yet.");
-		}
-	}
+// outdated:
+//	/*
+//	 * Go to the manage classes activity
+//	 */
+//	public void callManageClassesActivity(Context context) {		
+//		
+//		Intent i=null;
+//		
+//		if (gmm != null) {
+//			if (gmm.get_string_array().length > 0) {
+//				i = new Intent(context, ManageClassesActivity.class);
+//				Bundle b = new Bundle();
+//				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
+//				i.putExtras(b);
+//				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
+//				context.startActivity(i);
+//			}
+//			
+//		} else {
+//			// We cannot start ContextSelection activity if class names not yet available
+//			i = null;
+//
+//			Log.w(TAG,
+//					"Not changing to manage classes activity, as class names not available yet.");
+//		}
+//	}
 	
 	/*
 	 * Initiate request of the new class by classing the feasibility check. Is this check is passed,
@@ -1224,11 +1211,17 @@ public class StateManager extends BroadcastReceiver {
 				.setVibrate(vibratePattern)
 				.addAction(R.drawable.ic_stat_dismiss, "Dismiss", dismiss);
 		
-		Intent notificationIntent = getContextSelectionActivity(context);
-		if (notificationIntent == null) {
-			Log.e(TAG, "Notification intent could not be initialized, as callContextSelectionActivity returned null");
-			return;
-		}
+		
+		
+		Intent i = new Intent(context, ContextSelection.class);
+		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		
+		Intent notificationIntent = i;
+		
+//		if (notificationIntent == null) {
+//			Log.e(TAG, "Notification intent could not be initialized, as callContextSelectionActivity returned null");
+//			return;
+//		}
 
 		
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
@@ -1393,10 +1386,39 @@ public class StateManager extends BroadcastReceiver {
 		AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
 		Log.i(TAG, "New status: model updated");
 		
+		// Flush the buffers...
+		queryBuffer.clear();
+		predBuffer.clear();
+		for (int i = 0; i < tmpGMM.get_n_classes(); i++) {
+			ArrayList<Double> tmp = thresBuffer.get(i);
+			tmp.clear();
+			thresBuffer.set(i, tmp);
+
+			thresSet.set(i, false);
+
+			if (feedbackReceived.get(i) == false) {
+				ArrayList<Double> tmp2 = initThresBuffer.get(i);
+				tmp2.clear();
+				initThresBuffer.set(i, tmp2);
+			}
+		}
 		
 		// Broadcast this message, that other activities can rebuild their views:
 		Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
 		context.sendBroadcast(i2);
+		
+		// Display notification:
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(
+				context).setSmallIcon(R.drawable.ic_stat_confirm)
+				.setContentTitle("Changed model successfully")
+				.setAutoCancel(true)
+				.setWhen(System.currentTimeMillis())
+				.setTicker("Changed model successfully");
+
+		NotificationManager manager = (NotificationManager) context
+				.getSystemService(Context.NOTIFICATION_SERVICE);
+		manager.notify(Globals.NOTIFICATION_ID_STANDARD,
+				builder.build());	
 	}
 	
 	/*
@@ -1429,11 +1451,7 @@ public class StateManager extends BroadcastReceiver {
 		 *  will be done automatically later...
 		 */
 		if (variablesInitialized == true) {
-			
-			// Broadcast this message, that other activities can rebuild their views:
-			Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
-			context.sendBroadcast(i2);
-			
+					
 			// Create temporary copies of all ArrayLists:
 			ArrayList<Boolean> initThresSetTmp = new ArrayList<Boolean>(initThresSet);
 			ArrayList<Boolean> thresSetTmp = new ArrayList<Boolean>(thresSet);
@@ -1514,11 +1532,7 @@ public class StateManager extends BroadcastReceiver {
 			predBuffer.clear();			
 			
 		
-		} else { // Initialize the buffers, ... if they are not initialized yet:
-			
-			Globals.readWriteLock.readLock().lock();
-			gmm = new GMM("GMM.json");
-			Globals.readWriteLock.readLock().unlock();
+		} else { // Initialize the buffers etc. if they are not initialized yet:
 			
 			// Load data from JSON file from external storage if it already exists:
 			if (Globals.APP_DATA_FILE.exists()) { //TODO: can this happen here???
@@ -1551,7 +1565,7 @@ public class StateManager extends BroadcastReceiver {
 				thresBuffer = new ArrayList<ArrayList<Double>>();
 				thresQueriedInterval = new ArrayList<Double>();
 				
-				for(int i=0; i<gmm.get_n_classes(); i++) {
+				for(int i=0; i<tmpGMM.get_n_classes(); i++) {
 					initThresSet.add(false);
 					thresSet.add(false);
 					feedbackReceived.add(false);
@@ -1562,14 +1576,11 @@ public class StateManager extends BroadcastReceiver {
 				}
 				
 				totalCount = new ArrayList<Integer>();
-				for(int i=0; i<gmm.get_n_classes(); i++) {
+				for(int i=0; i<tmpGMM.get_n_classes(); i++) {
 					totalCount.add(0);
 				}
 
 				resetQueriesLeft(context);
-
-				Intent i = new Intent(Globals.CLASS_NAMES_SET);
-				context.sendBroadcast(i);
 				
 			}						
 			
@@ -1578,19 +1589,21 @@ public class StateManager extends BroadcastReceiver {
 			predBuffer = new ArrayList<Integer>();
 			
 			// Save String array of the context classes to preferences:
-			Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
+			Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, tmpGMM.get_string_array());
 
 			if (classNamesRequested == true) {
-				Intent i = new Intent(Globals.CLASS_NAMES_SET);
-				context.sendBroadcast(i);
 				classNamesRequested = false;
 			}
 
-			Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
+			Log.i(TAG, "Number of context classes: " + tmpGMM.get_n_classes());
 			
 			variablesInitialized = true;
 			
 		}
+		
+		// Broadcast this message, that other activities can rebuild their views:
+		Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
+		context.sendBroadcast(i2);
 		
 		// Display notification:
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(

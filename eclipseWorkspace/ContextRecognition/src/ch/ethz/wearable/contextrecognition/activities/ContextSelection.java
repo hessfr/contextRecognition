@@ -28,8 +28,10 @@ public class ContextSelection extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Bundle b = getIntent().getExtras();
-        classNames = b.getStringArray(Globals.CLASS_NAMES);     
+//        Bundle b = getIntent().getExtras();
+//        classNames = b.getStringArray(Globals.CLASS_NAMES);     
+        
+        classNames = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
         
 		if (classNames != null) {
 			// Add the "Define Own Context Class" to the bottom of the list:

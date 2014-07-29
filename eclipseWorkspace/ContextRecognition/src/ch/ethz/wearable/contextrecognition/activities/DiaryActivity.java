@@ -25,6 +25,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.echo.holographlibrary.PieGraph;
@@ -60,7 +61,15 @@ public class DiaryActivity extends ActionBarActivity {
 
         legend = (ListView) findViewById(R.id.listView1);
         
-        createChart(totalCounts, contextClasses);
+        if (contextClasses.length == totalCounts.length) {
+        	createChart(totalCounts, contextClasses);
+        } else {
+        	Log.w(TAG, "Diary activity not opened, because new classes not fully incorporated yet");
+			Toast.makeText(this, (String) "Please wait until new class incorporated",
+					Toast.LENGTH_LONG).show();
+        	finish();
+        }
+        
 
     }
     

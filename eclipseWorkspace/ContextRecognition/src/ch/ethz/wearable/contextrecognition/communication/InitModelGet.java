@@ -58,7 +58,7 @@ public class InitModelGet extends IntentService {
 
 		long pollingInterval;
 		long maxRetry;
-		long delay = 1000; /*Give the server 1 second time after the 
+		long delay = 2000; /*Give the server 2 seconds time after the 
 		first request, so that we don't have to wait if the model was already trained before*/
 		
 		if (waitOrNoWait.equals(Globals.NO_WAIT)) {
