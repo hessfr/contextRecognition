@@ -362,8 +362,11 @@ public class StateManager extends BroadcastReceiver {
 							
 							//Log.i(TAG,"Time since last feedback: " + (System.currentTimeMillis() - prevTime));
 
-								if ((queryCrit > threshold.get(currentPrediction)) && (waitingForFeedback == false) && (numQueriesLeft > 0) &&
-										((System.currentTimeMillis() - prevTime) > Globals.minBreak)) {
+								if ((queryCrit > threshold.get(currentPrediction)) && 
+										(waitingForFeedback == false) && 
+										(numQueriesLeft > 0) &&
+										((System.currentTimeMillis() - prevTime) > Globals.minBreak) && 
+										(AppStatus.getInstance().get() != AppStatus.getInstance().MODEL_ADAPTION)) {
 									
 									Log.i(TAG, "Threshold exceeded, user queried for current context");
 
