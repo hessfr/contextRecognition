@@ -450,6 +450,14 @@ public class StateManager extends BroadcastReceiver {
 					
 							prevPredictionString = predictionString;
 						}
+						
+						// Broadcast the current entropy value (for debugging only)
+						Intent i = new Intent(Globals.PREDICTION_ENTROPY_INTENT);
+						Bundle b = new Bundle();
+						b.putDouble(Globals.PREDICTION_ENTROPY_VALUE, currentEntropy);
+						i.putExtras(b);
+						context.sendBroadcast(i);
+						
 					} else {
 						
 						predictionString = Globals.SILENCE; 
@@ -666,6 +674,8 @@ public class StateManager extends BroadcastReceiver {
 			
 			onChangeClassesFinished(context, prevClassnames);
 			
+			// TODO: Move this into onChangeClassesFinished method:
+			/*
 			// Flush buffers:
 			queryBuffer.clear();
 			predBuffer.clear();
@@ -681,7 +691,9 @@ public class StateManager extends BroadcastReceiver {
 					tmp2.clear();
 					initThresBuffer.set(i, tmp2);
 				}
-			}			
+			}
+			*/	
+
 		}
 		
 		if (intent.getAction().equals(Globals.CONN_SEND_RAW_AUDIO_RECEIVE)) {
@@ -770,6 +782,9 @@ public class StateManager extends BroadcastReceiver {
 			
 			onChangeClassesFinished(context, prevClassnames);
 			
+			//TODO: Move this into onChangeClassesFinished method:
+			
+			/*
 			// Flush buffers:
 			if (variablesInitialized == true) {
 				
@@ -795,6 +810,7 @@ public class StateManager extends BroadcastReceiver {
 				
 				//TODO: delete this
 			}
+			*/
 			
 			
 
@@ -1441,12 +1457,17 @@ public class StateManager extends BroadcastReceiver {
 			// And fill them again in the correct order:
 			for(int i=0; i<newClassnames.length; i++) {
 				
-				// Index of this element in the String Array of 
+				/*
+				 *  Index of this element in the String Array of the previous classes:
+				 *  
+				 *  i -> index in the new classes
+				 *  
+				 *  idx -> index in the old classes (= -1 if it doesn't exist)
+				 */
 				int idx = ArrayUtils.indexOf(prevClassnames, newClassnames[i]);
 				
 				if (idx == -1) {
 					// If the class is completely new, initialize empty ArrayLists for this class:
-					
 					initThresSet.add(false);
 					thresSet.add(false);
 					feedbackReceived.add(false);
@@ -1472,8 +1493,26 @@ public class StateManager extends BroadcastReceiver {
 					thresQueriedInterval.add(thresQueriedIntervalTmp.get(idx));
 					totalCount.add(totalCountTmp.get(idx));				
 				}
-		}
-		
+			
+				// Clear the buffers to calculate the thresholds for all classes:
+				ArrayList<Double> tmp = thresBuffer.get(i);
+				tmp.clear();
+				thresBuffer.set(i, tmp);
+
+				thresSet.set(i, false);
+
+				if (feedbackReceived.get(i) == false) {
+					ArrayList<Double> tmp2 = initThresBuffer.get(i);
+					tmp2.clear();
+					initThresBuffer.set(i, tmp2);
+				}
+			
+			}
+
+			// Flush the query and the prediction buffers for all classes:	
+			queryBuffer.clear();
+			predBuffer.clear();			
+			
 		
 		} else { // Initialize the buffers, ... if they are not initialized yet:
 			
@@ -1555,7 +1594,7 @@ public class StateManager extends BroadcastReceiver {
 		
 		// Display notification:
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(
-				context).setSmallIcon(R.drawable.ic_stat_confirm_black)
+				context).setSmallIcon(R.drawable.ic_stat_confirm)
 				.setContentTitle("Changed model successfully")
 				.setAutoCancel(true)
 				.setWhen(System.currentTimeMillis())

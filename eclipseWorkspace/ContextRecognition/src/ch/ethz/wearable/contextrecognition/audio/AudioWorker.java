@@ -140,10 +140,7 @@ public class AudioWorker extends IntentService {
 						// Loop through the audio data and extract our features for each 32ms window
 						for(int i=0; i<63; i++) {
 							
-							// Split the data into 32ms chunks (equals 1024 (??) elements)
-//							short[] tmpData = new short[1024];
-//							System.arraycopy(data, i*1024, tmpData, 0, 1024);
-							
+							// Split the data into 32ms chunks (equals 512 per elements)
 							short[] tmpData = new short[512];
 							System.arraycopy(data, i*512, tmpData, 0, 512);
 

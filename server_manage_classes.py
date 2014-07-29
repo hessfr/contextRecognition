@@ -105,7 +105,7 @@ for el in classesToBeAdded:
 json.dump(newGMM, open(new_filename, "wb"))
 os.remove(old_filename) 
 
-print("Manage classes finished: " + str(len(classesToBeAdded)) + " classes were added and " + str(numberClassesDelete) + " classes were deleted")
+print("Manage classes finished: " + str(len(classesToBeAdded)) + " class(es) added and " + str(numberClassesDelete) + " class(es) removed")
 
     
 

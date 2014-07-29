@@ -145,12 +145,12 @@ public class SoundHandler extends Thread {
 					}
 					
 					
-					// Write this chunk of data to a file (for evaluation only):
-					// we have to convert short to byte array first, then we can use FileOutputStream:
-//					Log.w(TAG, "dataShort: " + dataShort[0]);
+					/*
+					 *  Write this chunk of data to a file (for evaluation only), we 
+					 *  have to convert short to byte array first, then we can use FileOutputStream:
+					 */
+					
 					byte[] dataByte = short2byte(dataShort);
-//					Log.w(TAG, "dataShort: " + dataShort[0]);
-//					Log.w(TAG, "-------------------");
 					File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
 					appendToFile(dataByte, file);
 					

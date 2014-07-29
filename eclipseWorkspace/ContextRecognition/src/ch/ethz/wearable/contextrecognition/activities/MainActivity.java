@@ -62,6 +62,7 @@ public class MainActivity extends ActionBarActivity {
 	ImageButton confirmButton;
 	SharedPreferences mPrefs;
 	TextView contextTV;
+	TextView entropyTV;
 	final String welcomeScreenShownPref = "welcomeScreenShown";
 	GtSelectorAdapter dataAdapter = null;
 	
@@ -117,6 +118,7 @@ public class MainActivity extends ActionBarActivity {
 
 		addListenerOnButton();
 		contextTV = (TextView) findViewById(R.id.contextTV);
+		entropyTV = (TextView) findViewById(R.id.entropyTV);
 
 		if (FIRST_RUN == true) {
 			Log.i(TAG, "First run of MainActivity");
@@ -184,6 +186,7 @@ public class MainActivity extends ActionBarActivity {
 		// Register the broadcast receiver of the MainAcitivity and intent filters:
 		IntentFilter filterMain = new IntentFilter();
 		filterMain.addAction(Globals.PREDICTION_CHANGED_INTENT);
+		filterMain.addAction(Globals.PREDICTION_ENTROPY_INTENT);
 		filterMain.addAction(Globals.CLASS_NAMES_SET);
 		registerReceiver(receiverMainActivity, filterMain);
 		
@@ -377,11 +380,18 @@ public class MainActivity extends ActionBarActivity {
 			contextTV.setText("-");
 			contextTV.setTextColor(getResources().getColor(R.color.silent_text_view));
 			CONTEXT_CLASS_STRING = str;
+			setEntropyText(0);
 		} else {
 			contextTV.setText(str);
 			contextTV.setTextColor(getResources().getColor(R.color.normal_text_view));
 			CONTEXT_CLASS_STRING = str;
 		}
+	}
+	
+	private void setEntropyText(double value) {
+
+		entropyTV.setText(String.valueOf(Math.round(value*100)/1000.d));
+
 	}
 	
 	private void createListView(String[] stringArray) {
@@ -449,6 +459,10 @@ public class MainActivity extends ActionBarActivity {
 				
 				if (intent.getAction().equals(Globals.PREDICTION_CHANGED_INTENT)) {
 					setText(bundle.getString(Globals.NEW_PREDICTION_STRING));
+				}
+				
+				if (intent.getAction().equals(Globals.PREDICTION_ENTROPY_INTENT)) {
+					setEntropyText(bundle.getDouble(Globals.PREDICTION_ENTROPY_VALUE));
 				}
 			} 
 			

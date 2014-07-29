@@ -112,9 +112,9 @@ public class Globals {
 	 * Client-server interaction
 	 */
 //	public static final String IP = "192.168.0.23"; // wifi home
-	public static final String IP = "10.2.119.175"; // wifi ETH
+//	public static final String IP = "10.2.119.175"; // wifi ETH
 //	public static final String IP = "192.168.0.68"; // wifi home
-//	public static final String IP = "129.132.131.71"; // server eth
+	public static final String IP = "129.132.131.71"; // server eth
 	
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/";
@@ -239,12 +239,16 @@ public class Globals {
 	// Send by the StateManager:
 	public static final String PREDICTION_CHANGED_INTENT = "predictionChangedIntent";
 	public static final String NEW_PREDICTION_STRING = "newPredictionString";
-	
+
 	public static final String REQUEST_CLASS_NAMES = "action.requestClassNames";
 	
 	public static final String CLASS_NAMES_SET = "classNamesSet";
 	
 	public static final String SILENCE_PREDICTED_CHANGE_UI = "action.silencePredictedUI";
+	
+	// Only for debugging: show current entropy value in MainActivity:
+	public static final String PREDICTION_ENTROPY_INTENT = "predictionEntropyIntent";
+	public static final String PREDICTION_ENTROPY_VALUE = "predictionEntropyValue";
 	
 	// Define if we wait for server response when calling MainActivity from welcome activity:
 	public static final String WAIT_FOR_SERVER = "waitForServer";	

@@ -33,6 +33,8 @@ def addNewClass(jsonGMM, newClassName, newClassData=None):
     n_features = X_train.shape[1]
     n_components = 16
 
+    print("Start training new class " + newClassName)
+
     newClf = GMM(n_components = n_components, covariance_type='full', n_iter=100) # set n_iter to 100 to speed up the training
     newClf.fit(X_train)
 

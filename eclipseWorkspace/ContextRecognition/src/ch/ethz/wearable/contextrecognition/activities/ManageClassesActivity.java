@@ -16,8 +16,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -25,7 +25,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
-import ch.ethz.wearable.contextrecognition.communication.InitModel;
+import ch.ethz.wearable.contextrecognition.communication.ManageClasses;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder.onClickEvent;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
@@ -104,8 +104,6 @@ public class ManageClassesActivity extends ActionBarActivity {
 										// Add the new item at the second last spot and set the check box to selected
 										ArrayList<String> stringList = dataAdapter.getStringArrayList();
 										stringList.add(stringList.get(stringList.size()-1));
-										
-										Log.i(TAG, "This should be define own context class: " + stringList.get(stringList.size()-1));
 										
 										stringList.set((stringList.size()-2), newClassName);
 										
@@ -321,6 +319,10 @@ public class ManageClassesActivity extends ActionBarActivity {
 							isDifferent = true;
 						}
 					}
+					// Check if new classes have been added:
+					if(prevClassNames.length != currentStatuses.size()) {
+						isDifferent = true;
+					}
 					
 					
 					ArrayList<String> classesToRequestList = new ArrayList<String>();
@@ -341,12 +343,11 @@ public class ManageClassesActivity extends ActionBarActivity {
 					
 					if (isDifferent == true) {
 						// request model from server is it's not the default classifier:
-						Log.i(TAG, "New model will be requested from server as selected context"
-								+ "classes are different from the default ones");
+						Log.i(TAG, "New model will be requested from server");
 						
 						//TODO: check if this is working:
-						Intent i = new Intent(context, InitModel.class);
-						i.putExtra(Globals.CONN_INIT_MODEL_CLASSES, classesToRequest);
+						Intent i = new Intent(context, ManageClasses.class);
+						i.putExtra(Globals.CONN_MANAGE_CLASSES_ARRAY, classesToRequest);
 						context.startService(i);	
 						
 					} else {
