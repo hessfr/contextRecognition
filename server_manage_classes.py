@@ -44,12 +44,16 @@ for i in range(len(oldClasses)):
     if oldClasses[i] not in newClasses:
         indicesToDelete.append(classesDict[oldClasses[i]])
    
-# Sort the indicesToDelete list:
-indicesToDelete = sorted(indicesToDelete)
+# Sort the indicesToDelete list in reverse order, so that we don't have to care about changing indices when removing highest indices first:
+indicesToDelete = sorted(indicesToDelete, reverse=True)
 numberClassesDelete = len(indicesToDelete)
 
 #print(classesDict)
-#print(indicesToDelete)
+#print("The following indice(s) will be deleted:")
+#for el in indicesToDelete:
+#   print(el)
+#print("---")
+
 
 # Delete classes in the GMM models
 tmpGMM = copy.deepcopy(oldGMM)
@@ -63,26 +67,19 @@ sortedList = []
 for el in sortedTupleList:
     sortedList.append(list(el))
 
-# Now iterate over that list and remove the elements we want to delete and adjust successive numbers:
-for i in range(len(sortedList)):
-    if i in indicesToDelete:
-        del sortedList[i]
-        # delete this index in the indicesToDelete and decrement the remaining ones:
-        indicesToDelete.remove(i)
-        indicesToDelete = [(x-1) for x in indicesToDelete]
-        
-#print(sortedList)
 
-prev = -1
-for i in range(len(sortedList)):
-    if sortedList[i][1] != (prev+1):
-        for j in range(i, len(sortedList)):
-            sortedList[j][1] = sortedList[j][1]-1
-    prev = sortedList[i][1]
+#print("Before removing:")
+#print sortedList
+#print("---")
 
-print("After removing, following class(es) left: ")    
+for i in indicesToDelete:
+    del sortedList[i]
+
+for i in range(len(sortedList)):
+    sortedList[i][1] = i
+
+#print("After removing, following class(es) left: ")    
 print(sortedList)
-print("---")
 
 # Convert back to dictionary:
 newClassesDict = {}
@@ -92,7 +89,6 @@ for el in sortedList:
 # Assign the new classesDict to all elements in the model:
 for el in newGMM:
     el["classesDict"] = newClassesDict
-
 
 """ Incorporate new classes: """
 classesToBeAdded = []
@@ -108,60 +104,4 @@ json.dump(newGMM, open(new_filename, "wb"))
 os.remove(old_filename) 
 
 print("Manage classes finished: " + str(len(classesToBeAdded)) + " class(es) added and " + str(numberClassesDelete) + " class(es) removed")
-
     
-
-"""
-featureData = getFeaturesMultipleClasses(classes_list)
-
-trainedGMM = trainGMM(featureData)
-
-print("Training of classifier finished")
-
-dir = "classifiers/" + new_filename
-
-# convert classifier to JSON and store it:
-dictToJSON(trainedGMM, returnGMM=False, filename=dir)    
-
-# Save the information to the existing_classifiers file, so that we can find it next time:
-existing_classifiers = pickle.load(open("classifiers/existing_classifiers.p","rb"))
-existing_classifiers["context_classes"].append(classes_list)   
-existing_classifiers["filenames"].append(new_filename)
-
-pickle.dump(existing_classifiers, open("classifiers/existing_classifiers.p","wb"))
-"""    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
