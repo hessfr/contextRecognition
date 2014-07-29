@@ -79,8 +79,10 @@ for i in range(len(sortedList)):
         for j in range(i, len(sortedList)):
             sortedList[j][1] = sortedList[j][1]-1
     prev = sortedList[i][1]
-    
-#print(sortedList)
+
+print("After removing, following class(es) left: ")    
+print(sortedList)
+print("---")
 
 # Convert back to dictionary:
 newClassesDict = {}
