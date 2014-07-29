@@ -69,7 +69,7 @@ def getFeatures(className, downloadFileNum=30):
             if FX_Java(className):
                 res = np.array(json.load(open(filename,"rb")))
             else:
-                print("Features could not be extracted")    
+                print("Features could not be extracted (Java FX failed)")    
                 return
         else:
             """ If it the sound files hasn't be downloaded yet, start the downloading: """

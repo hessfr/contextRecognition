@@ -1,0 +1,5 @@
+compiling:
+javac -cp gson-2.2.4.jar extractFeatures.java FFT.java MFCC.java Window.java Matrix.java
+
+executing:
+java -cp gson-2.2.4.jar:. extractFeatures --folder Office

@@ -48,7 +48,8 @@ public class GetUpdatedModel extends IntentService {
 		
 		final long maxRetries;
 		final long pollingInterval;
-		long delay = 200; // wait 200ms before starting the first execution
+		long delay = 1000; /*Give the server 1 second time after the 
+		first request, so that we don't have to wait if the model was already trained before*/
 		
 		if (feasibilityCheckResult.equals(Globals.FEASIBILITY_DOWNLOADED)) {
 			
