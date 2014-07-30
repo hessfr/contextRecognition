@@ -20,7 +20,7 @@ new_filename = str(sys.argv[2])
 
 classes_list = json.loads(classes_list_str)
 
-print(classes_list)
+#print(classes_list)
 
 featureData = getFeaturesMultipleClasses(classes_list)
 

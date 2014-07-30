@@ -154,6 +154,7 @@ class InitClassifier():
         #classes_list = json.loads(cherrypy.request.json)
         classes_list = json.loads(context_classes) 
 
+	#print("All requested classes:")
         #print(classes_list)
 
         model_exists_result = check_model_exists(classes_list)
@@ -184,7 +185,10 @@ class InitClassifier():
                 
                 else:
                     print("feasibilityCheck returned invalid result")
-            
+
+	    #print("All valid classes:")
+	    #print(valid_classes)            
+
 	    if len(valid_classes) != 0:
                 # Start training the classifier in the background (list is passed as String and converted back with Regex later):
                 subprocess.Popen(["python", "server_create_initial_model.py", json.dumps(valid_classes), filename_new_classifier])
