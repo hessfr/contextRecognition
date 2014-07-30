@@ -408,19 +408,9 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-//							String[] classArr = {"Office", "INVALID_CLASS 123", "Conversation", "Restaurant",
-//									"Car", "Bus", "Street", "Toilet", "Kitchen", "Forest"}; // -> delete Train, Vacuum
-//							
-//							// Send the the request to actually train a new class on the server:
-//							Intent ii = new Intent(context, ManageClasses.class);
-//							ii.putExtra(Globals.CONN_MANAGE_CLASSES_ARRAY, classArr);
-//							context.startService(ii);
 
-								
-							
-							
-							
-							
+						
+						
 						}
 						
 						
@@ -506,16 +496,6 @@ public class StateManager extends BroadcastReceiver {
 				requestNewClassFromServer(context, newClassName);
 				
 			} 
-//			else if (intent.getAction().equals(Globals.CALL_CONTEXT_SELECTION_INTENT)) {
-//				callContextSelectionActivity(context);
-//			}
-//
-//			else if (intent.getAction().equals(Globals.CALL_MANAGE_CLASSES_INTENT)) {
-//
-//				callManageClassesActivity(context);
-//
-//			}
-
 		}
 		
 		if (intent.getAction().equals(Globals.DISMISS_NOTIFICATION)) {
@@ -673,26 +653,6 @@ public class StateManager extends BroadcastReceiver {
 			
 			onChangeClassesFinished(context, prevClassnames);
 			
-			// TODO: Move this into onChangeClassesFinished method:
-			/*
-			// Flush buffers:
-			queryBuffer.clear();
-			predBuffer.clear();
-			for (int i = 0; i < gmm.get_n_classes(); i++) {
-				ArrayList<Double> tmp = thresBuffer.get(i);
-				tmp.clear();
-				thresBuffer.set(i, tmp);
-
-				thresSet.set(i, false);
-
-				if (feedbackReceived.get(i) == false) {
-					ArrayList<Double> tmp2 = initThresBuffer.get(i);
-					tmp2.clear();
-					initThresBuffer.set(i, tmp2);
-				}
-			}
-			*/	
-
 		}
 		
 		if (intent.getAction().equals(Globals.CONN_SEND_RAW_AUDIO_RECEIVE)) {
@@ -785,38 +745,6 @@ public class StateManager extends BroadcastReceiver {
 			
 			onChangeClassesFinished(context, prevClassnames);
 			
-			//TODO: Move this into onChangeClassesFinished method:
-			
-			/*
-			// Flush buffers:
-			if (variablesInitialized == true) {
-				
-				queryBuffer.clear();
-				predBuffer.clear();
-				for (int i = 0; i < gmm.get_n_classes(); i++) {
-					ArrayList<Double> tmp = thresBuffer.get(i);
-					tmp.clear();
-					thresBuffer.set(i, tmp);
-
-					thresSet.set(i, false);
-
-					if (feedbackReceived.get(i) == false) {
-						ArrayList<Double> tmp2 = initThresBuffer.get(i);
-						tmp2.clear();
-						initThresBuffer.set(i, tmp2);
-					}
-				}	
-				
-			}
-			
-			if (variablesInitialized == false) {
-				
-				//TODO: delete this
-			}
-			*/
-			
-			
-
 		}
 		
 		// =====================================================================
@@ -1098,94 +1026,7 @@ public class StateManager extends BroadcastReceiver {
 		
 
 	}
-	
-// outdated:
-//	/*
-//	 * Go to the context selection activity
-//	 */
-//	public void callContextSelectionActivity(Context context) {		
-//		
-//		Intent i=null;
-//		
-//		if (gmm != null) {
-//			if (gmm.get_string_array().length > 0) {
-//				i = new Intent(context, ContextSelection.class);
-//				Bundle b = new Bundle();
-//				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
-//				i.putExtras(b);
-//				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
-//				context.startActivity(i);
-//			}
-//			
-//		} else {
-//			// We cannot start ContextSelection activity if class names not yet available
-//			i = null;
-//
-//			Log.w(TAG,
-//					"Not changing to ContextSelection activity, as class names not available yet.");
-//		}
-//	}
-//	
-	
-// outdated:
-//	/*
-//	 * Only return intent to the context selection activity (for pending intent of  the notification)
-//	 */
-//	public Intent getContextSelectionActivity(Context context) {		
-//		
-//		Intent i = new Intent(context, ContextSelection.class);
-//		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//		context.startActivity(i);
-//		
-//		Intent i=null;
-//		
-//		if (gmm != null) {
-//			if (gmm.get_string_array().length > 0) {
-//				i = new Intent(context, ContextSelection.class);
-//				Bundle b = new Bundle();
-//				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
-//				i.putExtras(b);
-//				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
-//			}
-//			
-//		} else {
-//			// We cannot start ContextSelection activity if class names not yet available
-//			i = null;
-//
-//			Log.w(TAG,
-//					"Not changing to ContextSelection activity, as class names not available yet.");
-//		}
-//		
-//		return i;
-//	}
 
-// outdated:
-//	/*
-//	 * Go to the manage classes activity
-//	 */
-//	public void callManageClassesActivity(Context context) {		
-//		
-//		Intent i=null;
-//		
-//		if (gmm != null) {
-//			if (gmm.get_string_array().length > 0) {
-//				i = new Intent(context, ManageClassesActivity.class);
-//				Bundle b = new Bundle();
-//				b.putStringArray(Globals.CLASS_NAMES, gmm.get_string_array());
-//				i.putExtras(b);
-//				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // start activity from outside activity
-//				context.startActivity(i);
-//			}
-//			
-//		} else {
-//			// We cannot start ContextSelection activity if class names not yet available
-//			i = null;
-//
-//			Log.w(TAG,
-//					"Not changing to manage classes activity, as class names not available yet.");
-//		}
-//	}
-	
 	/*
 	 * Initiate request of the new class by classing the feasibility check. Is this check is passed,
 	 * we tell the server to (download &) train the new model and finally transmit it to the client. (all
@@ -1657,18 +1498,6 @@ public class StateManager extends BroadcastReceiver {
 		
 		AppData appData = new AppData(initThresSet, thresSet, feedbackReceived, 
 				threshold, initThresBuffer, thresBuffer, thresQueriedInterval, numQueriesLeft);
-		
-//		for(int i=0; i<4; i++) {
-//			Log.i(TAG, "------- i=" + i);
-//			Log.i(TAG, "initThresSet: " + initThresSet.get(i));
-//			Log.i(TAG, "thresSet: " + thresSet.get(i));
-//			Log.i(TAG, "feedbackReceived: " + feedbackReceived.get(i));
-//			Log.i(TAG, "threshold: " + threshold.get(i));
-//			Log.i(TAG, "initThresBuffer: " + initThresBuffer.get(i));
-//			Log.i(TAG, "thresBuffer: " + thresBuffer.get(i));
-//			Log.i(TAG, "thresQueriedInterval: " + thresQueriedInterval.get(i));
-//		}
-		
 		
 		String str = new Gson().toJson(appData);
 		
