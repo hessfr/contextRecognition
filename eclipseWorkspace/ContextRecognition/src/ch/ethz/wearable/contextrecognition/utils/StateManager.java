@@ -1,5 +1,7 @@
 package ch.ethz.wearable.contextrecognition.utils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,6 +15,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +23,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
@@ -410,32 +416,51 @@ public class StateManager extends BroadcastReceiver {
 							testBool = true;
 							
 							
-							File inputFile = new File(Globals.getLogPath(), "rawAudio");
-							byte[] zipBuffer = new byte[1024];
 							
-							String zipFilename = "test.zip";
-							File outputFile = new File(Globals.APP_PATH, zipFilename);
-							
-							GZIPOutputStream gzipOS;
-							try {
-//								if(!outputFile.exists()) {
-//									outputFile.createNewFile();
-//								} 
-								gzipOS = new GZIPOutputStream(new FileOutputStream(outputFile));
-								FileInputStream in = new FileInputStream(inputFile);
-								int len;
-								while ((len = in.read(zipBuffer)) > 0)
-								{
-									gzipOS.write(zipBuffer, 0, len);
+							new Thread() {
+								public void run() {
+									
+									String zipFilename = "test.tar.gz";
+									File outputFile = new File(Globals.APP_PATH, zipFilename);
+									File folderToZip = new File(Globals.APP_PATH, "/Logs_20140729");
+									
+									try {
+										compressFile(folderToZip, outputFile);
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+									
+									
+									
+//									File inputFile = new File(Globals.getLogPath(), "rawAudio");
+//									byte[] zipBuffer = new byte[1024];
+//									
+//									String zipFilename = "test.zip";
+//									File outputFile = new File(Globals.APP_PATH, zipFilename);
+//									
+//									GZIPOutputStream gzipOS;
+//									try {
+//										gzipOS = new GZIPOutputStream(new FileOutputStream(outputFile));
+//										FileInputStream in = new FileInputStream(inputFile);
+//										int len;
+//										while ((len = in.read(zipBuffer)) > 0)
+//										{
+//											gzipOS.write(zipBuffer, 0, len);
+//										}
+//										in.close();
+//										gzipOS.finish();
+//										gzipOS.close();
+//									} catch (FileNotFoundException e) {
+//										e.printStackTrace();
+//									} catch (IOException e) {
+//										e.printStackTrace();
+//									}
+									
+									
+									
 								}
-								in.close();
-								gzipOS.finish();
-								gzipOS.close();
-							} catch (FileNotFoundException e) {
-								e.printStackTrace();
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
+							}.start();
+
 							
 						
 						}
@@ -493,8 +518,6 @@ public class StateManager extends BroadcastReceiver {
 							prevPredictionString = Globals.SILENCE;
 						}
 					}
-					
-
 
 				} else {
 					Log.i(TAG,
@@ -539,8 +562,8 @@ public class StateManager extends BroadcastReceiver {
 			 * up the device and calls the pending intent, even if the app itself is not opened.
 			 */
 			Calendar updateTime = Calendar.getInstance();
-		    updateTime.set(Calendar.HOUR_OF_DAY, 23);
-		    updateTime.set(Calendar.MINUTE, 55);
+		    updateTime.set(Calendar.HOUR_OF_DAY, 0);
+		    updateTime.set(Calendar.MINUTE, 5);
 		    
 		    Intent resetIntent = new Intent(Globals.END_OF_DAY_TASKS);
 	        PendingIntent pendingResetIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
@@ -1616,5 +1639,94 @@ public class StateManager extends BroadcastReceiver {
 	    else
 	    	modelAdaptor.execute(context);
 	} 
+	
+	/**
+	 * Code from http://sloanseaman.com/wordpress/2012/05/22/tar-and-gzip-compression-in-java/
+	 * 
+	 * Compress (tar.gz) the input file (or directory) to the output file
+	 * <p/>
+	 *
+	 * In the case of a directory all files within the directory (and all nested
+	 * directories) will be added to the archive
+	 *
+	 * @param file The file(s if a directory) to compress
+	 * @param output The resulting output file (should end in .tar.gz)
+	 * @throws IOException
+	 */
+	public static void compressFile(File file, File output)
+		throws IOException
+	{
+		ArrayList<File> list = new ArrayList<File>(1);
+		list.add(file);
+		compressFiles(list, output);
+	}
+
+	/**
+	 * Code from http://sloanseaman.com/wordpress/2012/05/22/tar-and-gzip-compression-in-java/
+	 * 
+	 * Compress (tar.gz) the input files to the output file
+	 *
+	 * @param files The files to compress
+	 * @param output The resulting output file (should end in .tar.gz)
+	 * @throws IOException
+	 */
+	public static void compressFiles(Collection<File> files, File output)
+		throws IOException
+	{
+		Log.d(TAG, "Compressing "+files.size() + " to " + output.getAbsoluteFile());
+	               // Create the output stream for the output file
+		FileOutputStream fos = new FileOutputStream(output);
+	               // Wrap the output file stream in streams that will tar and gzip everything
+		TarArchiveOutputStream taos = new TarArchiveOutputStream(
+			new GZIPOutputStream(new BufferedOutputStream(fos)));
+	               // TAR has an 8 gig file limit by default, this gets around that
+		taos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR); // to get past the 8 gig limit
+	               // TAR originally didn't support long file names, so enable the support for it
+		taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
+
+	               // Get to putting all the files in the compressed output file
+		for (File f : files) {
+			addFilesToCompression(taos, f, ".");
+		}
+
+	               // Close everything up
+		taos.close();
+		fos.close();
+	}
+
+	/**
+	 * Code from http://sloanseaman.com/wordpress/2012/05/22/tar-and-gzip-compression-in-java/
+	 * 
+	 * Does the work of compression and going recursive for nested directories
+	 * <p/>
+	 *
+	 * Borrowed heavily from http://www.thoughtspark.org/node/53
+	 *
+	 * @param taos The archive
+	 * @param file The file to add to the archive
+	        * @param dir The directory that should serve as the parent directory in the archivew
+	 * @throws IOException
+	 */
+	private static void addFilesToCompression(TarArchiveOutputStream taos, File file, String dir)
+		throws IOException
+	{
+	               // Create an entry for the file
+		taos.putArchiveEntry(new TarArchiveEntry(file, dir + "/" +file.getName()));
+		if (file.isFile()) {
+	                       // Add the file to the archive
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+			IOUtils.copy(bis, taos);
+			taos.closeArchiveEntry();
+			bis.close();
+		}
+		else if (file.isDirectory()) {
+	                       // close the archive entry
+			taos.closeArchiveEntry();
+	                       // go through all the files in the directory and using recursion, add them to the archive
+			for (File childFile : file.listFiles()) {
+				addFilesToCompression(taos, childFile, file.getName());
+			}
+		}
+	}
 	
 }
