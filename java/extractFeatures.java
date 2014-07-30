@@ -36,7 +36,8 @@ public class extractFeatures {
         
 		double fftBufferR[] = new double[FFT_SIZE];
     	double fftBufferI[] = new double[FFT_SIZE];
-    	double featureCepstrum[] = new double[MFCCS_VALUE];
+    	double featureCepstrum[] = new double[MFCCS_VALUE]; 
+    	double featureArray[] = new double[MFCCS_VALUE+1]; // also include the log energy 
     	double logEnergy;
 	    
     	ArrayList<double[]> features = new ArrayList<double[]>();
@@ -119,11 +120,17 @@ public class extractFeatures {
 				}
 				
 				if (isValid == true) {
-					features.add(featureCepstrum);
+					// Calculate log energy:
+					logEnergy = calcLogEnergy(audioShorts, 0.032);
+					
+					// Combine the MFCCs and the log energy into one array:
+					System.arraycopy(featureCepstrum, 0, featureArray, 0, featureCepstrum.length);
+					featureArray[featureCepstrum.length] = logEnergy;
+					
+					features.add(featureArray);
 				}
 				
-				// Calculate log energy:
-				//logEnergy = calcLogEnergy(audioShorts, 0.032);
+				
 				
 				
             }
