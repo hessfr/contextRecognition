@@ -48,7 +48,7 @@ class AddContextClass():
         filename = str(filename)
         filename = filename[1:-1]
 
-        print(filename)
+        #print(filename)
 
         if(os.path.isfile(filename)):
             print("Filename " + filename + " found on disk, will be sent to client")
@@ -217,10 +217,20 @@ class InitClassifier():
 
         notReadyCode = -1
 
+	# Check if the json file of the classifier already exisits:
         if(os.path.isfile(filename)):
             print("Filename " + filename + " found on disk, will be sent to client")
         
             js = json.load(open(filename, 'rb'))
+            
+            #os.remove(filename)
+            
+            return js
+
+        elif(os.path.isfile("classifiers/" + filename)):
+            print("Filename " + filename + " found on disk, will be sent to client")
+        
+            js = json.load(open("classifiers/" + filename, 'rb'))
             
             #os.remove(filename)
             
