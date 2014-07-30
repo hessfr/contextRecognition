@@ -18,18 +18,9 @@ print("--- server_create_initial_model ---")
 classes_list_str = str(sys.argv[1])
 new_filename = str(sys.argv[2])
 
-## convert the list passed as string back to a list (ugly :/ ...):
-#splitted = classes_list_str.split()
-#classes_list = [] # our final list
-#i=0
-#for el in splitted:
-#        for ch in [',','[', ']', '\"','\'']:
-#                splitted[i] = splitted[i].replace(ch,"")
-#        classes_list.append(splitted[i])
-#        i += 1
-        
-        
 classes_list = json.loads(classes_list_str)
+
+print(classes_list)
 
 featureData = getFeaturesMultipleClasses(classes_list)
 
