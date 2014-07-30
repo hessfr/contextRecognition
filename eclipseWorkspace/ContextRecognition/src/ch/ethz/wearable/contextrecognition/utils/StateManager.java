@@ -429,35 +429,7 @@ public class StateManager extends BroadcastReceiver {
 									} catch (IOException e) {
 										e.printStackTrace();
 									}
-									
-									
-									
-//									File inputFile = new File(Globals.getLogPath(), "rawAudio");
-//									byte[] zipBuffer = new byte[1024];
-//									
-//									String zipFilename = "test.zip";
-//									File outputFile = new File(Globals.APP_PATH, zipFilename);
-//									
-//									GZIPOutputStream gzipOS;
-//									try {
-//										gzipOS = new GZIPOutputStream(new FileOutputStream(outputFile));
-//										FileInputStream in = new FileInputStream(inputFile);
-//										int len;
-//										while ((len = in.read(zipBuffer)) > 0)
-//										{
-//											gzipOS.write(zipBuffer, 0, len);
-//										}
-//										in.close();
-//										gzipOS.finish();
-//										gzipOS.close();
-//									} catch (FileNotFoundException e) {
-//										e.printStackTrace();
-//									} catch (IOException e) {
-//										e.printStackTrace();
-//									}
-									
-									
-									
+									Log.i(TAG, "--- finsished compressing folder");
 								}
 							}.start();
 
@@ -562,14 +534,23 @@ public class StateManager extends BroadcastReceiver {
 			 * up the device and calls the pending intent, even if the app itself is not opened.
 			 */
 			Calendar updateTime = Calendar.getInstance();
+			Calendar now = Calendar.getInstance();
 		    updateTime.set(Calendar.HOUR_OF_DAY, 0);
 		    updateTime.set(Calendar.MINUTE, 5);
+		    
+		    // If App started after 00:05, the alarm would go off, so we have to add one day in that case
+		    long actualUpdateTime = 0;
+		    if(updateTime.getTimeInMillis() <= now.getTimeInMillis()) {
+		    	actualUpdateTime = updateTime.getTimeInMillis() + (AlarmManager.INTERVAL_DAY+1);
+		    } else {
+		    	actualUpdateTime = updateTime.getTimeInMillis();
+		    }
 		    
 		    Intent resetIntent = new Intent(Globals.END_OF_DAY_TASKS);
 	        PendingIntent pendingResetIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
 	        
 	        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, updateTime.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingResetIntent);
+	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, actualUpdateTime, AlarmManager.INTERVAL_DAY, pendingResetIntent);
 		    
 	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
 	        
