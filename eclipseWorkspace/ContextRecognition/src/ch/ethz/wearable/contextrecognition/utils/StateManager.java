@@ -416,7 +416,7 @@ public class StateManager extends BroadcastReceiver {
 							testBool = true;
 							
 							
-							
+							/*
 							new Thread() {
 								public void run() {
 									
@@ -429,10 +429,12 @@ public class StateManager extends BroadcastReceiver {
 									} catch (IOException e) {
 										e.printStackTrace();
 									}
+									
 									Log.i(TAG, "--- finsished compressing folder");
+									// TODO: call sendRawAudio from here????
 								}
 							}.start();
-
+							*/
 							
 						
 						}
