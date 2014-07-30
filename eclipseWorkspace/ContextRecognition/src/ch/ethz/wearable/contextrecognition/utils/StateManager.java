@@ -761,6 +761,10 @@ public class StateManager extends BroadcastReceiver {
 					manager.notify(Globals.NOTIFICATION_ID_CLASSES_NOT_ADDED, builder.build());	
 				}
 				
+				// Display Toast if we have to wait for the server:
+				Toast.makeText(context, "Model will be created on server, starting with "
+						+ "default model", Toast.LENGTH_LONG).show();
+				
 				// Start timer to periodically poll the server for the response:
 				Intent i = new Intent(context, InitModelGet.class);
 				i.putExtra(Globals.CONN_INIT_MODEL_GET_FILENAME, filenameOnServer);
