@@ -170,30 +170,30 @@ class InitClassifier():
             valid_classes = []
             invalid_classes = []
             
+	    waitOrNoWait = "no_wait"
+
             for el in classes_list:
                 if (feasibilityCheck(el) == "not_feasible"): 
                     invalid_classes.append(el)
-                    waitOrNoWait = "no_wait"
                     
                 elif (feasibilityCheck(el) == "downloaded"):
                     valid_classes.append(el)
-                    waitOrNoWait = "no_wait"
                     
                 elif (feasibilityCheck(el) == "feasible"):
                     valid_classes.append(el)
-                    waitOrNoWait = "wait"
                 
                 else:
                     print("feasibilityCheck returned invalid result")
-                    waitOrNoWait = "no_wait"
             
+	    if len(valid_classes) != 0:
                 # Start training the classifier in the background (list is passed as String and converted back with Regex later):
-                subprocess.Popen(["python", "server_create_initial_model.py", json.dumps(classes_list), filename_new_classifier])
-                
-           
-    
-            #response = {"wait": "wait", "filename": dir}
-
+                subprocess.Popen(["python", "server_create_initial_model.py", json.dumps(valid_classes), filename_new_classifier])
+		waitOrNoWait = "wait"
+	    else:
+		# If not a single class is valid, don't do anything:
+		#TODO: handle this properly	    
+		waitOrNoWait = "no_wait"
+	
             # Return new filename and the list of invalid classes:
             response = {"filename": filename_new_classifier, "wait": waitOrNoWait, "invalid_classes": invalid_classes}
    
