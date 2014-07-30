@@ -2,6 +2,7 @@ package ch.ethz.wearable.contextrecognition.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -40,7 +42,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
-import ch.ethz.wearable.contextrecognition.activities.ManageClassesActivity;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
@@ -408,8 +409,34 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-
-						
+							
+							File inputFile = new File(Globals.getLogPath(), "rawAudio");
+							byte[] zipBuffer = new byte[1024];
+							
+							String zipFilename = "test.zip";
+							File outputFile = new File(Globals.APP_PATH, zipFilename);
+							
+							GZIPOutputStream gzipOS;
+							try {
+//								if(!outputFile.exists()) {
+//									outputFile.createNewFile();
+//								} 
+								gzipOS = new GZIPOutputStream(new FileOutputStream(outputFile));
+								FileInputStream in = new FileInputStream(inputFile);
+								int len;
+								while ((len = in.read(zipBuffer)) > 0)
+								{
+									gzipOS.write(zipBuffer, 0, len);
+								}
+								in.close();
+								gzipOS.finish();
+								gzipOS.close();
+							} catch (FileNotFoundException e) {
+								e.printStackTrace();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							
 						
 						}
 						
