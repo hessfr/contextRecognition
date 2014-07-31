@@ -206,6 +206,18 @@ public class SoundHandler extends Thread {
 		// Stop and release the recorder when not recording anymore
 		this.rec.stop();
 		this.rec.release();
+		
+		// Doesn't work if app is classes via task manager:
+//		try {
+//			File file = new File(Globals.getLogPath(),
+//					Globals.START_LOG_FILENAME);
+//			FileWriter f = new FileWriter(file, true);
+//			f.write(System.currentTimeMillis() + " STOP" + "\n");
+//			f.close();
+//		} catch (IOException e) {
+//			Log.e(TAG, "Writing to start log file failed");
+//			e.printStackTrace();
+//		}
 
 	}
 	
@@ -256,7 +268,7 @@ public class SoundHandler extends Thread {
 	
 	public void endRec() {
 		Log.i(TAG, "endRec()");
-		this.currentlyRecording = false;
+		this.currentlyRecording = false;		
 	}
 	
 	/*

@@ -405,7 +405,7 @@ public class MainActivity extends ActionBarActivity {
 	private void setText(String str) {
 		
 		if (str.equals(Globals.SILENCE)) {
-			contextTV.setText("-");
+			contextTV.setText("Silence");
 			contextTV.setTextColor(getResources().getColor(R.color.silent_text_view));
 			CONTEXT_CLASS_STRING = str;
 			setEntropyText(0);
