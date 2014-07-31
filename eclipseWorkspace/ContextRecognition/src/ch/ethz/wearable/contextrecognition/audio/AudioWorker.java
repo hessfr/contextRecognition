@@ -96,7 +96,7 @@ public class AudioWorker extends IntentService {
 			@Override
 			protected void handleData(short[] data, boolean[] silenceBuffer) {
 
-				//Log.i(TAG, "Current app status: " + appStatus.getInstance().get());
+				//Log.i(TAG, "Current app status: " + AppStatus.getInstance().get());
 				
 				
 				if (AppStatus.getInstance().get() == AppStatus.MODEL_UPDATED) {
@@ -109,7 +109,8 @@ public class AudioWorker extends IntentService {
 				
 				// Only handle new data if we are in init or normal classification status:
 				if ((AppStatus.getInstance().get() == AppStatus.NORMAL_CLASSIFICATION) ||
-						AppStatus.getInstance().get() == AppStatus.INIT) {
+						AppStatus.getInstance().get() == AppStatus.INIT ||
+						AppStatus.getInstance().get() == AppStatus.MODEL_ADAPTION) {
 					
 					//Check if sequence length is 2 seconds (more precisely 63 32ms windows)
 					if (data.length != 32256) { //data.length != 64512
