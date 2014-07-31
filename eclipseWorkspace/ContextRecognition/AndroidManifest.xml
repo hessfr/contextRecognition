@@ -149,7 +149,6 @@
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel" />
-       	<service android:name="ch.ethz.wearable.contextrecognition.communication.SendRawAudio" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModel" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModelGet" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.ManageClasses" />

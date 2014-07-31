@@ -81,6 +81,10 @@ public class RatingActivity extends ActionBarActivity {
 			// Go to manage classes activity:
 			callManageClasses();
 		}
+		if (id == R.id.action_upload) {
+			// Go to manage classes activity:
+			callUploadActivity();
+		}
         
         return super.onOptionsItemSelected(item);
     }
@@ -111,6 +115,13 @@ public class RatingActivity extends ActionBarActivity {
      * */
     private void callManageClasses() {
         Intent i = new Intent(RatingActivity.this, ManageClassesActivity.class);
+        startActivity(i);
+    }
+    /**
+     * Launch upload activity
+     * */
+    private void callUploadActivity() {
+        Intent i = new Intent(RatingActivity.this, UploadActivity.class);
         startActivity(i);
     }
     /**

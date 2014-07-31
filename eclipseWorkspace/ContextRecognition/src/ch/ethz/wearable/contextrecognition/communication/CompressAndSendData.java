@@ -31,8 +31,6 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
-import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
-import ch.ethz.wearable.contextrecognition.utils.Globals;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -43,6 +41,8 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 /*
  * This IntentService compresses every logging folders (expect the one of the current date) into a tar.gz file
  * and deletes the folder when done. After that it will start a TimerTask to transfer the data to the server.
@@ -130,6 +130,7 @@ public class CompressAndSendData extends IntentService {
 				null, pollingInterval, maxRetries, null, null, null) {
 
 			private int counter;
+			private int numFilesFound = 0;
 			ArrayList<Boolean> resultList = new ArrayList<Boolean>();
 
 			public void run() {
@@ -140,7 +141,11 @@ public class CompressAndSendData extends IntentService {
 					
 			    	if(zipFile.getName().contains(".tar.gz")) {
 			    		
+//			    		Toast.makeText(getBaseContext(), "Upload started", Toast.LENGTH_LONG).show();
+			    		
 			    		Log.i(TAG, zipFile.getName() + " will be transfered");
+			    		
+			    		numFilesFound++;
 			    		
 			    		ConnectivityManager connManager = (ConnectivityManager) getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 			    		NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
@@ -241,39 +246,48 @@ public class CompressAndSendData extends IntentService {
 			    	}
 				}
 
-				// This end result will only become true, if ALL files were transfered successfully
-				boolean endResult = true;
-				
-				for(int i=0; i<resultList.size(); i++) {
-					if(resultList.get(i) == false) {
-						endResult = false;
+				if (numFilesFound == 0) {
+					
+					Log.i(TAG, "No files to upload");
+					
+//					Toast.makeText(getBaseContext(), "No files to upload", Toast.LENGTH_LONG).show();
+					
+					this.cancel();
+				} else {
+					
+					// This end result will only become true, if ALL files were transfered successfully
+					boolean endResult = true;
+					
+					for(int i=0; i<resultList.size(); i++) {
+						if(resultList.get(i) == false) {
+							endResult = false;
+						}
+					}
+					
+					if (endResult == true) {
+						Log.i(TAG, "Transfering of experiment data to server successful");
+						
+						Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
+						i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
+						getBaseContext().sendBroadcast(i);
+
+						Log.i(TAG, "IntentService finished");
+						
+						this.cancel();
+					}
+					
+					if (++counter == maxRetries) {
+						Log.e(TAG, "Experiment data could not be transfer to server");
+						
+						Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
+						i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
+						getBaseContext().sendBroadcast(i);
+						
+						Log.i(TAG, "IntentService finished");
+						
+						this.cancel();
 					}
 				}
-				
-				if (endResult == true) {
-					Log.i(TAG, "Transfering of experiment data to server successful");
-					
-					Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
-					i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
-					getBaseContext().sendBroadcast(i);
-
-					Log.i(TAG, "IntentService finished");
-					
-					this.cancel();
-				}
-				
-				if (++counter == maxRetries) {
-					Log.e(TAG, "Experiment data could not be transfer to server");
-					
-					Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
-					i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
-					getBaseContext().sendBroadcast(i);
-					
-					Log.i(TAG, "IntentService finished");
-					
-					this.cancel();
-				}
-
 			}
 		};
 		Timer timer = new Timer();

@@ -273,6 +273,10 @@ public class MainActivity extends ActionBarActivity {
 			// Go to manage classes activity:
 			callManageClasses();
 		}
+		if (id == R.id.action_upload) {
+			// Go to manage classes activity:
+			callUploadActivity();
+		}
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -313,6 +317,13 @@ public class MainActivity extends ActionBarActivity {
      * */
     private void callManageClasses() {
         Intent i = new Intent(MainActivity.this, ManageClassesActivity.class);
+        startActivity(i);
+    }
+    /**
+     * Launch upload activity
+     * */
+    private void callUploadActivity() {
+        Intent i = new Intent(MainActivity.this, UploadActivity.class);
         startActivity(i);
     }
     /**

@@ -393,6 +393,10 @@ public class ManageClassesActivity extends ActionBarActivity {
 				// Quit the app and stop the recording:
 				callShutdown();
 			}
+			if (id == R.id.action_upload) {
+				// Go to manage classes activity:
+				callUploadActivity();
+			}
 
 	        return super.onOptionsItemSelected(item);
 	    }
@@ -416,6 +420,13 @@ public class ManageClassesActivity extends ActionBarActivity {
 	     * */
 	    private void callRating() {
 	        Intent i = new Intent(ManageClassesActivity.this, RatingActivity.class);
+	        startActivity(i);
+	    }
+	    /**
+	     * Launch upload activity
+	     * */
+	    private void callUploadActivity() {
+	        Intent i = new Intent(ManageClassesActivity.this, UploadActivity.class);
 	        startActivity(i);
 	    }
 	    /**

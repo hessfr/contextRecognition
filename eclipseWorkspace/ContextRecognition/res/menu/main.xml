@@ -28,7 +28,11 @@
         android:orderInCategory="100"
         android:title="@string/action_help"
         app:showAsAction="never"/>
-    
+    <item
+        android:id="@+id/action_upload"
+        android:orderInCategory="100"
+        android:title="@string/action_upload"
+        app:showAsAction="never"/>
     <item
         android:id="@+id/action_exit"
         android:orderInCategory="100"
