@@ -6,8 +6,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 
 import android.app.Application;
 import android.content.BroadcastReceiver;
@@ -141,6 +145,8 @@ public class MainActivity extends ActionBarActivity {
 				SharedPreferences.Editor editor = mPrefs.edit();
 				editor.putInt(Globals.MAX_NUM_QUERIES, 10);
 				editor.commit();
+				
+				appendToMaxQueryLog(10);
 				
 				Log.d(TAG, "Preference commited");
 			}
@@ -630,6 +636,25 @@ public class MainActivity extends ActionBarActivity {
 				Log.e(TAG, "Writing to GT log file failed");
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	private void appendToMaxQueryLog(int newValue) {
+		
+		Calendar cal = Calendar.getInstance();
+		Date currentLocalTime = cal.getTime();
+		DateFormat date = new SimpleDateFormat("yyyMMdd HH:mm");
+		String dateString = date.format(currentLocalTime);
+		
+		
+		try {
+			File file = new File(Globals.getLogPath(), Globals.MAX_QUERY_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write(dateString + "\t" + newValue + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to AL log file failed");
+			e.printStackTrace();
 		}
 	}
 	

@@ -55,6 +55,8 @@ public class Globals {
 	
 	public static final String PRED_LOG_FILENAME = "PRED_Log.txt";
 	
+	public static final String MAX_QUERY_LOG_FILENAME = "MAX_QUERY_Log.txt";
+	
 	public static final String AUDIO_FILENAME = "rawAudio";
 	
 	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");

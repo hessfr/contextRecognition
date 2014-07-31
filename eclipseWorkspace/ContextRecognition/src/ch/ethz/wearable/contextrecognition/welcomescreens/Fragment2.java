@@ -1,5 +1,13 @@
 package ch.ethz.wearable.contextrecognition.welcomescreens;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -36,7 +44,7 @@ public class Fragment2 extends Fragment {
         
         int currentValue = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);
 		if (currentValue == -1) {
-			Log.i(TAG, "Maximum number of queries set to default value, as there was not entry in the preferences yet");
+			Log.d(TAG, "Maximum number of queries set to default value, as there was not entry in the preferences yet");
 			currentValue = 10;
 		}        
 		
@@ -77,10 +85,11 @@ public class Fragment2 extends Fragment {
     			editor.putInt(Globals.MAX_NUM_QUERIES, newValue);
     			editor.commit();
     			
-    			Log.i(TAG, "Preference commited, new value of MAX_NUM_QUERIES: " + newValue);
+    			Log.d(TAG, "Preference commited, new value of MAX_NUM_QUERIES: " + newValue);
+
+    			appendToMaxQueryLog(newValue);
     			
     			Intent intent = new Intent(Globals.MAX_QUERY_NUMBER_CHANGED);
-    			
     			getActivity().sendBroadcast(intent);    			
             }
         });
@@ -89,6 +98,25 @@ public class Fragment2 extends Fragment {
 		return v;
 	}
 
+	private void appendToMaxQueryLog(int newValue) {
+		
+		Calendar cal = Calendar.getInstance();
+		Date currentLocalTime = cal.getTime();
+		DateFormat date = new SimpleDateFormat("yyyMMdd HH:mm");
+		String dateString = date.format(currentLocalTime);
+		
+		
+		try {
+			File file = new File(Globals.getLogPath(), Globals.MAX_QUERY_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write(dateString + "\t" + newValue + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to AL log file failed");
+			e.printStackTrace();
+		}
+	}
+	
 	public static Fragment2 newInstance(String text) {
 
 		Fragment2 f = new Fragment2();

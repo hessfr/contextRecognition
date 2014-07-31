@@ -1,5 +1,13 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -82,12 +90,32 @@ public class SettingsActivity extends ActionBarActivity {
     			
     			Log.d(TAG, "Preference commited, new value of MAX_NUM_QUERIES: " + newValue);
     			
-    			Intent intent = new Intent(Globals.MAX_QUERY_NUMBER_CHANGED);
+    			appendToMaxQueryLog(newValue);
     			
+    			Intent intent = new Intent(Globals.MAX_QUERY_NUMBER_CHANGED);
     			sendBroadcast(intent);    			
             }
         });
     }
+    
+	private void appendToMaxQueryLog(int newValue) {
+		
+		Calendar cal = Calendar.getInstance();
+		Date currentLocalTime = cal.getTime();
+		DateFormat date = new SimpleDateFormat("yyyMMdd HH:mm");
+		String dateString = date.format(currentLocalTime);
+		
+		
+		try {
+			File file = new File(Globals.getLogPath(), Globals.MAX_QUERY_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write(dateString + "\t" + newValue + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to AL log file failed");
+			e.printStackTrace();
+		}
+	}
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
