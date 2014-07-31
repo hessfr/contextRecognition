@@ -193,7 +193,7 @@ public class CompressAndSendData extends IntentService {
 				            InputStreamEntity reqEntity = null;
 				    		try {
 				    			reqEntity = new InputStreamEntity(new FileInputStream(zipFile), -1);
-				    			reqEntity.setContentType("binary/octet-stream"); //TODO: check if this works for tar.gz
+				    			reqEntity.setContentType("binary/octet-stream");
 				    	        reqEntity.setChunked(true);
 				    	        
 				    	        post.setEntity(reqEntity);
@@ -249,7 +249,7 @@ public class CompressAndSendData extends IntentService {
 				}
 				
 				if (endResult == true) {
-					Log.i(TAG, "Transfering of raw audio data to server successful");
+					Log.i(TAG, "Transfering of experiment data to server successful");
 					
 					Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
 					i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
@@ -261,7 +261,7 @@ public class CompressAndSendData extends IntentService {
 				}
 				
 				if (++counter == maxRetries) {
-					Log.e(TAG, "Raw audio data could not be transfer to server");
+					Log.e(TAG, "Experiment data could not be transfer to server");
 					
 					Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
 					i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
