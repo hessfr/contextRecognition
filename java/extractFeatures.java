@@ -201,15 +201,24 @@ public class extractFeatures {
 	
 	private double calcLogEnergy(short[] data) {
 		
+		double minE = 8.67e-19;
 //		System.out.println("Length of short array: " + data.length);
+		int dim = data.length;
 		
 		double sum = 0.0;
 		
-		for(int i=0; i<data.length; i++) {
-			sum += Math.pow(Math.abs(data[i]),2);
+		for(int i=0; i<dim; i++) {
+			sum += Math.pow(data[i],2);
 		}
 		
-		return Math.log(sum);
+		double d = Math.sqrt(sum / ((double) dim));
+		
+		if (d<minE) {
+			d=minE;
+			System.out.println("d smaller minE");
+		}
+		
+		return Math.log(d);
 	}
 	
     public static void main(String[] args) { 
