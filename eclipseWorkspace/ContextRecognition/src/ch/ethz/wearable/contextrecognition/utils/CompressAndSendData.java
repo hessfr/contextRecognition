@@ -119,7 +119,7 @@ public class CompressAndSendData extends IntentService {
 	
 	private void sendToServer() {
 		
-		 Log.i(TAG, "Method to transfer experiment data to server called");
+		 Log.d(TAG, "sendToServer method called");
 		
 		final long pollingInterval = Globals.POLLING_INTERVAL_UPLOAD;
 		final long maxRetries = Globals.MAX_RETRY_UPLOAD;
@@ -138,7 +138,7 @@ public class CompressAndSendData extends IntentService {
 					
 			    	if(zipFile.getName().contains(".tar.gz")) {
 			    		
-			    		Log.i(TAG, "Zip file " + zipFile + " will be transfered");
+			    		Log.i(TAG, "Zip file " + zipFile.getName() + " will be transfered");
 			    		
 			    		ConnectivityManager connManager = (ConnectivityManager) getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 			    		NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
@@ -169,8 +169,9 @@ public class CompressAndSendData extends IntentService {
 				    			Log.e(TAG, "Couldn't find valid user id in preferences, maybe the assignment method failed");
 				    		}
 				    		
-				    		// Extract the date string from the folder name:
+				    		// Extract the date string from the file name (between underscore and dot):
 				    		String dateString = zipFile.toString().substring(zipFile.toString().indexOf("_") + 1);
+				    		dateString = dateString.substring(0, dateString.indexOf(".tar.gz"));
 				    		
 				    		// Add parameters to URL
 				    		List<NameValuePair> par = new LinkedList<NameValuePair>();
@@ -191,10 +192,8 @@ public class CompressAndSendData extends IntentService {
 				            
 				            InputStreamEntity reqEntity = null;
 				    		try {
-				    			//File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
-				    			//File file = new File(Globals.APP_PATH, "rawAudio");
 				    			reqEntity = new InputStreamEntity(new FileInputStream(zipFile), -1);
-				    			reqEntity.setContentType("binary/octet-stream");
+				    			reqEntity.setContentType("binary/octet-stream"); //TODO: check if this works for tar.gz
 				    	        reqEntity.setChunked(true);
 				    	        
 				    	        post.setEntity(reqEntity);
@@ -211,9 +210,9 @@ public class CompressAndSendData extends IntentService {
 				    	    		
 				    	    		resultList.add(true);
 				    	    		
-				    	    		Log.i(TAG, "Raw audio file successfully transfered to server");
+				    	    		Log.i(TAG, "Zip file successfully transfered to server");
 				    	    		
-				    	    		//delete the rawAudio file on the device:
+				    	    		//delete the zip file on the device:
 				    	    		zipFile.delete();
 				    	    		
 				    	    	} else {

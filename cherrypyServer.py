@@ -109,7 +109,7 @@ class RawAudio():
         
         data = cherrypy.request.body.read()
         
-        baseFolder = "userAudioData/"
+        baseFolder = "experimentData/"
         
         full_filename = str(baseFolder + "RawAudio_" + user_id + "_" + date)
 
