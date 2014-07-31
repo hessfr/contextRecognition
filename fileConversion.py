@@ -1,7 +1,8 @@
 import scipy.io.wavfile as wav
 import os
-from os import listdir
+from os import rename, listdir
 import shutil
+import pipes
 import numpy as np
 import subprocess
 from subprocess import Popen, PIPE
@@ -21,8 +22,18 @@ def convertFolder(folderName):
         fileList = listdir(dir)
         for file in fileList: 
             
-            file = str(dir + "/" + file)
-            
+            # If filename contains quotations marks, just remove them and rename the file:
+            if ("'" in file) or ('"' in file):
+                print("Remove quotation marks in filename")
+                tmp1 = file.replace('"','')
+                newFilename = tmp1.replace("'", "")
+                newFilename = str(dir + "/" + newFilename)
+                file = str(dir + "/" + file)
+                rename(file, newFilename)
+                file = newFilename            
+            else:
+                file = str(dir + "/" + file) 
+
             """ Check if file is audio file first: """
             if isAudio(file):
                 if len(file.rsplit('.', 1)) == 1:
