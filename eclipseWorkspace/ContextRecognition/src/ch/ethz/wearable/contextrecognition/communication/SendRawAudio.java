@@ -36,6 +36,8 @@ import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 
+// OUTDATED
+
 public class SendRawAudio extends IntentService {
 
 	private static final String TAG = "SendRawAudio";
@@ -122,23 +124,6 @@ public class SendRawAudio extends IntentService {
 					    		HttpClient client = new DefaultHttpClient(httpParameters);
 					            HttpPost post = new HttpPost(URL);
 					            
-					            // Doesn't work (500 on server: "Illegal end of multipart body.") and deprecated:
-//					            MultipartEntity multipartEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-//					            File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
-//					            multipartEntity.addPart("Data", new FileBody(file));
-//					            post.setEntity(multipartEntity);
-					            
-					            // Doesn't work:
-//					            MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
-//					            entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-//					            File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
-//					            entityBuilder.addPart("mFile", new FileBody(file));
-//					            entityBuilder.addBinaryBody("data", file);
-//					            HttpEntity multiPartEntity = entityBuilder.build();
-//					            post.setEntity(multiPartEntity);
-					            
-					            
-					            // Works, but is too slow:
 					            InputStreamEntity reqEntity = null;
 					    		try {
 					    			//File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
