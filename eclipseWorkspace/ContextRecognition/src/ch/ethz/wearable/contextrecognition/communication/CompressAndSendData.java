@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.utils;
+package ch.ethz.wearable.contextrecognition.communication;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -31,6 +31,8 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -106,7 +108,7 @@ public class CompressAndSendData extends IntentService {
 					}
 
 				} else {
-					Log.i(TAG, "Folder " + logFolder.getName() + " not zipped, as it the log folder from today");
+					Log.d(TAG, "Folder " + logFolder.getName() + " not zipped, as it the log folder from today");
 				}
 				
 			}
@@ -138,7 +140,7 @@ public class CompressAndSendData extends IntentService {
 					
 			    	if(zipFile.getName().contains(".tar.gz")) {
 			    		
-			    		Log.i(TAG, "Zip file " + zipFile.getName() + " will be transfered");
+			    		Log.i(TAG, zipFile.getName() + " will be transfered");
 			    		
 			    		ConnectivityManager connManager = (ConnectivityManager) getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 			    		NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);

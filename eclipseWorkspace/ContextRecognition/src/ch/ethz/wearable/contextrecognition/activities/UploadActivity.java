@@ -7,7 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
+import ch.ethz.wearable.contextrecognition.communication.CompressAndSendData;
 
 import com.example.contextrecognition.R;
 
@@ -38,7 +38,7 @@ public class UploadActivity extends Activity {
 			public void onClick(View arg0) {
  
 				// initiate the transfer of the raw audio data to the server:
-				Intent i = new Intent(getBaseContext(), SendRawAudio.class);
+				Intent i = new Intent(getBaseContext(), CompressAndSendData.class);
 				getBaseContext().startService(i);
 
 			}

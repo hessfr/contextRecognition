@@ -154,7 +154,7 @@
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModelGet" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.ManageClasses" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.ManageClassesGet" />
-       	<service android:name="ch.ethz.wearable.contextrecognition.utils.CompressAndSendData" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.CompressAndSendData" />
        	
        	<!-- Register the broadcast receiver and all intent filters -->
        	<receiver android:name="ch.ethz.wearable.contextrecognition.utils.StateManager"

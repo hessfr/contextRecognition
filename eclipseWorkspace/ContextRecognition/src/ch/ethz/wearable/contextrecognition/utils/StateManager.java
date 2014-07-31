@@ -1,10 +1,7 @@
 package ch.ethz.wearable.contextrecognition.utils;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -15,17 +12,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
@@ -50,11 +42,11 @@ import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
+import ch.ethz.wearable.contextrecognition.communication.CompressAndSendData;
 import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
 import ch.ethz.wearable.contextrecognition.communication.InitModelGet;
 import ch.ethz.wearable.contextrecognition.communication.ManageClassesGet;
-import ch.ethz.wearable.contextrecognition.communication.SendRawAudio;
 import ch.ethz.wearable.contextrecognition.data.AppData;
 import ch.ethz.wearable.contextrecognition.math.ModelAdaptor;
 import ch.ethz.wearable.contextrecognition.math.ModelAdaptor.onModelAdaptionCompleted;
@@ -590,7 +582,7 @@ public class StateManager extends BroadcastReceiver {
 			resetQueriesLeft(context);
 			
 			// initiate the transfer of the raw audio data to the server:
-			Intent i = new Intent(context, SendRawAudio.class);
+			Intent i = new Intent(context, CompressAndSendData.class);
 			context.startService(i);
 		}
 		
