@@ -36,7 +36,8 @@ public class extractFeatures {
         
 		double fftBufferR[] = new double[FFT_SIZE];
     	double fftBufferI[] = new double[FFT_SIZE];
-    	double featureCepstrum[] = new double[MFCCS_VALUE];
+    	double featureCepstrum[] = new double[MFCCS_VALUE]; 
+    	double featureArray[] = new double[MFCCS_VALUE+1]; // also include the log energy 
     	double logEnergy;
 	    
     	ArrayList<double[]> features = new ArrayList<double[]>();
@@ -119,11 +120,17 @@ public class extractFeatures {
 				}
 				
 				if (isValid == true) {
-					features.add(featureCepstrum);
+					// Calculate log energy:
+					logEnergy = calcLogEnergy(audioShorts);
+					
+					// Combine the MFCCs and the log energy into one array:
+					System.arraycopy(featureCepstrum, 0, featureArray, 0, featureCepstrum.length);
+					featureArray[featureCepstrum.length] = logEnergy;
+					
+					features.add(featureArray);
 				}
 				
-				// Calculate log energy:
-				//logEnergy = calcLogEnergy(audioShorts, 0.032);
+				
 				
 				
             }
@@ -192,19 +199,26 @@ public class extractFeatures {
 		return allFeatures;
 	}
 	
-	private double calcLogEnergy(short[] data, double period) {
+	private double calcLogEnergy(short[] data) {
 		
+		double minE = 8.67e-19;
 //		System.out.println("Length of short array: " + data.length);
+		int dim = data.length;
 		
 		double sum = 0.0;
 		
-		for(int i=0; i<data.length; i++) {
+		for(int i=0; i<dim; i++) {
 			sum += Math.pow(data[i],2);
 		}
 		
-		double result = Math.log(sum * period);
+		double d = Math.sqrt(sum / ((double) dim));
 		
-		return result;
+		if (d<minE) {
+			d=minE;
+			System.out.println("d smaller minE");
+		}
+		
+		return Math.log(d);
 	}
 	
     public static void main(String[] args) { 
