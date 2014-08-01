@@ -49,6 +49,7 @@ public class SoundHandler extends Thread {
 	public static final int RECORDER_SAMPLERATE = 16000;
 	
 	private LinkedList<queueElement> queue = new LinkedList<queueElement>(); // contains the raw audio data, each element is 2 seconds long
+	
 	private class queueElement{
 		@SuppressWarnings("unused")
 		public int numSamplesRead;
@@ -61,7 +62,11 @@ public class SoundHandler extends Thread {
 		super();
 	}
 	
-	private Thread recorderThread = new Thread() {
+	/*
+	 * Makes new data available when a new samples arrives. The actual processing will be done
+	 * by overriding the handleData method
+	 */
+	private Thread queueThread = new Thread() {
 
 		public void run() {
 			
@@ -73,7 +78,6 @@ public class SoundHandler extends Thread {
 					//Log.i(TAG, String.valueOf(queue.size()));
 					
 					if(queue.size() != 0) {
-						//Log.i(TAG, "queue size: " + queue.size());
 						
 						// get new object from queue:
 						newEL = queue.poll(); // return the head element of the list and remove it
@@ -89,7 +93,7 @@ public class SoundHandler extends Thread {
 					//Log.i(TAG, "Framelength: " + String.valueOf(newEL.buffer.length));
 				}
 				
-				// Wait 10ms before getting the next element again: // TODO: is this a good value???
+				// Wait 10ms before getting the next element again:
 				try {
 					sleep(10);
 				} catch (InterruptedException e) {
@@ -101,10 +105,10 @@ public class SoundHandler extends Thread {
 		
 	};
 	
-	public void run(){
+	public void run() {
 		
 		// Start the thread
-		this.recorderThread.start();
+		this.queueThread.start();
 		        
 		while(currentlyRecording) {
 			

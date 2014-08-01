@@ -1,6 +1,8 @@
 package ch.ethz.wearable.contextrecognition.audio;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
@@ -76,7 +78,7 @@ public class AudioWorker extends IntentService {
 		Globals.readWriteLock.readLock().unlock();
 		
 		// Add the event to the log files:
-		appendToLogStart();
+		appendToLogFiles();
 		
 		// Initialize the data handling
 		initializeDataHandling();
@@ -286,20 +288,79 @@ public class AudioWorker extends IntentService {
 	}
 	
 	/*
-	 * Add the time of the first application start to the startLog and the predctionLog files
+	 * Add the time of the when we start and stop recording to the log files
 	 */
-	private void appendToLogStart() {
+	private void appendToLogFiles() {
 		
-		
+		// Check when we made the last change to the raw audio data file and add log it to file:
+		File rawAudioFile = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
+		if (rawAudioFile.exists()) {
+			long recordingStopped = rawAudioFile.lastModified();
+			
+			/*
+			 *  First read in when we started the last time, that we can calculate the relative time, when
+			 *  we stopped recording:
+			 */
+			try {
+				long recordingLastStarted = 0;
+				double recordingStoppedRel = 0.0;
+				File startStopFile = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
+				
+				BufferedReader br = new BufferedReader(new FileReader(startStopFile));
+			    String lastLine = null;
+			    String tmpLine = null;
+
+			    while ((tmpLine = br.readLine()) != null) {
+			    	lastLine = tmpLine;
+			    }
+			    br.close();
+			    
+			    if (lastLine.contains("start")) {
+			    	recordingLastStarted = Long.valueOf(lastLine.substring(0, lastLine.indexOf("\t")));
+			    	
+			    	recordingStoppedRel = (recordingStopped - recordingLastStarted)/1000.0;
+			    	
+			    } else {
+			    	Log.e(TAG, "Start-stop log file corrupted, couldn't calulcate stop time");
+			    }
+			    	
+				File predFile = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
+			    if (predFile.exists()) {
+					FileWriter f = new FileWriter(predFile, true);
+					f.write("\t" + recordingStoppedRel + "\n");
+					f.close();
+			    }
+					
+			} catch (IOException e) {
+				e.printStackTrace();
+				Log.e(TAG, "Relative stop time could not be added to prediction log file");
+			}
+			
+			
+			
+			
+			
+			
+			try {
+				File file = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
+				FileWriter f = new FileWriter(file, true);
+				f.write(recordingStopped + "\t" + "stop" + "\n");
+				f.close();
+			} catch (IOException e) {
+				Log.e(TAG, "Writing to start log file failed");
+				e.printStackTrace();
+			}
+			
+			
+		}
 	
 		double time = (System.currentTimeMillis() - Globals.RECORDING_START_TIME) / 1000.0;
 		
-		// TODO: do we still need this log file??
 		Log.d(TAG, "Appending to start time of the app to log");
 		try {
-			File file = new File(Globals.getLogPath(), Globals.START_LOG_FILENAME);
+			File file = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
 			FileWriter f = new FileWriter(file, true);
-			f.write(System.currentTimeMillis() + "\n");
+			f.write(System.currentTimeMillis() + "\t" + "start" + "\n");
 			f.close();
 		} catch (IOException e) {
 			Log.e(TAG, "Writing to start log file failed");
@@ -309,7 +370,7 @@ public class AudioWorker extends IntentService {
 		try {
 			File file = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
 			FileWriter f = new FileWriter(file, true);
-			f.write("\nRECORDING_STARTED" + "\n");
+			f.write("RECORDING_STARTED" + "\n");
 			f.close();
 		} catch (IOException e) {
 			Log.e(TAG, "Writing to prediction log file failed");
@@ -319,7 +380,7 @@ public class AudioWorker extends IntentService {
 		try {
 			File file = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
 			FileWriter f = new FileWriter(file, true);
-			f.write(time + "\t" + "RECORDING_STARTED" + "\n");
+			f.write("RECORDING_STARTED" + "\n");
 			f.close();
 		} catch (IOException e) {
 			Log.e(TAG, "Writing to GT log file failed");

@@ -47,7 +47,7 @@ public class Globals {
 	
 	//public static final File CURRENT_LOG_FOLDER = new File(APP_PATH, "/Logs_" + dateString);
 
-	public static final String START_LOG_FILENAME = "START_LOG.txt";
+	public static final String START_STOP_LOG_FILENAME = "START_STOP_Log.txt";
 	
 	public static final String AL_LOG_FILENAME = "AL_Log.txt";
 	

@@ -407,10 +407,8 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-							
-
-							Intent i = new Intent(context, CompressAndSendData.class);
-							context.startService(i);
+//							Intent i = new Intent(context, CompressAndSendData.class);
+//							context.startService(i);
 							
 						
 						}
@@ -1160,7 +1158,6 @@ public class StateManager extends BroadcastReceiver {
 		try {
 			File file = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
 			
-			// TODO: is this too slow???
 			BufferedReader br = new BufferedReader(new FileReader(file));
 		    String lastLine = null;
 		    String tmpLine = null;
