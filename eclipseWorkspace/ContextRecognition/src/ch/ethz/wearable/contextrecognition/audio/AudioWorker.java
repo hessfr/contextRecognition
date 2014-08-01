@@ -66,10 +66,7 @@ public class AudioWorker extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent arg0) {
 		Log.i(TAG, "AudioWorker Service started");
-		
-		Globals.RECORDING_START_TIME = System.currentTimeMillis();
-		Log.d(TAG, "start recording at time " + Globals.RECORDING_START_TIME);
-		
+			
 	    mfccList = new LinkedList<double[]>();
 	    dataBuffer = new LinkedList<double[]>();
 		featuresExtractor = new FeaturesExtractor();

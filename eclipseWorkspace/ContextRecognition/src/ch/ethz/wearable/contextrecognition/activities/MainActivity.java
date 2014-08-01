@@ -205,6 +205,7 @@ public class MainActivity extends ActionBarActivity {
 		 * recording again:
 		 */
 		if (AppStatus.getInstance().get() == AppStatus.getInstance().STOP_RECORDING) {
+			Globals.RECORDING_START_TIME = 0;
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);
 			AppStatus.getInstance().set(AppStatus.INIT);

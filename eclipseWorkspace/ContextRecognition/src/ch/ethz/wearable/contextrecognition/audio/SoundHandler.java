@@ -134,7 +134,6 @@ public class SoundHandler extends Thread {
 				short[] dataShort = new short[BUFFER_LENGTH];
 				int nRead = rec.read(dataShort, 0, dataShort.length);
 				
-				
 				if (nRead == AudioRecord.ERROR_INVALID_OPERATION
 						|| nRead == AudioRecord.ERROR_BAD_VALUE) {
 
@@ -145,15 +144,6 @@ public class SoundHandler extends Thread {
 					Log.e(TAG,"Only " + nRead + " of " + BUFFER_LENGTH + " samples were recorded");
 
 				} else {
-					
-					/*
-					 *  Put the current time to preferences, that we can get the exact time when the 
-					 *  recording stopped at the next start of the app
-					 */
-					mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-					SharedPreferences.Editor editor = mPrefs.edit();
-					editor.putLong(Globals.LASTEST_RECORDING_TIMESTAMP, System.currentTimeMillis());
-					editor.commit();
 					
 					// Log.i(TAG, "Loudness: " + Shorts.max(dataShort));
 					
@@ -176,6 +166,20 @@ public class SoundHandler extends Thread {
 					byte[] dataByte = short2byte(dataShort);
 					File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
 					appendToFile(dataByte, file);
+					
+					/*
+					 *  Put the current time to preferences, that we can get the exact time when the 
+					 *  recording stopped at the next start of the app
+					 */
+					mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+					SharedPreferences.Editor editor = mPrefs.edit();
+					editor.putLong(Globals.LASTEST_RECORDING_TIMESTAMP, System.currentTimeMillis());
+					editor.commit();
+					
+					if (Globals.RECORDING_START_TIME == 0) {
+						Globals.RECORDING_START_TIME = System.currentTimeMillis();
+						Log.i(TAG, "start recording at time " + Globals.RECORDING_START_TIME);
+					}
 					
 					if (pointer < 6) {
 						pointer++;
@@ -230,18 +234,6 @@ public class SoundHandler extends Thread {
 		this.rec.stop();
 		this.rec.release();
 		
-		// Doesn't work if app is classes via task manager:
-//		try {
-//			File file = new File(Globals.getLogPath(),
-//					Globals.START_LOG_FILENAME);
-//			FileWriter f = new FileWriter(file, true);
-//			f.write(System.currentTimeMillis() + " STOP" + "\n");
-//			f.close();
-//		} catch (IOException e) {
-//			Log.e(TAG, "Writing to start log file failed");
-//			e.printStackTrace();
-//		}
-
 	}
 	
 	private AudioRecord initRec() {
