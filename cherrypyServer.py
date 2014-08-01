@@ -111,7 +111,7 @@ class RawAudio():
         
         baseFolder = "experimentData/"
         
-        full_filename = str(baseFolder + "ExpData_" + user_id + "_" + date)
+        full_filename = str(baseFolder + "ExpData_" + user_id + "_" + date + ".tar.gz")
 
         # If file already exists, display a warning:        
         if(os.path.isfile(full_filename)):
