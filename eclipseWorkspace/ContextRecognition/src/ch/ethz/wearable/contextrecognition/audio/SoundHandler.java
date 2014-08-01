@@ -5,9 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
@@ -16,6 +19,8 @@ import com.google.common.primitives.Shorts;
 public class SoundHandler extends Thread {
 	
 	private final String TAG = "SoundHandler"; 
+	
+	private Context context;
 	
 	public boolean isRunning = true;
 	
@@ -42,6 +47,8 @@ public class SoundHandler extends Thread {
 	private boolean[] silenceDetectionBuffer = new boolean[CHUNKS_PER_PREDICTION]; // true means silent
 	private boolean predictionDataAvailable = false;
 	
+	SharedPreferences mPrefs;
+	
 	private int pointer = 0; // to fill the sequence for the prediction with the recorded data
 	
 	private Object blockSync = new Object();
@@ -58,8 +65,11 @@ public class SoundHandler extends Thread {
 	}
 
 	// Constructor:
-	public SoundHandler(){
+	public SoundHandler(Context context){
 		super();
+		
+		this.context = context;	
+		
 	}
 	
 	/*
@@ -135,6 +145,15 @@ public class SoundHandler extends Thread {
 					Log.e(TAG,"Only " + nRead + " of " + BUFFER_LENGTH + " samples were recorded");
 
 				} else {
+					
+					/*
+					 *  Put the current time to preferences, that we can get the exact time when the 
+					 *  recording stopped at the next start of the app
+					 */
+					mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+					SharedPreferences.Editor editor = mPrefs.edit();
+					editor.putLong(Globals.LASTEST_RECORDING_TIMESTAMP, System.currentTimeMillis());
+					editor.commit();
 					
 					// Log.i(TAG, "Loudness: " + Shorts.max(dataShort));
 					

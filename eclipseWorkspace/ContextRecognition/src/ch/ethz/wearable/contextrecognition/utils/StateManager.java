@@ -410,7 +410,12 @@ public class StateManager extends BroadcastReceiver {
 //							Intent i = new Intent(context, CompressAndSendData.class);
 //							context.startService(i);
 							
-						
+
+							
+							
+							
+							
+							
 						}
 						
 						

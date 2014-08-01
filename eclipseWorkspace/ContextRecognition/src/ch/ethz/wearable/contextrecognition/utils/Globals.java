@@ -266,6 +266,8 @@ public class Globals {
 	public static final String CURRENT_CONTEXT = "currentContext";
 	public static final String CONTEXT_CLASSES = "contextClasses";
 	public static final String CLASS_COUNTS = "classCounts";
+	public static final String LASTEST_RECORDING_TIMESTAMP = "lastestRecordingTimestamp";
+	
 	
 	/*
 	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989

@@ -10,17 +10,20 @@ import java.util.LinkedList;
 
 import org.ejml.data.DenseMatrix64F;
 
+import android.app.Activity;
+import android.app.IntentService;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import ch.ethz.wearable.contextrecognition.data.Mfccs;
 import ch.ethz.wearable.contextrecognition.data.PredictionResult;
 import ch.ethz.wearable.contextrecognition.math.Classifier;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-import android.app.Activity;
-import android.app.IntentService;
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
 
 public class AudioWorker extends IntentService {
 
@@ -70,7 +73,7 @@ public class AudioWorker extends IntentService {
 	    mfccList = new LinkedList<double[]>();
 	    dataBuffer = new LinkedList<double[]>();
 		featuresExtractor = new FeaturesExtractor();
-		soundHandler = new SoundHandler();
+		soundHandler = new SoundHandler(getBaseContext());
 		clf = new Classifier();
 		
 		Globals.readWriteLock.readLock().lock();
@@ -78,10 +81,10 @@ public class AudioWorker extends IntentService {
 		Globals.readWriteLock.readLock().unlock();
 		
 		// Add the event to the log files:
-		appendToLogFiles();
+		appendToLogFiles(getBaseContext());
 		
 		// Initialize the data handling
-		initializeDataHandling();
+		initializeDataHandling(getBaseContext());
         
 	}
 	
@@ -91,9 +94,9 @@ public class AudioWorker extends IntentService {
 	 * (ii) run the classification algorithm
 	 * (iii) start the next recording sequence
 	 */
-	public void initializeDataHandling() {
+	public void initializeDataHandling(Context context) {
 
-		soundHandler = new SoundHandler() {
+		soundHandler = new SoundHandler(context) {
 			
 			@Override
 			protected void handleData(short[] data, boolean[] silenceBuffer) {
@@ -290,13 +293,12 @@ public class AudioWorker extends IntentService {
 	/*
 	 * Add the time of the when we start and stop recording to the log files
 	 */
-	private void appendToLogFiles() {
+	private void appendToLogFiles(Context context) {
 		
-		// Check when we made the last change to the raw audio data file and add log it to file:
-		File rawAudioFile = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
-		if (rawAudioFile.exists()) {
-			long recordingStopped = rawAudioFile.lastModified();
-			
+		SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		long recordingStopped = mPrefs.getLong(Globals.LASTEST_RECORDING_TIMESTAMP, -1);
+		
+		if (recordingStopped != -1) {
 			/*
 			 *  First read in when we started the last time, that we can calculate the relative time, when
 			 *  we stopped recording:
@@ -333,14 +335,9 @@ public class AudioWorker extends IntentService {
 					
 			} catch (IOException e) {
 				e.printStackTrace();
-				Log.e(TAG, "Relative stop time could not be added to prediction log file");
+				Log.w(TAG, "Relative stop time could not be added to prediction log file");
 			}
-			
-			
-			
-			
-			
-			
+
 			try {
 				File file = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
 				FileWriter f = new FileWriter(file, true);
@@ -350,10 +347,10 @@ public class AudioWorker extends IntentService {
 				Log.e(TAG, "Writing to start log file failed");
 				e.printStackTrace();
 			}
-			
-			
 		}
-	
+		
+
+
 		double time = (System.currentTimeMillis() - Globals.RECORDING_START_TIME) / 1000.0;
 		
 		Log.d(TAG, "Appending to start time of the app to log");
