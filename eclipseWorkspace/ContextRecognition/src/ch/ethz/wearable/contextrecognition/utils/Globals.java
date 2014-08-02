@@ -30,6 +30,7 @@ public class Globals {
 	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 			+ "/" + APP_FOLDER);
 	
+	// Get the file to the current (today's) log folder
 	@SuppressLint("SimpleDateFormat")
 	public static File getLogPath() {
 		Calendar cal = Calendar.getInstance();
@@ -41,6 +42,19 @@ public class Globals {
 		if (!f.exists()) {
 		    f.mkdir();
 		}
+		
+		return f;
+	}
+	
+	// Get the file to yesterday's log folder
+	@SuppressLint("SimpleDateFormat")
+	public static File getLogPathYesterday() {
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DATE, -1);
+		Date currentLocalTime = cal.getTime();
+		DateFormat date = new SimpleDateFormat("yyyMMdd");
+		String dateString = date.format(currentLocalTime);
+		File f = new File(APP_PATH, "/Logs_" + dateString);
 		
 		return f;
 	}
@@ -60,9 +74,6 @@ public class Globals {
 	public static final String AUDIO_FILENAME = "rawAudio";
 	
 	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");
-	
-	// Just for testing: to see if the scheduled "long-term" events like file transfer at the end of the day work
-	public static final File TEST_FILE = new File(APP_PATH, "scheduledTasks.txt");
 	
 	public static long RECORDING_START_TIME = 0;
 	

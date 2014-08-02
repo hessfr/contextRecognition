@@ -412,10 +412,6 @@ public class StateManager extends BroadcastReceiver {
 							
 
 							
-							
-							
-							
-							
 						}
 						
 						
@@ -527,11 +523,11 @@ public class StateManager extends BroadcastReceiver {
 		    	actualUpdateTime = updateTime.getTimeInMillis();
 		    }
 		    
-		    Intent resetIntent = new Intent(Globals.END_OF_DAY_TASKS);
-	        PendingIntent pendingResetIntent = PendingIntent.getBroadcast(context, 0, resetIntent, 0);
+		    Intent endOfDayIntent = new Intent(Globals.END_OF_DAY_TASKS);
+	        PendingIntent pendingEndOfDayIntent = PendingIntent.getBroadcast(context, 0, endOfDayIntent, 0);
 	        
 	        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, actualUpdateTime, AlarmManager.INTERVAL_DAY, pendingResetIntent);
+	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, actualUpdateTime, AlarmManager.INTERVAL_DAY, pendingEndOfDayIntent);
 		    
 	        Log.d(TAG, "AlarmManager registered, to reset the maximum number of queries at the end of the day");
 	        
@@ -543,14 +539,18 @@ public class StateManager extends BroadcastReceiver {
 	        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, currentCal.getTimeInMillis(), Globals.PERSIST_PERIOD, pendingPersistIntent);
 		    
 	        Log.d(TAG, "AlarmManager registered, to continuously persist data");
-
+	        
+		} 
+		
+		if (intent.getAction().equals(Globals.END_OF_DAY_TASKS)) {
+			
 	        // Copy the classifier into the Log folder at the end of the day (for later evaluation):
 			Calendar cal = Calendar.getInstance();
 			Date currentLocalTime = cal.getTime();
 			DateFormat date = new SimpleDateFormat("yyyMMdd");
 			String dateString = date.format(currentLocalTime);
 
-			File destFile = new File(Globals.getLogPath(), "GMM_" + dateString);
+			File destFile = new File(Globals.getLogPathYesterday(), "GMM_" + dateString);
 			
 			try {
 				Globals.readWriteLock.readLock().lock();
@@ -560,26 +560,11 @@ public class StateManager extends BroadcastReceiver {
 				Log.e(TAG, "Failed to copy GMM into log folder");
 				e.printStackTrace();
 			}
-	        
-		} 
-		
-		if (intent.getAction().equals(Globals.END_OF_DAY_TASKS)) {
-			
-			Calendar cal = Calendar.getInstance();
-			Date currentLocalTime = cal.getTime();
-			DateFormat date = new SimpleDateFormat("dd-MM-yyy HH:mm:ss z");
-			String timeAndDate = date.format(currentLocalTime);
-			try {
-				FileWriter f = new FileWriter(Globals.TEST_FILE, true);
-				f.write(timeAndDate + " end of day task called\n");
-				f.close();
-			} catch (IOException e) {
-				Log.e(TAG, "Writing to test file failed");
-				e.printStackTrace();
-			}
-			
+					
 			// reset the max number of queries:
 			resetQueriesLeft(context);
+			
+
 			
 			// initiate the transfer of the raw audio data to the server:
 			Intent i = new Intent(context, CompressAndSendData.class);
