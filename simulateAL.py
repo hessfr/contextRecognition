@@ -16,11 +16,10 @@ from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
 import ipdb as pdb #pdb.set_trace()
 
-_thresholdDict = {}
-
 def simulateAL(trainedGMM, testFeatureData):
     """
-    Newest method
+    Query criteria is the mean entropy value on the 2 second interval.
+    
     @param trainedGMM: already trained GMM
     @param testFeatureData: Numpy array of already extracted, but not scaled features of the test file
     """
@@ -59,13 +58,16 @@ def simulateAL(trainedGMM, testFeatureData):
     
     revClassesDict = reverseDict(trainedGMM["classesDict"])
 
-    """ Simulate actual behavior by reading in points in batches of size b: """
+    # Simulate actual behavior by reading in points in batches of size b: 
     b = 63 # equals 2 seconds
 
     predictedLabels = []
 
     currentTime = 0
     prevTime = -1000000.0
+
+
+    """ Initialize buffers etc. """
 
     # Booleans that indicate if the initial threshold was already set:
     initThresSet = []
@@ -96,6 +98,9 @@ def simulateAL(trainedGMM, testFeatureData):
     # Single buffer containing the last 30 points regardless of the predicted class
     queryBuffer = []
 
+    # Actual ground truth labels:
+    actBuffer = []
+
     # Our 3 min (?) buffer we use to initialized the threshold:
     initThresBuffer = []
     
@@ -104,7 +109,7 @@ def simulateAL(trainedGMM, testFeatureData):
     
     thresQueriedInterval = []
 
-    for i in range(len(n_classes)):
+    for i in range(n_classes):
         initThresSet.append(False)
         thresSet.append(False)
         feedbackReceived.append(False)
@@ -149,21 +154,23 @@ def simulateAL(trainedGMM, testFeatureData):
         if len(queryBuffer) < 30:
             queryBuffer.append(entropy)
             predBuffer.append(predictedLabel)
+            actBuffer.append(actualLabel)
         else:
             queryBuffer.append(entropy)
             del queryBuffer[0]
             predBuffer.append(predictedLabel)
             del predBuffer[0]
+            actBuffer.append(actualLabel)
+            del actBuffer[0]
 
         # --- for plotting only:
-        if len(plotBuffer[predictedLabel]) < 30: #TODO: xxxxxxxxxx
+        if len(plotBuffer[predictedLabel]) < 30:
             # fill buffer:
             plotBuffer[predictedLabel].append(entropy)
         else:
             # buffer full:
             tmp = np.array(plotBuffer[predictedLabel])
-            q = tmp.mean() + tmp.std() #TODO: xxxxxxxxxx
-            plotValues[predictedLabel].append(q)
+            plotValues[predictedLabel].append(queryCriteria(tmp))
             plotThres[predictedLabel].append(threshold[predictedLabel])
             plotBuffer[predictedLabel] = []
 
@@ -174,16 +181,16 @@ def simulateAL(trainedGMM, testFeatureData):
                     initThresBuffer[predictedLabel].append(entropy)
 
                 else:
-                    # set first threshold to 95% of max value if init buffer is full:
+                    # set first threshold init buffer is full:
                     tmp = np.array(initThresBuffer[predictedLabel])
-                    threshold[predictedLabel] = tmp.mean() + 1 * tmp.std() #TODO: xxxxxxxxxx
+                    threshold[predictedLabel] = initMetric(tmp.mean(), tmp.std())
                     print("Initial threshold for " + revClassesDict[predictedLabel] + " class " + str(round(threshold[predictedLabel],4)))
                     thresSet[predictedLabel] = True
                     initThresSet[predictedLabel] = True
 
         # --- Setting threshold (not the initial ones): ---
         if (thresSet[predictedLabel] == False) and (feedbackReceived[predictedLabel] == True):
-            if len(thresBuffer[predictedLabel]) < 300: # 300 equals 10min #TODO: xxxxxxxxxx
+            if len(thresBuffer[predictedLabel]) < 300: # 300 equals 10min 
                 # Fill threshold buffer
                 thresBuffer[predictedLabel].append(entropy)
             else:
@@ -193,7 +200,7 @@ def simulateAL(trainedGMM, testFeatureData):
                 if initThresSet[predictedLabel] == True:
                     # set threshold after a model adaption:
                     tmp = np.array(thresBuffer[predictedLabel])
-                    thres = tmp.mean() + 3 * tmp.std() #TODO: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                    thres = metricAfterFeedback(tmp.mean(), tmp.std())
                     #prevThreshold = threshold[predictedLabel]
                     #threshold[predictedLabel] = (thres + prevThreshold) / 2.0
                     
@@ -213,6 +220,7 @@ def simulateAL(trainedGMM, testFeatureData):
             # --- calculate current query criteria: ---
             npCrit = np.array(queryBuffer)
             npPred = np.array(predBuffer)
+            npActual = np.array(actBuffer)
 
             # Majority vote on predicted labels in this 1min:
             maj = majorityVote(npPred).mean()
@@ -220,7 +228,7 @@ def simulateAL(trainedGMM, testFeatureData):
             majPoints = npCrit[iTmp]
 
             # only use points that had the same predicted class in that 1min window:
-            queryCrit = majPoints.mean() #  + majPoints.std() #TODO: xxxxxxxxxx
+            queryCrit = queryCriteria(majPoints)
 
             # Majority vote on actual labels in this 1min for comparison only:
             majActual = majorityVote(npActual).mean() # only for evaluation
@@ -251,14 +259,15 @@ def simulateAL(trainedGMM, testFeatureData):
 
                         feedbackReceived[actualLabel] = True
 
-                        # Compute a value for the threshold on this interval, as we want to use it to calculate the new threshold later.
-                        thresQueriedInterval[actualLabel] = majPoints.mean()# + 2 * majPoints.std() #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        # Compute a value for the threshold on this interval (that triggered the query), as we want to use it to calculate the new threshold later.
+                        thresQueriedInterval[actualLabel] = metricBeforeFeedback(majPoints.mean(), majPoints.std())
 
                         # reset buffers:
                         queryBuffer = []
                         predBuffer = []
+                        actBuffer = []
 
-                        for i in range(len(n_classes)):
+                        for i in range(n_classes):
                             thresBuffer[i] = []
                             thresSet[i] = False
                             if(feedbackReceived[i]) == False:
@@ -271,7 +280,7 @@ def simulateAL(trainedGMM, testFeatureData):
     print(str(round(100.0 * majWrongCnt/float(majWrongCnt+majCorrectCnt),2)) + "% of all majority votes were wrong")
 
     # ---- for plotting only: plot max values of entropy in 1min over time ---
-    for i in range(len(n_classes)):
+    for i in range(n_classes):
         pl.plot(plotValues[i])
         pl.plot(plotThres[i])
         pl.show()
@@ -295,6 +304,49 @@ def simulateAL(trainedGMM, testFeatureData):
         i += 1
 
     return results
+
+def queryCriteria(data):
+    """
+    The metric that is used to check the query criteria
+
+    @param data: Numpy array of the batch of data that should be checked
+    @return: Scalar value, that will be compared to the threshold
+    """
+    return data.mean()
+
+def initMetric(mean, std):
+    """
+    Metric that is used to set the initial threshold for each class
+
+    @param mean: Mean value (scalar) of the 2 second interval
+    @param std: Standard deviation value (scalar) of the 2 second interval
+    @return: Scalar value that is used to set the initial threshold
+    """
+    return (mean + std)
+
+def metricAfterFeedback(mean, std):
+    """
+    Part of the threshold calculation accounting for only for values after the 
+    model adaption after the buffer is filled, i.e. not immediatly after (calculated with the new model)
+
+    @param mean: Mean value (scalar) of the 2 second interval
+    @param std: Standard deviation value (scalar) of the 2 second interval
+    @return: Scalar value used to calculate part of the threshold
+    """
+    return (mean + std)
+
+def metricBeforeFeedback(mean, std):
+    """
+    Part of the threshold calculation accounting for only for values on the 
+    interval that triggered the query (calculated with the old model)
+
+    @param mean: Mean value (scalar) of the 2 second interval
+    @param std: Standard deviation value (scalar) of the 2 second interval
+    @return: Scalar value used to calculate part of the threshold
+    """
+    return (mean + std)
+
+
 
 def checkLabelAccuracy(actualLabels, label):
     """
