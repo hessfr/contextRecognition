@@ -18,17 +18,16 @@ import ipdb as pdb #pdb.set_trace()
 
 _thresholdDict = {}
 
-#tGMM = pickle.load(open("tGMM.p","rb"))
-#realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
-
-def meanAL(trainedGMM, testFeatureData):
+def simulateAL(trainedGMM, testFeatureData):
     """
     Newest method
     @param trainedGMM: already trained GMM
-    @param testFeatureData: Numpy array of already extracted features of the test file
+    @param testFeatureData: Numpy array of already extracted, but not scaled features of the test file
     """
     y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0], 'labelsAdapted.txt')
     y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0], 'labels.txt')
+
+    n_classes = len(trainedGMM["classesDict"])
 
     print(trainedGMM["classesDict"])
 
@@ -70,51 +69,26 @@ def meanAL(trainedGMM, testFeatureData):
 
     # Booleans that indicate if the initial threshold was already set:
     initThresSet = []
-    initThresSet.append(False)
-    initThresSet.append(False)
-    initThresSet.append(False)
 
     # Booleans that indicate if the initial threshold was already set:
     thresSet = []
-    thresSet.append(False)
-    thresSet.append(False)
-    thresSet.append(False)
-
+    
     # Booleans that indicate if any label was already provided by user for a class. To make sure that we
     # don't set the threshold too high for that class after the model was adapted
     feedbackReceived = []
-    feedbackReceived.append(False)
-    feedbackReceived.append(False)
-    feedbackReceived.append(False)
-
-
+    
     # Number of queries asked for each class:
     numQueries = [] # only for evaluation
-    numQueries.append(0)
-    numQueries.append(0)
-    numQueries.append(0)
 
     # Thresholds for the different classes:
     threshold = []
-    threshold.append(-1)
-    threshold.append(-1)
-    threshold.append(-1)
-
+ 
     updatePoints = []
 
     # ---- for plotting only ---
     plotValues = [] # only for evaluation
-    plotValues.append([])
-    plotValues.append([])
-    plotValues.append([])
     plotThres = []
-    plotThres.append([])
-    plotThres.append([])
-    plotThres.append([])
     plotBuffer = []
-    plotBuffer.append([])
-    plotBuffer.append([])
-    plotBuffer.append([])
 
     # predicted labels in the last minute:
     predBuffer = []
@@ -124,25 +98,35 @@ def meanAL(trainedGMM, testFeatureData):
 
     # Our 3 min (?) buffer we use to initialized the threshold:
     initThresBuffer = []
-    initThresBuffer.append([])
-    initThresBuffer.append([])
-    initThresBuffer.append([])
-
+    
     # Our 10min buffer we use for threshold calculation after adapting the model:
     thresBuffer = []
-    thresBuffer.append([])
-    thresBuffer.append([])
-    thresBuffer.append([])
+    
+    thresQueriedInterval = []
+
+    for i in range(len(n_classes)):
+        initThresSet.append(False)
+        thresSet.append(False)
+        feedbackReceived.append(False)
+        numQueries.append(0)
+        threshold.append(-1)
+
+        initThresBuffer.append([])
+        thresBuffer.append([])
+        thresQueriedInterval.append(-1)
+
+        # ---- for plotting only: ---
+        plotValues.append([])
+        plotThres.append([])
+        plotBuffer.append([])
+        
+    
 
     majCorrectCnt = 0 #only for evaluation
     majWrongCnt = 0 #only for evaluation
     
-    thresQueriedInterval = []
-    thresQueriedInterval.append(-1)
-    thresQueriedInterval.append(-1)
-    thresQueriedInterval.append(-1)
-
-    # This loop loads new data every 2sec
+    
+        # This loop loads new data every 2sec
     for i in range(simFeatures.shape[0]/b):
         start = i*b
         end = (i+1)*b
@@ -274,20 +258,11 @@ def meanAL(trainedGMM, testFeatureData):
                         queryBuffer = []
                         predBuffer = []
 
-                        thresBuffer[0] = []
-                        thresBuffer[1] = []
-                        thresBuffer[2] = []
-
-                        thresSet[0] = False
-                        thresSet[1] = False
-                        thresSet[2] = False
-
-                        if(feedbackReceived[0]) == False:
-                            initThresBuffer[0] = []
-                        if(feedbackReceived[1]) == False:
-                            initThresBuffer[1] = []
-                        if(feedbackReceived[2]) == False:
-                            initThresBuffer[2] = []
+                        for i in range(len(n_classes)):
+                            thresBuffer[i] = []
+                            thresSet[i] = False
+                            if(feedbackReceived[i]) == False:
+                                initThresBuffer[i] = []
 
 
                         prevTime = currentTime
@@ -296,15 +271,10 @@ def meanAL(trainedGMM, testFeatureData):
     print(str(round(100.0 * majWrongCnt/float(majWrongCnt+majCorrectCnt),2)) + "% of all majority votes were wrong")
 
     # ---- for plotting only: plot max values of entropy in 1min over time ---
-    pl.plot(plotValues[0])
-    pl.plot(plotThres[0])
-    pl.show()
-    pl.plot(plotValues[1])
-    pl.plot(plotThres[1])
-    pl.show()
-    pl.plot(plotValues[2])
-    pl.plot(plotThres[2])
-    pl.show()
+    for i in range(len(n_classes)):
+        pl.plot(plotValues[i])
+        pl.plot(plotThres[i])
+        pl.show()
 
 
     pdb.set_trace()
