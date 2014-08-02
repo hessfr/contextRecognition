@@ -59,8 +59,6 @@ public class Globals {
 		return f;
 	}
 	
-	//public static final File CURRENT_LOG_FOLDER = new File(APP_PATH, "/Logs_" + dateString);
-
 	public static final String START_STOP_LOG_FILENAME = "START_STOP_Log.txt";
 	
 	public static final String AL_LOG_FILENAME = "AL_Log.txt";
@@ -93,11 +91,11 @@ public class Globals {
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
 	// Silence detection threshold (higher means more samples will be considered silent):
-	public static short SILENCE_DETECTION_THRESHOLD = 1200; //TODO: find good value
+	public static short SILENCE_DETECTION_THRESHOLD = 1200;
 	
 	// Array of context classes that can be selected initially:
 	public static String[] initialContextClasses = {"Office", "Conversation", "Restaurant",
-		"Car", "Bus", "Train", "Street", "Vacuum", "Toilet", "Kitchen"}; //TODO: include sleeping...
+		"Car", "Bus", "Train", "Street", "Vacuum", "Toilet", "Kitchen"}; //TODO
 	// Array indicating if the context class should be selected initially:
 	public static Boolean[] defaultClasses = {true, true, true, true, true,
 		true, true, true, true, true};
@@ -124,10 +122,7 @@ public class Globals {
 	/*
 	 * Client-server interaction
 	 */
-//	public static final String IP = "192.168.0.23"; // wifi home
-//	public static final String IP = "10.2.119.175"; // wifi ETH
-//	public static final String IP = "192.168.0.68"; // wifi home
-	public static final String IP = "129.132.131.71"; // server eth
+	public static final String IP = "129.132.131.71";
 	
 	public static final String PORT = "8080";
 	public static final String BASE_URL = "http://" + IP + ":" + PORT + "/";
@@ -138,8 +133,22 @@ public class Globals {
 	public static final String INIT_CLASSIFIER_URL = BASE_URL + "initclassifier/?";
 	public static final String MANAGE_CLASSES_URL = BASE_URL + "manageclasses/?";
 	
+	public static final long POLLING_INTERVAL_NEW_CLASS_ALREADY_DOWNLOADED = 10 * 60 * 1000; // 2 * 60 * 1000 = 2min
+	public static final long POLLING_INTERVAL_NEW_CLASS_NOT_DOWNLOADED = 15 * 60 * 1000; // 15 * 60 * 1000 = 15min
+	public static final long MAX_RETRY_NEW_CLASS_ALREADY_DOWNLOADED = 30; // 30 * 2min -> 1h
+	public static final long MAX_RETRY_NEW_CLASS_NOT_DOWNLOADED = 12; // 12 * 15min -> 3h
+	
+	public static final long POLLING_INTERVAL_INITIAL_MODEL = 10 * 60 * 1000; // 10 * 60 * 1000 = 10min
+	public static final long MAX_RETRY_INITIAL_MODEL = 10; // 10 * 10min = 2h
+	
+	public static final long POLLING_INTERVAL_UPLOAD = 1 * 3600 * 1000; // 1h
+	public static final long MAX_RETRY_UPLOAD = 5;
+	
+	// Values used if server is not responding:
+	public static final long POLLING_INTERVAL_DEFAULT = 3 * 60 * 1000; // 3 * 60 * 1000 = 3min
+	public static final long MAX_RETRY_DEFAULT = 15; // 15 * 3min = 75min
+	
 	// IntentServices for communication:
-	//public static final String CONN_CHECK_FEASIBILITY_SEND = "action.connCheckFeasibilitySend";
 	public static final String CONN_CHECK_FEASIBILITY_RECEIVE = "action.connCheckFeasibilityReceive";
 	public static final String CONN_CHECK_FEASIBILITY_CLASS_NAME = "connCheckFeasibilityClassName";
 	public static final String CONN_CHECK_FEASIBILITY_RESULT = "connCheckFeasibilityResult";
@@ -187,25 +196,7 @@ public class Globals {
 	// Results of the initClassifier (String have to match results from server):
 	public static final String WAIT = "wait";
 	public static final String NO_WAIT = "no_wait";
-	
-	public static final long POLLING_INTERVAL_NEW_CLASS_ALREADY_DOWNLOADED = 10 * 60 * 1000; // 2 * 60 * 1000 = 2min
-	public static final long POLLING_INTERVAL_NEW_CLASS_NOT_DOWNLOADED = 15 * 60 * 1000; // 15 * 60 * 1000 = 15min
-	public static final long MAX_RETRY_NEW_CLASS_ALREADY_DOWNLOADED = 30; // 30 * 2min -> 1h
-	public static final long MAX_RETRY_NEW_CLASS_NOT_DOWNLOADED = 12; // 12 * 15min -> 3h
-	
-	public static final long POLLING_INTERVAL_INITIAL_MODEL = 10 * 60 * 1000; // 10 * 60 * 1000 = 10min
-	public static final long MAX_RETRY_INITIAL_MODEL = 10; // 10 * 10min = 2h
-	
-	public static final long POLLING_INTERVAL_UPLOAD = 1 * 3600 * 1000; // 1h
-	public static final long MAX_RETRY_UPLOAD = 5;
-	
-	// Values used is server is not responding:
-	public static final long POLLING_INTERVAL_DEFAULT = 3 * 60 * 1000; // 3 * 60 * 1000 = 3min
-	public static final long MAX_RETRY_DEFAULT = 15; // 15 * 3min = 75min
 
-	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-	
-	
 	/*
 	 * Broadcast intent and extra names:
 	 */
@@ -279,6 +270,7 @@ public class Globals {
 	public static final String CLASS_COUNTS = "classCounts";
 	public static final String LASTEST_RECORDING_TIMESTAMP = "lastestRecordingTimestamp";
 	
+	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	
 	/*
 	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989

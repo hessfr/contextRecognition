@@ -25,7 +25,6 @@ import ch.ethz.wearable.contextrecognition.utils.Globals;
  * This request returns a list of all classes, that are known to the server (i.e. that were
  * already trained previously). Used to suggest class names when adding a custom context class
  */
-
 public class GetKnownClasses extends AsyncTask<String, Void, String[]> {
 
 	private static final String TAG = "GetKnownClasses";
@@ -99,7 +98,6 @@ public class GetKnownClasses extends AsyncTask<String, Void, String[]> {
 
 	@Override
 	protected void onPostExecute(String[] result) {
-		// super.onPostExecute(result);
 
 		returnResults();
 	}

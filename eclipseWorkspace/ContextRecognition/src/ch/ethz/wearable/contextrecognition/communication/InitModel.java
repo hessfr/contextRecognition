@@ -30,6 +30,10 @@ import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
+/*
+ * This IntentService requests the initial model from the server. In case the server is not 
+ * reachable, it retries it several times
+ */
 public class InitModel extends IntentService {
 
 	private static final String TAG = "InitModel";
@@ -76,8 +80,6 @@ public class InitModel extends IntentService {
 				    String paramString = URLEncodedUtils.format(par, "utf-8");
 			        String URL = Globals.INIT_CLASSIFIER_URL + paramString;     
 			        
-//				 	String URL = Globals.INIT_CLASSIFIER_URL;   
-			        
 			        //Set timeout parameters:
 			        HttpParams httpParameters = new BasicHttpParams();
 			        int timeoutConnection = 3000;
@@ -88,11 +90,10 @@ public class InitModel extends IntentService {
 			        HttpClient client = new DefaultHttpClient(httpParameters);
 				    HttpPost post = new HttpPost(URL);
 				    
-//				    //Add headers to URL
-//				    //post.setHeader("Content-type", "text/plain");
+				    //Add headers to URL
 				    post.setHeader("Accept", "application/json");
 			    	post.setHeader("Content-type", "application/json");
-//					
+			    	
 					String jsonString = null;
 
 			        JSONObject jsonObj = new JSONObject();
@@ -106,8 +107,6 @@ public class InitModel extends IntentService {
 			        }	
 			        
 			        jsonString = jsonObj.toString();
-//			        
-//			        Log.i(TAG, "JSON String: " + jsonString);
 
 					// Send the POST request:
 				    try {
@@ -136,20 +135,6 @@ public class InitModel extends IntentService {
 				    		
 				    		invalidClassesArray = new String[invalidClassesList.size()];
 				    		invalidClassesArray = invalidClassesList.toArray(invalidClassesArray);
-
-				    		
-				    		/*
-				    		Log.i(TAG, "ReceivedString: " + receivedString);
-				    		
-				    		JSONObject jsonObject = new JSONObject(receivedString);
-				    		results = new String[2];
-				    		results[0] = jsonObject.getString("filename");
-				    		results[1] = jsonObject.getString("wait");
-				    		
-				    		
-				    		Log.i(TAG,"filename is " + results[0]);
-				    		Log.i(TAG,"wait is " + results[1]);
-				    		*/
 
 				    	} else {
 				    		Log.e(TAG, "Invalid response received after POST request");

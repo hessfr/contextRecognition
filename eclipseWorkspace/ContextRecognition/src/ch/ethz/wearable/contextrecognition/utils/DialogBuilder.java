@@ -9,12 +9,17 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import ch.ethz.wearable.contextrecognition.communication.GetKnownClasses;
 
+/*
+ * Builder class for the AlertDialog that lets you define custom classes and suggests 
+ * names received from the server
+ */
 public class DialogBuilder {
 	
 	private static final String TAG = "OwnContextClassDialog";
@@ -26,6 +31,8 @@ public class DialogBuilder {
 	public DialogBuilder(Context context, onClickEvent listener) {
 		this.context = context;
 		this.listener = listener;
+		
+		Log.d(TAG, "Constructor");
 	}
 	
 	public interface onClickEvent {
@@ -33,6 +40,7 @@ public class DialogBuilder {
 	}
 	
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public AlertDialog createDialog(String[] classesToRemove) {
 		
 	  	// Show alert dialog
@@ -47,20 +55,14 @@ public class DialogBuilder {
 				android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
 		alertDialogBuilder.setView(autoCompleteTV);
 		
-//		GetKnownClasses getKnownClasses = new GetKnownClasses();
-		
 		String[] contextClassesFromServer = null;
 		String[] validSuggestions = null; // without the already trained classes
 		
-//		try {
-
-//			contextClassesFromServer = getKnownClasses.execute().get();
-			
 			contextClassesFromServer = executegetKnownClasses();
 			
 			if (contextClassesFromServer != null) {
+				
 				// Remove the already trained classes from the array:
-				//String[] trainedClasses = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
 				ArrayList<String> tmp = new ArrayList<String>();
 				
 				for(int j=0; j<contextClassesFromServer.length; j++) {
@@ -81,12 +83,6 @@ public class DialogBuilder {
 				validSuggestions = tmp.toArray(validSuggestions);
 			}
 
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		} catch (ExecutionException e) {
-//			e.printStackTrace();
-//		}
-		
 		// If no data could be received from the server, initialize empty array:
 		if (validSuggestions == null) {
 			validSuggestions = new String[0];
@@ -126,7 +122,7 @@ public class DialogBuilder {
     }
 	
 	/*
-	 * Allow parallel execution for the AsyncTask
+	 * Allow parallel execution for the AsyncTask if API > 11 (Previous APIs do this by default)
 	 * 
 	 * Code similar to http://stackoverflow.com/questions/4068984/running-multiple-asynctasks-at-the-same-time-not-possible/13800208#13800208
 	 */

@@ -1,7 +1,8 @@
 package ch.ethz.wearable.contextrecognition.data;
 
 /*
- * Class containing the prediction result and the mean entropy.
+ * Class containing the prediction result and the mean entropy that is return by
+ * the Classifier class
  */
 public class PredictionResult {
 	private int predictedClass;

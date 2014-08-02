@@ -1,13 +1,11 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
-//import android.app.ActionBar;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
 import org.apache.commons.lang3.ArrayUtils;
-
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -27,7 +25,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
 import com.example.contextrecognition.R;
@@ -121,7 +118,9 @@ public class DiaryActivity extends ActionBarActivity {
     			"#438D80", "#827839", "#571B7E", "#8C001A", "#D462FF", "#50EBEC",
     			"#3B3131", "#566D7E", "#7F525D", "#538074"}; //TODO
     	
-    	// http://stackoverflow.com/questions/112234/sorting-matched-arrays-in-java
+    	/*
+    	 * From http://stackoverflow.com/questions/112234/sorting-matched-arrays-in-java
+    	 */
     	Integer[] idx = new Integer[t.length];
     	for( int i = 0 ; i < idx.length; i++ ) idx[i] = i;              
     	Arrays.sort(idx, new Comparator<Integer>() {
@@ -242,6 +241,7 @@ public class DiaryActivity extends ActionBarActivity {
     /**
      * Launch Shutdown activity to close app and stop recording
      * */
+	@SuppressLint("InlinedApi")
 	private void callShutdown() {
 		Application app = getApplication();
 	    Intent intent = new Intent(app, ShutdownActivity.class);

@@ -11,6 +11,10 @@ import org.ejml.ops.CommonOps;
 import ch.ethz.wearable.contextrecognition.data.PredictionResult;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 
+/*
+ * This class contains the necessary code to make the prediction using a Gaussian Mixture
+ * Model and returns the predicted class and the mean entropy of the interval
+ */
 public class Classifier {
 	
 	public final String TAG = "Classifier";
@@ -141,7 +145,6 @@ public class Classifier {
 		for(int c=0; c<n_components; c++) {
 			
 			CholeskyDecomposition<DenseMatrix64F> chol = DecompositionFactory.chol(covars[c].numRows, true); //if 2nd parameter is set to true, the lower triangular matrix is returned
-			//TODO: do we need to check if cholesky decomposition is possible??
 			DenseMatrix64F L0 = new DenseMatrix64F(covars[c].numRows, covars[c].numCols);
 			GenericMatrixOps.copy(covars[c], L0);
 			chol.decompose(L0);
@@ -173,7 +176,7 @@ public class Classifier {
 				
 				//Fill the column for the correct feature in the distMean matrix:
 				CommonOps.extract(featValues, 0, featValues.numRows, 0, 1, distMean, 0, f);
-			} //TODO: Schauen ob diese Klammer richtig gesetzt!!!
+			}
 			
 			DenseMatrix64F distMeanTransp = new DenseMatrix64F(n_features,n_samples);
 			CommonOps.transpose(distMean, distMeanTransp);
@@ -191,7 +194,7 @@ public class Classifier {
 			
 			DenseMatrix64F rowSum = new DenseMatrix64F(n_samples,1); //calculate sum of each row
 			
-			CommonOps.sumRows(solved,rowSum); //TODO: verify that solved is not modified
+			CommonOps.sumRows(solved,rowSum);
 			
 			double summand = n_features * Math.log(2*Math.PI) + L0LogDet;
 			
@@ -267,7 +270,7 @@ public class Classifier {
 
 		//Calculate sum for every column
 		DenseMatrix64F colSum = new DenseMatrix64F(1, n_samples);
-		CommonOps.sumCols(exp, colSum); //TODO: verify that exp is not modified
+		CommonOps.sumCols(exp, colSum);
 		
 		//Calculate log for each element:
 		DenseMatrix64F logs = new DenseMatrix64F(1, n_samples);
@@ -322,7 +325,7 @@ public class Classifier {
 
 		double[] resArray = new double[y_in.length];
 		
-		for(int i=0; i<n_frames; i++) { //TODO: Check if loop conditions correct
+		for(int i=0; i<n_frames; i++) {
 			if (((i+1) * frameLength) < y_in.length) {
 				// All except the very last one:
 				

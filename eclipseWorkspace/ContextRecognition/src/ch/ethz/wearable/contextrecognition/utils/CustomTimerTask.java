@@ -5,7 +5,7 @@ import java.util.TimerTask;
 import android.content.Context;
 
 /*
- * Custom timer task, that accepts several input parameter
+ * Custom TimerTask, that accepts several input parameter
  */
 public class CustomTimerTask extends TimerTask {
     String filenameOnServer;

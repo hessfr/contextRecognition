@@ -33,6 +33,11 @@ import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
+/*
+ * This intent service sends the request to change the model (remove and/or add new classes)
+ * to the server and returns a list of invalid classes, a flag to indicate if we have to wait
+ * and the filename on the server. In case the server is not reachable, it retries it several times
+ */
 public class ManageClasses extends IntentService {
 
 	private static final String TAG = "ManageClasses";

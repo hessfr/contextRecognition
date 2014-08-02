@@ -58,10 +58,6 @@ public class ManageClassesActivity extends ActionBarActivity {
 	        
 	        addListenerOnButton();
 	        
-	        
-//	        Bundle b = getIntent().getExtras();
-//	        prevClassNames = b.getStringArray(Globals.CLASS_NAMES);     
-	        
 	        prevClassNames = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
 	        
 			if (prevClassNames != null) {

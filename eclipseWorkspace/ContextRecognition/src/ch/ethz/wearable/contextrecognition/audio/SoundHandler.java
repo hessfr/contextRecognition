@@ -31,7 +31,7 @@ public class SoundHandler extends Thread {
 	private static int BUFFER_LENGTH = 4608; // Size of the chunks of data we read in using AudioRecord.read()
 	
 	/*
-	 * Size of the buffer for the Audiorecord. This has to be larger than BUFFER_LENGTH to avoid potential
+	 * Size of the buffer for the audio recorder. This has to be larger than BUFFER_LENGTH to avoid potential
 	 * "over-running" and loss of data
 	 */
 	private static int AUDIORECORD_BUFFER_LENGTH = 4608 * 2;
@@ -99,8 +99,6 @@ public class SoundHandler extends Thread {
 
 					handleData(newEL.data, newEL.silenceBuffer);
 
-					//Log.i(TAG, "Length: " + String.valueOf(newEL.sampleRead));
-					//Log.i(TAG, "Framelength: " + String.valueOf(newEL.buffer.length));
 				}
 				
 				// Wait 10ms before getting the next element again:
@@ -145,9 +143,10 @@ public class SoundHandler extends Thread {
 
 				} else {
 					
-					// Log.i(TAG, "Loudness: " + Shorts.max(dataShort));
-					
-					// Fill the prediction buffer ("ring-buffer": if full, overwrite the oldest elements...)
+					/*
+					 *  Fill the prediction buffer ("ring-buffer": if full, overwrite the 
+					 *  oldest elements...):
+					 */
 					System.arraycopy(dataShort, 0, predictionBuffer, (pointer * dataShort.length), dataShort.length);
 					
 					// Fill the silence detection buffer:
@@ -162,7 +161,6 @@ public class SoundHandler extends Thread {
 					 *  Write this chunk of data to a file (for evaluation only), we 
 					 *  have to convert short to byte array first, then we can use FileOutputStream:
 					 */
-					
 					byte[] dataByte = short2byte(dataShort);
 					File file = new File(Globals.getLogPath(), Globals.AUDIO_FILENAME);
 					appendToFile(dataByte, file);
@@ -210,7 +208,6 @@ public class SoundHandler extends Thread {
 							 */
 							synchronized(this.blockSync) {
 								queue.add(newEL);
-								//Log.i(TAG, "Element added to queue");
 							}
 							
 							// After we added the element to the queue, "clear" the prediction buffer
@@ -230,7 +227,7 @@ public class SoundHandler extends Thread {
 			
 		}
 		
-		// Stop and release the recorder when not recording anymore
+		// Stop and release the recorder when not recording anymore:
 		this.rec.stop();
 		this.rec.release();
 		
@@ -256,13 +253,20 @@ public class SoundHandler extends Thread {
 	public void beginRec() {
 		
 		try {
-			// Call initRec() and only continue if successful
+			
+			// Initialize recorder and only continue if successful:
 			if(this.rec == null) {
-				if(initRec() == null)
+				
+				if(initRec() == null){
+					
 					return;
+				}
+					
 			} else {
+				
 				// If AudioRecorder is already recording do nothing
 				if(rec.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+					
 					Log.i(TAG,"AudioRecorder is already recording");
 					return;
 				}
@@ -304,7 +308,7 @@ public class SoundHandler extends Thread {
 	
 	private void appendToFile(byte[] buffer, File file){
 		try {
-			FileOutputStream os = new FileOutputStream(file, true); // appending to file
+			FileOutputStream os = new FileOutputStream(file, true);
 			os.write(buffer);
 			os.close();      	
 
@@ -314,7 +318,7 @@ public class SoundHandler extends Thread {
 	}
 	
 	/*
-	 * Override this method in AudioWorker
+	 * Override this method in the AudioWorker class
 	 */
 	protected void handleData(short[] data, boolean[] silenceBuffer) {
 		//Log.d(TAG, "handleData called");

@@ -54,18 +54,10 @@ public class CompressAndSendData extends IntentService {
 
 	private static final String TAG = "CompressAndSendData";
 	
-//	private Context context;
-//	
-//	// Constructor:
-//	public CompressAndSendData(Context context) {
-//		this.context = context;
-//	}
-	
 	public CompressAndSendData() {
 		super("CompressAndSendData");
 		
 		Log.d(TAG, "Constructor");
-		
 	}
 	
 	@Override
@@ -78,7 +70,7 @@ public class CompressAndSendData extends IntentService {
 		for (File logFolder : elementsInAppFolder) {
 			if (logFolder.isDirectory()) {
 				
-				// Ignore the one from today:
+				// Ignore today's folder:
 				if (!logFolder.getPath().equals(Globals.getLogPath().getPath())) {
 					
 					// Compress each folder:
@@ -114,7 +106,6 @@ public class CompressAndSendData extends IntentService {
 			}
 		}
 
-		// Now call the IntentService to send to data to the server:
 		sendToServer();
 			
 	}
@@ -345,7 +336,7 @@ public class CompressAndSendData extends IntentService {
 			addFilesToCompression(taos, f, ".");
 		}
 
-	               // Close everything up
+	    // Close everything up:
 		taos.close();
 		fos.close();
 	}
@@ -366,19 +357,19 @@ public class CompressAndSendData extends IntentService {
 	private static void addFilesToCompression(TarArchiveOutputStream taos, File file, String dir)
 		throws IOException
 	{
-	               // Create an entry for the file
+	    // Create an entry for the file:
 		taos.putArchiveEntry(new TarArchiveEntry(file, dir + "/" +file.getName()));
 		if (file.isFile()) {
-	                       // Add the file to the archive
+	        // Add the file to the archive:
 			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
 			IOUtils.copy(bis, taos);
 			taos.closeArchiveEntry();
 			bis.close();
 		}
 		else if (file.isDirectory()) {
-	                       // close the archive entry
+	        // close the archive entry:
 			taos.closeArchiveEntry();
-	                       // go through all the files in the directory and using recursion, add them to the archive
+	        // go through all the files in the directory and using recursion, add them to the archive
 			for (File childFile : file.listFiles()) {
 				addFilesToCompression(taos, childFile, file.getName());
 			}

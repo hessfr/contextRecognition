@@ -24,9 +24,7 @@ import org.apache.http.util.EntityUtils;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
@@ -36,7 +34,6 @@ import ch.ethz.wearable.contextrecognition.utils.Globals;
  * Intent service that regularly checks if the request to create the initial model on the server 
  * is finished and downloads the new classifiers if so
  */
-
 public class InitModelGet extends IntentService {
 
 	private static final String TAG = "InitModelGet";
@@ -58,8 +55,12 @@ public class InitModelGet extends IntentService {
 
 		long pollingInterval;
 		long maxRetry;
-		long delay = 2000; /*Give the server 2 seconds time after the 
-		first request, so that we don't have to wait if the model was already trained before*/
+		/* 
+		 * Give the server 2 seconds time after the first request, so that we 
+		 * don't have to wait for one polling interval if the model was already 
+		 * trained before:
+		 */
+		long delay = 2000;
 		
 		if (waitOrNoWait.equals(Globals.NO_WAIT)) {
 			pollingInterval = Globals.POLLING_INTERVAL_DEFAULT;
@@ -105,12 +106,10 @@ public class InitModelGet extends IntentService {
 			    	HttpResponse response = client.execute(get);
 
 			    	if (response.getStatusLine().getStatusCode() == 200) {
-			    		// This is our new classifier. Overwrite the existing one:
 			    		
+			    		// This is our new classifier with which we overwrite the existing one:
 			    		String receveivedString = EntityUtils.toString(response.getEntity());	    		
 			    		String jsonString = null;
-
-			    		//Log.i(TAG, "received string: " + receveivedString);	
 			    		
 			    		// Abort and return false if computation on server not finished yet:
 			    		if (receveivedString.equals("-1")) {

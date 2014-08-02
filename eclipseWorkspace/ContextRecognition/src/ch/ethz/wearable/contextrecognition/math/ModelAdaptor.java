@@ -32,7 +32,10 @@ import ch.ethz.wearable.contextrecognition.utils.GMM;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-
+/*
+ * AsyncTask incorporating new data points into the existing mixture model. Overwrites
+ * the Json GMM file and the storage with the resulting model
+ */
 public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	/*
 	 * 1. argument: type of parameter 2. argument: type of progress unit

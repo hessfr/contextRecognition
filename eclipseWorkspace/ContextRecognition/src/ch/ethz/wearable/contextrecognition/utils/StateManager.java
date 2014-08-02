@@ -43,7 +43,7 @@ import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.CompressAndSendData;
-import ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel;
+import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClassGet;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
 import ch.ethz.wearable.contextrecognition.communication.InitModelGet;
 import ch.ethz.wearable.contextrecognition.communication.ManageClassesGet;
@@ -57,7 +57,7 @@ import com.google.gson.Gson;
 /*
  * Handles all broadcasts and holds all prediction variables like current context, buffers, class names, ...
  * 
- * AL Queries are also sent from here...
+ * AL Queries are also initiated here...
  */
 @SuppressLint("SimpleDateFormat")
 public class StateManager extends BroadcastReceiver {
@@ -134,7 +134,7 @@ public class StateManager extends BroadcastReceiver {
 	
 	SharedPreferences mPrefs;
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "static-access" })
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		
@@ -830,7 +830,7 @@ public class StateManager extends BroadcastReceiver {
 			
 			if (filenameOnServer != null) {
 				
-				Intent i = new Intent(context, GetUpdatedModel.class);
+				Intent i = new Intent(context, IncorporateNewClassGet.class);
 				i.putExtra(Globals.CONN_UPDATED_MODEL_FILENAME, filenameOnServer);
 				i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, feasibilityString);
 				context.startService(i);
@@ -943,6 +943,7 @@ public class StateManager extends BroadcastReceiver {
 		}
 	};
 	
+	@SuppressWarnings("static-access")
 	private void callModelAdaption(Context context, int label) {
 
 		if (AppStatus.getInstance().get() != AppStatus.getInstance().MODEL_ADAPTION) {

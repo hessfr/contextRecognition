@@ -148,7 +148,7 @@
        	<!-- IntentServices for communication -->
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass" />
-       	<service android:name="ch.ethz.wearable.contextrecognition.communication.GetUpdatedModel" />
+       	<service android:name="ch.ethz.wearable.contextrecognition.communication.IncorporateNewClassGet" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModel" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.InitModelGet" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.ManageClasses" />

@@ -144,6 +144,7 @@ public class RatingActivity extends ActionBarActivity {
 		
 		submitButton.setOnClickListener(new OnClickListener() {
  
+			@SuppressWarnings("unused")
 			@Override
 			public void onClick(View arg0) {
 				float accuracyRating = ratingBarAccuracy.getRating();

@@ -1,4 +1,6 @@
-//Code from https://github.com/DSRC-GPU/CrowGenCpp
+/*
+ * ode from https://github.com/DSRC-GPU/CrowGenCpp
+ */
 package ch.ethz.wearable.contextrecognition.math;
 
 import java.util.ArrayList;
@@ -9,6 +11,9 @@ import org.ejml.simple.SimpleMatrix;
 
 import com.google.common.collect.Lists;
 
+/*
+ * Cluster algorithm using kMeans. Used when training a new mixture model
+ */
 public class KMeansClusterer {
 	private SimpleMatrix data;
 
@@ -42,7 +47,7 @@ public class KMeansClusterer {
 	}
 	
 	/*
-	 * Randomly initiialized a certain number or centroids defined by the parameter numCentroids.
+	 * Randomly initialize a certain number or centroids defined by the parameter numCentroids.
 	 */
 	public List<Centroid> initializeRandom(int numCentroids) {
 		List<Centroid> centroids = Lists.newArrayListWithCapacity(numCentroids);
@@ -112,23 +117,6 @@ public class KMeansClusterer {
 		}
 		return centroids;
 	}
-
-//	public static void main(String[] args) {
-//		double[][] data = { { 1, 1 }, { 1, 2 }, { 1, 3 }, { 2, 1 }, { 2, 2 },
-//				{ 2, 3 }, { 3, 1 }, { 3, 2 }, { 3, 3 }, { 11, 11 }, { 11, 12 },
-//				{ 11, 13 }, { 12, 11 }, { 12, 12 }, { 12, 13 }, { 13, 11 },
-//				{ 13, 12 }, { 13, 13 } };
-//
-//		KMeansClusterer clusterer = new KMeansClusterer(new SimpleMatrix(data));
-//		List<Centroid> centroids = clusterer.chooseCentroids(2, 13);
-//		List<Centroid> results = clusterer.cluster(centroids);
-//
-//		System.out.println("KMeans computed for " + centroids.size()
-//				+ " clusters");
-//		for (Centroid centroid : results) {
-//			System.out.println("Centroid " + centroid.getFeatures().toString());
-//		}
-//	}
 
 	public class Centroid {
 		private List<Integer> points;

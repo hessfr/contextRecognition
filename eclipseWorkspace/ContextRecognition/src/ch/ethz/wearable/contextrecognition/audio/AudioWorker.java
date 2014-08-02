@@ -33,12 +33,17 @@ public class AudioWorker extends IntentService {
 	private Classifier clf;
 	private SoundHandler soundHandler;
 	private FeaturesExtractor featuresExtractor;
+	
 	private LinkedList<double[]> mfccList;
-	private LinkedList<double[]> dataBuffer; // buffer the last 1 minute of data for the model adaption
-	private static int DATA_BUFFER_SIZE = 1875; // equals ~1min for 0.032ms window length
+	
+	// buffer the last 1 minute of data for the model adaption:
+	private LinkedList<double[]> dataBuffer; 
+	
+	// equals ~1min for 0.032ms window length:
+	private static int DATA_BUFFER_SIZE = 1875; 
+	
 	private boolean bufferStatus = false;
 	private String stringRes;
-
 	public static int code = Activity.RESULT_CANCELED;	
 	
 	public AudioWorker() {
@@ -249,16 +254,14 @@ public class AudioWorker extends IntentService {
 		bundle.putDouble(Globals.PREDICTION_ENTROPY, predictionEntropy);
 		bundle.putString(Globals.PREDICTION_STRING, predicationString);
 		
-		//Log.i(TAG, "------------------");
-		//Log.i(TAG, gmm.get_string_array()[2]);
 		bundle.putStringArray(Globals.CLASS_STRINGS,gmm.get_string_array());
 		
 		bundle.putBoolean(Globals.BUFFER_STATUS, bufferStatus);
 		bundle.putSerializable(Globals.BUFFER, buffer);
 		
-		bundle.putParcelable(Globals.GMM_OBJECT, gmm); //Needed??
+		bundle.putParcelable(Globals.GMM_OBJECT, gmm);
 		
-		bundle.putSerializable(Globals.CLASSES_DICT, classesDict); //Needed??
+		bundle.putSerializable(Globals.CLASSES_DICT, classesDict);
 
 		bundle.putInt(Globals.RESULTCODE, code);
 		
@@ -345,10 +348,6 @@ public class AudioWorker extends IntentService {
 				e.printStackTrace();
 			}
 		}
-		
-
-
-		double time = (System.currentTimeMillis() - Globals.RECORDING_START_TIME) / 1000.0;
 		
 		Log.d(TAG, "Appending to start time of the app to log");
 		try {

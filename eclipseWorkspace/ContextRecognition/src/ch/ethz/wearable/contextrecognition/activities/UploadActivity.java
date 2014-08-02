@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -134,6 +135,7 @@ public class UploadActivity extends ActionBarActivity {
 			@Override
 			public void onClick(View arg0) {
  
+				Log.d(TAG, "Upload button pressed");
 				Toast.makeText(context, "Upload will be started", Toast.LENGTH_LONG).show();
 				
 				// initiate the transfer of the raw audio data to the server:

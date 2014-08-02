@@ -22,17 +22,12 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.app.IntentService;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-
-import com.example.contextrecognition.R;
 
 /*
  * Intent service that regularly checks if the manage classes request is finished on the server and
@@ -59,8 +54,12 @@ public class ManageClassesGet extends IntentService {
 
 		long pollingInterval;
 		long maxRetry;
-		long delay = 2000; /*Give the server 2 seconds time after the 
-		first request, so that we don't have to wait if the model was already trained before*/
+		/* 
+		 * Give the server 2 seconds time after the first request, so that we 
+		 * don't have to wait for one polling interval if the model was already 
+		 * trained before:
+		 */
+		long delay = 2000; 
 		
 		if (waitOrNoWait.equals(Globals.NO_WAIT)) {
 			pollingInterval = Globals.POLLING_INTERVAL_DEFAULT;
@@ -80,7 +79,6 @@ public class ManageClassesGet extends IntentService {
 
 			public void run() {
 
-//				ManageClassesGet getReq = new ManageClassesGet();
 				Boolean resGet = false;
 
 				String[] prevClassnames=null;
@@ -105,13 +103,11 @@ public class ManageClassesGet extends IntentService {
 			    	HttpResponse response = client.execute(get);
 
 			    	if (response.getStatusLine().getStatusCode() == 200) {
-			    		// This is our new classifier. Overwrite the existing one:
 			    		
+			    		// This is our new classifier with which we overwrite the existing one:
 			    		String receveivedString = EntityUtils.toString(response.getEntity());	    		
 			    		String jsonString = null;
 
-			    		//Log.i(TAG, "received string: " + receveivedString);	
-			    		
 			    		// Abort and return false if computation on server not finished yet:
 			    		if (receveivedString.equals("-1")) {
 			    			Log.i(TAG, "Server return not ready code");
@@ -144,14 +140,10 @@ public class ManageClassesGet extends IntentService {
 			    			resGet = true;
 			    		}
 			    		
-
-			    		
 			    	} else {
 			    		Log.e(TAG, "Invalid response received after GET request");
 			    		Log.e(TAG, String.valueOf(response.getStatusLine()));
-
 			    	}
-
 			    	
 			    } catch (UnsupportedEncodingException e) {
 			        e.printStackTrace();

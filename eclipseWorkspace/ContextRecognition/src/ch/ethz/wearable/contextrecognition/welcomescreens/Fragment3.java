@@ -3,7 +3,6 @@ package ch.ethz.wearable.contextrecognition.welcomescreens;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -146,14 +145,9 @@ public class Fragment3 extends Fragment {
  
 				// Check if actualSelection array is different than the default array:
 				boolean isDifferent = false;
-				int numClasses = 0;
 				for(int i=0; i<Globals.defaultClasses.length; i++){
 					if (Globals.defaultClasses[i] != currentStatuses.get(i)) {
 						isDifferent = true;
-					}
-					
-					if (currentStatuses.get(i) == true) {
-						numClasses++;
 					}
 				}
 				
@@ -197,7 +191,7 @@ public class Fragment3 extends Fragment {
 	
 	private void callMainActivity() {
 		Intent i = new Intent(getActivity(), MainActivity.class);
-		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); //TODO
+		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivity(i);
 	}
 	

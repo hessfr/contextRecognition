@@ -10,13 +10,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder.onClickEvent;
-import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-
-import com.example.contextrecognition.R;
 
 public class ContextSelection extends ListActivity {
     
@@ -56,7 +52,6 @@ public class ContextSelection extends ListActivity {
       
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
       String item = (String) getListAdapter().getItem(position);

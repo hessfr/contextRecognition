@@ -25,6 +25,10 @@ import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
+/*
+ * This request checks if a certain class is feasible to train (i.e. if there are enough
+ * sound files on freesound to train a classifier
+ */
 public class CheckClassFeasibility extends IntentService {
 
 	private static final String TAG = "CheckClassFeasibility";
@@ -54,16 +58,11 @@ public class CheckClassFeasibility extends IntentService {
 
 			public void run() {
 				
-				
-				
-				
 				// Add parameters to URL
 				List<NameValuePair> par = new LinkedList<NameValuePair>();
 				par.add(new BasicNameValuePair("classname", className));
 				String paramString = URLEncodedUtils.format(par, "utf-8");
 				String URL = Globals.FEASIBILITY_CHECK_URL + paramString;
-
-				// Log.i(TAG, URL);
 
 				// Set timeout parameters:
 				HttpParams httpParameters = new BasicHttpParams();
@@ -102,20 +101,16 @@ public class CheckClassFeasibility extends IntentService {
 					e.printStackTrace();
 				}
 
-
-				
-				
-				
 				if (result != null) {
 					
-					Log.i(TAG, "Feasiblity check successful");
+					Log.d(TAG, "Received result from feasiblity check");
 					
 					Intent i = new Intent(Globals.CONN_CHECK_FEASIBILITY_RECEIVE);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, result);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, className);		
 					sendBroadcast(i);
 
-					Log.i(TAG, "IntentService finished");
+					Log.d(TAG, "IntentService finished");
 					
 					this.cancel();
 				}
@@ -128,7 +123,7 @@ public class CheckClassFeasibility extends IntentService {
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, className);		
 					sendBroadcast(i);					
 					
-					Log.i(TAG, "IntentService finished");
+					Log.d(TAG, "IntentService finished");
 					
 					this.cancel();
 				}
@@ -138,7 +133,7 @@ public class CheckClassFeasibility extends IntentService {
 		Timer timer = new Timer();
 		timer.schedule(task, 0, pollingInterval);
 		
-		Log.i(TAG, "IntentService finished");
+		Log.d(TAG, "IntentService finished");
 		
 	}
 	

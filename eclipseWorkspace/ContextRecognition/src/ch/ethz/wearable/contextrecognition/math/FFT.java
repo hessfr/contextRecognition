@@ -1,4 +1,3 @@
-package ch.ethz.wearable.contextrecognition.math;
 /**
  * 
  * Funf: Open Sensing Framework
@@ -22,6 +21,7 @@ package ch.ethz.wearable.contextrecognition.math;
  * License along with Funf. If not, see <http://www.gnu.org/licenses/>.
  * 
  */
+package ch.ethz.wearable.contextrecognition.math;
 
 public class FFT
 {
