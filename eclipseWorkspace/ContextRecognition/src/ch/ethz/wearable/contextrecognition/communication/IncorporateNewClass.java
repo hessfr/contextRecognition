@@ -25,19 +25,29 @@ import org.apache.http.util.EntityUtils;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 public class IncorporateNewClass extends IntentService {
 
 	private static final String TAG = "IncorporateNewClass";
 	
+	Handler handler;
+	
 	public IncorporateNewClass() {
 		super("IncorporateNewClass");
 		
 		Log.d(TAG, "Constructor");
 		
+	}
+	
+	@Override
+	public void onCreate() {
+	    super.onCreate();
+	    handler = new Handler();
 	}
 	
 	@Override
@@ -109,8 +119,6 @@ public class IncorporateNewClass extends IntentService {
 						
 						jsonString = strBuffer.toString();
 
-						//Log.i(TAG, jsonString);
-						
 					} catch (IOException e) {
 						Log.e(TAG,"Couldn't open JSON file");
 						e.printStackTrace();
@@ -165,6 +173,9 @@ public class IncorporateNewClass extends IntentService {
 				
 				if (++counter == maxRetries) {
 					Log.e(TAG, "Server problems: IncorporateNewClass request not successful");
+					
+					handler.post(new DisplayToast(getBaseContext(), "Server problems: "
+							+ "adding new class not successful"));
 					
 					Intent i = new Intent(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE);
 					i.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME, filenameOnServer);

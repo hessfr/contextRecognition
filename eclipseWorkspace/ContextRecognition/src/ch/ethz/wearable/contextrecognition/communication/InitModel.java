@@ -26,8 +26,10 @@ import org.json.JSONObject;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
@@ -38,11 +40,18 @@ public class InitModel extends IntentService {
 
 	private static final String TAG = "InitModel";
 	
+	Handler handler;
+	
 	public InitModel() {
 		super("InitModel");
 		
 		Log.d(TAG, "Constructor");
-		
+	}
+	
+	@Override
+	public void onCreate() {
+	    super.onCreate();
+	    handler = new Handler();
 	}
 	
 	@Override
@@ -168,9 +177,8 @@ public class InitModel extends IntentService {
 					this.cancel();
 					
 				} else {
-					
-//					Toast.makeText( getBaseContext(), "Your selected classes will be available "
-//									+ "in some minutes. Using default classes", Toast.LENGTH_LONG).show();
+					handler.post(new DisplayToast(getBaseContext(), "Classes will be "
+							+ "available in some minutes, starting with default classes"));
 				}
 				
 				if (++counter == maxRetries) {

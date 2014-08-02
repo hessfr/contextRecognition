@@ -24,9 +24,11 @@ import org.apache.http.util.EntityUtils;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
@@ -38,11 +40,19 @@ public class InitModelGet extends IntentService {
 
 	private static final String TAG = "InitModelGet";
 	
+	Handler handler;
+	
 	public InitModelGet() {
 		super("InitModelGet");
 		
 		Log.d(TAG, "Constructor");
 		
+	}
+	
+	@Override
+	public void onCreate() {
+	    super.onCreate();
+	    handler = new Handler();
 	}
 	
 	@Override
@@ -170,8 +180,8 @@ public class InitModelGet extends IntentService {
 					
 					Log.i(TAG, "Number of context classes: " + tmpGMM.get_n_classes());
 					
-//					Toast.makeText(context, "Initial classifier loaded", Toast.LENGTH_LONG).show();
-
+					handler.post(new DisplayToast(context, "Initial classifier loaded"));
+					
 					// Set status to updated, so that the AudioWorker can load the new classifier
 					AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
 					Log.i(TAG, "New status: model updated");
@@ -191,11 +201,8 @@ public class InitModelGet extends IntentService {
 					
 					Log.w(TAG, "Server not responded to GET request intitial model");
 					
-//					Toast.makeText( //-> Toast doesn't work like that! 
-//		    			  	context,
-//							(String) "Server not reponding, deploying default model, user specific classes "
-//									+ "will be requested when server online again ",
-//							Toast.LENGTH_LONG).show();
+					handler.post(new DisplayToast(context, "Server not responding, using "
+							+ "default classes instead"));
 					
 					this.cancel();
 				}

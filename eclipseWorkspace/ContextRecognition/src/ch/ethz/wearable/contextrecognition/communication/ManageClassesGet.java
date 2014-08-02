@@ -24,8 +24,10 @@ import org.apache.http.util.EntityUtils;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
@@ -37,11 +39,19 @@ public class ManageClassesGet extends IntentService {
 
 	private static final String TAG = "ManageClassesGet";
 	
+	Handler handler;
+	
 	public ManageClassesGet() {
 		super("ManageClassesGet");
 		
 		Log.d(TAG, "Constructor");
 		
+	}
+	
+	@Override
+	public void onCreate() {
+	    super.onCreate();
+	    handler = new Handler();
 	}
 	
 	@Override
@@ -171,11 +181,8 @@ public class ManageClassesGet extends IntentService {
 				if (++counter == Globals.MAX_RETRY_INITIAL_MODEL) {
 					Log.w(TAG, "Server not responded to GET request intitial model");
 					
-//					Toast.makeText( //-> Toast doesn't work like that! 
-//		    			  	context,
-//							(String) "Server not reponding, deploying default model, user specific classes "
-//									+ "will be requested when server online again ",
-//							Toast.LENGTH_LONG).show();
+					handler.post(new DisplayToast(getBaseContext(), "Server not responding, "
+							+ "using default classes instead"));
 					
 					this.cancel();
 				}

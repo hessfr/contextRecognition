@@ -20,9 +20,13 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
@@ -32,12 +36,20 @@ import ch.ethz.wearable.contextrecognition.utils.Globals;
 public class CheckClassFeasibility extends IntentService {
 
 	private static final String TAG = "CheckClassFeasibility";
+
+	Handler handler;
 	
 	public CheckClassFeasibility() {
 		super("CheckClassFeasibility");
 		
 		Log.d(TAG, "Constructor");
 		
+	}
+	
+	@Override
+	public void onCreate() {
+	    super.onCreate();
+	    handler = new Handler();
 	}
 	
 	@Override
@@ -123,6 +135,8 @@ public class CheckClassFeasibility extends IntentService {
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, className);		
 					sendBroadcast(i);					
 					
+					handler.post(new DisplayToast(getBaseContext(), "Server timed out"));
+					
 					Log.d(TAG, "IntentService finished");
 					
 					this.cancel();
@@ -137,5 +151,4 @@ public class CheckClassFeasibility extends IntentService {
 		
 	}
 	
-
 }

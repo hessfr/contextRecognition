@@ -29,8 +29,10 @@ import org.json.JSONObject;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
@@ -42,11 +44,19 @@ public class ManageClasses extends IntentService {
 
 	private static final String TAG = "ManageClasses";
 	
+	Handler handler;
+	
 	public ManageClasses() {
 		super("ManageClasses");
 		
 		Log.d(TAG, "Constructor");
 		
+	}
+	
+	@Override
+	public void onCreate() {
+	    super.onCreate();
+	    handler = new Handler();
 	}
 	
 	@Override
@@ -199,7 +209,10 @@ public class ManageClasses extends IntentService {
 				}
 				
 				if (++counter == maxRetries) {
-					Log.e(TAG, "Server problems: manage classes request not successful");
+					
+					Log.w(TAG, "Server problems: manage classes request not successful");
+					
+					handler.post(new DisplayToast(getBaseContext(), "Server not responding"));
 					
 				    Intent i = new Intent(Globals.CONN_MANAGE_CLASSES_RECEIVE);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS, invalidClassesArray);
@@ -207,7 +220,7 @@ public class ManageClasses extends IntentService {
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_FILENAME ,filenameOnServer);
 					sendBroadcast(i);					
 					
-					Log.i(TAG, "IntentService finished");
+					Log.d(TAG, "IntentService finished");
 					
 					this.cancel();
 				}

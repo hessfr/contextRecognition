@@ -407,10 +407,9 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-//							Intent i = new Intent(context, CompressAndSendData.class);
-//							context.startService(i);
 							
-
+							
+							
 							
 						}
 						

@@ -39,9 +39,11 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.BatteryManager;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
+import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 /*
  * This IntentService compresses every logging folders (expect the one of the current date) into a tar.gz file
@@ -54,10 +56,18 @@ public class CompressAndSendData extends IntentService {
 
 	private static final String TAG = "CompressAndSendData";
 	
+	Handler handler;
+	
 	public CompressAndSendData() {
 		super("CompressAndSendData");
 		
 		Log.d(TAG, "Constructor");
+	}
+	
+	@Override
+	public void onCreate() {
+	    super.onCreate();
+	    handler = new Handler();
 	}
 	
 	@Override
@@ -132,7 +142,7 @@ public class CompressAndSendData extends IntentService {
 					
 			    	if(zipFile.getName().contains(".tar.gz")) {
 			    		
-//			    		Toast.makeText(getBaseContext(), "Upload started", Toast.LENGTH_LONG).show();
+			    		handler.post(new DisplayToast(getBaseContext(), "Upload started"));
 			    		
 			    		Log.i(TAG, zipFile.getName() + " will be transfered");
 			    		
@@ -241,7 +251,7 @@ public class CompressAndSendData extends IntentService {
 					
 					Log.i(TAG, "No files to upload");
 					
-//					Toast.makeText(getBaseContext(), "No files to upload", Toast.LENGTH_LONG).show();
+					handler.post(new DisplayToast(getBaseContext(), "No files to upload"));
 					
 					this.cancel();
 				} else {
@@ -258,11 +268,14 @@ public class CompressAndSendData extends IntentService {
 					if (endResult == true) {
 						Log.i(TAG, "Transfering of experiment data to server successful");
 						
+						handler.post(new DisplayToast(getBaseContext(), "Experiment data "
+								+ "transfered successfully"));
+						
 						Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
 						i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
 						getBaseContext().sendBroadcast(i);
 
-						Log.i(TAG, "IntentService finished");
+						Log.d(TAG, "IntentService finished");
 						
 						this.cancel();
 					}
@@ -270,11 +283,14 @@ public class CompressAndSendData extends IntentService {
 					if (++counter == maxRetries) {
 						Log.e(TAG, "Experiment data could not be transfer to server");
 						
+						handler.post(new DisplayToast(getBaseContext(), "Failed to transfer "
+								+ "experiment data"));
+						
 						Intent i = new Intent(Globals.CONN_SEND_RAW_AUDIO_RECEIVE);
 						i.putExtra(Globals.CONN_SEND_RAW_AUDIO_RESULT, endResult);	
 						getBaseContext().sendBroadcast(i);
 						
-						Log.i(TAG, "IntentService finished");
+						Log.d(TAG, "IntentService finished");
 						
 						this.cancel();
 					}
