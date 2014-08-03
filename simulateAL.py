@@ -26,9 +26,10 @@ def simulateAL(trainedGMM, testFeatureData):
     y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0], 'labelsAdapted.txt')
     y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0], 'labels.txt')
 
-    n_classes = len(trainedGMM["classesDict"])
+    classesInGT = np.unique(y_GT)
+    classesInGT = classesInGT[classesInGT != -1]
 
-    print(trainedGMM["classesDict"])
+    n_classes = len(trainedGMM["classesDict"])
 
     """ Create index arrays to define which elements are used to evaluate performance and which for simulation of the AL
     behavior: """
@@ -242,8 +243,14 @@ def simulateAL(trainedGMM, testFeatureData):
                 # check if we want to query these points and update our threshold value if we adapt the model:
                 if queryCrit > threshold[predictedLabel]:
 
-                    if str(revClassesDict[actualLabel]) != "Conversation" and str(revClassesDict[predictedLabel]) != "Conversation": # ignore queries that are labeled as conversation or that were predicted as conversation
-                        print("Query for " + str(revClassesDict[actualLabel]) + " class (predicted as " + str(revClassesDict[predictedLabel]) + ") received at " + str(currentTime) + " seconds.")
+                    # ignore queries that are labeled as conversation or that were predicted as conversation
+                    #if (str(revClassesDict[actualLabel]) != "Conversation" and 
+                    #str(revClassesDict[predictedLabel]) != "Conversation"):
+                    if True:
+
+                        print("Query for " + str(revClassesDict[actualLabel]) + " class (predicted as " 
+                        + str(revClassesDict[predictedLabel]) + ") received at " + str(currentTime) +
+                        " seconds.")
 
                         # adapt the model:
                         upd = np.array(updatePoints)
@@ -288,8 +295,7 @@ def simulateAL(trainedGMM, testFeatureData):
             pl.plot(plotValues[i])
             pl.plot(plotThres[i])
             #pl.show()
-            fig.savefig("plotsTmp/" + revClassesDict[i] + ".jpg")
-
+            fig.savefig("plotsTmp/Class_" + revClassesDict[i] + ".jpg")
 
     pdb.set_trace()
 
@@ -305,6 +311,7 @@ def simulateAL(trainedGMM, testFeatureData):
         resultDict["timestamp"] = timestamps[i]
         resultDict["classesDict"] = GMM["classesDict"]
         resultDict["duration"] = simFeatures.shape[0] * 0.032 #length in seconds
+        resultDict["classesInGT"] = classesInGT
         results.append(resultDict)
         i += 1
 

@@ -30,6 +30,7 @@ def plotAL(results):
     labelAccuracy = []
     labelAccuracy.append(1)
     duration = results[0]["duration"]
+    classesInGT = results[0]["classesInGT"]
 
     for el in results:
         accuracy.append(el["accuracy"])
@@ -37,8 +38,9 @@ def plotAL(results):
         
         tmp = []
         for i in range(len(classesDict)):
-            #print(el["F1dict"][revClassesDict[cl]])
-            tmp.append(el["F1dict"][revClassesDict[i]])
+            # Only append classes that are in the ground truth:
+            if i in classesInGT:
+                tmp.append(el["F1dict"][revClassesDict[i]])
 
         F1list.append(tmp)
         #Conversation.append(el["F1dict"]["Conversation"])
@@ -79,8 +81,11 @@ def plotAL(results):
     fig.savefig("plotsTmp/accuracy.jpg")
     
     fig = pl.figure()
+    j=0
     for i in range(len(classesDict)):
-        pl.plot(idx, F1array[:,i], label=revClassesDict[i])
+        if i in classesInGT:
+            pl.plot(idx, F1array[:,j], label=revClassesDict[i])
+            j += 1
     
     #pl.plot(idx, Conversation, label="Conversation")
     #pl.plot(idx, Office, label="Office")
