@@ -142,8 +142,6 @@ public class CompressAndSendData extends IntentService {
 					
 			    	if(zipFile.getName().contains(".tar.gz")) {
 			    		
-			    		handler.post(new DisplayToast(getBaseContext(), "Upload started"));
-			    		
 			    		Log.i(TAG, zipFile.getName() + " will be transfered");
 			    		
 			    		numFilesFound++;
@@ -162,6 +160,8 @@ public class CompressAndSendData extends IntentService {
 			            
 			    		if (mWifi.isConnected()) {
 			    			if (plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB) {
+			    				
+			    				handler.post(new DisplayToast(getBaseContext(), "Upload started"));
 			    				
 			    				// WIFI connected and charging:
 			    				wifiAndCharging = true;
@@ -241,6 +241,9 @@ public class CompressAndSendData extends IntentService {
 				    	    }
 			    		} else {
 			    			
+			    			handler.post(new DisplayToast(getBaseContext(), "Not connected to wifi / not charging. "
+			    					+ "File will be transfered later"));
+			    			
 			    			Log.e(TAG, "Wifi not connected / not charging. Files won't be transferred to server");
 			    			resultList.add(false);
 			    		}
@@ -254,6 +257,7 @@ public class CompressAndSendData extends IntentService {
 					handler.post(new DisplayToast(getBaseContext(), "No files to upload"));
 					
 					this.cancel();
+					
 				} else {
 					
 					// This end result will only become true, if ALL files were transfered successfully

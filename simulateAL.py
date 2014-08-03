@@ -209,7 +209,7 @@ def simulateAL(trainedGMM, testFeatureData):
                     print("New threshold for " + revClassesDict[predictedLabel] + " class " +
                           str(round(threshold[predictedLabel],4)) + ". Set " + str(round(currentTime-prevTime)) + "s after model adaption")
                     
-                    print("thresQueriedInterval for class " + str(predictedLabel) + ": " + str(thresQueriedInterval[predictedLabel]))
+                    #print("thresQueriedInterval for class " + str(revClassesDict[predictedLabel]) + ": " + str(thresQueriedInterval[predictedLabel]))
                     
                     thresSet[predictedLabel] = True
 
@@ -279,11 +279,16 @@ def simulateAL(trainedGMM, testFeatureData):
     print("Total number of queries: " + str(sum(numQueries)))
     print(str(round(100.0 * majWrongCnt/float(majWrongCnt+majCorrectCnt),2)) + "% of all majority votes were wrong")
 
-    # ---- for plotting only: plot max values of entropy in 1min over time ---
+    # ---- for plotting only: query criteria and threshold values over time for each class separately: ---
     for i in range(n_classes):
-        pl.plot(plotValues[i])
-        pl.plot(plotThres[i])
-        pl.show()
+        # Don't show plots for classes with too few samples:
+        if (len(plotValues[i]) > 10):
+            fig = pl.figure()
+            pl.title(revClassesDict[i])
+            pl.plot(plotValues[i])
+            pl.plot(plotThres[i])
+            #pl.show()
+            fig.savefig("plotsTmp/" + revClassesDict[i] + ".jpg")
 
 
     pdb.set_trace()
@@ -355,7 +360,7 @@ def checkLabelAccuracy(actualLabels, label):
     @param label: The label of the class with which the model should be adapted
     """
     accuracy = len(actualLabels[actualLabels == label]) / float(len(actualLabels))
-    print(str(round(accuracy*100,1)) + "% of the labels used to adapt the model were correct")
+    #print(str(round(accuracy*100,1)) + "% of the labels used to adapt the model were correct")
 
     return accuracy
 
