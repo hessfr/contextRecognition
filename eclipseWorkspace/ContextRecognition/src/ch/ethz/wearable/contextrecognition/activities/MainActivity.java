@@ -379,7 +379,7 @@ public class MainActivity extends ActionBarActivity {
 			@SuppressWarnings("static-access")
 			@Override
 			public void onClick(View arg0) {
-
+				
 				if (AppStatus.getInstance().get() != AppStatus.getInstance().MODEL_ADAPTION) {
 					
 					Intent intent = new Intent(Globals.MODEL_ADAPTION_EXISTING_INTENT);

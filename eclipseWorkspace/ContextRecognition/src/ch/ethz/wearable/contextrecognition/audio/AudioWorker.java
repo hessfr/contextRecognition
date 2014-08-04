@@ -348,6 +348,7 @@ public class AudioWorker extends IntentService {
 			}
 		}
 		
+		// Append the starting time to the files:
 		Log.d(TAG, "Appending to start time of the app to log");
 		try {
 			File file = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
