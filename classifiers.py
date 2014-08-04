@@ -413,9 +413,8 @@ def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
     for i in range(n_classes):
 
         # logLikelihood[i] = trainedGMM['clfs'][i].score(X_test) # uses scikit function
-        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_, trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_) # uses logProb function defined below
-
-    
+        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_, 
+        trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_) # uses logProb function defined below
 
     """ Select the class with the highest log-probability: """
     y_pred = np.argmax(logLikelihood, 0) # =predictions in Java
@@ -500,16 +499,20 @@ def logProb(X, weights, means, covars):
 
         log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det) #=rowSum in Java
 
-#        if (c==0):
-#            pdb.set_trace()
-
     tmp_log_prob = (log_prob + np.log(weights))
 
     # compute sum in log domain:
     tmpArray = np.rollaxis(tmp_log_prob, axis=1) # transpose
     vmax = tmpArray.max(axis=0)
-    final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
 
+    #TODO: if we want to check which components is the most likely one: -> evaluate this for every class:
+    # To check if most likely component was from freesound model or user adaption:
+    #FS_COMPONENTS = 16
+    #mostLikelyComp = tmpArray.argmax(axis=0)
+    #num_freesound_components = (mostLikelyComp < FS_COMPONENTS).sum()
+    #num_user_components = (mostLikelyComp >= FS_COMPONENTS).sum()
+
+    final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
 
     final_log_prob = final_log_prob + vmax # shape = (n_samples,)
     

@@ -16,6 +16,9 @@ import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.google.common.primitives.Shorts;
 
+/*
+ * Structure of this class similar to: github.com/sumeetkr
+ */
 public class SoundHandler extends Thread {
 	
 	private final String TAG = "SoundHandler"; 
