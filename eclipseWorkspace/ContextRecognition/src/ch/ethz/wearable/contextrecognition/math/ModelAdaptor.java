@@ -49,18 +49,11 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	private static final String TAG = "ModelAdaptor";
 	private static final double EPS = Double.MIN_VALUE;
 
-	// private ArrayList<double[]> buffer;
-
-	// private void fillBuffer() {
-	//
-	// //buffer = AudioWorker.dataBuffer;
-	// }
-	
 	/*
 	 * Constructor allows us to pass multiple arguments of different types to AsyncTask
 	 */
 	public ModelAdaptor(ArrayList<double[]> b, int l, onModelAdaptionCompleted listener) {
-		this. buffer = b;
+		this.buffer = b;
 		this.label = l;
 		this.listener = listener;
 	}
@@ -80,11 +73,10 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 
 		GMM newGMM = null;
 
-		// TODO: should we change the AppStatus? We just continue making predictions anyway,
-		// even if model adaption is running, so it's not really needed...
+		DenseMatrix64F updatePointsNotScaled = convertToEJML(buffer);
 
-		DenseMatrix64F updatePoints = convertToEJML(buffer);
-
+		DenseMatrix64F updatePoints = norm(updatePointsNotScaled, oldGMM.get_scale_means(), oldGMM. get_scale_stddevs());
+		
 		int maxNewClasses = 2;
 		
 		try {
@@ -116,6 +108,9 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
 	}
 
+	/*
+	 * Points need to be scaled already before calling this function
+	 */
 	public GMM adaptGMM(GMM oldGMM, DenseMatrix64F updatePoints, int label,
 			int maxNewComp) throws IOException {
 
@@ -128,9 +123,6 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		int n_train_old = oldGMM.clf(label).get_n_train();
 
 		double[] bicArray = new double[maxNewComp];
-
-//		Log.i(TAG, "xxxxxxxxxxxx in ModelAdaptor: ");
-//		Log.i(TAG, updatePoints.toString());
 
 		for (int c = 1; c <= maxNewComp; c++) {
 
@@ -1481,5 +1473,27 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 
 		return out;
 
+	}
+	
+	/*
+	 * Subtract mean and norm standard deviation of of input data according to the mean and stddev values of the training data
+	 * means and stddevs have shape of (1 x n_features)
+	 */
+	private DenseMatrix64F norm(DenseMatrix64F X, DenseMatrix64F means, DenseMatrix64F stddevs) {
+		DenseMatrix64F normed = new DenseMatrix64F(X.numRows,X.numCols);
+		DenseMatrix64F tmpCol = new DenseMatrix64F(X.numRows, 1);
+		
+		for(int i=0; i<X.numCols; i++) {
+			tmpCol = CommonOps.extract(X, 0, X.numRows, i, (i+1));
+			
+			CommonOps.add(tmpCol, -1 * means.get(0,i), tmpCol);
+			
+			CommonOps.scale((1/stddevs.get(0,i)), tmpCol);
+			
+			CommonOps.insert(tmpCol, normed, 0, i);
+		}
+		
+		return normed;
+		
 	}
 }

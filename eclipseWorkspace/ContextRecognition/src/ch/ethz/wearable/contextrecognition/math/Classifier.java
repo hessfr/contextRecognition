@@ -290,7 +290,6 @@ public class Classifier {
 	public DenseMatrix64F norm(DenseMatrix64F X, DenseMatrix64F means, DenseMatrix64F stddevs) {
 		DenseMatrix64F normed = new DenseMatrix64F(X.numRows,X.numCols);
 		DenseMatrix64F tmpCol = new DenseMatrix64F(X.numRows, 1);
-
 		
 		for(int i=0; i<X.numCols; i++) {
 			tmpCol = CommonOps.extract(X, 0, X.numRows, i, (i+1));
