@@ -8,8 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-
-import com.example.contextrecognition.R;
+import ch.ethz.wearable.contextrecognition.R;
 
 public class Fragement1 extends Fragment {
 

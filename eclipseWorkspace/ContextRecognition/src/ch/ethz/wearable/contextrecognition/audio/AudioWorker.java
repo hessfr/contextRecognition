@@ -18,7 +18,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import ch.ethz.wearable.contextrecognition.data.Mfccs;
+import ch.ethz.wearable.contextrecognition.data.Features;
 import ch.ethz.wearable.contextrecognition.data.PredictionResult;
 import ch.ethz.wearable.contextrecognition.math.Classifier;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
@@ -34,7 +34,7 @@ public class AudioWorker extends IntentService {
 	private SoundHandler soundHandler;
 	private FeaturesExtractor featuresExtractor;
 	
-	private LinkedList<double[]> mfccList;
+	private LinkedList<double[]> featureList;
 	
 	// buffer the last 1 minute of data for the model adaption:
 	private LinkedList<double[]> dataBuffer; 
@@ -72,7 +72,7 @@ public class AudioWorker extends IntentService {
 	protected void onHandleIntent(Intent arg0) {
 		Log.i(TAG, "AudioWorker Service started");
 			
-	    mfccList = new LinkedList<double[]>();
+	    featureList = new LinkedList<double[]>();
 	    dataBuffer = new LinkedList<double[]>();
 		featuresExtractor = new FeaturesExtractor();
 		soundHandler = new SoundHandler(getBaseContext());
@@ -152,13 +152,13 @@ public class AudioWorker extends IntentService {
 							short[] tmpData = new short[512];
 							System.arraycopy(data, i*512, tmpData, 0, 512);
 
-							Mfccs currentMFCCs = featuresExtractor.extractFeatures(tmpData);
-							mfccList.add(currentMFCCs.get());
+							Features currentFeatures = featuresExtractor.extractFeatures(tmpData);
+							featureList.add(currentFeatures.get());
 
 							// Also add the MFCCs to the 1min data buffer:
 							if (dataBuffer.size() < DATA_BUFFER_SIZE) {
 								// Add new feature point:
-								dataBuffer.add(currentMFCCs.get());
+								dataBuffer.add(currentFeatures.get());
 								
 								//Update buffer status:
 								if (bufferStatus != false) {
@@ -167,7 +167,7 @@ public class AudioWorker extends IntentService {
 
 							} else {
 								// Add new feature point and remove the oldest one:
-								dataBuffer.add(currentMFCCs.get());
+								dataBuffer.add(currentFeatures.get());
 								dataBuffer.remove(0);
 								
 								//Update buffer status:
@@ -181,17 +181,16 @@ public class AudioWorker extends IntentService {
 						//Log.i(TAG, "Feature extraction duration: " + (endTimeFX-startTimeFX)); //~2s
 						
 						// If we have 2 seconds of data, call our prediction method and clear the list afterwards again 
-						if (mfccList.size() == 63) {
+						if (featureList.size() == 63) {
 							
 							//long startTimeClf = System.currentTimeMillis();
 							
 							// Convert data to DenseMatrix:
-							double[][] array = new double[mfccList.size()][12];
-							for (int i=0; i<mfccList.size(); i++) {
-							    array[i] = mfccList.get(i);
+							double[][] array = new double[featureList.size()][Globals.NUM_FEATURES];
+							for (int i=0; i<featureList.size(); i++) {
+							    array[i] = featureList.get(i);
 							}
 							DenseMatrix64F samples = new DenseMatrix64F(array);
-							//Log.i(TAG, samples.toString());
 
 							PredictionResult predictionResult = clf.predict(gmm, samples);
 							int currentResult = predictionResult.get_class();
@@ -208,7 +207,7 @@ public class AudioWorker extends IntentService {
 							//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
 							
 							// Delete all elements of the list afterwards
-							mfccList.clear();
+							featureList.clear();
 							
 							// If we were in init status, change to normal classification now:
 							if (AppStatus.getInstance().get() == AppStatus.INIT) {
@@ -220,7 +219,7 @@ public class AudioWorker extends IntentService {
 							//Log.i(TAG, "Classification duration: " + (endTimeClf-startTimeClf)); // ~0.5s
 													
 						} else {
-							Log.e(TAG, "mfccList has wrong size of " + mfccList.size() + "instead of 63");
+							Log.e(TAG, "mfccList has wrong size of " + featureList.size() + "instead of 63");
 						}
 					} else {
 						
@@ -259,7 +258,7 @@ public class AudioWorker extends IntentService {
 		bundle.putBoolean(Globals.BUFFER_STATUS, bufferStatus);
 		bundle.putSerializable(Globals.BUFFER, buffer);
 		
-		bundle.putParcelable(Globals.GMM_OBJECT, gmm);
+		//bundle.putParcelable(Globals.GMM_OBJECT, gmm);
 		
 		bundle.putSerializable(Globals.CLASSES_DICT, classesDict);
 

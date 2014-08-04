@@ -17,8 +17,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RatingBar;
-
-import com.example.contextrecognition.R;
+import ch.ethz.wearable.contextrecognition.R;
 
 public class RatingActivity extends ActionBarActivity {
     

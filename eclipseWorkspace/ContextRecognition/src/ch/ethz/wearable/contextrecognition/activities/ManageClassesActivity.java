@@ -25,12 +25,11 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
+import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.communication.ManageClasses;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder.onClickEvent;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-
-import com.example.contextrecognition.R;
 
 public class ManageClassesActivity extends ActionBarActivity {
 		

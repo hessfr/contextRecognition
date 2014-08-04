@@ -119,20 +119,20 @@ public class extractFeatures {
 
 					if (isValid == true) {
 
-						// // Without log energy:
-						features.add(featureCepstrum);
+//						// Without log energy:
+//						features.add(featureCepstrum);
 
-//						// Calculate log energy:
-//						logEnergy = calcLogEnergy(audioShorts);
-//
-//						// Combine the MFCCs and the log energy into one array:
-//						System.arraycopy(featureCepstrum, 0, featureArray, 0,
-//								featureCepstrum.length);
-//						featureArray[featureCepstrum.length] = logEnergy;
-//
-//						features.add(featureArray);
-//
-//						featureArray = new double[MFCCS_VALUE + 1];
+						// Calculate log energy:
+						logEnergy = calcLogEnergy(audioShorts);
+
+						// Combine the MFCCs and the log energy into one array:
+						System.arraycopy(featureCepstrum, 0, featureArray, 0,
+								featureCepstrum.length);
+						featureArray[featureCepstrum.length] = logEnergy;
+
+						features.add(featureArray);
+
+						featureArray = new double[MFCCS_VALUE + 1];
 
 					}
 

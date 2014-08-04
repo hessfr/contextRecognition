@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+
 import org.apache.commons.lang3.ArrayUtils;
+
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
@@ -24,10 +26,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
+
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
-import com.example.contextrecognition.R;
 
 
 

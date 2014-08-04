@@ -75,6 +75,8 @@ public class Globals {
 	
 	public static long RECORDING_START_TIME = 0;
 	
+	public static int NUM_FEATURES = 13;
+	
 	/*
 	 * App settings
 	 */

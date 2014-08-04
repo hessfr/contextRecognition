@@ -22,13 +22,12 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
+import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.activities.MainActivity;
 import ch.ethz.wearable.contextrecognition.communication.InitModel;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder.onClickEvent;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-
-import com.example.contextrecognition.R;
 
 public class Fragment3 extends Fragment {
 

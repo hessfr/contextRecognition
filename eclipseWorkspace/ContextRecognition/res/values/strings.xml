@@ -45,8 +45,8 @@
     <string name="next_button">Next</string>
     
     <!-- Upload activity -->
-    <string name="upload_failed">Sorry, the upload of your audio data failed, 
-        please try it again by pressing the button:</string>
+    <string name="upload_failed">If the automatic upload of your audio data failed,
+        please start it again by pressing the button:</string>
     <string name="upload_again_button">Start upload</string>
     
     <!-- Manage classes activity activity -->

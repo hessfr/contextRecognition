@@ -13,9 +13,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
+import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.communication.CompressAndSendData;
-
-import com.example.contextrecognition.R;
 
 public class UploadActivity extends ActionBarActivity {
 

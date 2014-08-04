@@ -6,8 +6,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-
-import com.example.contextrecognition.R;
+import ch.ethz.wearable.contextrecognition.R;
 
 public class WelcomeActivity extends FragmentActivity {
 

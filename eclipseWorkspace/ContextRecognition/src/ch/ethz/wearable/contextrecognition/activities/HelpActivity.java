@@ -9,8 +9,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import com.example.contextrecognition.R;
+import ch.ethz.wearable.contextrecognition.R;
 
 public class HelpActivity extends ActionBarActivity {
 	

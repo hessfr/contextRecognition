@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -39,19 +40,19 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
+import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.CompressAndSendData;
-import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClassGet;
 import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass;
+import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClassGet;
 import ch.ethz.wearable.contextrecognition.communication.InitModelGet;
 import ch.ethz.wearable.contextrecognition.communication.ManageClassesGet;
 import ch.ethz.wearable.contextrecognition.data.AppData;
 import ch.ethz.wearable.contextrecognition.math.ModelAdaptor;
 import ch.ethz.wearable.contextrecognition.math.ModelAdaptor.onModelAdaptionCompleted;
 
-import com.example.contextrecognition.R;
 import com.google.gson.Gson;
 
 /*
@@ -75,8 +76,8 @@ public class StateManager extends BroadcastReceiver {
 	private static double currentEntropy;
 	private static String predictionString;
 	private static String prevPredictionString = "";
+	private static String[] classNameArray;
 	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
-	private static GMM gmm;
 	private static ArrayList<Integer> totalCount; // contains number of total predictions for each class (for plotting)
 	
 	// ----- Variables needed to calculate the queryCriteria: -----
@@ -157,8 +158,7 @@ public class StateManager extends BroadcastReceiver {
 						currentEntropy = bundle.getDouble(Globals.PREDICTION_ENTROPY);
 						predictionString = bundle.getString(Globals.PREDICTION_STRING);
 						
-//						classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
-//						Log.i(TAG, classNameArray[0]);
+						classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
 						
 //						bufferStatus = bundle
 //								.getBoolean(Globals.BUFFER_STATUS);
@@ -167,14 +167,14 @@ public class StateManager extends BroadcastReceiver {
 						Serializable s1 = bundle.getSerializable(Globals.BUFFER);
 						if (waitingForFeedback == false) {
 							buffer = (ArrayList<double[]>) s1;
+							//Log.i(TAG, "Buffer size: " + buffer.size()/31.5 + " seconds");
 						}
-//						Log.i(TAG, String.valueOf(buffer.get(0)[0]));
 
-						gmm = bundle.getParcelable(Globals.GMM_OBJECT); // Needed??
+						//gmm = bundle.getParcelable(Globals.GMM_OBJECT); // Needed??
 
-//						Serializable s2 = new HashMap<String, Integer>();
-//						s2 = bundle.getSerializable(Globals.CLASSES_DICT);
-//						classesDict = (HashMap<String, Integer>) s2;
+						Serializable s2 = new HashMap<String, Integer>();
+						s2 = bundle.getSerializable(Globals.CLASSES_DICT);
+						classesDict = (HashMap<String, Integer>) s2;
 		
 //						Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 
@@ -219,7 +219,7 @@ public class StateManager extends BroadcastReceiver {
 								thresBuffer = new ArrayList<ArrayList<Double>>();
 								thresQueriedInterval = new ArrayList<Double>();
 								
-								for(int i=0; i<gmm.get_n_classes(); i++) {
+								for(int i=0; i<classNameArray.length; i++) {
 									initThresSet.add(false);
 									thresSet.add(false);
 									feedbackReceived.add(false);
@@ -230,7 +230,7 @@ public class StateManager extends BroadcastReceiver {
 								}
 								
 								totalCount = new ArrayList<Integer>();
-								for(int i=0; i<gmm.get_n_classes(); i++) {
+								for(int i=0; i<classNameArray.length; i++) {
 									totalCount.add(0);
 								}
 
@@ -246,7 +246,7 @@ public class StateManager extends BroadcastReceiver {
 							predBuffer = new ArrayList<Integer>();
 							
 							// Save String array of the context classes to preferences:
-							Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, gmm.get_string_array());
+							Globals.setStringArrayPref(context, Globals.CONTEXT_CLASSES, classNameArray);
 
 							if (classNamesRequested == true) {
 								Intent i = new Intent(Globals.CLASS_NAMES_SET);
@@ -254,7 +254,7 @@ public class StateManager extends BroadcastReceiver {
 								classNamesRequested = false;
 							}
 
-							Log.i(TAG, "Number of context classes: " + gmm.get_n_classes());
+							Log.i(TAG, "Number of context classes: " + classNameArray.length);
 							
 							variablesInitialized = true;
 						}					
@@ -289,7 +289,7 @@ public class StateManager extends BroadcastReceiver {
 								double std = stdCalc.evaluate(d);
 								
 								threshold.set(currentPrediction, initMetric(mean, std));
-								Log.i(TAG, "Initial threshold for class " + gmm.get_class_name(currentPrediction) +
+								Log.i(TAG, "Initial threshold for class " + get_class_name(currentPrediction, classesDict) +
 										" set to " + initMetric(mean, std));
 								
 								thresSet.set(currentPrediction, true);
@@ -320,7 +320,7 @@ public class StateManager extends BroadcastReceiver {
 									
 									threshold.set(currentPrediction, newThreshold);
 									
-									Log.i(TAG, "Threshold for class " + gmm.get_class_name(currentPrediction) +
+									Log.i(TAG, "Threshold for class " + get_class_name(currentPrediction, classesDict) +
 											" updated to " + newThreshold);
 									
 									thresSet.set(currentPrediction, true);
@@ -967,22 +967,12 @@ public class StateManager extends BroadcastReceiver {
 					appendToALLog(true, label, currentPrediction, false, true);
 				}
 				
-				Log.i(TAG, "Model adaption called for class " + String.valueOf(label));
+				Log.i(TAG, "Model adaption called for class " + String.valueOf(get_class_name(label, classesDict)));
 				
 				waitingForFeedback = false;
 				
 				
-				
-				
-//				new ModelAdaptor(buffer, label, listener).execute(context);
-				
-				
-				executeModelAdaption(context, buffer, label, listener); //TODO
-				
-				
-				
-				
-				
+				executeModelAdaption(context, buffer, label, listener);
 				
 				// Clear all buffer values etc.
 					
@@ -994,7 +984,7 @@ public class StateManager extends BroadcastReceiver {
 				// Flush the buffers
 				queryBuffer.clear();
 				predBuffer.clear();
-				for(int i=0; i<gmm.get_n_classes(); i++) {
+				for(int i=0; i<classNameArray.length; i++) {
 					ArrayList<Double> tmp = thresBuffer.get(i);
 					tmp.clear();
 					thresBuffer.set(i, tmp);
@@ -1101,13 +1091,13 @@ public class StateManager extends BroadcastReceiver {
 		Log.i(TAG, "Appending to AL log");
 		
 		String classNameGT = null;
-		String classNamePredicted = gmm.get_class_name(contextClassPredicted);
+		String classNamePredicted = get_class_name(contextClassPredicted, classesDict);
 		String timePassed = null;
 		String isNewClassString = null;
 		String volFeedbackString = null;
 		
 		if (feedbackReceived == true) {
-			classNameGT = gmm.get_class_name(contextClassGT);
+			classNameGT = get_class_name(contextClassGT, classesDict);
 			timePassed = String.valueOf(System.currentTimeMillis()-timeQuerySent);
 			if (isNewClass == true) {
 				isNewClassString = "new_class";
@@ -1584,6 +1574,17 @@ public class StateManager extends BroadcastReceiver {
 	    	modelAdaptor.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, context);
 	    else
 	    	modelAdaptor.execute(context);
+	}
+	
+	// Return name of the class for a given integer
+	private String get_class_name(int i, Map<String, Integer> cl) {
+		String res = new String();
+		for (Entry<String, Integer> entry : cl.entrySet()) {
+            if (entry.getValue() == i) {
+            	res = entry.getKey();
+            }
+        }
+		return res;	
 	}
 	
 }

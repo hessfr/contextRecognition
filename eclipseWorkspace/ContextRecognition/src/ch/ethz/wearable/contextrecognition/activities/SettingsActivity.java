@@ -22,9 +22,8 @@ import android.view.MenuItem;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-
-import com.example.contextrecognition.R;
 
 public class SettingsActivity extends ActionBarActivity {
 	

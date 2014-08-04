@@ -29,8 +29,6 @@ public class Classifier {
     	
     	DenseMatrix64F X = norm(featureData, gmm.get_scale_means(), gmm. get_scale_stddevs());
     	
-    	
-    	
     	DenseMatrix64F tmpLL = new DenseMatrix64F(n_samples, 1);
     	DenseMatrix64F logLikelihood = new DenseMatrix64F(n_samples, n_classes);
     	

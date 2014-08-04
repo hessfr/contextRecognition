@@ -39,12 +39,11 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 import ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity;
-
-import com.example.contextrecognition.R;
 
 public class MainActivity extends ActionBarActivity {
 
