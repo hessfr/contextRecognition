@@ -134,7 +134,7 @@ def adaptGMM(trainedGMM, updatePoints, label):
 
 
     finalGMM["clfs"][label] = GMM(n_components=len(new_model), covariance_type='full')
-    dummy = np.random.random((100,12))
+    dummy = np.random.random((100,n_features))
     finalGMM["clfs"][label].fit(dummy) # workaround, as sklearn requires that .fit is called before using this GMM. All values are overwritten later anyway
 
 
