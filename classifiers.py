@@ -764,36 +764,26 @@ def createGTMultiNew(classesDict, length, groundTruthLabels='labels_new_format.t
     """ Preprocess ground truth labels: """
     with open(groundTruthLabels) as f:
         reader = csv.reader(f, delimiter="\t")
-        labelList = list(reader) #1st column = start time, 2nd column = end time, 3rd column = class label (string)
+        labelList = list(reader)
 
     """ Create array containing label for sample point: """
     n_maxLabels = 3 #maximum number of labels that can be assign to one point
     y_GT = np.empty([length,n_maxLabels])
     y_GT.fill(-1) #-1 corresponds to no label given
 
-
-    testCnt = 0
     for i in range(len(labelList)):
         """ Fill array from start to end of each ground truth label with the correct label: """
         if labelList[i][2] == "start":
             tmpContext = labelList[i][1]
             start = getIndex(float(labelList[i][0]))
-            
-
 
             # Find the end time of this context:
             for j in range(i,len(labelList)):
                 if ((labelList[j][1] == tmpContext) and (labelList[j][2] == "end")):
-                   
-
 
                     end = getIndex(float(labelList[j][0]))
                     if end >= y_GT.shape[0]:
                         end = y_GT.shape[0] - 1
-
-                    print("end: " + labelList[j][0])
-
-                    testCnt += 1
 
                     """ Fill ground truth array, and check if our classifier was 
                     trained with all labels of the test file, if not give warning: """
@@ -830,14 +820,12 @@ def createGTMultiNew(classesDict, length, groundTruthLabels='labels_new_format.t
                         labelList[i][1] + "'. It will not be considered for testing.")
 
                     break
-
-    print("Test count: " + str(testCnt))
     
     return y_GT
 
 def createGTUnique(classesDict, length, groundTruthLabels='labelsAdapted.txt'):
     """
-    Create ground truth array were only one label is allowed per point
+    Create ground truth array where only one label is allowed per point
     @param classesDict:
     @param length:
     @param groundTruthLabels:
@@ -861,7 +849,8 @@ def createGTUnique(classesDict, length, groundTruthLabels='labelsAdapted.txt'):
         if end >= y_GT.shape[0]:
             end = y_GT.shape[0] - 1 #TODO: add proper check here if values are feasible
 
-        """ Check if our classifier was trained with all labels of the test file, if not give warning: """
+        """ Check if our classifier was trained with all labels of the test
+        file, if not give warning: """
         classesNotTrained = []
         if line[2] not in classesDict.keys():
             classesNotTrained.append(line[2])
@@ -872,6 +861,55 @@ def createGTUnique(classesDict, length, groundTruthLabels='labelsAdapted.txt'):
         if classesNotTrained:
             print("The classifier wasn't trained with class '" + line[2] + "'. It will not be considered for testing.")
 
+    return y_GT
+
+def createGTUniqueNew(classesDict, length, groundTruthLabels='labels_adapted_new_format.txt'):
+    """
+    Create ground truth array where only one label is allowed per point
+    @param classesDict:
+    @param length:
+    @param groundTruthLabels:
+    @return:
+    """
+
+    """ Preprocess ground truth labels: """
+    with open(groundTruthLabels) as f:
+        reader = csv.reader(f, delimiter="\t")
+        labelList = list(reader)
+
+    y_GT = np.empty([length])
+    y_GT.fill(-1) #-1 corresponds to no label given
+
+    for i in range(len(labelList)):
+        """ Fill array from start to end of each ground truth label with the correct label: """
+        if labelList[i][2] == "start":
+            tmpContext = labelList[i][1]
+            start = getIndex(float(labelList[i][0]))
+
+            # Find the end time of this context:
+            for j in range(i,len(labelList)):
+                if ((labelList[j][1] == tmpContext) and (labelList[j][2] == "end")):
+
+                    end = getIndex(float(labelList[j][0]))
+                    if end >= y_GT.shape[0]:
+                        end = y_GT.shape[0] - 1
+
+                    """ Fill ground truth array, and check if our classifier was 
+                    trained with all labels of the test file, if not give warning: """
+                    classesNotTrained = []
+                    if labelList[i][1] not in classesDict.keys():
+                        classesNotTrained.append(labelList[i][1])
+                        y_GT[start:end+1].fill(-1)
+                    
+                    else:
+                        y_GT[start:end+1].fill(classesDict[tmpContext])
+
+                    if classesNotTrained:
+                        print("The classifier wasn't trained with class '" + 
+                        labelList[i][1] + "'. It will not be considered for testing.")
+
+                    break
+    
     return y_GT
 
 def confusionMatrix(y_GT, y_pred, classesDict):
