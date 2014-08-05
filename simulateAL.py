@@ -12,6 +12,8 @@ from classifiers import getIndex
 from classifiers import testGMM
 from classifiers import predictGMM
 from classifiers import majorityVote
+from classifiers import createGTUnique
+from classifiers import createGTMulti
 from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
 import ipdb as pdb #pdb.set_trace()
@@ -510,93 +512,6 @@ def splitData(y_GT):
         #print("Sequence ending at frame " + str(i) + " not saved.")
 
     return [evalIdx, simIdx]
-
-def createGTUnique(classesDict, length, groundTruthLabels='labelsAdapted.txt'):
-    """
-    Create ground truth array were only one label is allowed per point
-    @param classesDict:
-    @param length:
-    @param groundTruthLabels:
-    @return:
-    """
-    #TODO: move this method in classifiers.py and use it there as well to avoid redundancy!
-
-    """ Preprocess ground truth labels: """
-    with open(groundTruthLabels) as f:
-        reader = csv.reader(f, delimiter="\t")
-        labelList = list(reader) #1st column = start time, 2nd column = end time, 3rd column = class label (string)
-
-    """ Create array containing label for sample point: """
-    y_GT = np.empty([length])
-    y_GT.fill(-1) #-1 corresponds to no label given
-
-    for line in labelList:
-        """ Fill array from start to end of each ground truth label with the correct label: """
-        start = getIndex(float(line[0]))
-        end = getIndex(float(line[1])) #fill to the end of the frame
-
-        if end >= y_GT.shape[0]:
-            end = y_GT.shape[0] - 1 #TODO: add proper check here if values are feasible
-
-        """ Check if our classifier was trained with all labels of the test file, if not give warning: """
-        classesNotTrained = []
-        if line[2] not in classesDict.keys():
-            classesNotTrained.append(line[2])
-            y_GT[start:end+1].fill(-1)
-        else:
-            y_GT[start:end+1].fill(classesDict[line[2]])
-
-        if classesNotTrained:
-            print("The classifier wasn't trained with class '" + line[2] + "'. It will not be considered for testing.")
-
-    return y_GT
-
-def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
-    """
-    Create ground truth array that allows multiple labels per point
-    @param classesDict:
-    @param length:
-    @param groundTruthLabels:
-    @return:
-    """
-    #TODO: move this method in classifiers.py and use it there as well to avoid redundancy!
-
-    """ Preprocess ground truth labels: """
-    with open(groundTruthLabels) as f:
-        reader = csv.reader(f, delimiter="\t")
-        labelList = list(reader) #1st column = start time, 2nd column = end time, 3rd column = class label (string)
-
-    """ Create array containing label for sample point: """
-    n_maxLabels = 3 #maximum number of labels that can be assign to one point
-    y_GT = np.empty([length,n_maxLabels])
-    y_GT.fill(-1) #-1 corresponds to no label given
-
-    for line in labelList:
-        """ Fill array from start to end of each ground truth label with the correct label: """
-        start = getIndex(float(line[0]))
-        end = getIndex(float(line[1])) #fill to the end of the frame
-
-        if end >= y_GT.shape[0]:
-            end = y_GT.shape[0] - 1 #TODO: add proper check here if values are feasible
-
-        """ Fill ground truth array, and check if our classifier was trained with all labels of the test file, if not give warning: """
-        classesNotTrained = []
-        if line[2] not in classesDict.keys():
-            classesNotTrained.append(line[2])
-        else:
-            if (len(np.unique(y_GT[start:end+1,0])) == 1) and (np.unique(y_GT[start:end+1,0])[0] == -1):
-                y_GT[start:end+1,0].fill(classesDict[line[2]])
-            elif (len(np.unique(y_GT[start:end+1,1])) == 1) and (np.unique(y_GT[start:end+1,1])[0] == -1):
-                y_GT[start:end+1,1].fill(classesDict[line[2]])
-            elif (len(np.unique(y_GT[start:end+1,2])) == 1) and (np.unique(y_GT[start:end+1,2])[0] == -1):
-                y_GT[start:end+1,2].fill(classesDict[line[2]])
-            else:
-                print("Problem occurred when filling ground truth array. Maybe you are using more than 3 simultaneous context classes?")
-
-        if classesNotTrained:
-            print("The classifier wasn't trained with class '" + line[2] + "'. It will not be considered for testing.")
-
-    return y_GT
 
 def reverseDict(oldDict):
     """
