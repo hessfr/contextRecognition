@@ -407,10 +407,7 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-							
 
-							
-							
 							
 						}
 						
@@ -1136,7 +1133,7 @@ public class StateManager extends BroadcastReceiver {
 		
 		Log.d(TAG, "Appending to prediction log file");
 
-		File predLogFile = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
+		File predLogFile = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME); // new log file
 		
 		// Check if just after midnight:
 		Calendar cal = Calendar.getInstance();
@@ -1165,15 +1162,36 @@ public class StateManager extends BroadcastReceiver {
 			 */
 			Globals.RECORDING_START_TIME = System.currentTimeMillis();
 			
-			// First finished the log files in the folder from yesterday:
+			//FOR TESTING ONLY:
+			File file = new File(Globals.getLogPath(), "DayChangeTestFile.txt");
+			try {
+				FileWriter f = new FileWriter(file, true);
+				Calendar c = Calendar.getInstance();
+				Date d = c.getTime();
+				DateFormat date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String dateString = date.format(d);
+				f.write("In if clause at " + dateString + "\n");
+				f.close();
+				
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			//------
+			
+			/*
+			 * First finished the log files in the folder from yesterday:
+			 */
 			SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 			long recordingStopped = mPrefs.getLong(Globals.LASTEST_RECORDING_TIMESTAMP, -1);
 			try {
+				
 				long recordingLastStarted = 0;
 				double recordingStoppedRel = 0.0;
-				File startStopFile = new File(Globals.getLogPathYesterday(), Globals.START_STOP_LOG_FILENAME);
+				File startStopFileYesterday = new File(Globals.getLogPathYesterday(), Globals.START_STOP_LOG_FILENAME);
 				
-				BufferedReader br = new BufferedReader(new FileReader(startStopFile));
+				BufferedReader br = new BufferedReader(new FileReader(startStopFileYesterday));
 			    String lastLine = null;
 			    String tmpLine = null;
 
@@ -1191,9 +1209,9 @@ public class StateManager extends BroadcastReceiver {
 			    	Log.e(TAG, "Start-stop log file corrupted, couldn't calulcate stop time");
 			    }
 			    	
-				File predFile = new File(Globals.getLogPathYesterday(), Globals.PRED_LOG_FILENAME);
-			    if (predFile.exists()) {
-					FileWriter f = new FileWriter(predFile, true);
+				File predFileYesterday = new File(Globals.getLogPathYesterday(), Globals.PRED_LOG_FILENAME);
+			    if (predFileYesterday.exists()) {
+					FileWriter f = new FileWriter(predFileYesterday, true);
 					f.write("\t" + recordingStoppedRel + "\n");
 					f.close();
 			    }
@@ -1203,12 +1221,13 @@ public class StateManager extends BroadcastReceiver {
 				Log.w(TAG, "Relative stop time could not be added to prediction log file");
 			}
 			
-			//Then create the new log files and add the starting time:
-			// Append the starting time to the files:
+			/*
+			 * Then create the new log files and add the starting time:
+			 */
 			Log.d(TAG, "Appending to start time of the app to log");
 			try {
-				File file = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
-				FileWriter f = new FileWriter(file, true);
+				File startStopFile = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
+				FileWriter f = new FileWriter(startStopFile, true);
 				f.write(System.currentTimeMillis() + "\t" + "start" + "\n");
 				f.close();
 			} catch (IOException e) {
@@ -1217,8 +1236,7 @@ public class StateManager extends BroadcastReceiver {
 			}
 			
 			try {
-				File file = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME);
-				FileWriter f = new FileWriter(file, true);
+				FileWriter f = new FileWriter(predLogFile, true);
 				f.write("RECORDING_STARTED" + "\n");
 				f.close();
 			} catch (IOException e) {
@@ -1227,8 +1245,8 @@ public class StateManager extends BroadcastReceiver {
 			}
 			
 			try {
-				File file = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
-				FileWriter f = new FileWriter(file, true);
+				File gtLogFile = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
+				FileWriter f = new FileWriter(gtLogFile, true);
 				f.write("RECORDING_STARTED" + "\n");
 				f.close();
 			} catch (IOException e) {

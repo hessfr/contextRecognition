@@ -117,11 +117,16 @@ public class DiaryActivity extends ActionBarActivity {
     
     private void createChart(final Integer[] t, String[] c) {
     	
-    	String[] colors = {"#438D80", " #98AFC7", "#566D7E", "#827839", "#566D7E", 
-    			"#3090C7", "#95B9C7", "#3BB9FF", "#4C4646", "#8EEBEC", "#78866B",
-    			"#728C00", "#347235", "#52D017", "#9DC209", "#FFDB58", "#E9AB17",
-    			"#CD7F32", "#966F33", "#566D7E", "#6F4E37", "#C35817", "#F87217",
-    			"#E55451", "#3090C7" };
+    	String[] colors = {
+    			
+    			"#E9AB17", "#9DC209", "#C35817", "#966F33", "#566D7E",
+    			"#F87217", "#728C00", "#E55451", "#827839",	"#3090C7", 
+    			"#95B9C7", "#3BB9FF", "#4C4646", "#8EEBEC", "#78866B", 
+    			"#CD7F32", "#52D017", "#966F33", "#566D7E", "#6F4E37", 
+    			"#3090C7", "#438D80", "#566D7E", 
+
+    			};
+    			
     	
     	/*
     	 * From http://stackoverflow.com/questions/112234/sorting-matched-arrays-in-java
@@ -158,7 +163,7 @@ public class DiaryActivity extends ActionBarActivity {
     	
     	for(int i=0; i<totalCounts.length; i++) {
     		PieSlice slice = new PieSlice();
-    		slice.setColor(Color.parseColor(colors[i]));
+			slice.setColor(Color.parseColor(colors[i]));
     		slice.setValue(1);
     		pg.addSlice(slice);
     	}
