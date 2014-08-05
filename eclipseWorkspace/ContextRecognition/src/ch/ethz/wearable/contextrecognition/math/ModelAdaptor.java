@@ -731,10 +731,6 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 			CommonOps.extract(tmp, 0, 1, 0, tmp.numCols, means, i, 0);
 		}
 
-		// for testing only
-		// GenericMatrixOps.copy(m, means);
-		// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
 		// ----- initialize weights -----
 		CommonOps.fill(weights, (1.0 / n_components));
 

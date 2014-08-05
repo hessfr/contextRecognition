@@ -128,7 +128,8 @@ public class Classifier {
     }
    
     // Calculate the log probability of multiple points under a GMM represented by the weights, means, covars
-	public DenseMatrix64F computeLogProb(DenseMatrix64F X, DenseMatrix64F weights, DenseMatrix64F means, DenseMatrix64F[] covars) {
+	private DenseMatrix64F computeLogProb(DenseMatrix64F X, DenseMatrix64F weights, 
+			DenseMatrix64F means, DenseMatrix64F[] covars) {
 		
 		if (X.numCols != means.numCols) {
 			System.out.print("X has wrong shape" + "\n");
@@ -287,7 +288,7 @@ public class Classifier {
 	 * Subtract mean and norm standard deviation of of input data according to the mean and stddev values of the training data
 	 * means and stddevs have shape of (1 x n_features)
 	 */
-	public DenseMatrix64F norm(DenseMatrix64F X, DenseMatrix64F means, DenseMatrix64F stddevs) {
+	private DenseMatrix64F norm(DenseMatrix64F X, DenseMatrix64F means, DenseMatrix64F stddevs) {
 		DenseMatrix64F normed = new DenseMatrix64F(X.numRows,X.numCols);
 		DenseMatrix64F tmpCol = new DenseMatrix64F(X.numRows, 1);
 		
@@ -308,7 +309,7 @@ public class Classifier {
 	/*
 	 * Calculate a majority vote of given window length on a double array and returns the resulting DenseMatrix64F
 	 */
-	public DenseMatrix64F majorityVote(double[] y_in) {
+	private DenseMatrix64F majorityVote(double[] y_in) {
 		double MAJORITY_WINDOW = 2.0; // in seconds
 		double WINDOW_LENGTH = 0.1; // in seconds
 
@@ -371,7 +372,7 @@ public class Classifier {
 		return res;
 	}
 	
-	public double getMostFrequent(double[] a) {
+	private double getMostFrequent(double[] a) {
 		
 	  int count = 1, tempCount;
 	  double popular = a[0];

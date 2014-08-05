@@ -32,19 +32,19 @@ public class KMeansClusterer {
 	 * Initialize centroids with the parameters given, e.g. if 1, 4, 6 are given, intialize the clusters with
 	 * the values of the 1st, the 4th and 6th data point
 	 */
-	public List<Centroid> chooseCentroids(int... userCentroids) {
-		// 2 arguments -> 2 centroids
-		List<Centroid> centroids = Lists.newArrayListWithCapacity(userCentroids.length);
-
-		for (int c : userCentroids) { // sweep through all parameter values
-			SimpleMatrix centroid = new SimpleMatrix(1, data.numCols());
-			for (int j = 0; j < data.numCols(); j++) {
-				centroid.set(0, j, data.get(c, j));
-			}
-			centroids.add(new Centroid(centroid));
-		}
-		return centroids;
-	}
+//	private List<Centroid> chooseCentroids(int... userCentroids) {
+//		// 2 arguments -> 2 centroids
+//		List<Centroid> centroids = Lists.newArrayListWithCapacity(userCentroids.length);
+//
+//		for (int c : userCentroids) { // sweep through all parameter values
+//			SimpleMatrix centroid = new SimpleMatrix(1, data.numCols());
+//			for (int j = 0; j < data.numCols(); j++) {
+//				centroid.set(0, j, data.get(c, j));
+//			}
+//			centroids.add(new Centroid(centroid));
+//		}
+//		return centroids;
+//	}
 	
 	/*
 	 * Randomly initialize a certain number or centroids defined by the parameter numCentroids.

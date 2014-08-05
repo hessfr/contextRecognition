@@ -29,7 +29,6 @@ import ch.ethz.wearable.contextrecognition.data.Features;
 import ch.ethz.wearable.contextrecognition.math.FFT;
 import ch.ethz.wearable.contextrecognition.math.MFCC;
 import ch.ethz.wearable.contextrecognition.math.Window;
-import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 public class FeaturesExtractor {
 

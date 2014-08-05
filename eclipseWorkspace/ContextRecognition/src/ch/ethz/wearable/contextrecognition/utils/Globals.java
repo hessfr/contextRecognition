@@ -75,7 +75,7 @@ public class Globals {
 	
 	public static long RECORDING_START_TIME = 0;
 	
-	public static int NUM_FEATURES = 13;
+	public static int NUM_FEATURES = 13; // 12 features if only MFCCs, 13 if MFCCs & log energy
 	
 	/*
 	 * App settings
@@ -95,13 +95,16 @@ public class Globals {
 	// Silence detection threshold (higher means more samples will be considered silent):
 	public static short SILENCE_DETECTION_THRESHOLD = 1200;
 	
-	// Array of context classes that can be selected initially:
+	/*
+	 *  Array of context classes that can be selected initially: 
+	 *  (these classes have to match the classes of the default 
+	 *  model that is deployed in the assets folder)
+	 */
 	public static String[] initialContextClasses = {"Office", "Conversation", "Restaurant",
-		"Car", "Bus", "Train", "Street", "Vacuum", "Toilet", "Kitchen"}; //TODO
+		"Car", "Bus", "Train", "Street", "Vacuum", "Toilet", "Kitchen"};
 	// Array indicating if the context class should be selected initially:
 	public static Boolean[] defaultClasses = {true, true, true, true, true,
 		true, true, true, true, true};
-	
 	
 	/*
 	 * Buffer lengths for the threshold calculation
