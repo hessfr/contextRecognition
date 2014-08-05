@@ -37,9 +37,16 @@
     
     <string name="activity_annotation"><u><b>Annotate your activities:</b></u></string>
     
-    <string name="welcome_text_1">The is the first welcome screen.....</string>
-    <string name="welcome_text_2">The is the second welcome screen.....</string>
-    <string name="welcome_text_3">The is the third welcome screen.....</string>
+    <string name="welcome_text_1">This app will recognize daily activities like taking the train, 
+        eating at a restaurant etc. based on ambient sound recorded by your phone.\n\n\n\nYou can select the
+        activities you would like to be recognized later, but keep in mind, that they have to be
+        discriminable by their sound.</string>
+    <string name="welcome_text_2_upper">In order to get the best possible recognition accuracy, the app
+        will ask you about your current activity from time to time. You can an upper limit
+        for the amount of these requests here:</string>
+    <string name="welcome_text_2_lower">Additionally you can always provide this feedback voluntarily
+        by clicking on the pencil and the tick mark icon on the main screen.</string>
+    <string name="welcome_text_3">Please select the activities here that you would like to be recognized:</string>
     <string name="welcome_button">Start using the app</string>
     <string name="prev_button">Previous</string>
     <string name="next_button">Next</string>

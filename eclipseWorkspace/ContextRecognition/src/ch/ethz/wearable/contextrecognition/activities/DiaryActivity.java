@@ -94,11 +94,11 @@ public class DiaryActivity extends ActionBarActivity {
             callRating();
         	return true;
         }
-        if (id == R.id.action_help) {
-        	//Go to help activity
-            callHelp();
-        	return true;
-        }
+//        if (id == R.id.action_help) {
+//        	//Go to help activity
+//            callHelp();
+//        	return true;
+//        }
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -230,10 +230,10 @@ public class DiaryActivity extends ActionBarActivity {
     /**
      * Launch Help activity
      * */
-    private void callHelp() {
-        Intent i = new Intent(DiaryActivity.this, HelpActivity.class);
-        startActivity(i);
-    }
+//    private void callHelp() {
+//        Intent i = new Intent(DiaryActivity.this, HelpActivity.class);
+//        startActivity(i);
+//    }
     /**
      * Launch manage classes activity
      * */

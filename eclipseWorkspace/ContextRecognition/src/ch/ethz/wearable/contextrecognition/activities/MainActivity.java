@@ -267,11 +267,11 @@ public class MainActivity extends ActionBarActivity {
 			callRating();
 			return true;
 		}
-		if (id == R.id.action_help) {
-			// Go to help activity
-			callHelp();
-			return true;
-		}
+//		if (id == R.id.action_help) {
+//			// Go to help activity
+//			callHelp();
+//			return true;
+//		}
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -315,10 +315,10 @@ public class MainActivity extends ActionBarActivity {
 	/**
 	 * Launch Help activity
 	 * */
-	private void callHelp() {
-		Intent i = new Intent(MainActivity.this, HelpActivity.class);
-		startActivity(i);
-	}
+//	private void callHelp() {
+//		Intent i = new Intent(MainActivity.this, HelpActivity.class);
+//		startActivity(i);
+//	}
     /**
      * Launch manage classes activity
      * */

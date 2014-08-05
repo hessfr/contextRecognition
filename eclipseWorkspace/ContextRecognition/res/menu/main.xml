@@ -23,11 +23,11 @@
         android:orderInCategory="100"
         android:title="@string/action_rating"
         app:showAsAction="never"/>
-    <item
-        android:id="@+id/action_help"
-        android:orderInCategory="100"
-        android:title="@string/action_help"
-        app:showAsAction="never"/>
+<!--     <item -->
+<!--         android:id="@+id/action_help" -->
+<!--         android:orderInCategory="100" -->
+<!--         android:title="@string/action_help" -->
+<!--         app:showAsAction="never"/> -->
     <item
         android:id="@+id/action_upload"
         android:orderInCategory="100"

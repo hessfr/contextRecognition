@@ -5,8 +5,9 @@
     android:orientation="vertical" >
     
     <LinearLayout
+        android:id="@+id/upperLayout"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center" >
 
@@ -14,8 +15,11 @@
             android:id="@+id/textView1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+        	android:layout_marginRight="10dp"
+            android:layout_marginTop="40dp"
             android:gravity="center"
-            android:text="@string/welcome_text_2" />
+            android:text="@string/welcome_text_2_upper" />
 
         <TextView
             android:id="@+id/currentSeekBarValue"
@@ -32,6 +36,16 @@
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:progress="10" />
+        
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+        	android:layout_marginRight="10dp"
+            android:layout_marginTop="40dp"
+            android:gravity="center"
+            android:text="@string/welcome_text_2_lower" />
     </LinearLayout>
 
     <!-- Horizontal line #488AC7 -->
