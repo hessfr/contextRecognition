@@ -45,7 +45,7 @@ public class SoundHandler extends Thread {
 	/*
 	 * One 2s sequence contains 63 32ms windows, the prediction method is called with this buffer
 	 * Also, one of this sequences is exactly 7 buffer lengths long
-	 * 63 * 512 ~= 2s
+	 * 63 * 0.032 ~= 2s
 	 */
 	private static int PREDICTION_LENGTH = 32256;
 	private static int CHUNKS_PER_PREDICTION = PREDICTION_LENGTH/BUFFER_LENGTH;

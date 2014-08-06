@@ -64,7 +64,7 @@ public class extractFeatures {
 			 * We need the data in short (16-bit) format instead of byte
 			 * (8-bit), so we have to convert each chunk of data
 			 */
-			int shortBufferLength = (int) audioBytes.length / 2;
+			int shortBufferLength = (int) audioBytes.length / 2; // = 512
 			short[] audioShorts = new short[shortBufferLength];
 
 			int numBytesRead = 0;

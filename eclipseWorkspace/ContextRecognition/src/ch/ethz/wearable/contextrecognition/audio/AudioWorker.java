@@ -108,7 +108,6 @@ public class AudioWorker extends IntentService {
 
 				//Log.i(TAG, "Current app status: " + AppStatus.getInstance().get());
 				
-				
 				if (AppStatus.getInstance().get() == AppStatus.MODEL_UPDATED) {
 					Globals.readWriteLock.readLock().lock();
 					gmm = new GMM("GMM.json");
