@@ -94,6 +94,8 @@ def simulateAL(trainedGMM, testFeatureData):
     plotValues = [] # only for evaluation
     plotThres = []
     plotBuffer = []
+    plotActualTicks = []
+    plotActualIdx = []
 
     # predicted labels in the last minute:
     predBuffer = []
@@ -127,7 +129,10 @@ def simulateAL(trainedGMM, testFeatureData):
         plotValues.append([])
         plotThres.append([])
         plotBuffer.append([])
-        
+        # Add tickmark to the plot, of the classes that was actually 
+        # predicted and caused this query:
+        plotActualTicks.append([])
+        plotActualIdx.append([])
     
 
     majCorrectCnt = 0 #only for evaluation
@@ -202,6 +207,7 @@ def simulateAL(trainedGMM, testFeatureData):
                 # Threshold buffer full:
                 thresBuffer[predictedLabel].append(entropy)
 
+
                 if initThresSet[predictedLabel] == True:
                     # set threshold after a model adaption:
                     tmp = np.array(thresBuffer[predictedLabel])
@@ -246,6 +252,9 @@ def simulateAL(trainedGMM, testFeatureData):
                 majWrongCnt += 1
             
             # --- for plotting only: ---
+            # This will create plots, where the values when the buffers are
+            # being filled are totally ignored, and were we cannot see the
+            # waiting time of 10min
             plotValues[predictedLabel].append(queryCrit)
             plotThres[predictedLabel].append(threshold[predictedLabel])
             # --------------------------
@@ -256,13 +265,19 @@ def simulateAL(trainedGMM, testFeatureData):
                 if queryCrit > threshold[predictedLabel]:
 
                     # ignore queries that are labeled as conversation or that were predicted as conversation
-                    if (str(revClassesDict[actualLabel]) != "Conversation" and 
-                    str(revClassesDict[predictedLabel]) != "Conversation"):
-                    #if True:
+                    #if (str(revClassesDict[actualLabel]) != "Conversation" and 
+                    #str(revClassesDict[predictedLabel]) != "Conversation"):
+                    if True:
 
-                        print("Query for " + str(revClassesDict[actualLabel]) + " class (predicted as " 
-                        + str(revClassesDict[predictedLabel]) + ") received at " + str(currentTime) +
-                        " seconds.")
+                        print("Query for " + str(revClassesDict[actualLabel]) + 
+                        " class (predicted as " + str(revClassesDict[predictedLabel]) + 
+                        ") received at " + str(currentTime) + " seconds.")
+                      
+                        # Add tick marks for that actual label to the plot of 
+                        # the predicted label (as the exceeding of the threshold 
+                        # of the predicted label caused that query):
+                        plotActualTicks[predictedLabel].append(str(revClassesDict[actualLabel]))
+                        plotActualIdx[predictedLabel].append(len(plotValues[predictedLabel]))
 
                         # adapt the model:
                         upd = np.array(updatePoints)
@@ -303,11 +318,12 @@ def simulateAL(trainedGMM, testFeatureData):
     # ---- for plotting only: query criteria and threshold values over time for each class separately: ---
     for i in range(n_classes):
         # Don't show plots for classes with too few samples:
-        if (len(plotValues[i]) > 10):
+        if (len(plotValues[i]) > 0):
             fig = pl.figure()
             pl.title(revClassesDict[i])
             pl.plot(plotValues[i])
             pl.plot(plotThres[i])
+            pl.xticks(plotActualIdx[i], plotActualTicks[i], rotation=45)
             #pl.show()
             fig.savefig("plotsTmp/Class_" + revClassesDict[i] + ".jpg")
 

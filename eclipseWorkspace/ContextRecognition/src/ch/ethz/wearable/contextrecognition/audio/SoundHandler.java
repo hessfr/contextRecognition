@@ -1,8 +1,11 @@
 package ch.ethz.wearable.contextrecognition.audio;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import android.content.Context;
@@ -66,6 +69,21 @@ public class SoundHandler extends Thread {
 		public short[] data;
 		public boolean[] silenceBuffer;
 	}
+	
+	// Variables used for the permutation:
+	private File mPermSeqFile; //initialize this file when using permutation
+	private File mRecFile; //initialize this file when using permutation
+	int []perm_frameIndex;
+	byte[][] perm_Buffer;
+	int perm_Pointer;
+	int perm_nFrameInBuffer;
+	int perm_nBytePerFramInBuffer;
+	boolean perm_duplicateLastFrameInBuffer;
+	byte [] perm_RestBuffer;
+	int perm_RestLen=0;
+	long sampleNr=0;
+	private int  bytePerSamples=0;
+	float PERM_SUBFRAMELENGTH_MOD;
 
 	// Constructor:
 	public SoundHandler(Context context){
@@ -73,6 +91,36 @@ public class SoundHandler extends Thread {
 		
 		this.context = context;	
 		
+		
+//		//--- Initialize variables for the permutation: ---
+//		int nSMPBuffer= (int) Math.round(32.0 /(1000.0/16000.0));
+//		PERM_SUBFRAMELENGTH_MOD= nSMPBuffer*((float)1000.0/((float)16000));
+//
+//		perm_nBytePerFramInBuffer = bytePerSamples * nSMPBuffer;
+//
+//		float n= (float) 1000.0 / PERM_SUBFRAMELENGTH_MOD;
+//		perm_nFrameInBuffer = (int) Math.ceil(n);
+//		if(n!=(float)perm_nFrameInBuffer)
+//			perm_duplicateLastFrameInBuffer=true;
+//		else
+//			perm_duplicateLastFrameInBuffer=false;
+//
+//		perm_Buffer = new byte[perm_nFrameInBuffer][perm_nBytePerFramInBuffer];
+//		for (int i = 0; i < perm_nFrameInBuffer; i++) {
+//			perm_Buffer[i] = new byte[perm_nBytePerFramInBuffer];
+//		}
+//		perm_Pointer = 0;
+//
+//		//For debugging:
+//		perm_frameIndex= new int[perm_nFrameInBuffer];
+//
+//		perm_RestBuffer= new byte[perm_nBytePerFramInBuffer];
+//		perm_RestLen=0;
+//
+//		//For debugging:
+//		//createFramePermIndex();
+//		//---------------------------------------------------
+
 	}
 	
 	/*
@@ -309,7 +357,7 @@ public class SoundHandler extends Thread {
 		return bytes;
 	}
 	
-	private void appendToFile(byte[] buffer, File file){
+	private void appendToFile(byte[] buffer, File file) {
 		try {
 			FileOutputStream os = new FileOutputStream(file, true);
 			os.write(buffer);
@@ -318,6 +366,122 @@ public class SoundHandler extends Thread {
 		} catch (IOException e) {
 			Log.e(TAG, "Error writing to audio data to file");
 		}
+	}
+	
+	/*
+	 * Permute the audio data for privacy protection, currently not used and not tested:
+	 * 
+	 * Code from Amir Muaremi, Mirco Rossi, ETH Zurich (mrossi@ethz.ch)
+	 */
+	@SuppressWarnings("unused")
+	private void appendToFilePermuted(byte[] buffer, File file) {
+		int bufferPointer=0;
+
+		if(perm_RestLen!=0){
+			try{
+				System.arraycopy(perm_RestBuffer, 0, perm_Buffer[perm_frameIndex[perm_Pointer]], 0, perm_RestLen);
+			}catch(Exception e){
+				e.toString();
+			}
+
+			System.arraycopy(buffer, bufferPointer, perm_Buffer[perm_frameIndex[perm_Pointer]], perm_RestLen, perm_nBytePerFramInBuffer-perm_RestLen);
+
+			bufferPointer+=perm_nBytePerFramInBuffer-perm_RestLen;
+			perm_Pointer++;
+			sampleNr+=perm_nBytePerFramInBuffer/bytePerSamples;
+			perm_RestLen=0;
+			if (perm_Pointer >= perm_nFrameInBuffer) {
+
+				for (int i = 0; i < perm_nFrameInBuffer; i++)
+					appendToFile(perm_Buffer[i], mRecFile);
+
+				if (perm_duplicateLastFrameInBuffer) {
+					System.arraycopy(perm_Buffer[perm_frameIndex[--perm_Pointer]], 0,perm_Buffer[0], 0, perm_nBytePerFramInBuffer);
+					perm_Pointer = 1;
+				} else
+					perm_Pointer = 0;
+
+				// For debugging:
+				createFramePermIndex();
+
+			}
+		}
+
+
+
+		while((bufferPointer+perm_nBytePerFramInBuffer-1)<buffer.length){
+			System.arraycopy(buffer, bufferPointer, perm_Buffer[perm_frameIndex[perm_Pointer]], 0, perm_nBytePerFramInBuffer);
+
+
+			bufferPointer+=perm_nBytePerFramInBuffer;
+			perm_Pointer++;
+			sampleNr+=perm_nBytePerFramInBuffer/bytePerSamples;
+			if (perm_Pointer >= perm_nFrameInBuffer) {
+
+				for (int i = 0; i < perm_nFrameInBuffer; i++)
+					appendToFile(perm_Buffer[i], mRecFile);
+
+				if (perm_duplicateLastFrameInBuffer) {
+					System.arraycopy(perm_Buffer[perm_frameIndex[--perm_Pointer]], 0,perm_Buffer[0], 0, perm_nBytePerFramInBuffer);
+					perm_Pointer = 1;
+				} else
+					perm_Pointer = 0;
+
+				// For debugging:
+				createFramePermIndex();
+
+			}
+		}
+
+		if(bufferPointer!=buffer.length){
+			perm_RestLen=buffer.length-bufferPointer;
+			System.arraycopy(buffer, bufferPointer, perm_RestBuffer, 0, perm_RestLen); 
+		}
+	}
+	
+	/*
+	 * Generate a random permutation frame index and store in perm_frameIndex
+	 * 
+	 * Code from Amir Muaremi, Mirco Rossi, ETH Zurich (mrossi@ethz.ch)
+	 */
+	private void createFramePermIndex(){
+		int stop=perm_nFrameInBuffer;
+		int start=0;
+		if(perm_duplicateLastFrameInBuffer){
+			start=1;
+			stop=perm_nFrameInBuffer-1;
+			perm_frameIndex[perm_nFrameInBuffer-1]=perm_nFrameInBuffer-1;
+			perm_frameIndex[0]=0;
+		}
+
+		ArrayList<Integer> pick= new ArrayList<Integer>();
+		for(int i=start;i<stop;i++)
+			pick.add(i);
+
+		int r;
+		for(int i=start;i<stop;i++){
+			r=(int) Math.floor(Math.random() * pick.size());
+			perm_frameIndex[i]=pick.get(r).intValue();
+			pick.remove(r);
+		}
+
+		//if(Constants.experiment.audio_perm_saveVer){
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(mPermSeqFile,true));
+			String out_string="";
+			for(int i =0; i<perm_frameIndex.length; i++)
+				out_string+=perm_frameIndex[i] +",";
+			out_string=out_string.substring(0, out_string.length()-1)+"\n";
+			out.write(out_string);
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		   
+		//}
+
+
+
+
 	}
 	
 	/*
