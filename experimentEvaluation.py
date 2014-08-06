@@ -56,29 +56,32 @@ def onlineAccuracy(gtLogFile, predLogFile):
     end_time = float(max(tmpArray[:,0]))
     
     # Create a ground truth array where one entry corresponds to 0.5s:
-    length = end_time - start_time + 1
+    length = end_time - start_time
     y_GT = np.empty([int(length*2), n_maxLabels])
     y_GT.fill(-1)
     for i in range(len(gtList)):
         """ Fill array from start to end of each ground truth label with the correct label: """
         if gtList[i][2] == "start":
             tmpContext = gtList[i][1]
-            start = 2 * int(gtList[i][0]) - int(2*start_time)
+           
 
+            start = 2 * int(gtList[i][0])
+           
+            print("start index: " + str(start))
+            
             # Find the end time of this context:
             for j in range(i,len(gtList)):
 
                 if ((gtList[j][1] == tmpContext) and (gtList[j][2] == "end")):
 
-                    end = 2 * int(gtList[j][0]) - int(2*start_time)
+                    end = 2 * int(gtList[j][0])
+                    print("end index: " + str(end))
                     if end >= y_GT.shape[0]:
-                        print("xxxxxxxxx " + str(end))
                         end = y_GT.shape[0] - 1
 
                     # Check if we can write into the first column of the y_GT array:
                     if ((len(np.unique(y_GT[start:end+1,0])) == 1) and 
                     (np.unique(y_GT[start:end+1,0])[0] == -1)):
-
                         y_GT[start:end+1,0].fill(classesDict[gtList[i][1]])
 
                     # Check if we can write into the second column of the y_GT array:
@@ -98,7 +101,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
                         "Maybe you are using more than 3 simultaneous context classes?")
                     
                     break
-
+            print y_GT
     return y_GT
 
 
