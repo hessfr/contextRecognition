@@ -543,10 +543,10 @@ public class StateManager extends BroadcastReceiver {
 			
 	        // Copy the classifier into the Log folder at the end of the day (for later evaluation):
 			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.DATE, -1);
 			Date currentLocalTime = cal.getTime();
 			DateFormat date = new SimpleDateFormat("yyyMMdd");
 			String dateString = date.format(currentLocalTime);
-
 			File destFile = new File(Globals.getLogPathYesterday(), "GMM_" + dateString);
 			
 			try {
@@ -1163,7 +1163,7 @@ public class StateManager extends BroadcastReceiver {
 			Globals.RECORDING_START_TIME = System.currentTimeMillis();
 			
 			//FOR TESTING ONLY:
-			File file = new File(Globals.getLogPath(), "DayChangeTestFile.txt");
+			File file = new File(Globals.APP_PATH, "DayChangeTestFile.txt");
 			try {
 				FileWriter f = new FileWriter(file, true);
 				Calendar c = Calendar.getInstance();

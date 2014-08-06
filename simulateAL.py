@@ -142,7 +142,8 @@ def simulateAL(trainedGMM, testFeatureData):
         actualLabel = int(simLabels[end]) # only the latest label is used to adapt the model, like in real-life
         currentTime = i*b*0.032
 
-        # Buffer points of the 30 last 2 second intervals, as we used want to update our model with the last minute of data
+        # Buffer points of the 30 last 2 second intervals, as we used want to update 
+        # our model with the last minute of data
         if len(updatePoints) < 1875:
             updatePoints.extend(currentPoints.tolist())
         else:
@@ -167,15 +168,15 @@ def simulateAL(trainedGMM, testFeatureData):
             del actBuffer[0]
 
         # --- for plotting only:
-        if len(plotBuffer[predictedLabel]) < 30:
-            # fill buffer:
-            plotBuffer[predictedLabel].append(entropy)
-        else:
-            # buffer full:
-            tmp = np.array(plotBuffer[predictedLabel])
-            plotValues[predictedLabel].append(queryCriteria(tmp))
-            plotThres[predictedLabel].append(threshold[predictedLabel])
-            plotBuffer[predictedLabel] = []
+       # if len(plotBuffer[predictedLabel]) < 30:
+       #     # fill buffer:
+       #     plotBuffer[predictedLabel].append(entropy)
+       # else:
+       #     # buffer full, so we want to add this value to the plot:
+       #     tmp = np.array(plotBuffer[predictedLabel])
+       #     plotValues[predictedLabel].append(queryCriteria(tmp))
+       #     plotThres[predictedLabel].append(threshold[predictedLabel])
+       #     plotBuffer[predictedLabel] = []
 
         # --- Setting initial threshold: ---
         if (initThresSet[predictedLabel] == False):
@@ -187,7 +188,8 @@ def simulateAL(trainedGMM, testFeatureData):
                     # set first threshold init buffer is full:
                     tmp = np.array(initThresBuffer[predictedLabel])
                     threshold[predictedLabel] = initMetric(tmp.mean(), tmp.std())
-                    print("Initial threshold for " + revClassesDict[predictedLabel] + " class " + str(round(threshold[predictedLabel],4)))
+                    print("Initial threshold for " + revClassesDict[predictedLabel] + 
+                    " class " + str(round(threshold[predictedLabel],4)))
                     thresSet[predictedLabel] = True
                     initThresSet[predictedLabel] = True
 
@@ -210,9 +212,12 @@ def simulateAL(trainedGMM, testFeatureData):
                     threshold[predictedLabel] = (thres + thresQueriedInterval[predictedLabel]) / 2.0
                     
                     print("New threshold for " + revClassesDict[predictedLabel] + " class " +
-                          str(round(threshold[predictedLabel],4)) + ". Set " + str(round(currentTime-prevTime)) + "s after model adaption")
+                          str(round(threshold[predictedLabel],4)) + ". Set " + 
+                          str(round(currentTime-prevTime)) + "s after model adaption")
                     
-                    #print("thresQueriedInterval for class " + str(revClassesDict[predictedLabel]) + ": " + str(thresQueriedInterval[predictedLabel]))
+                    #print("thresQueriedInterval for class " + str(revClassesDict[predictedLabel]) + 
+                    #": " + str(thresQueriedInterval[predictedLabel]))
+                    
                     
                     thresSet[predictedLabel] = True
 
@@ -239,16 +244,21 @@ def simulateAL(trainedGMM, testFeatureData):
                 majCorrectCnt += 1
             else:
                 majWrongCnt += 1
-
+            
+            # --- for plotting only: ---
+            plotValues[predictedLabel].append(queryCrit)
+            plotThres[predictedLabel].append(threshold[predictedLabel])
+            # --------------------------
+       
             # only query if more than 10min since the last query:
             if (currentTime - prevTime) > 600:
                 # check if we want to query these points and update our threshold value if we adapt the model:
                 if queryCrit > threshold[predictedLabel]:
 
                     # ignore queries that are labeled as conversation or that were predicted as conversation
-                    #if (str(revClassesDict[actualLabel]) != "Conversation" and 
-                    #str(revClassesDict[predictedLabel]) != "Conversation"):
-                    if True:
+                    if (str(revClassesDict[actualLabel]) != "Conversation" and 
+                    str(revClassesDict[predictedLabel]) != "Conversation"):
+                    #if True:
 
                         print("Query for " + str(revClassesDict[actualLabel]) + " class (predicted as " 
                         + str(revClassesDict[predictedLabel]) + ") received at " + str(currentTime) +
@@ -268,8 +278,10 @@ def simulateAL(trainedGMM, testFeatureData):
 
                         feedbackReceived[actualLabel] = True
 
-                        # Compute a value for the threshold on this interval (that triggered the query), as we want to use it to calculate the new threshold later.
-                        thresQueriedInterval[actualLabel] = metricBeforeFeedback(majPoints.mean(), majPoints.std())
+                        # Compute a value for the threshold on this interval (that triggered the query), 
+                        # as we want to use it to calculate the new threshold later.
+                        thresQueriedInterval[actualLabel] = metricBeforeFeedback(majPoints.mean(), 
+                        majPoints.std())
 
                         # reset buffers:
                         queryBuffer = []
