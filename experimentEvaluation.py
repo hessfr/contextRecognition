@@ -54,7 +54,11 @@ def onlineAccuracy(gtLogFile, predLogFile):
     tmpArray = np.array(gtList)
     start_time = float(min(tmpArray[:,0]))
     end_time = float(max(tmpArray[:,0]))
-    
+
+    # We want ignore invalid (no class assigned) values, before the first class is
+    # assigned, so we have to subtract this offset later:
+    # offset = int(2*start_time)
+
     # Create a ground truth array where one entry corresponds to 0.5s:
     length = end_time - start_time
     y_GT = np.empty([int(length*2), n_maxLabels])
@@ -63,45 +67,44 @@ def onlineAccuracy(gtLogFile, predLogFile):
         """ Fill array from start to end of each ground truth label with the correct label: """
         if gtList[i][2] == "start":
             tmpContext = gtList[i][1]
-           
 
-            start = 2 * int(gtList[i][0])
-           
-            print("start index: " + str(start))
+            start = int(2 * (gtList[i][0] - start_time))
             
             # Find the end time of this context:
             for j in range(i,len(gtList)):
 
                 if ((gtList[j][1] == tmpContext) and (gtList[j][2] == "end")):
 
-                    end = 2 * int(gtList[j][0])
-                    print("end index: " + str(end))
-                    if end >= y_GT.shape[0]:
-                        end = y_GT.shape[0] - 1
+
+                    end = int(2 * (gtList[j][0] - start_time))
+                    
+                    if end > y_GT.shape[0]:
+                        print("Problem when calculating GT array: index too large")
+                        end = y_GT.shape[0]
 
                     # Check if we can write into the first column of the y_GT array:
-                    if ((len(np.unique(y_GT[start:end+1,0])) == 1) and 
-                    (np.unique(y_GT[start:end+1,0])[0] == -1)):
-                        y_GT[start:end+1,0].fill(classesDict[gtList[i][1]])
+                    if ((len(np.unique(y_GT[start:end,0])) == 1) and 
+                    (np.unique(y_GT[start:end,0])[0] == -1)):
+
+                        y_GT[start:end,0].fill(classesDict[gtList[i][1]])
 
                     # Check if we can write into the second column of the y_GT array:
-                    elif ((len(np.unique(y_GT[start:end+1,1])) == 1) and 
-                    (np.unique(y_GT[start:end+1,1])[0] == -1)):
+                    elif ((len(np.unique(y_GT[start:end,1])) == 1) and 
+                    (np.unique(y_GT[start:end,1])[0] == -1)):
 
-                        y_GT[start:end+1,1].fill(classesDict[gtList[i][1]])
+                        y_GT[start:end,1].fill(classesDict[gtList[i][1]])
                
                     # Check if we can write into the third column of the y_GT array:
-                    elif ((len(np.unique(y_GT[start:end+1,2])) == 1) and 
-                    (np.unique(y_GT[start:end+1,2])[0] == -1)):
+                    elif ((len(np.unique(y_GT[start:end,2])) == 1) and 
+                    (np.unique(y_GT[start:end,2])[0] == -1)):
 
-                        y_GT[start:end+1,2].fill(classesDict[gtList[i][1]])
+                        y_GT[start:end,2].fill(classesDict[gtList[i][1]])
                     
                     else:
                         print("Problem occurred when filling ground truth array." +  
                         "Maybe you are using more than 3 simultaneous context classes?")
                     
                     break
-            print y_GT
     return y_GT
 
 

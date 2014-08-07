@@ -5,7 +5,6 @@ import csv
 import copy
 import operator
 import pylab as pl
-from scipy.stats import itemfreq
 from sklearn.mixture import GMM
 from sklearn import preprocessing
 import ipdb as pdb #pdb.set_trace()
