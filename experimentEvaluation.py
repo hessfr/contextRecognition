@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import csv
+import ipdb as pdb #pdb.set_trace()
 
 """
 Different methods to evaluate the results of the experiment
@@ -36,14 +37,22 @@ def onlineAccuracy(gtLogFile, predLogFile):
     class_name_set = []
     for el in gtList:
         class_name_set.append(el[1])
+    for el in predList:
+        if (el[0] != "RECORDING_STARTED"):
+            class_name_set.append(el[0])
+   
     class_name_set = list(set(class_name_set))
-    
+   
+
+
     # Create a dict to map class name to number (this is a "bidirectional" dict,
     # i.e. elements can be access by d["className"] and d[2]
     classesDict = {}
     for i in range(len(class_name_set)):
         classesDict[class_name_set[i]] = i
         print(class_name_set[i] + " = " + str(i))
+    
+    print("-----")
     classesDict.update(dict((v, k) for k, v in classesDict.iteritems()))
 
     # Round every entry to 0.5s:
@@ -52,7 +61,8 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
     # Find start and stop time, i.e. min and max values:
     tmpArray = np.array(gtList)
-    offset = float(min(tmpArray[:,0]))
+    start_time_gt = float(min(tmpArray[:,0]))
+    stop_time_gt = float(max(tmpArray[:,0]))
     
     y_GT = createGTArray(gtList, classesDict)
 
@@ -62,24 +72,27 @@ def onlineAccuracy(gtLogFile, predLogFile):
         if len(predList[i]) <= 1:
             del predList[i]           
 
-    createPredictionArray(predList, offset, y_GT.shape[0], classesDict)
+    createPredictionArray(predList, start_time_gt, stop_time_gt, y_GT.shape[0], classesDict)
 
 
 
 
-def createPredictionArray(predList, offset, length, classesDict, n_max_labels=3):
+def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classesDict):
     """
     Create a numpy array of the predictions for 0.5s long windows
 
     @param predList: List in this format: [context_class, start_time, end_time], does not contain RECORDING_STARTED entries etc.
-    @param offset: Offset in seconds describing when the first entry in the ground truth array is was provided.
+    @param stop_time_gt: Offset in seconds describing when the first entry in the ground truth array is was provided.
+    @param stop_time_gt: last timestamp in the GT array
     @param length: Length of the ground truth array
     @param classesDict: "Bidirectional" dict containg mapping from class name to numbers and vic    e versa
-    @param n_max_labels: maximum number of labels that can be assign to one point
     @return: Numpy array of the predicted labels
 
     """
 
+    #TODO: handle if the last timestamp in the GT wasn't a stop...
+
+    offset = start_time_gt
     print("offset: " + str(offset))
 
     # First delete all entries that were before the first ground truth label was provided:
@@ -103,30 +116,40 @@ def createPredictionArray(predList, offset, length, classesDict, n_max_labels=3)
             predList[i][2] = 0.5 * math.ceil(2.0 * float(predList[i][2]))
 
 
-    y_pred = np.empty([int(length), n_max_labels])
+    length = int(length)
+    print("Length in seconds: " + str((length+1)/2.0))
+    print("Array length: " + str(length))
 
+    y_pred = np.empty(length)
+    y_pred.fill(-1)
 
+    
+    for line in predList:
+        """ Fill array from start to end with the predicted label: """
+        start = int(2 * (float(line[1]) - start_time_gt))
+        if line[2] != "":
+            end = int(2 * (float(line[2]) - start_time_gt))
+        else:
+            print("End time empty")
+            end = length - 1
 
+        if end >= length:
+            #print("End time " + str((end+2.0*start_time_gt)/2.0) + " later than last GT label")
+            print("Index " + str(end) + " out of bound")
+            end = length - 1
 
+        print("start: " + str(start) + " - end: " + str(end))
 
+        y_pred[start:end+1].fill(classesDict[line[0]])
 
-    print(predList)
+        #print(y_pred)
+        #pdb.set_trace()
 
+    #TODO: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+    print(y_pred)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 
 def createGTArray(gtList, classesDict, n_max_labels=3):
     """
