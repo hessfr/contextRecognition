@@ -93,7 +93,7 @@ public class Globals {
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
 	// Silence detection threshold (higher means more samples will be considered silent):
-	public static short SILENCE_DETECTION_THRESHOLD = 1200;
+	public static short SILENCE_DETECTION_THRESHOLD = 1000;
 	
 	/*
 	 *  Array of context classes that can be selected initially: 

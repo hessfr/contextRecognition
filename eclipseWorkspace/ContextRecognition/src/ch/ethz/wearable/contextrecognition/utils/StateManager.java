@@ -407,7 +407,8 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
-
+							
+							
 							
 						}
 						
@@ -424,6 +425,9 @@ public class StateManager extends BroadcastReceiver {
 						SharedPreferences.Editor editor = mPrefs.edit();
 						editor.putString(Globals.CURRENT_CONTEXT, predictionString);
 						editor.commit();
+						
+						// When day changes, create the new log files and reset the recording start time:
+						dayChangeTasks(context);
 						
 						// Save to log file and send broadcast to change text, if prediction has changed
 						if (!predictionString.equals(prevPredictionString)) {
@@ -450,6 +454,9 @@ public class StateManager extends BroadcastReceiver {
 						
 						predictionString = Globals.SILENCE; 
 						
+						// When day changes, create the new log files and reset the recording start time:
+						dayChangeTasks(context);
+						
 						// Save to log file and send broadcast to change text, if prediction has changed
 						if (!predictionString.equals(prevPredictionString)) {
 							
@@ -464,7 +471,7 @@ public class StateManager extends BroadcastReceiver {
 							prevPredictionString = Globals.SILENCE;
 						}
 					}
-
+					
 				} else {
 					Log.i(TAG,
 							"Received prediction result not okay, result code "
@@ -1129,10 +1136,21 @@ public class StateManager extends BroadcastReceiver {
 		}
 	}
 	
-	private void appendToPredLog(Context context, String className) {
+	/*
+	 * If we are recording of the transition from one day to another, we have to take the following
+	 * actions (don't do anything if not):
+	 * 
+	 * - Reset the recording time
+	 * - Finish the log files from the previous day
+	 * - Create the start-Stop-, prediction- and ground truth log files and add the 
+	 * 	starting time
+	 * 
+	 * Make sure that this method is called before the archiving of the log folder (i.e.
+	 * between 00:00 and 00:05)
+	 * 
+	 */
+	private void dayChangeTasks(Context context) {
 		
-		Log.d(TAG, "Appending to prediction log file");
-
 		File predLogFile = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME); // new log file
 		
 		// Check if just after midnight:
@@ -1148,21 +1166,13 @@ public class StateManager extends BroadcastReceiver {
 		cal.set(Calendar.SECOND, 0);
 		cal.set(Calendar.MILLISECOND, 0);
 		long justAfterMidnight = cal.getTime().getTime();
-		
-		if ((!predLogFile.exists()) && (now>=midnight) && (now<=justAfterMidnight)) {
-			/*
-			 * If the transition from one day to another happens (i.e. when changing to
-			 * a new and empty log folder) and the app is running over that transition, we 
-			 * take the following actions: (if app is not running over midnight, the log files
-			 * are created as usual in the AudioWorker and this code will be ignored)
-			 * 
-			 * 	- Reset the recording time
-			 * 	- Create the start-Stop-, prediction- and ground truth log files and add the 
-			 * 	starting time
-			 */
+
+		if ((!predLogFile.exists()) && (now >= midnight)
+				&& (now <= justAfterMidnight)) {
+
 			Globals.RECORDING_START_TIME = System.currentTimeMillis();
-			
-			//FOR TESTING ONLY:
+
+			// FOR TESTING ONLY:
 			File file = new File(Globals.APP_PATH, "DayChangeTestFile.txt");
 			try {
 				FileWriter f = new FileWriter(file, true);
@@ -1172,61 +1182,72 @@ public class StateManager extends BroadcastReceiver {
 				String dateString = date.format(d);
 				f.write("In if clause at " + dateString + "\n");
 				f.close();
-				
+
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			//------
-			
+			// ------
+
 			/*
 			 * First finished the log files in the folder from yesterday:
 			 */
-			SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-			long recordingStopped = mPrefs.getLong(Globals.LASTEST_RECORDING_TIMESTAMP, -1);
+			SharedPreferences mPrefs = PreferenceManager
+					.getDefaultSharedPreferences(context);
+			long recordingStopped = mPrefs.getLong(
+					Globals.LASTEST_RECORDING_TIMESTAMP, -1);
 			try {
-				
+
 				long recordingLastStarted = 0;
 				double recordingStoppedRel = 0.0;
-				File startStopFileYesterday = new File(Globals.getLogPathYesterday(), Globals.START_STOP_LOG_FILENAME);
-				
-				BufferedReader br = new BufferedReader(new FileReader(startStopFileYesterday));
-			    String lastLine = null;
-			    String tmpLine = null;
+				File startStopFileYesterday = new File(
+						Globals.getLogPathYesterday(),
+						Globals.START_STOP_LOG_FILENAME);
 
-			    while ((tmpLine = br.readLine()) != null) {
-			    	lastLine = tmpLine;
-			    }
-			    br.close();
-			    
-			    if (lastLine.contains("start")) {
-			    	recordingLastStarted = Long.valueOf(lastLine.substring(0, lastLine.indexOf("\t")));
-			    	
-			    	recordingStoppedRel = (recordingStopped - recordingLastStarted)/1000.0;
-			    	
-			    } else {
-			    	Log.e(TAG, "Start-stop log file corrupted, couldn't calulcate stop time");
-			    }
-			    	
-				File predFileYesterday = new File(Globals.getLogPathYesterday(), Globals.PRED_LOG_FILENAME);
-			    if (predFileYesterday.exists()) {
+				BufferedReader br = new BufferedReader(new FileReader(
+						startStopFileYesterday));
+				String lastLine = null;
+				String tmpLine = null;
+
+				while ((tmpLine = br.readLine()) != null) {
+					lastLine = tmpLine;
+				}
+				br.close();
+
+				if (lastLine.contains("start")) {
+					recordingLastStarted = Long.valueOf(lastLine.substring(0,
+							lastLine.indexOf("\t")));
+
+					recordingStoppedRel = (recordingStopped - recordingLastStarted) / 1000.0;
+
+				} else {
+					Log.e(TAG,
+							"Start-stop log file corrupted, couldn't calulcate stop time");
+				}
+
+				File predFileYesterday = new File(
+						Globals.getLogPathYesterday(),
+						Globals.PRED_LOG_FILENAME);
+				if (predFileYesterday.exists()) {
 					FileWriter f = new FileWriter(predFileYesterday, true);
 					f.write("\t" + recordingStoppedRel + "\n");
 					f.close();
-			    }
-					
+				}
+
 			} catch (IOException e) {
 				e.printStackTrace();
-				Log.w(TAG, "Relative stop time could not be added to prediction log file");
+				Log.w(TAG,
+						"Relative stop time could not be added to prediction log file");
 			}
-			
+
 			/*
 			 * Then create the new log files and add the starting time:
 			 */
 			Log.d(TAG, "Appending to start time of the app to log");
 			try {
-				File startStopFile = new File(Globals.getLogPath(), Globals.START_STOP_LOG_FILENAME);
+				File startStopFile = new File(Globals.getLogPath(),
+						Globals.START_STOP_LOG_FILENAME);
 				FileWriter f = new FileWriter(startStopFile, true);
 				f.write(System.currentTimeMillis() + "\t" + "start" + "\n");
 				f.close();
@@ -1234,7 +1255,7 @@ public class StateManager extends BroadcastReceiver {
 				Log.e(TAG, "Writing to start log file failed");
 				e.printStackTrace();
 			}
-			
+
 			try {
 				FileWriter f = new FileWriter(predLogFile, true);
 				f.write("RECORDING_STARTED" + "\n");
@@ -1243,9 +1264,10 @@ public class StateManager extends BroadcastReceiver {
 				Log.e(TAG, "Writing to prediction log file failed");
 				e.printStackTrace();
 			}
-			
+
 			try {
-				File gtLogFile = new File(Globals.getLogPath(), Globals.GT_LOG_FILENAME);
+				File gtLogFile = new File(Globals.getLogPath(),
+						Globals.GT_LOG_FILENAME);
 				FileWriter f = new FileWriter(gtLogFile, true);
 				f.write("RECORDING_STARTED" + "\n");
 				f.close();
@@ -1253,9 +1275,16 @@ public class StateManager extends BroadcastReceiver {
 				Log.e(TAG, "Writing to GT log file failed");
 				e.printStackTrace();
 			}
-			
+
 		}
 		
+	}
+	
+	private void appendToPredLog(Context context, String className) {
+		
+		Log.d(TAG, "Appending to prediction log file");
+
+		File predLogFile = new File(Globals.getLogPath(), Globals.PRED_LOG_FILENAME); 
 		
 		try {
 			
