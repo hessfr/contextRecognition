@@ -164,6 +164,7 @@ public class Globals {
 	
 	public static final String CONN_UPDATED_MODEL_RECEIVE = "action.connUpdatedModelReceive";
 	public static final String CONN_UPDATED_MODEL_FILENAME = "action.connUpdatedModelFilename";
+	public static final String CONN_UPDATED_MODEL_PREV_CLASSNAMES = "connUpdatedModelPrevClassnames";
 	public static final String CONN_UPDATED_MODEL_RESULT = "action.connUpdatedModelResult";
 	
 	public static final String CONN_SEND_RAW_AUDIO_RECEIVE = "action.connSendRawAudioReceive";

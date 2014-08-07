@@ -213,6 +213,9 @@ public class AudioWorker extends IntentService {
 							publishResult(currentResult, currentEntropy, stringRes, hm, gmm, 
 									bufferStatus, dataBuffer, firstPredictionAfterModelChange, code);
 							
+							// 
+							firstPredictionAfterModelChange = false;
+							
 							//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
 							
 							// Delete all elements of the list afterwards
@@ -232,7 +235,7 @@ public class AudioWorker extends IntentService {
 						}
 					} else {
 						
-						publishResultSilence(firstPredictionAfterModelChange);
+						publishResultSilence();
 						
 					}
 				}
@@ -241,8 +244,6 @@ public class AudioWorker extends IntentService {
 					Log.i(TAG, "AppStatus changed to STOP_RECORDING, stopping the SoundHandler now");
 					endRec();
 				}
-				
-				firstPredictionAfterModelChange = false;
 				
 			}
 		};
@@ -259,7 +260,6 @@ public class AudioWorker extends IntentService {
 
 		Bundle bundle = new Bundle();
 
-		
 		bundle.putInt(Globals.PREDICTION_INT, predictionInt);
 		bundle.putDouble(Globals.PREDICTION_ENTROPY, predictionEntropy);
 		bundle.putString(Globals.PREDICTION_STRING, predicationString);
@@ -286,7 +286,7 @@ public class AudioWorker extends IntentService {
 		//Log.d(TAG, "Prediction broadcasted");
 	}	
 	
-	private void publishResultSilence(boolean firstPredictionAfterModelChange) {
+	private void publishResultSilence() {
 		
 		Log.d(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
 		
@@ -295,8 +295,6 @@ public class AudioWorker extends IntentService {
 		Bundle bundle = new Bundle();
 		
 		bundle.putInt(Globals.RESULTCODE, code);
-		
-		bundle.putBoolean(Globals.FIRST_PRED_AFTER_MODEL_CHANGE, firstPredictionAfterModelChange);
 		
 		bundle.putBoolean(Globals.SILENCE, true);
 		
