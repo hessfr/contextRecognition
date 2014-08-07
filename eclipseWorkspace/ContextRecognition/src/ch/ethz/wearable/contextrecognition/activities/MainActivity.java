@@ -262,11 +262,11 @@ public class MainActivity extends ActionBarActivity {
 			callLabel();
 			return true;
 		}
-		if (id == R.id.action_rating) {
-			// Go to rating activity
-			callRating();
-			return true;
-		}
+//		if (id == R.id.action_rating) {
+//			// Go to rating activity
+//			callRating();
+//			return true;
+//		}
 //		if (id == R.id.action_help) {
 //			// Go to help activity
 //			callHelp();
@@ -304,13 +304,13 @@ public class MainActivity extends ActionBarActivity {
 		startActivity(i);
 	}
 
-	/**
-	 * Launch Rating activity
-	 * */
-	private void callRating() {
-		Intent i = new Intent(MainActivity.this, RatingActivity.class);
-		startActivity(i);
-	}
+//	/**
+//	 * Launch Rating activity
+//	 * */
+//	private void callRating() {
+//		Intent i = new Intent(MainActivity.this, RatingActivity.class);
+//		startActivity(i);
+//	}
 
 	/**
 	 * Launch Help activity

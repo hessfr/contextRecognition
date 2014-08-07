@@ -89,11 +89,11 @@ public class DiaryActivity extends ActionBarActivity {
         	callSettings();
         	return true;
         }
-        if (id == R.id.action_rating) {
-        	//Go to help activity
-            callRating();
-        	return true;
-        }
+//        if (id == R.id.action_rating) {
+//        	//Go to help activity
+//            callRating();
+//        	return true;
+//        }
 //        if (id == R.id.action_help) {
 //        	//Go to help activity
 //            callHelp();
@@ -220,13 +220,13 @@ public class DiaryActivity extends ActionBarActivity {
         Intent i = new Intent(DiaryActivity.this, SettingsActivity.class);
         startActivity(i);
     }
-    /**
-     * Launch Rating activity
-     * */
-    private void callRating() {
-        Intent i = new Intent(DiaryActivity.this, RatingActivity.class);
-        startActivity(i);
-    }
+//    /**
+//     * Launch Rating activity
+//     * */
+//    private void callRating() {
+//        Intent i = new Intent(DiaryActivity.this, RatingActivity.class);
+//        startActivity(i);
+//    }
     /**
      * Launch Help activity
      * */

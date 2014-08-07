@@ -132,11 +132,11 @@ public class SettingsActivity extends ActionBarActivity {
         	callLabel();
         	return true;
         }
-        if (id == R.id.action_rating) {
-        	//Go to rating activity
-        	callRating();
-        	return true;
-        }
+//        if (id == R.id.action_rating) {
+//        	//Go to rating activity
+//        	callRating();
+//        	return true;
+//        }
 //        if (id == R.id.action_help) {
 //        	//Go to help activity
 //            callHelp();
@@ -165,13 +165,13 @@ public class SettingsActivity extends ActionBarActivity {
         Intent i = new Intent(SettingsActivity.this, DiaryActivity.class);
         startActivity(i);
     }
-    /**
-     * Launch Rating activity
-     * */
-    private void callRating() {
-        Intent i = new Intent(SettingsActivity.this, RatingActivity.class);
-        startActivity(i);
-    }
+//    /**
+//     * Launch Rating activity
+//     * */
+//    private void callRating() {
+//        Intent i = new Intent(SettingsActivity.this, RatingActivity.class);
+//        startActivity(i);
+//    }
     /**
      * Launch Help activity
      * */

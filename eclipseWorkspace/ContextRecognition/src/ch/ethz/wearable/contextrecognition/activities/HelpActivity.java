@@ -49,11 +49,11 @@ public class HelpActivity extends ActionBarActivity {
         	callLabel();
         	return true;
         }
-        if (id == R.id.action_rating) {
-        	//Go to rating activity
-        	callRating();
-        	return true;
-        }
+//        if (id == R.id.action_rating) {
+//        	//Go to rating activity
+//        	callRating();
+//        	return true;
+//        }
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -84,13 +84,13 @@ public class HelpActivity extends ActionBarActivity {
         Intent i = new Intent(HelpActivity.this, DiaryActivity.class);
         startActivity(i);
     }
-    /**
-     * Launch Rating activity
-     * */
-    private void callRating() {
-        Intent i = new Intent(HelpActivity.this, RatingActivity.class);
-        startActivity(i);
-    }
+//    /**
+//     * Launch Rating activity
+//     * */
+//    private void callRating() {
+//        Intent i = new Intent(HelpActivity.this, RatingActivity.class);
+//        startActivity(i);
+//    }
     /**
      * Launch manage classes activity
      * */

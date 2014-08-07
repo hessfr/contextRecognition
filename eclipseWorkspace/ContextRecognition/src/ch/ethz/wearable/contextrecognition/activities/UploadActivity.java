@@ -58,11 +58,11 @@ public class UploadActivity extends ActionBarActivity {
         	callLabel();
         	return true;
         }
-        if (id == R.id.action_rating) {
-        	//Go to rating activity
-        	callRating();
-        	return true;
-        }
+//        if (id == R.id.action_rating) {
+//        	//Go to rating activity
+//        	callRating();
+//        	return true;
+//        }
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -93,13 +93,13 @@ public class UploadActivity extends ActionBarActivity {
         Intent i = new Intent(UploadActivity.this, DiaryActivity.class);
         startActivity(i);
     }
-    /**
-     * Launch Rating activity
-     * */
-    private void callRating() {
-        Intent i = new Intent(UploadActivity.this, RatingActivity.class);
-        startActivity(i);
-    }
+//    /**
+//     * Launch Rating activity
+//     * */
+//    private void callRating() {
+//        Intent i = new Intent(UploadActivity.this, RatingActivity.class);
+//        startActivity(i);
+//    }
     /**
      * Launch manage classes activity
      * */
