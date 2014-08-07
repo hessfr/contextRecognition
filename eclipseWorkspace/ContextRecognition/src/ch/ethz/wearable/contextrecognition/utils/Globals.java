@@ -213,6 +213,7 @@ public class Globals {
 	public static final String CLASSES_DICT = "classesDict";
 	public static final String RESULTCODE = "resultcode";
 	public static final String SILENCE = "silence";
+	public static final String FIRST_PRED_AFTER_MODEL_CHANGE = "firstPredAfterModelChange";
 	public static final String SILENCE_PREDICTED = "action.silencePredicted";
 	
 	public static final String STATUS_INTENT = "action.status";
@@ -272,6 +273,7 @@ public class Globals {
 	public static final String USER_ID = "userId";
 	public static final String CURRENT_CONTEXT = "currentContext";
 	public static final String CONTEXT_CLASSES = "contextClasses";
+	public static final String CONTEXT_CLASSES_SERVER = "contextClassesServer";
 	public static final String CLASS_COUNTS = "classCounts";
 	public static final String LASTEST_RECORDING_TIMESTAMP = "lastestRecordingTimestamp";
 	

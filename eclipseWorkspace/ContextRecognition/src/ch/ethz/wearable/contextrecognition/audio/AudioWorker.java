@@ -45,6 +45,11 @@ public class AudioWorker extends IntentService {
 	// equals ~1min for 0.032ms window length:
 	private static int DATA_BUFFER_SIZE = 1875; 
 	
+	/*
+	 *  This boolean is used to notify the StateManager that the model changed (classes added / removed)
+	 *  so that the buffers can be reinitialized:
+	 */
+	private boolean firstPredictionAfterModelChange = false;
 	private boolean bufferStatus = false;
 	private String stringRes;
 	public static int code = Activity.RESULT_CANCELED;	
@@ -113,6 +118,7 @@ public class AudioWorker extends IntentService {
 					gmm = new GMM("GMM.json");
 					Globals.readWriteLock.readLock().unlock();
 					AppStatus.getInstance().set(AppStatus.NORMAL_CLASSIFICATION);
+					firstPredictionAfterModelChange = true;
 					Log.i(TAG, "New classifier loaded after model adaption");
 				}
 				
@@ -204,7 +210,8 @@ public class AudioWorker extends IntentService {
 							// Set result code to okay and publish the result
 							code = Activity.RESULT_OK;
 							HashMap<String, Integer> hm = new HashMap<String, Integer>(gmm.get_classesDict());
-							publishResult(currentResult, currentEntropy, stringRes, hm, gmm, bufferStatus, dataBuffer, code);
+							publishResult(currentResult, currentEntropy, stringRes, hm, gmm, 
+									bufferStatus, dataBuffer, firstPredictionAfterModelChange, code);
 							
 							//Log.i(TAG, "Current Prediction: " + stringRes + ": " + intRes);
 							
@@ -225,7 +232,7 @@ public class AudioWorker extends IntentService {
 						}
 					} else {
 						
-						publishResultSilence();
+						publishResultSilence(firstPredictionAfterModelChange);
 						
 					}
 				}
@@ -234,6 +241,8 @@ public class AudioWorker extends IntentService {
 					Log.i(TAG, "AppStatus changed to STOP_RECORDING, stopping the SoundHandler now");
 					endRec();
 				}
+				
+				firstPredictionAfterModelChange = false;
 				
 			}
 		};
@@ -244,7 +253,7 @@ public class AudioWorker extends IntentService {
 	private void publishResult(int predictionInt, double predictionEntropy,
 			String predicationString, HashMap<String, Integer> classesDict,
 			GMM gmm, boolean bufferStatus, LinkedList<double[]> buffer,
-			int resultCode) {
+			boolean firstPredictionAfterModelChange, int resultCode) {
 		
 		Intent intent = new Intent(Globals.PREDICTION_INTENT);
 
@@ -266,6 +275,8 @@ public class AudioWorker extends IntentService {
 
 		bundle.putInt(Globals.RESULTCODE, code);
 		
+		bundle.putBoolean(Globals.FIRST_PRED_AFTER_MODEL_CHANGE, firstPredictionAfterModelChange);
+		
 		bundle.putBoolean(Globals.SILENCE, false);
 
 		intent.putExtras(bundle);
@@ -275,7 +286,7 @@ public class AudioWorker extends IntentService {
 		//Log.d(TAG, "Prediction broadcasted");
 	}	
 	
-	private void publishResultSilence() {
+	private void publishResultSilence(boolean firstPredictionAfterModelChange) {
 		
 		Log.d(TAG, "Loadness below silence threshold for this 2s interval, no prediction is made");
 		
@@ -284,6 +295,8 @@ public class AudioWorker extends IntentService {
 		Bundle bundle = new Bundle();
 		
 		bundle.putInt(Globals.RESULTCODE, code);
+		
+		bundle.putBoolean(Globals.FIRST_PRED_AFTER_MODEL_CHANGE, firstPredictionAfterModelChange);
 		
 		bundle.putBoolean(Globals.SILENCE, true);
 		

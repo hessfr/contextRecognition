@@ -176,6 +176,8 @@ public class StateManager extends BroadcastReceiver {
 						s2 = bundle.getSerializable(Globals.CLASSES_DICT);
 						classesDict = (HashMap<String, Integer>) s2;
 		
+						boolean firstPredAfterModelChange = bundle.getBoolean(Globals.FIRST_PRED_AFTER_MODEL_CHANGE); //TODO:xxxxxxxxxxxxxxx
+						
 //						Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
 
 						//=================================================================================
@@ -183,6 +185,10 @@ public class StateManager extends BroadcastReceiver {
 						//=================================================================================
 						
 						//startTime = System.currentTimeMillis();
+						
+						if (firstPredAfterModelChange == true) {
+							
+						}
 						
 						// Initialize the variable when receiving the first set of data:
 						if(variablesInitialized == false) {
@@ -319,6 +325,8 @@ public class StateManager extends BroadcastReceiver {
 									double newThreshold = (metricAfterFeedback(mean, std) + thresQueriedInterval.get(currentPrediction)) / 2.0;
 									
 									threshold.set(currentPrediction, newThreshold);
+									
+									
 									
 									Log.i(TAG, "Threshold for class " + get_class_name(currentPrediction, classesDict) +
 											" updated to " + newThreshold);
@@ -1410,7 +1418,7 @@ public class StateManager extends BroadcastReceiver {
 	@SuppressWarnings("unchecked")
 	private void onChangeClassesFinished(Context context, String[] prevClassnames) {
 	
-		Log.i(TAG, "onManageClassesFinished called");
+		Log.i(TAG, "onChangeClassesFinished called");
 		
 		// Load the classifier temporarily here to store new context classes to preferences and read new context classes:
 		Globals.readWriteLock.readLock().lock();

@@ -2,12 +2,16 @@ package ch.ethz.wearable.contextrecognition.activities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
@@ -26,6 +30,7 @@ import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.R;
+import ch.ethz.wearable.contextrecognition.communication.GetKnownClasses;
 import ch.ethz.wearable.contextrecognition.communication.ManageClasses;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder.onClickEvent;
@@ -39,8 +44,10 @@ public class ManageClassesActivity extends ActionBarActivity {
 		ContextSelectorAdapter dataAdapter;
 		ListView listView;
 		ArrayList<Boolean> currentStatuses;
+		ArrayList<Boolean> cbStatusList;
 		Button applyButton;
-		private String[] prevClassNames;
+		private String[] classesCurrentlyTrained;
+		private String[] classNamesServer;
 		static final String DEFINE_OWN_CLASS = "Define own context class";
 		
 	    @Override
@@ -57,27 +64,42 @@ public class ManageClassesActivity extends ActionBarActivity {
 	        
 	        addListenerOnButton();
 	        
-	        prevClassNames = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
+	        classNamesServer = executegetKnownClasses();
+	        if(classNamesServer != null) {
+	        	// If successful, save this array to the preferences:
+	        	Globals.setStringArrayPref(this, Globals.CONTEXT_CLASSES_SERVER, classNamesServer);
+	        } else {
+	        	// If not successful, get the last one from the preferences:
+	        	classNamesServer = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES_SERVER);
+	        }
 	        
-			if (prevClassNames != null) {
+	        classesCurrentlyTrained = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
+	        
+			if (classesCurrentlyTrained != null) {
+				//TODO: if (classNamesServer != null) {....
 				
-				ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(prevClassNames));
-				ArrayList<Boolean> defaultList = new ArrayList<Boolean>();
+				ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(classNamesServer));
+				cbStatusList = new ArrayList<Boolean>();
 				// All check boxes have to be selected when we start this activity:
 				for(int i=0; i<contextList.size(); i++) {
-					defaultList.add(true);
+					if (Arrays.asList(classesCurrentlyTrained).contains(contextList.get(i))) {
+						cbStatusList.add(true);
+					} else {
+						cbStatusList.add(false);
+					}
+					
 				}
 				
 				// The check boxes that got selected by the user will be saved here:
 				currentStatuses = new ArrayList<Boolean>();
-				for(int i=0; i<defaultList.size(); i++) {
-					currentStatuses.add(defaultList.get(i));
+				for(int i=0; i<cbStatusList.size(); i++) {
+					currentStatuses.add(cbStatusList.get(i));
 				}
 				
 				contextList.add(DEFINE_OWN_CLASS);
-				defaultList.add(false);
+				cbStatusList.add(false);
 				
-				dataAdapter = new ContextSelectorAdapter(this, R.layout.listview_element_checkbox, contextList, defaultList);
+				dataAdapter = new ContextSelectorAdapter(this, R.layout.listview_element_checkbox, contextList, cbStatusList);
 				
 				listView = (ListView) findViewById(R.id.contextSelector);
 				
@@ -311,26 +333,26 @@ public class ManageClassesActivity extends ActionBarActivity {
 	 
 					// Check if some of the already incorporated class have been deselected:
 					boolean isDifferent = false;
-					for(int i=0; i<prevClassNames.length; i++){
-						if (currentStatuses.get(i) == false) {
+					for(int i=0; i<classNamesServer.length; i++){
+						if (currentStatuses.get(i) != cbStatusList.get(i)) {
 							isDifferent = true;
 						}
 					}
 					// Check if new classes have been added:
-					if(prevClassNames.length != currentStatuses.size()) {
+					if(classNamesServer.length != currentStatuses.size()) {
 						isDifferent = true;
 					}
 					
 					
 					ArrayList<String> classesToRequestList = new ArrayList<String>();
-					for(int i=0; i<prevClassNames.length; i++) {
+					for(int i=0; i<classNamesServer.length; i++) {
 						if (currentStatuses.get(i) == true) {
-							classesToRequestList.add(prevClassNames[i]);
+							classesToRequestList.add(classNamesServer[i]);
 						}
 					}
 					
 					// Add the classes we added on top of previous classes:
-					for(int i=prevClassNames.length; i<(dataAdapter.getStringArray().length-1); i++) {
+					for(int i=classNamesServer.length; i<(dataAdapter.getStringArray().length-1); i++) {
 						if (currentStatuses.get(i) == true) {
 							classesToRequestList.add(dataAdapter.getStringArray()[i]);
 						}
@@ -342,7 +364,6 @@ public class ManageClassesActivity extends ActionBarActivity {
 						// request model from server is it's not the default classifier:
 						Log.i(TAG, "New model will be requested from server");
 						
-						//TODO: check if this is working:
 						Intent i = new Intent(context, ManageClasses.class);
 						i.putExtra(Globals.CONN_MANAGE_CLASSES_ARRAY, classesToRequest);
 						context.startService(i);	
@@ -434,5 +455,33 @@ public class ManageClassesActivity extends ActionBarActivity {
 		    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		    app.startActivity(intent);
 	    }
+	    
+		/*
+		 * Allow parallel execution for the AsyncTask if API > 11 (Previous APIs do this by default)
+		 * 
+		 * Code similar to http://stackoverflow.com/questions/4068984/running-multiple-asynctasks-at-the-same-time-not-possible/13800208#13800208
+		 */
+		@TargetApi(Build.VERSION_CODES.HONEYCOMB) // API 11
+		public static <T> String[] executegetKnownClasses() {
+			GetKnownClasses getKnownClasses = new GetKnownClasses();
+		    String[] result = null;
+			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+				try {
+					result = getKnownClasses.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR).get();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+			else
+				try {
+					result = getKnownClasses.execute().get();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+			return result;
+		}
 	}
 
