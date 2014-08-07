@@ -26,7 +26,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     
     #TODO: handle if multiple RECORDING_STARTED entries in the same log file
     
-    n_maxLabels = 3 #maximum number of labels that can be assign to one point
+    n_maxLabels = 3 #
   
     for i in reversed(range(len(gtList))):
         # Don't consider the RECORDING_STARTED entries for now:
@@ -52,16 +52,103 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
     # Find start and stop time, i.e. min and max values:
     tmpArray = np.array(gtList)
+    offset = float(min(tmpArray[:,0]))
+    
+    y_GT = createGTArray(gtList, classesDict)
+
+
+    for i in reversed(range(len(predList))):
+        # Don't consider the RECORDING_STARTED entries for now:
+        if len(predList[i]) <= 1:
+            del predList[i]           
+
+    createPredictionArray(predList, offset, y_GT.shape[0], classesDict)
+
+
+
+
+def createPredictionArray(predList, offset, length, classesDict, n_max_labels=3):
+    """
+    Create a numpy array of the predictions for 0.5s long windows
+
+    @param predList: List in this format: [context_class, start_time, end_time], does not contain RECORDING_STARTED entries etc.
+    @param offset: Offset in seconds describing when the first entry in the ground truth array is was provided.
+    @param length: Length of the ground truth array
+    @param classesDict: "Bidirectional" dict containg mapping from class name to numbers and vic    e versa
+    @param n_max_labels: maximum number of labels that can be assign to one point
+    @return: Numpy array of the predicted labels
+
+    """
+
+    print("offset: " + str(offset))
+
+    # First delete all entries that were before the first ground truth label was provided:
+    for i in reversed(range(len(predList))):
+        # Delete all entry, that are completely before the offset:
+        if predList[i][2]:
+            if float(predList[i][2]) < offset:
+                del predList[i]           
+        
+        # Now adjust the start time of those entries, that started before the offset, but
+        # finished after the offset:
+        if predList[i][1]:
+            if float(predList[i][1]) < offset:
+                predList[i][1] = offset
+   
+    # Round every entry to 0.5s:
+    for i in range(len(predList)):
+        if predList[i][1]:
+            predList[i][1] = 0.5 * math.ceil(2.0 * float(predList[i][1]))
+        if predList[i][2]:
+            predList[i][2] = 0.5 * math.ceil(2.0 * float(predList[i][2]))
+
+
+    y_pred = np.empty([int(length), n_max_labels])
+
+
+
+
+
+
+    print(predList)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def createGTArray(gtList, classesDict, n_max_labels=3):
+    """
+    Create the numpy ground truth array for 0.5s long windows
+    
+    @param gtList: List containg lines in the following format: [timestamp, context_class, "start"/"end"] and no RECORDING_STARTED entries etc. 
+    @param classesDict: "Bidirectional" dict containg mapping from class name to numbers and vice versa
+    @param n_max_labels: maximum number of labels that can be assign to one point
+    @return: Numpy array of the ground truth
+    """
+
+    # Find start and stop time, i.e. min and max values:
+    tmpArray = np.array(gtList)
     start_time = float(min(tmpArray[:,0]))
     end_time = float(max(tmpArray[:,0]))
 
     # We want ignore invalid (no class assigned) values, before the first class is
-    # assigned, so we have to subtract this offset later:
-    # offset = int(2*start_time)
+    # assigned, so we have to subtract the start_time offset later
 
     # Create a ground truth array where one entry corresponds to 0.5s:
     length = end_time - start_time
-    y_GT = np.empty([int(length*2), n_maxLabels])
+    y_GT = np.empty([int(length*2), n_max_labels])
     y_GT.fill(-1)
     for i in range(len(gtList)):
         """ Fill array from start to end of each ground truth label with the correct label: """
