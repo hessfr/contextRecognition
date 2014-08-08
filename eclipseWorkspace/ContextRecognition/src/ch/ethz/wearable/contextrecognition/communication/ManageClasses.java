@@ -28,6 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
@@ -69,6 +70,8 @@ public class ManageClasses extends IntentService {
 		final long pollingInterval = Globals.POLLING_INTERVAL_DEFAULT;
 		final long maxRetries = Globals.MAX_RETRY_DEFAULT;
 
+		final Context context = getBaseContext();
+		
 		CustomTimerTask task = new CustomTimerTask(getBaseContext(),
 				null, pollingInterval, maxRetries, null, null, classesArray) {
 
@@ -176,6 +179,11 @@ public class ManageClasses extends IntentService {
 			    		invalidClassesArray = new String[invalidClassesList.size()];
 			    		invalidClassesArray = invalidClassesList.toArray(invalidClassesArray);
 
+			    		// Set the CLASSES_BEING_ADDED / CLASSES_BEING_REMOVED in the preferences:
+			    		List<String> classesBeingAddedList = new ArrayList<String>();
+			    		List<String> classesBeingRemovedList = new ArrayList<String>();
+			    		String[] currentClasses = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+			    		
 			    		
 			    	} else {
 			    		Log.e(TAG, "Invalid response received after ManageClasses POST request");

@@ -130,7 +130,7 @@ public class StateManager extends BroadcastReceiver {
 	
 	private static boolean classNamesRequested = false;
 	
-	private String[] prevClassnames;
+	private static String[] prevClassnames;
 	
 	//private static long startTime;
 	//private static long endTime;
@@ -671,6 +671,13 @@ public class StateManager extends BroadcastReceiver {
 			AppStatus.getInstance().set(AppStatus.MODEL_UPDATED);
 			Log.i(TAG, "New status: model updated");
 			
+			Log.i(TAG, "prevClassnames length: " + prevClassnames.length);
+			Log.i(TAG, "----- prevClassnames after broadcast receiver ---");
+			for(int i=0; i<prevClassnames.length; i++) {
+				Log.i(TAG, "prevClassnames: " + prevClassnames[i]);
+			}
+			Log.i(TAG, "-----");
+			
 			//onChangeClassesFinished(context, prevClassnames);
 			
 		}
@@ -886,6 +893,12 @@ public class StateManager extends BroadcastReceiver {
 			
 			Boolean successful = intent.getBooleanExtra(Globals.CONN_UPDATED_MODEL_RESULT, false);
 			prevClassnames = intent.getStringArrayExtra(Globals.CONN_UPDATED_MODEL_PREV_CLASSNAMES);
+			
+			Log.i(TAG, "----- prevClassnames after broadcast receiver ---");
+			for(int i=0; i<prevClassnames.length; i++) {
+				Log.i(TAG, "prevClassnames: " + prevClassnames[i]);
+			}
+			Log.i(TAG, "-----");
 			
 			if (successful == true) {
 				
@@ -1199,24 +1212,6 @@ public class StateManager extends BroadcastReceiver {
 				&& (now <= justAfterMidnight)) {
 
 			Globals.RECORDING_START_TIME = System.currentTimeMillis();
-
-			// FOR TESTING ONLY:
-			File file = new File(Globals.APP_PATH, "DayChangeTestFile.txt");
-			try {
-				FileWriter f = new FileWriter(file, true);
-				Calendar c = Calendar.getInstance();
-				Date d = c.getTime();
-				DateFormat date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String dateString = date.format(d);
-				f.write("In if clause at " + dateString + "\n");
-				f.close();
-
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			// ------
 
 			/*
 			 * First finished the log files in the folder from yesterday:
@@ -1748,6 +1743,14 @@ public class StateManager extends BroadcastReceiver {
 	private void changeBuffersAfterModelChange(Context context, String[] newClassnames, String[] prevClassnames) {
 	
 		Log.i(TAG, "changeBuffersAfterModelChange called");
+		
+		Log.i(TAG, "prevClassnames length: " + prevClassnames.length);
+		
+		Log.i(TAG, "----- prevClassnames in changeBuffersAfterModelChange ---");
+		for(int i=0; i<prevClassnames.length; i++) {
+			Log.i(TAG, "prevClassnames: " + prevClassnames[i]);
+		}
+		Log.i(TAG, "-----");
 		
 		/*
 		 *  Check first if the buffers... are already initialized at all (if not, it
