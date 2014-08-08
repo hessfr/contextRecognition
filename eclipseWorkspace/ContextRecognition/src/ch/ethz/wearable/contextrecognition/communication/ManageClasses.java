@@ -182,7 +182,9 @@ public class ManageClasses extends IntentService {
 			    		// Set the CLASSES_BEING_ADDED / CLASSES_BEING_REMOVED in the preferences:
 			    		List<String> classesBeingAddedList = new ArrayList<String>();
 			    		List<String> classesBeingRemovedList = new ArrayList<String>();
+			    		
 			    		String[] currentClasses = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+			    		
 			    		
 			    		
 			    	} else {
