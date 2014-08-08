@@ -1616,8 +1616,8 @@ public class StateManager extends BroadcastReceiver {
 		
 		AppStatus.getInstance().set(AppStatus.NORMAL_CLASSIFICATION);
 		
-		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, new String[0]);
-		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, new String[0]);
+		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, null);
+		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, null);
 		
 		// Broadcast this message, that other activities can rebuild their views:
 		Intent i2 = new Intent(Globals.CLASS_NAMES_SET);

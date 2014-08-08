@@ -44,13 +44,19 @@ public class ManageClassesActivity extends ActionBarActivity {
 		ContextSelectorAdapter dataAdapter;
 		ListView listView;
 		ArrayList<Boolean> currentStatuses;
-		ArrayList<Boolean> cbStatusList;
+		ArrayList<Boolean> cbInitialStatusList;
+		private ArrayList<String> contextList;
 		Button applyButton;
 		private String[] classesCurrentlyTrained;
 		private String[] classNamesServer;
+		private String[] classesBeingAdded; // if a server request is pending
+		private String[] classesBeingRemoved; // if a server request is pending
 		static final String DEFINE_OWN_CLASS = "Define own context class";
+		static final String IS_BEING_ADDED = " - is being added";
+		static final String IS_BEING_REMOVED = " - is being removed";
 		
-	    @Override
+	    @SuppressWarnings("unchecked")
+		@Override
 	    protected void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
 	        setContentView(R.layout.activity_manage_classes);
@@ -73,33 +79,91 @@ public class ManageClassesActivity extends ActionBarActivity {
 	        	classNamesServer = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES_SERVER);
 	        }
 	        
+	        if(classNamesServer == null) {
+	        	// if the server request wasn't successful and the array in the preferences was also empty
+	        	classNamesServer = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
+	        }
+	        
 	        classesCurrentlyTrained = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
 	        
-			if (classesCurrentlyTrained != null) {
-				//TODO: if (classNamesServer != null) {....
+	        classesBeingAdded = Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
+	        if (classesBeingAdded != null) {
+	        	Log.i(TAG, classesBeingAdded.length + " classes are currently being added");
+	        }
+	        
+	        
+	        classesBeingRemoved = Globals.getStringArrayPref(context, Globals.CLASSES_BEING_REMOVED);
+	        if (classesBeingRemoved != null) {
+	        	Log.i(TAG, classesBeingRemoved.length + " classes are currently being removed");
+	        }
+	        
+        	if (classesCurrentlyTrained != null) {
 				
-				ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(classNamesServer));
-				cbStatusList = new ArrayList<Boolean>();
+        		// Use this contextList to build the list view:
+				contextList = new ArrayList<String>(Arrays.asList(classNamesServer));
+				
+				// Also show the classes that are currently being added on the server:
+				if (classesBeingAdded != null) {
+					for (int i=0; i<classesBeingAdded.length; i++) {
+						Log.i(TAG, classesBeingAdded[i] + " added to list, as it is currently trained");
+						if (!contextList.contains(classesBeingAdded[i])) {
+							contextList.add(classesBeingAdded[i]);
+						}
+					}
+				}
+				
+				/*
+				 *  Sort the list:
+				 *  1. Classes that are already in our model
+				 *  2. Classes that we already requested from the server and will be added then
+				 *  3. All other classes available on the server
+				 */
+				// Create copy of the ArrayList first:
+				ArrayList<String> tmpList = new ArrayList<String>();
+				for(String s : contextList) {
+					tmpList.add(s);
+				}
+				
+				contextList.clear();
+				
+				for(int i=0; i<tmpList.size(); i++) {
+					if (Arrays.asList(classesCurrentlyTrained).contains(tmpList.get(i))) {
+						contextList.add(tmpList.get(i));
+					}
+				}
+				if (classesBeingAdded != null) {
+					for(int i=0; i<tmpList.size(); i++) {
+						if (Arrays.asList(classesBeingAdded).contains(tmpList.get(i))) {
+							contextList.add(tmpList.get(i));
+						}
+					}
+				}
+				for(int i=0; i<tmpList.size(); i++) {
+					if (!contextList.contains(tmpList.get(i))) {
+						contextList.add(tmpList.get(i));
+					}
+				}
+				
+				cbInitialStatusList = new ArrayList<Boolean>();
 				// All check boxes have to be selected when we start this activity:
 				for(int i=0; i<contextList.size(); i++) {
 					if (Arrays.asList(classesCurrentlyTrained).contains(contextList.get(i))) {
-						cbStatusList.add(true);
+						cbInitialStatusList.add(true);
 					} else {
-						cbStatusList.add(false);
+						cbInitialStatusList.add(false);
 					}
-					
 				}
 				
-				// The check boxes that got selected by the user will be saved here:
+				// The check boxes that got selected by the user will be stored here:
 				currentStatuses = new ArrayList<Boolean>();
-				for(int i=0; i<cbStatusList.size(); i++) {
-					currentStatuses.add(cbStatusList.get(i));
+				for(int i=0; i<cbInitialStatusList.size(); i++) {
+					currentStatuses.add(cbInitialStatusList.get(i));
 				}
 				
 				contextList.add(DEFINE_OWN_CLASS);
-				cbStatusList.add(false);
+				cbInitialStatusList.add(false);
 				
-				dataAdapter = new ContextSelectorAdapter(this, R.layout.listview_element_checkbox, contextList, cbStatusList);
+				dataAdapter = new ContextSelectorAdapter(this, R.layout.listview_element_checkbox, contextList, cbInitialStatusList);
 				
 				listView = (ListView) findViewById(R.id.contextSelector);
 				
@@ -158,7 +222,8 @@ public class ManageClassesActivity extends ActionBarActivity {
 				
 			} else {
 				Log.e(TAG, "classNames String Array empty. List could not be set");
-			}
+			} 
+			
 	        
 			
 	    }    
@@ -232,6 +297,7 @@ public class ManageClassesActivity extends ActionBarActivity {
 										   idx = i;
 									   }
 								   }
+
 								   if (cb.isChecked() == true) {
 									   // CheckBox got selected just now:
 
@@ -255,7 +321,7 @@ public class ManageClassesActivity extends ActionBarActivity {
 						   break;
 						   
 					case TYPE_TEXTVIEW:
-						
+						// For the "Define own context class" entry
 						convertView = mInflater.inflate(R.layout.listview_element_textview, null);
 						holder.textView = (TextView) convertView.findViewById(R.id.textView1);
 						
@@ -270,17 +336,30 @@ public class ManageClassesActivity extends ActionBarActivity {
 			   
 			   String string = contextList.get(position);
 			   
+			   // Add additional text if the class if currently changed on the server:
+			   if (classesBeingAdded != null) {
+				   if(Arrays.asList(classesBeingAdded).contains(contextList.get(position))) {
+					   string = string + IS_BEING_ADDED;
+				   }
+			   }
+			   if (classesBeingRemoved != null) {
+				   if(Arrays.asList(classesBeingRemoved).contains(contextList.get(position))) {
+					   string = string + IS_BEING_REMOVED;
+				   }
+			   }
+
+			   
 				switch (type) {
 				case TYPE_CHECKBOX:
 
-					holder.checkBox.setText(string);
+					holder.checkBox.setText(string); 
 					holder.checkBox.setTextSize(18);
 					holder.checkBox.setChecked(cbStatus.get(position));
 
 					break;
 
 				case TYPE_TEXTVIEW:
-
+					
 					holder.textView.setText(string);
 					holder.textView.setTextSize(18);
 					holder.textView.setTypeface(holder.textView.getTypeface(), Typeface.BOLD);
@@ -300,8 +379,10 @@ public class ManageClassesActivity extends ActionBarActivity {
 			
 			@Override
 	        public int getItemViewType(int position) {
-				// All elements check boxes, except then last one which is a text view:
 				
+				/* All elements are check boxes, except the last one ("Define own context class") 
+				 * which is a text view:
+				 */
 				if (position < contextList.size()-1) {
 					return TYPE_CHECKBOX;
 				} else {
@@ -331,34 +412,57 @@ public class ManageClassesActivity extends ActionBarActivity {
 				@Override
 				public void onClick(View arg0) {
 	 
+					Log.i(TAG, "cbInitialStatusList size: " + cbInitialStatusList.size());
+					Log.i(TAG, "currentStatuses size: " + currentStatuses.size());
+					
 					// Check if some of the already incorporated class have been deselected:
 					boolean isDifferent = false;
-					for(int i=0; i<classNamesServer.length; i++){
-						if (currentStatuses.get(i) != cbStatusList.get(i)) {
+					for(int i=0; i<cbInitialStatusList.size(); i++){
+						if (currentStatuses.get(i) != cbInitialStatusList.get(i)) {
 							isDifferent = true;
 						}
 					}
 					// Check if new classes have been added:
-					if(classNamesServer.length != currentStatuses.size()) {
+					if(cbInitialStatusList.size() != currentStatuses.size()) {
 						isDifferent = true;
 					}
 					
-					
+					// Build the list of classes that should be included in the new model:
 					ArrayList<String> classesToRequestList = new ArrayList<String>();
-					for(int i=0; i<classNamesServer.length; i++) {
+					// ignore the "DEFINE OWN CONTEXT CLASS" element:
+					for(int i=0; i<(contextList.size()-1); i++) {
 						if (currentStatuses.get(i) == true) {
-							classesToRequestList.add(classNamesServer[i]);
+							classesToRequestList.add(contextList.get(i));
 						}
 					}
 					
+//					Log.i(TAG, "contextList size: " + contextList.size());
+//					Log.i(TAG, "dataAdapter size: " + dataAdapter.getStringArray().length);
+					
+//					Log.i(TAG, "------------- dataAdapter: ---------");
+//					for(int i=0; i<dataAdapter.getStringArray().length; i++) {
+//						Log.i(TAG, dataAdapter.getStringArray()[i]);
+//					}
+					
+//					Log.i(TAG, "------------- contextList: ---------");
+//					for(int i=0; i<contextList.size(); i++) {
+//						Log.i(TAG, contextList.get(i));
+//					}
+					
 					// Add the classes we added on top of previous classes:
-					for(int i=classNamesServer.length; i<(dataAdapter.getStringArray().length-1); i++) {
+					// ignore the "DEFINE OWN CONTEXT CLASS" element:
+					for(int i=(contextList.size()-1); i<(dataAdapter.getStringArray().length-1); i++) {
 						if (currentStatuses.get(i) == true) {
 							classesToRequestList.add(dataAdapter.getStringArray()[i]);
 						}
 					}
 					
 					String[] classesToRequest = classesToRequestList.toArray(new String[classesToRequestList.size()]);
+					
+//					Log.i(TAG, "------ classes to request ----");
+//					for(int i=0; i<classesToRequest.length; i++) {
+//						Log.i(TAG, classesToRequest[i]);
+//					}
 					
 					if (isDifferent == true) {
 						// request model from server is it's not the default classifier:
