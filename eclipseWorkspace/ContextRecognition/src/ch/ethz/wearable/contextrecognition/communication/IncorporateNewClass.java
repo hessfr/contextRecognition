@@ -24,6 +24,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
@@ -62,6 +63,8 @@ public class IncorporateNewClass extends IntentService {
 		final long pollingInterval = Globals.POLLING_INTERVAL_DEFAULT;
 		final long maxRetries = Globals.MAX_RETRY_DEFAULT;
 
+		final Context context = getBaseContext();
+		
 		CustomTimerTask task = new CustomTimerTask(getBaseContext(),
 				null, pollingInterval, maxRetries, newClassName, feasibilityCheckResult, null) {
 
@@ -139,6 +142,16 @@ public class IncorporateNewClass extends IntentService {
 			    	if (response.getStatusLine().getStatusCode() == 200) {
 			    		
 			    		filenameOnServer = EntityUtils.toString(response.getEntity());
+			    		
+			    		String[] classesBeingAdded = new String[1];
+			    		classesBeingAdded[0] = newClassName;
+			    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, classesBeingAdded);
+			    		
+//			    		Log.i(TAG, "----- classes being added: ----");
+//			    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
+//			    		for(int i=0; i<tmp1.length; i++) {
+//			    			Log.i(TAG, tmp1[i]);
+//			    		}
 			    		
 			    	} else {
 			    		Log.e(TAG, "Invalid response received after POST request");

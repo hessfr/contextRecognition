@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
@@ -180,11 +181,52 @@ public class ManageClasses extends IntentService {
 			    		invalidClassesArray = invalidClassesList.toArray(invalidClassesArray);
 
 			    		// Set the CLASSES_BEING_ADDED / CLASSES_BEING_REMOVED in the preferences:
+			    		List<String> classesInNewModel = new ArrayList<String>();
+			    		String[] currentClasses = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
 			    		List<String> classesBeingAddedList = new ArrayList<String>();
 			    		List<String> classesBeingRemovedList = new ArrayList<String>();
+
+			    		// DOn't consider the invalid classes:
+			    		for(int i=0; i<classesArray.length; i++) {
+			    			if (!invalidClassesList.contains(classesArray[i])) {
+			    				classesInNewModel.add(classesArray[i]);
+			    			}
+			    		}
+
+			    		// Find classes that are were not in the previous model:
+			    		for(int i=0; i<classesInNewModel.size(); i++) {
+			    			if (!Arrays.asList(currentClasses).contains(classesInNewModel.get(i))) {
+			    				classesBeingAddedList.add(classesInNewModel.get(i));
+			    			}
+			    		}
 			    		
-			    		String[] currentClasses = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+			    		// Find classes that are not in the new model anymore:
+			    		for(int i=0; i<currentClasses.length; i++) {
+			    			if (!classesInNewModel.contains(currentClasses[i])) {
+			    				classesBeingRemovedList.add(currentClasses[i]);
+			    			}
+			    		}
 			    		
+			    		// Create the String arrays and push them to preferences:
+			    		String[] classesBeingAdded = new String[classesBeingAddedList.size()];
+			    		classesBeingAdded = classesBeingAddedList.toArray(classesBeingAdded);
+			    		
+			    		String[] classesBeingRemoved = new String[classesBeingRemovedList.size()];
+			    		classesBeingRemoved = classesBeingRemovedList.toArray(classesBeingRemoved);
+			    		
+			    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, classesBeingAdded);
+			    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, classesBeingRemoved);
+			    		
+//			    		Log.i(TAG, "----- classes being added: ----");
+//			    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
+//			    		for(int i=0; i<tmp1.length; i++) {
+//			    			Log.i(TAG, tmp1[i]);
+//			    		}
+//			    		Log.i(TAG, "----- classes being removed: ----");
+//			    		String[] tmp2=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_REMOVED);
+//			    		for(int i=0; i<tmp2.length; i++) {
+//			    			Log.i(TAG, tmp2[i]);
+//			    		}
 			    		
 			    		
 			    	} else {

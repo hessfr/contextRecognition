@@ -3,6 +3,7 @@ package ch.ethz.wearable.contextrecognition.communication;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
@@ -25,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
@@ -64,6 +66,8 @@ public class InitModel extends IntentService {
 		final long pollingInterval = Globals.POLLING_INTERVAL_DEFAULT;
 		final long maxRetries = Globals.MAX_RETRY_DEFAULT;
 
+		final Context context = getBaseContext();
+		
 		CustomTimerTask task = new CustomTimerTask(getBaseContext(),
 				null, pollingInterval, maxRetries, null, null, contextClasses) {
 
@@ -145,6 +149,54 @@ public class InitModel extends IntentService {
 				    		invalidClassesArray = new String[invalidClassesList.size()];
 				    		invalidClassesArray = invalidClassesList.toArray(invalidClassesArray);
 
+				    		// Set the CLASSES_BEING_ADDED / CLASSES_BEING_REMOVED in the preferences:
+				    		List<String> classesInNewModel = new ArrayList<String>();
+				    		String[] currentClasses = Globals.initialContextClasses;
+				    		List<String> classesBeingAddedList = new ArrayList<String>();
+				    		List<String> classesBeingRemovedList = new ArrayList<String>();
+
+				    		// Don't consider the invalid classes:
+				    		for(int i=0; i<contextClasses.length; i++) {
+				    			if (!invalidClassesList.contains(contextClasses[i])) {
+				    				classesInNewModel.add(contextClasses[i]);
+				    			}
+				    		}
+
+				    		// Find classes that are were not in the previous model:
+				    		for(int i=0; i<classesInNewModel.size(); i++) {
+				    			if (!Arrays.asList(currentClasses).contains(classesInNewModel.get(i))) {
+				    				classesBeingAddedList.add(classesInNewModel.get(i));
+				    			}
+				    		}
+				    		
+				    		// Find classes that are not in the new model anymore:
+				    		for(int i=0; i<currentClasses.length; i++) {
+				    			if (!classesInNewModel.contains(currentClasses[i])) {
+				    				classesBeingRemovedList.add(currentClasses[i]);
+				    			}
+				    		}
+				    		
+				    		// Create the String arrays and push them to preferences:
+				    		String[] classesBeingAdded = new String[classesBeingAddedList.size()];
+				    		classesBeingAdded = classesBeingAddedList.toArray(classesBeingAdded);
+				    		
+				    		String[] classesBeingRemoved = new String[classesBeingRemovedList.size()];
+				    		classesBeingRemoved = classesBeingRemovedList.toArray(classesBeingRemoved);
+				    		
+				    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, classesBeingAdded);
+				    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, classesBeingRemoved);
+				    		
+//				    		Log.i(TAG, "----- classes being added: ----");
+//				    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
+//				    		for(int i=0; i<tmp1.length; i++) {
+//				    			Log.i(TAG, tmp1[i]);
+//				    		}
+//				    		Log.i(TAG, "----- classes being removed: ----");
+//				    		String[] tmp2=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_REMOVED);
+//				    		for(int i=0; i<tmp2.length; i++) {
+//				    			Log.i(TAG, tmp2[i]);
+//				    		}
+				    		
 				    	} else {
 				    		Log.e(TAG, "Invalid response received after POST request");
 				    		Log.e(TAG, String.valueOf(response.getStatusLine()));

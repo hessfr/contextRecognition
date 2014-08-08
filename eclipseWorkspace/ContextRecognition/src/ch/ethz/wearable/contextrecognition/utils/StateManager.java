@@ -1451,7 +1451,8 @@ public class StateManager extends BroadcastReceiver {
 	
 	/*
 	 * After we changed the number of classes, we have to change the size of the buffers etc. to calculate the
-	 * threshold values...
+	 * threshold values. This function is only called, after we received the first prediction with the
+	 * new classifier.
 	 */
 	@SuppressWarnings("unchecked")
 	private void changeBuffersAfterModelChange(Context context, String[] newClassnames, String[] prevClassnames) {
@@ -1614,6 +1615,9 @@ public class StateManager extends BroadcastReceiver {
 		}
 		
 		AppStatus.getInstance().set(AppStatus.NORMAL_CLASSIFICATION);
+		
+		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, new String[0]);
+		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, new String[0]);
 		
 		// Broadcast this message, that other activities can rebuild their views:
 		Intent i2 = new Intent(Globals.CLASS_NAMES_SET);
