@@ -95,9 +95,9 @@ public class InitModel extends IntentService {
 			        
 			        //Set timeout parameters:
 			        HttpParams httpParameters = new BasicHttpParams();
-			        int timeoutConnection = 3000;
+			        int timeoutConnection = 10000;
 			        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
-			        int timeoutSocket = 5000;
+			        int timeoutSocket = 30000;
 			        HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
 			        
 			        HttpClient client = new DefaultHttpClient(httpParameters);
@@ -183,8 +183,23 @@ public class InitModel extends IntentService {
 				    		String[] classesBeingRemoved = new String[classesBeingRemovedList.size()];
 				    		classesBeingRemoved = classesBeingRemovedList.toArray(classesBeingRemoved);
 				    		
+				    		for(int i=0; i<classesBeingAdded.length; i++) {
+				    			Log.i(TAG, "add class: " + classesBeingAdded[i]);
+				    		}
+				    		for(int i=0; i<classesBeingRemoved.length; i++) {
+				    			Log.i(TAG, "remove class: " + classesBeingRemoved[i]);
+				    		}
+				    		
+				    		
 				    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, classesBeingAdded);
 				    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, classesBeingRemoved);
+				    		
+				    		/*
+				    		 *  Broadcast to MainActivity that CLASSES_BEING_ADDED array changed, so
+				    		 *  that we can update the ground truth logger
+				    		 */
+				    		Intent i = new Intent(Globals.CLASSES_BEING_ADDED_INTENT);
+				    		context.sendBroadcast(i);
 				    		
 //				    		Log.i(TAG, "----- classes being added: ----");
 //				    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
@@ -222,7 +237,7 @@ public class InitModel extends IntentService {
 					i.putExtra(Globals.CONN_INIT_MODEL_INVALIDS, invalidClassesArray);
 					i.putExtra(Globals.CONN_INIT_MODEL_RESULT_FILENAME, filenameOnServer);
 					i.putExtra(Globals.CONN_INIT_MODEL_RESULT_WAIT, waitOrNoWait);		
-					sendBroadcast(i);
+					context.sendBroadcast(i);
 
 					Log.i(TAG, "IntentService finished");
 					
@@ -241,7 +256,7 @@ public class InitModel extends IntentService {
 					i.putExtra(Globals.CONN_INIT_MODEL_INVALIDS, invalidClassesArray);
 					i.putExtra(Globals.CONN_INIT_MODEL_RESULT_FILENAME, filenameOnServer);
 					i.putExtra(Globals.CONN_INIT_MODEL_RESULT_WAIT, waitOrNoWait);		
-					sendBroadcast(i);
+					context.sendBroadcast(i);
 					
 					Log.i(TAG, "IntentService finished");
 

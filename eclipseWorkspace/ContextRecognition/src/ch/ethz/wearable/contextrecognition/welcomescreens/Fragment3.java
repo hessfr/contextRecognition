@@ -84,7 +84,7 @@ public class Fragment3 extends Fragment {
 								ArrayList<String> stringList = dataAdapter.getStringArrayList();
 								stringList.add(stringList.get(stringList.size()-1));
 								
-								Log.i(TAG, "This should be define own context class: " + stringList.get(stringList.size()-1));
+								//Log.i(TAG, "This should be define own context class: " + stringList.get(stringList.size()-1));
 								
 								stringList.set((stringList.size()-2), newClassName);
 								
@@ -150,6 +150,10 @@ public class Fragment3 extends Fragment {
 					}
 				}
 				
+				// If we added a new class (and selected it), set the isDifferent boolean to true:
+				if (Globals.defaultClasses.length != currentStatuses.size()) {
+					isDifferent = true;
+				}
 				
 				ArrayList<String> classesToRequestList = new ArrayList<String>();
 				for(int i=0; i<Globals.initialContextClasses.length; i++) {

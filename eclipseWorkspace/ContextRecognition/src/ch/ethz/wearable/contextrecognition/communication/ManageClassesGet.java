@@ -170,7 +170,7 @@ public class ManageClassesGet extends IntentService {
 					
 					Intent i = new Intent(Globals.CONN_MANAGE_CLASSES_FINISH);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_PREV_CLASSNAMES, prevClassnames);
-					sendBroadcast(i);
+					context.sendBroadcast(i);
 
 					Log.i(TAG, "IntentService finished");
 

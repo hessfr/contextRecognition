@@ -79,6 +79,10 @@ public class MainActivity extends ActionBarActivity {
 		Boolean welcomeScreenShown = mPrefs.getBoolean(welcomeScreenShownPref,
 				false);
 
+		// Reset the classes to be added / removed arrays, as the request is forgotten when app closed:
+		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, null);
+		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, null);
+		
 		if (!welcomeScreenShown) {
 			// Obtain a unique user ID and store it in the preferences:
 			final TelephonyManager mTelephony = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -154,10 +158,6 @@ public class MainActivity extends ActionBarActivity {
 			editor.putString(Globals.CURRENT_CONTEXT, "");
 			editor.commit();
 			
-			// Reset the classes to be added / removed arrays, as the request is forgotten when app closed:
-			Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, null);
-			Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, null);
-			
 			// Append info to log when the app was started
 			appendToGTLog(true, false, "");
 			
@@ -197,6 +197,7 @@ public class MainActivity extends ActionBarActivity {
 		filterMain.addAction(Globals.PREDICTION_CHANGED_INTENT);
 		filterMain.addAction(Globals.PREDICTION_ENTROPY_INTENT);
 		filterMain.addAction(Globals.CLASS_NAMES_SET);
+		filterMain.addAction(Globals.CLASSES_BEING_ADDED_INTENT);		
 		registerReceiver(receiverMainActivity, filterMain);
 		
 		// Set the prediction TextView to the current prediction (workaround!)
@@ -550,6 +551,16 @@ public class MainActivity extends ActionBarActivity {
 				}
 				
 			}
+			
+			if (intent.getAction().equals(Globals.CLASSES_BEING_ADDED_INTENT)) {
+				
+				Log.i(TAG, "Pending classes changed, update the GT Logger");
+				
+				createListView(contextClasses);
+				
+			}
+			
+			
 		}
 	};
 	

@@ -217,6 +217,13 @@ public class ManageClasses extends IntentService {
 			    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, classesBeingAdded);
 			    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, classesBeingRemoved);
 			    		
+			    		/*
+			    		 *  Broadcast to MainActivity that CLASSES_BEING_ADDED array changed, so
+			    		 *  that we can update the ground truth logger
+			    		 */
+			    		Intent i = new Intent(Globals.CLASSES_BEING_ADDED_INTENT);
+			    		context.sendBroadcast(i);
+			    		
 //			    		Log.i(TAG, "----- classes being added: ----");
 //			    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
 //			    		for(int i=0; i<tmp1.length; i++) {
@@ -253,7 +260,7 @@ public class ManageClasses extends IntentService {
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS, invalidClassesArray);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_WAIT, waitOrNoWait);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_FILENAME ,filenameOnServer);
-					sendBroadcast(i);
+					context.sendBroadcast(i);
 
 					Log.d(TAG, "IntentService finished");
 					
@@ -270,7 +277,7 @@ public class ManageClasses extends IntentService {
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_INVALIDS, invalidClassesArray);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_WAIT, waitOrNoWait);
 					i.putExtra(Globals.CONN_MANAGE_CLASSES_FILENAME ,filenameOnServer);
-					sendBroadcast(i);					
+					context.sendBroadcast(i);					
 					
 					Log.d(TAG, "IntentService finished");
 					

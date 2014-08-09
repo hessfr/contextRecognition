@@ -147,6 +147,13 @@ public class IncorporateNewClass extends IntentService {
 			    		classesBeingAdded[0] = newClassName;
 			    		Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, classesBeingAdded);
 			    		
+			    		/*
+			    		 *  Broadcast to MainActivity that CLASSES_BEING_ADDED array changed, so
+			    		 *  that we can update the ground truth logger
+			    		 */
+			    		Intent i = new Intent(Globals.CLASSES_BEING_ADDED_INTENT);
+			    		context.sendBroadcast(i);
+			    		
 //			    		Log.i(TAG, "----- classes being added: ----");
 //			    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
 //			    		for(int i=0; i<tmp1.length; i++) {
@@ -177,7 +184,7 @@ public class IncorporateNewClass extends IntentService {
 				    Intent i = new Intent(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE);
 					i.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME, filenameOnServer);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT ,feasibilityCheckResult);
-					sendBroadcast(i);
+					context.sendBroadcast(i);
 
 					Log.i(TAG, "IntentService finished");
 					
@@ -193,7 +200,7 @@ public class IncorporateNewClass extends IntentService {
 					Intent i = new Intent(Globals.CONN_INCORPORATE_NEW_CLASS_RECEIVE);
 					i.putExtra(Globals.CONN_INCORPORATE_NEW_CLASS_FILENAME, filenameOnServer);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT ,feasibilityCheckResult);
-					sendBroadcast(i);					
+					context.sendBroadcast(i);					
 					
 					Log.i(TAG, "IntentService finished");
 					

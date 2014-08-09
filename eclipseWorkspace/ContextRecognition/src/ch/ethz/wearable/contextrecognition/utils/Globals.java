@@ -261,6 +261,10 @@ public class Globals {
 	public static final String PREDICTION_ENTROPY_INTENT = "predictionEntropyIntent";
 	public static final String PREDICTION_ENTROPY_VALUE = "predictionEntropyValue";
 	
+	// Send from communication IntentServices:
+	public static final String CLASSES_BEING_ADDED_INTENT = "classesBeingAddedIntent";
+	
+	
 	// Define if we wait for server response when calling MainActivity from welcome activity:
 	public static final String WAIT_FOR_SERVER = "waitForServer";	
 	
@@ -284,21 +288,31 @@ public class Globals {
 	
 	/*
 	 * From: http://stackoverflow.com/questions/7361627/how-can-write-code-to-make-sharedpreferences-for-array-in-android/7361989#7361989
+	 * 
+	 * In order to delete (i.e. replace by null) the StringArray, just parse null as parameter
 	 */
 	public static void setStringArrayPref(Context context, String key, String[] array) {
-		ArrayList<String> values = new ArrayList<String>(Arrays.asList(array));
-	    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-	    SharedPreferences.Editor editor = prefs.edit();
-	    JSONArray a = new JSONArray();
-	    for (int i = 0; i < values.size(); i++) {
-	        a.put(values.get(i));
-	    }
-	    if (!values.isEmpty()) {
-	        editor.putString(key, a.toString());
-	    } else {
-	        editor.putString(key, null);
-	    }
-	    editor.commit();
+		if (array != null) {
+			ArrayList<String> values = new ArrayList<String>(Arrays.asList(array));
+		    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		    SharedPreferences.Editor editor = prefs.edit();
+		    JSONArray a = new JSONArray();
+		    for (int i = 0; i < values.size(); i++) {
+		        a.put(values.get(i));
+		    }
+		    if (!values.isEmpty()) {
+		        editor.putString(key, a.toString());
+		    } else {
+		        editor.putString(key, null);
+		    }
+		    editor.commit();
+		} else {
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		    SharedPreferences.Editor editor = prefs.edit();
+		    editor.putString(key, null);
+		    editor.commit();
+		}
+
 	}
 
 	/*

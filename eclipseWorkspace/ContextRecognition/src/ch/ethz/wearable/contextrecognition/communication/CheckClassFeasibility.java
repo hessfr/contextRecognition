@@ -62,6 +62,8 @@ public class CheckClassFeasibility extends IntentService {
 		final long pollingInterval = Globals.POLLING_INTERVAL_DEFAULT;
 		final long maxRetries = Globals.MAX_RETRY_DEFAULT;
 
+		final Context context = getBaseContext();
+		
 		CustomTimerTask task = new CustomTimerTask(getBaseContext(),
 				className, pollingInterval, maxRetries, null, null, null) {
 
@@ -120,7 +122,7 @@ public class CheckClassFeasibility extends IntentService {
 					Intent i = new Intent(Globals.CONN_CHECK_FEASIBILITY_RECEIVE);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, result);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, className);		
-					sendBroadcast(i);
+					context.sendBroadcast(i);
 
 					Log.d(TAG, "IntentService finished");
 					
@@ -133,7 +135,7 @@ public class CheckClassFeasibility extends IntentService {
 					Intent i = new Intent(Globals.CONN_CHECK_FEASIBILITY_RECEIVE);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_RESULT, result);
 					i.putExtra(Globals.CONN_CHECK_FEASIBILITY_CLASS_NAME, className);		
-					sendBroadcast(i);					
+					context.sendBroadcast(i);					
 					
 					handler.post(new DisplayToast(getBaseContext(), "Server timed out"));
 					
