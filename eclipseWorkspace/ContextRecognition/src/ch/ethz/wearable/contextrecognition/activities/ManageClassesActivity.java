@@ -44,8 +44,8 @@ public class ManageClassesActivity extends ActionBarActivity {
 		ContextSelectorAdapter dataAdapter;
 		ListView listView;
 		ArrayList<Boolean> currentStatuses;
-		ArrayList<Boolean> cbInitialStatusList;
-		private ArrayList<String> contextList;
+		ArrayList<Boolean> cbInitialStatusList; // Last entry has to be the "DEFINE OWN CONTEXT CLASS" entry
+		private ArrayList<String> contextList; // Last entry has to be the "DEFINE OWN CONTEXT CLASS" entry
 		Button applyButton;
 		private String[] classesCurrentlyTrained;
 		private String[] classNamesServer;
@@ -55,7 +55,6 @@ public class ManageClassesActivity extends ActionBarActivity {
 		static final String IS_BEING_ADDED = " - is being added";
 		static final String IS_BEING_REMOVED = " - is being removed";
 		
-	    @SuppressWarnings("unchecked")
 		@Override
 	    protected void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
@@ -412,18 +411,26 @@ public class ManageClassesActivity extends ActionBarActivity {
 				@Override
 				public void onClick(View arg0) {
 	 
+					Log.i(TAG, "contextList size: " + contextList.size());
+					Log.i(TAG, "last element: " + contextList.get(contextList.size()-1));
+					Log.i(TAG, "dataAdapter size: " + dataAdapter.getStringArray().length);
+					Log.i(TAG, "last element: " + dataAdapter.getStringArray()[dataAdapter.getStringArray().length-1]);
 					Log.i(TAG, "cbInitialStatusList size: " + cbInitialStatusList.size());
+					Log.i(TAG, "last element: " + cbInitialStatusList.get(cbInitialStatusList.size()-1));
 					Log.i(TAG, "currentStatuses size: " + currentStatuses.size());
+					Log.i(TAG, "last element: " + currentStatuses.get(currentStatuses.size()-1));
 					
 					// Check if some of the already incorporated class have been deselected:
 					boolean isDifferent = false;
-					for(int i=0; i<cbInitialStatusList.size(); i++){
+					// ignore the "DEFINE OWN CONTEXT CLASS" element:
+					for(int i=0; i<(cbInitialStatusList.size()-1); i++){
 						if (currentStatuses.get(i) != cbInitialStatusList.get(i)) {
 							isDifferent = true;
 						}
 					}
 					// Check if new classes have been added:
-					if(cbInitialStatusList.size() != currentStatuses.size()) {
+					// ignore the "DEFINE OWN CONTEXT CLASS" element:
+					if((cbInitialStatusList.size()-1) != currentStatuses.size()) {
 						isDifferent = true;
 					}
 					

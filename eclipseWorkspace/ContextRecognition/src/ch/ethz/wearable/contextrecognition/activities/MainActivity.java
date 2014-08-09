@@ -60,7 +60,6 @@ public class MainActivity extends ActionBarActivity {
 
 	private String[] contextClasses;
 	private static Boolean[] currentGT; //same size as contextClasses string array
-	static final String CURRENT_GT = "currentGT";
 	ImageButton changeButton;
 	ImageButton confirmButton;
 	SharedPreferences mPrefs;
@@ -154,6 +153,10 @@ public class MainActivity extends ActionBarActivity {
 			SharedPreferences.Editor editor = mPrefs.edit();
 			editor.putString(Globals.CURRENT_CONTEXT, "");
 			editor.commit();
+			
+			// Reset the classes to be added / removed arrays, as the request is forgotten when app closed:
+			Globals.setStringArrayPref(context, Globals.CLASSES_BEING_ADDED, null);
+			Globals.setStringArrayPref(context, Globals.CLASSES_BEING_REMOVED, null);
 			
 			// Append info to log when the app was started
 			appendToGTLog(true, false, "");
@@ -432,36 +435,73 @@ public class MainActivity extends ActionBarActivity {
 			return;
 		}
 
+		
+		// Add the pending classes as well:
+		String[] classesBeingAdded = Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
+		int numClassesAdded = 0;
+		if (classesBeingAdded != null) {
+			numClassesAdded = classesBeingAdded.length;
+		}
+		
+		// This array contains both, the classes already in the model and the pending classes:
+		String[] allClasses = new String[(stringArray.length + numClassesAdded)];
+		
+		// Fill it with classes in the classifier first:
+		for(int i=0; i<stringArray.length; i++) {
+			allClasses[i] = stringArray[i];
+		}
+		
+		// Then add pending classes if there are any:
+		if (classesBeingAdded != null) {
+			int j=0;
+			for(int i=stringArray.length; i<allClasses.length; i++) {
+				Log.i(TAG, "class " + classesBeingAdded[j] + " added, although it is not in clf yet");
+				allClasses[i] = classesBeingAdded[j];
+				j++;
+			}
+		}
+		
+		
 		// Initialize the ground truth array the very first time:
 		if (currentGT == null) {
 			Log.d(TAG, "Initializing currentGT array");
-			currentGT = new Boolean[stringArray.length];
+			currentGT = new Boolean[allClasses.length];
 			for(int j=0; j<currentGT.length; j++) {
 				currentGT[j] = false;
 			}
 		}
 		
-		// When a context class was added, increase the size of the currentGT array:
-		if (currentGT.length != stringArray.length) {
+		/*
+		 *  When new context class(es) added, increase the size of the currentGT array to match the class names again
+		 *  and fill the new elements with false value:
+		 */
+		if (currentGT.length != allClasses.length) {
+			
+			Log.i(TAG, "Adjusting length of currentGT array");
+			
 			Boolean[] tmp = new Boolean[currentGT.length];
 			for(int i=0; i<currentGT.length; i++) {
 				tmp[i] = currentGT[i];
 			}
 			
-			currentGT = new Boolean[stringArray.length];
-			for(int i=0; i<stringArray.length ; i++) {
-				if (i<(currentGT.length-1)) {
+			Log.i(TAG, "tmp length: " + tmp.length);
+			Log.i(TAG, "currentGT length: " + currentGT.length);
+			
+			currentGT = new Boolean[allClasses.length];
+			for(int i=0; i<allClasses.length ; i++) {
+				if (i<(tmp.length-1)) { // First fill the status of all classes that were already included:
+					Log.d(TAG, " " + currentGT[i]);
+					Log.d(TAG, " " + tmp[i]);
 					currentGT[i] = tmp[i];
-				} else {
+				} else { // Then set status of new classes to false:
 					currentGT[i] = false;
 				}			
 			}
 		}
-		
 		Log.d(TAG, "increasing length of currentGT done");
 		
-		if (stringArray != null) {
-			ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(stringArray));
+		if (allClasses != null) {
+			ArrayList<String> contextList = new ArrayList<String>(Arrays.asList(allClasses));
 			ArrayList<Boolean> gtList = new ArrayList<Boolean>(Arrays.asList(currentGT));
 			
 			dataAdapter = new GtSelectorAdapter(this,R.layout.listview_element_checkbox, contextList, gtList);
@@ -530,6 +570,7 @@ public class MainActivity extends ActionBarActivity {
 			
 			this.contextList = new ArrayList<String>();
 			this.contextList.addAll(contextList);
+			
 			this.cbStatus = new ArrayList<Boolean>();
 			this.cbStatus.addAll(cbStatus);
 		}
@@ -559,10 +600,17 @@ public class MainActivity extends ActionBarActivity {
 					   CheckBox cb = (CheckBox) v;
 					   String contextClass = cb.getText().toString();
 					   
+//					   // Find position of this string in the contextClasses array:
+//					   int idx = -1;
+//					   for(int i=0; i<contextClasses.length; i++) {
+//						   if (contextClass.equals(contextClasses[i])) {
+//							   idx = i;
+//						   }
+//					   }
 					   // Find position of this string in the contextClasses array:
 					   int idx = -1;
-					   for(int i=0; i<contextClasses.length; i++) {
-						   if (contextClass.equals(contextClasses[i])) {
+					   for(int i=0; i<contextList.size(); i++) {
+						   if (contextClass.equals(contextList.get(i))) {
 							   idx = i;
 						   }
 					   }

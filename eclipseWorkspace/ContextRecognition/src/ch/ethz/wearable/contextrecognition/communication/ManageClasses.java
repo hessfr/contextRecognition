@@ -102,9 +102,9 @@ public class ManageClasses extends IntentService {
 		        
 		        //Set timeout parameters:
 		        HttpParams httpParameters = new BasicHttpParams();
-		        int timeoutConnection = 3000;
+		        int timeoutConnection = 4000;
 		        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
-		        int timeoutSocket = 5000;
+		        int timeoutSocket = 8000;
 		        HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
 		        
 		        HttpClient client = new DefaultHttpClient(httpParameters);
