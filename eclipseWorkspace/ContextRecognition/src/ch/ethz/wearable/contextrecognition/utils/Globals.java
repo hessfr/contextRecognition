@@ -80,8 +80,14 @@ public class Globals {
 	/*
 	 * App settings
 	 */
-	//Time after which the query is cancelled and the notification removed in ms:
-	public static long CANCEL_QUERY_TIME = 60000; //=1min
+	//Time after which the query is cancelled and the notification removed (in ms):
+	public static long CANCEL_QUERY_TIME = 60000; // = 1min
+	
+	//Time after which the phone should vibrate a second time, after sending the query (in ms):
+	public static long QUERY_VIBRATE_AGAIN_TIME = 30000; // = 30s
+	
+	// Vibrate time (in ms):
+	public static long VIBRATE_TIME = 500;
 
 	//Default value for the max number of queries per day:
 	public static int MAX_QUERIES_PER_DAY = 10;

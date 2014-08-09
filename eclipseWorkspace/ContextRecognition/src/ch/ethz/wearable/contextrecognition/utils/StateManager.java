@@ -36,6 +36,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -423,7 +424,9 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
+
 							
+							sendQuery(context);
 							
 							
 						}
@@ -1095,7 +1098,7 @@ public class StateManager extends BroadcastReceiver {
 	
 	private void sendQuery(Context context) {
 
-		long[] vibratePattern = {0, 500}; // Start with 0 delay and vibrate for 500ms
+		long[] vibratePattern = {0, Globals.VIBRATE_TIME};
 		
 		// To cancel the query		
 		Intent dismissIntent = new Intent(Globals.DISMISS_NOTIFICATION);
@@ -1127,10 +1130,15 @@ public class StateManager extends BroadcastReceiver {
 		waitingForFeedback = true;
 		timeQuerySent = System.currentTimeMillis();
 		
-		// Start TimerTask:
+		// Start TimerTask to cancel the query:
 		CancelQueryTask cancelQueryTask = new CancelQueryTask(context);
         Timer cancelTimer = new Timer();
         cancelTimer.schedule(cancelQueryTask, Globals.CANCEL_QUERY_TIME);
+        
+		// Start TimerTask to vibrate again after a certain time:
+        RemindTask remindTask = new RemindTask(context);
+        Timer remindTimer = new Timer();
+        remindTimer.schedule(remindTask, Globals.QUERY_VIBRATE_AGAIN_TIME);
         
         // Decrement the number of queries left (for today):
         numQueriesLeft--;
@@ -1467,8 +1475,6 @@ public class StateManager extends BroadcastReceiver {
 		public CancelQueryTask(Context c) {
 			this.context = c;
 		}
-		
-		
 		public void run() {
 
 			Log.d(TAG, "CancelQueryTask started");
@@ -1478,7 +1484,59 @@ public class StateManager extends BroadcastReceiver {
 				appendToALLog(false, -1, currentPrediction, false, false);
 				
 				dismissNotifitcation(context);
+		}
+	}
+	
+	class RemindTask extends TimerTask {
+		
+		Context context;
+		
+		public RemindTask(Context c) {
+			this.context = c;
+		}
+		public void run() {
 			
+			Log.d(TAG, "VibrateTask started");
+			
+			if (waitingForFeedback == true) {
+				
+				// Dismiss the old query:
+				dismissNotifitcation(context);
+				
+				// And create a new one:
+				Intent dismissIntent = new Intent(Globals.DISMISS_NOTIFICATION);
+				PendingIntent dismiss = PendingIntent.getBroadcast(context, 0, dismissIntent, 0);
+				
+				long[] vibratePattern = {0, Globals.VIBRATE_TIME};
+				
+				NotificationCompat.Builder builder = new NotificationCompat.Builder(
+						context).setSmallIcon(R.drawable.ic_action_help)
+						.setContentTitle("What's your current context?")
+						.setAutoCancel(true)
+						.setWhen(System.currentTimeMillis())
+						.setTicker("What's your current context?")
+						.setVibrate(vibratePattern)
+						.addAction(R.drawable.ic_stat_dismiss, "Dismiss", dismiss);
+				
+				
+				
+				Intent i = new Intent(context, ContextSelection.class);
+				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				
+				Intent notificationIntent = i;
+				
+				PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+						notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+				builder.setContentIntent(contentIntent);
+
+				NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+				manager.notify(Globals.NOTIFICATION_ID_QUERY, builder.build());
+				
+				Vibrator vibrator = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
+				vibrator.vibrate(Globals.VIBRATE_TIME);
+				
+				this.cancel();
+			}
 		}
 	}
 	
