@@ -15,9 +15,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.Map.Entry;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -42,6 +42,7 @@ import android.util.Log;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
+import ch.ethz.wearable.contextrecognition.activities.MainActivity;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.CompressAndSendData;
@@ -645,6 +646,15 @@ public class StateManager extends BroadcastReceiver {
 							.setWhen(System.currentTimeMillis())
 							.setTicker("Classes could not be added");
 
+					Intent i = new Intent(context, MainActivity.class);
+					i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					
+					Intent notificationIntent = i;
+					
+					PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+							notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+					builder.setContentIntent(contentIntent);
+					
 					NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 					manager.notify(Globals.NOTIFICATION_ID_CLASSES_NOT_ADDED, builder.build());	
 				}
@@ -735,8 +745,19 @@ public class StateManager extends BroadcastReceiver {
 							.setWhen(System.currentTimeMillis())
 							.setTicker("Classes could not be added");
 
-					NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-					manager.notify(Globals.NOTIFICATION_ID_CLASSES_NOT_ADDED, builder.build());	
+					Intent i = new Intent(context, MainActivity.class);
+					i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					
+					Intent notificationIntent = i;
+					
+					PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+							notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+					builder.setContentIntent(contentIntent);
+					
+					NotificationManager manager = (NotificationManager) context
+							.getSystemService(Context.NOTIFICATION_SERVICE);
+					manager.notify(Globals.NOTIFICATION_ID_CLASSES_NOT_ADDED, 
+							builder.build());	
 				}
 				
 				// Display Toast if we have to wait for the server:
@@ -834,8 +855,18 @@ public class StateManager extends BroadcastReceiver {
 						.setWhen(System.currentTimeMillis())
 						.setTicker("Server problems: new context class could not be added");
 
+				Intent i = new Intent(context, MainActivity.class);
+				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				
+				Intent notificationIntent = i;
+				
+				PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+						notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+				builder.setContentIntent(contentIntent);
+				
 				NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-				manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());				
+				manager.notify(Globals.NOTIFICATION_ID_STANDARD, builder.build());				
+				
 				
 			}
 			
@@ -869,8 +900,17 @@ public class StateManager extends BroadcastReceiver {
 						.setWhen(System.currentTimeMillis())
 						.setTicker("Server problems: new context class could not be added");
 
+				Intent i = new Intent(context, MainActivity.class);
+				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				
+				Intent notificationIntent = i;
+				
+				PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+						notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+				builder.setContentIntent(contentIntent);
+				
 				NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-				manager.notify(Globals.NOTIFICATION_ID_FILE_TRANSFER, builder.build());
+				manager.notify(Globals.NOTIFICATION_ID_STANDARD, builder.build());
 				
 			}
 		}
@@ -1077,16 +1117,9 @@ public class StateManager extends BroadcastReceiver {
 		
 		Intent notificationIntent = i;
 		
-//		if (notificationIntent == null) {
-//			Log.e(TAG, "Notification intent could not be initialized, as callContextSelectionActivity returned null");
-//			return;
-//		}
-
-		
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
 				notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		builder.setContentIntent(contentIntent);
-
 
 		NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		manager.notify(Globals.NOTIFICATION_ID_QUERY, builder.build());
@@ -1631,6 +1664,15 @@ public class StateManager extends BroadcastReceiver {
 				.setWhen(System.currentTimeMillis())
 				.setTicker("Changed model successfully");
 
+		Intent i = new Intent(context, MainActivity.class);
+		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		
+		Intent notificationIntent = i;
+		
+		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+				notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		builder.setContentIntent(contentIntent);
+		
 		NotificationManager manager = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 		manager.notify(Globals.NOTIFICATION_ID_STANDARD,
