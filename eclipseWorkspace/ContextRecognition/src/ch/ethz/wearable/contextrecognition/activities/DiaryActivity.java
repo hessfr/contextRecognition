@@ -156,7 +156,8 @@ public class DiaryActivity extends ActionBarActivity {
     	}
     	for(int i=0; i<t.length; i++) {
     		double percentage = 100 * totalCounts[i] / ((double) totalSum);
-    		contextClasses[i] = contextClasses[i] + " " + String.format("%.1f",percentage) + "%";
+    		contextClasses[i] = contextClasses[i] + " " + Math.round(percentage) + "%";
+//    		contextClasses[i] = contextClasses[i] + " " + String.format("%.1f",percentage) + "%";
     	}
 
     	PieGraph pg = (PieGraph) findViewById(R.id.piegraph);
