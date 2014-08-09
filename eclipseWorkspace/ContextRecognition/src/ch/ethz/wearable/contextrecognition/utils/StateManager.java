@@ -80,7 +80,8 @@ public class StateManager extends BroadcastReceiver {
 	private static String prevPredictionString = "";
 	private static String[] classNameArray;
 	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
-	private static ArrayList<Integer> totalCount; // contains number of total predictions for each class (for plotting)
+	private static ArrayList<Integer> totalCount; // contains number of total predictions for each class
+	private static int totalSilenceCount; // contains number silences predictions
 	
 	// ----- Variables needed to calculate the queryCriteria: -----
 	private static long prevTime = -1000000;
@@ -217,6 +218,8 @@ public class StateManager extends BroadcastReceiver {
 								numQueriesLeft = appData.get_numQueriesLeft();
 								
 								totalCount = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
+								SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+								totalSilenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
 
 							} else {
 								/*
@@ -248,6 +251,8 @@ public class StateManager extends BroadcastReceiver {
 								for(int i=0; i<classNameArray.length; i++) {
 									totalCount.add(0);
 								}
+								
+								totalSilenceCount = 0;
 
 								resetQueriesLeft(context);
 
@@ -470,6 +475,14 @@ public class StateManager extends BroadcastReceiver {
 					} else {
 						
 						predictionString = Globals.SILENCE; 
+						
+						// Increase the number of sample predicted as silent (for plotting)
+						SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+						totalSilenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
+						totalSilenceCount++;
+						SharedPreferences.Editor editor = mPrefs.edit();
+						editor.putInt(Globals.SILENCE_COUNTS, totalSilenceCount);
+						editor.commit();
 						
 						// When day changes, create the new log files and reset the recording start time:
 						dayChangeTasks(context);
@@ -1637,7 +1650,7 @@ public class StateManager extends BroadcastReceiver {
 		} else { // Initialize the buffers etc. if they are not initialized yet:
 			
 			// Load data from JSON file from external storage if it already exists:
-			if (Globals.APP_DATA_FILE.exists()) { //TODO: can this happen here???
+			if (Globals.APP_DATA_FILE.exists()) {
 				Log.i(TAG, "Loading app data from JSON file");
 				
 				AppData appData = readAppData();
@@ -1651,6 +1664,9 @@ public class StateManager extends BroadcastReceiver {
 				numQueriesLeft = appData.get_numQueriesLeft();
 				
 				totalCount = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
+				
+				SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+				totalSilenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
 
 			} else {
 				/*
@@ -1681,6 +1697,9 @@ public class StateManager extends BroadcastReceiver {
 				for(int i=0; i<newClassnames.length; i++) {
 					totalCount.add(0);
 				}
+				
+				SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+				totalSilenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
 
 				resetQueriesLeft(context);
 				

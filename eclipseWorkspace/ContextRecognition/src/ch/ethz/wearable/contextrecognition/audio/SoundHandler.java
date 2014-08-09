@@ -50,7 +50,7 @@ public class SoundHandler extends Thread {
 	private static int PREDICTION_LENGTH = 32256;
 	private static int CHUNKS_PER_PREDICTION = PREDICTION_LENGTH/BUFFER_LENGTH;
 	private short[] predictionBuffer;
-	private boolean[] silenceDetectionBuffer = new boolean[CHUNKS_PER_PREDICTION]; // true means silent
+	private boolean[] silenceDetectionBuffer = new boolean[CHUNKS_PER_PREDICTION]; // true equals silent
 	private boolean predictionDataAvailable = false;
 	
 	SharedPreferences mPrefs;

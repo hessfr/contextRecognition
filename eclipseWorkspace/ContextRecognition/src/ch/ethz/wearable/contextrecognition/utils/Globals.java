@@ -286,6 +286,7 @@ public class Globals {
 	public static final String CONTEXT_CLASSES = "contextClasses";
 	public static final String CONTEXT_CLASSES_SERVER = "contextClassesServer";
 	public static final String CLASS_COUNTS = "classCounts";
+	public static final String SILENCE_COUNTS = "silenceCounts";
 	public static final String LASTEST_RECORDING_TIMESTAMP = "lastestRecordingTimestamp";
 	public static final String CLASSES_BEING_ADDED = "classesBeingAdded";
 	public static final String CLASSES_BEING_REMOVED = "classesBeingRemoved";

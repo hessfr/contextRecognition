@@ -1,9 +1,13 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -11,8 +15,10 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -37,6 +43,10 @@ import com.echo.holographlibrary.PieSlice;
 public class DiaryActivity extends ActionBarActivity {
 	
 	private static final String TAG = "DiaryAcitivty";
+	
+	Context context = this;
+	
+	private static double PREDICTION_WINDOW = 2.016; // in seconds
 	
 	ListView legend;
 	TextView recordingTimeTV;
@@ -71,14 +81,35 @@ public class DiaryActivity extends ActionBarActivity {
 					Toast.LENGTH_LONG).show();
         	finish();
         }
-        
 
         recordingTimeTV = (TextView) findViewById(R.id.recordingTime);
         silentTimeTV = (TextView) findViewById(R.id.silentTime);
         
-        recordingTimeTV.setText("3:30h\ntotal recording time");
+        int totalPredSum = 0;
+        for (int i : totalCounts) {
+        	totalPredSum += i;
+        }
+        double totalPredTime = totalPredSum * PREDICTION_WINDOW;
         
-        silentTimeTV.setText("30min\nrecorded silences");
+        SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		int silenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
+        double totalSilenceTime = silenceCount * PREDICTION_WINDOW;
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        
+        double totalRecTime = totalPredTime + totalSilenceTime; // Total recording time in seconds
+        
+        Log.i(TAG, "total rec time: " + totalRecTime);
+        
+        Date totalRecDate = new Date((long) totalRecTime*1000);
+        String totalRecTimeString = df.format(totalRecDate);
+        recordingTimeTV.setText(totalRecTimeString + "h\nin total");
+
+        Log.i(TAG, "total silences time: " + totalSilenceTime);
+        
+        Date totalSilenceDate = new Date((long) totalSilenceTime*1000);
+        String silenceTimeString = df.format(totalSilenceDate);
+        silentTimeTV.setText(silenceTimeString + "h\nsilences");
         
     }
     

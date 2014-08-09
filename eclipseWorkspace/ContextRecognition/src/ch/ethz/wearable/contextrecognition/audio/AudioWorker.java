@@ -134,7 +134,6 @@ public class AudioWorker extends IntentService {
 						return;
 					}
 					
-					// Call handle data from SoundHandler class
 					super.handleData(data, silenceBuffer);
 
 					// Check if loudness of all chunks in the 2s sequence is below silence threshold:
