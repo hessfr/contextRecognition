@@ -39,6 +39,8 @@ public class DiaryActivity extends ActionBarActivity {
 	private static final String TAG = "DiaryAcitivty";
 	
 	ListView legend;
+	TextView recordingTimeTV;
+	TextView silentTimeTV;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +73,13 @@ public class DiaryActivity extends ActionBarActivity {
         }
         
 
+        recordingTimeTV = (TextView) findViewById(R.id.recordingTime);
+        silentTimeTV = (TextView) findViewById(R.id.silentTime);
+        
+        recordingTimeTV.setText("3:30h\ntotal recording time");
+        
+        silentTimeTV.setText("30min\nrecorded silences");
+        
     }
     
     @Override
