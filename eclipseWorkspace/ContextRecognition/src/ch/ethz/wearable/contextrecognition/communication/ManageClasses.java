@@ -235,6 +235,8 @@ public class ManageClasses extends IntentService {
 //			    			Log.i(TAG, tmp2[i]);
 //			    		}
 			    		
+			    		handler.post(new DisplayToast(getBaseContext(), "New model will be trained on"
+			    				+ " our server. This might take a while"));
 			    		
 			    	} else {
 			    		Log.e(TAG, "Invalid response received after ManageClasses POST request");
