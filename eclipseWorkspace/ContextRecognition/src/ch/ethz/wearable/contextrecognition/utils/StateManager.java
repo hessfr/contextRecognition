@@ -426,8 +426,6 @@ public class StateManager extends BroadcastReceiver {
 							
 
 							
-							sendQuery(context);
-							
 							
 						}
 						
@@ -437,7 +435,7 @@ public class StateManager extends BroadcastReceiver {
 						 * for the predicted one and save to preferences (for plotting):
 						 */
 						totalCount.set(currentPrediction, (totalCount.get(currentPrediction) + 1));
-						Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount); //TODO: this can also be done every minute instead of every 2sec
+						Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount);
 						
 						// Put the current prediction string to the preferences (workaround!):
 						mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -1745,6 +1743,15 @@ public class StateManager extends BroadcastReceiver {
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB) // API 11
 	private static <T> void executeModelAdaption(Context context, ArrayList<double[]> buffer, int label,
 			onModelAdaptionCompleted listener) {
+		
+		prevClassnames = new String[classNameArray.length];
+		// Fill the prevClassnames array with the current class names:
+		for(int i=0; i<classNameArray.length; i++) {
+
+			prevClassnames[i] = classNameArray[i];
+			
+		}
+		
 		ModelAdaptor modelAdaptor = new ModelAdaptor(buffer, label, listener);
 	    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
 	    	modelAdaptor.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, context);
