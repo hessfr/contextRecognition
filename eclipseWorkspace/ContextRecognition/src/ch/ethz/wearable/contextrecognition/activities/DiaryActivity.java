@@ -6,7 +6,9 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
@@ -43,6 +45,9 @@ public class DiaryActivity extends ActionBarActivity {
         todayCotalCounts = new Integer[t.size()];
         t.toArray(todayCotalCounts);
         
+        SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		int silenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
+        
         boolean startViewPager = true;
         
         if ((todayContextClasses == null) || (t == null)) {
@@ -77,7 +82,7 @@ public class DiaryActivity extends ActionBarActivity {
             viewPager = (ViewPager) findViewById(R.id.pager);
             // Pass results to ViewPagerAdapter Class
             
-            adapter = new ViewPagerAdapter(DiaryActivity.this, todayContextClasses, todayCotalCounts);
+            adapter = new ViewPagerAdapter(DiaryActivity.this, todayContextClasses, todayCotalCounts, silenceCount);
             // Binds the Adapter to the ViewPager
             viewPager.setAdapter(adapter);
             viewPager.setCurrentItem(adapter.getCount());

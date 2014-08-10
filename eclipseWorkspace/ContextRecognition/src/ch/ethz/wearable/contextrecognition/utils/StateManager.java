@@ -434,7 +434,7 @@ public class StateManager extends BroadcastReceiver {
 							
 							
 							Calendar cal = Calendar.getInstance();
-							cal.add(Calendar.DATE, -1);
+							cal.add(Calendar.DATE, +10);
 							Date currentLocalTime = cal.getTime();
 							
 							persistPredictionData(currentLocalTime);

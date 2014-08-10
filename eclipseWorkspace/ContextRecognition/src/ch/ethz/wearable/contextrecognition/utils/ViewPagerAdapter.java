@@ -1,8 +1,12 @@
 package ch.ethz.wearable.contextrecognition.utils;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -11,9 +15,7 @@ import java.util.TimeZone;
 import org.apache.commons.lang3.ArrayUtils;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -26,10 +28,15 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.R;
+import ch.ethz.wearable.contextrecognition.data.HistoricPredictions;
 
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
+import com.google.gson.Gson;
 
+/*
+ * Pager adapter for the ViewPager in the diary activity
+ */
 public class ViewPagerAdapter extends PagerAdapter {
 
 	private static final String TAG = "ViewPagerAdapter";
@@ -43,26 +50,63 @@ public class ViewPagerAdapter extends PagerAdapter {
 	Context context;
     LayoutInflater inflater;
     
-    String[] todayContextClasses;
-    Integer[] todayCotalCounts;
+    HistoricPredictions historicPredictions;
     
-    private static final int NUM_PAGES = 5; //TODO
- 
-    public ViewPagerAdapter(Context context, String[] todayContextClasses, Integer[] todayCotalCounts) {
+    public ViewPagerAdapter(Context context, String[] todayContextClasses,
+    		Integer[] todayCotalCounts, Integer todaySilenceCount) {
         this.context = context;
-        this.todayContextClasses = todayContextClasses;
-        this.todayCotalCounts = todayCotalCounts;
+        
+		Gson gson2 = new Gson();
+		
+		if(Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
+			
+			Log.d(TAG,"JSON file found");
+			
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(Globals.HISTORIC_PREDICTIONS_FILE));
+			
+				this.historicPredictions = gson2.fromJson(br, HistoricPredictions.class);
+				
+			} catch (IOException e) {
+				this.historicPredictions = null;
+				Log.e(TAG,"Couldn't open JSON file");
+				e.printStackTrace();
+			}
+		} else {
+			this.historicPredictions = null;
+			Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
+        }
+		
+		if (this.historicPredictions != null) {
+			
+			// Add the value from today:
+			this.historicPredictions.append_to_context_class_list(todayContextClasses);
+			this.historicPredictions.append_to_prediction_list(new ArrayList<Integer>(Arrays.asList(todayCotalCounts)));
+			this.historicPredictions.append_to_silence_list(todaySilenceCount);
+			
+			Calendar cal = Calendar.getInstance();
+			Date today = cal.getTime();
+			this.historicPredictions.append_to_date_list(today);
+			
+		} else {
+			Log.i(TAG, "histRead is null");
+		}
     }
  
     @Override
     public int getCount() {
-        return NUM_PAGES;
+        return this.historicPredictions.get_size();
     }
     
     @Override
     public String getPageTitle(int position) {
     	
-    	return "title";
+    	Date date = this.historicPredictions.get_date_list().get(position);
+    	
+    	SimpleDateFormat df = new SimpleDateFormat("EEE, MMM d");
+		String dateString = df.format(date);
+    	
+    	return dateString;
     }
  
     @Override
@@ -78,11 +122,18 @@ public class ViewPagerAdapter extends PagerAdapter {
         View itemView = inflater.inflate(R.layout.viewpager_diary_item, container,
                 false);
  
+        ArrayList<String> tmpContextClassesList = this.historicPredictions.get_context_class_list().get(position);
+        ArrayList<Integer> tmpPredictionList = this.historicPredictions.get_prediction_list().get(position);
+        
+        String[] contextClasses = tmpContextClassesList.toArray(new String[tmpContextClassesList.size()]);
+        Integer[] totalCounts = tmpPredictionList.toArray(new Integer[tmpPredictionList.size()]);
+        Integer silenceCount = this.historicPredictions.get_silence_list().get(position);
+        
         
         legend = (ListView) itemView.findViewById(R.id.listView1);
         
-        if (todayContextClasses.length == todayCotalCounts.length) {
-        	createChart(itemView, todayCotalCounts, todayContextClasses);
+        if (contextClasses.length == totalCounts.length) {
+        	createChart(itemView, totalCounts, contextClasses);
         } else {
         	Log.e(TAG, "Diary activity not opened, because new classes not fully incorporated yet");
         }
@@ -91,13 +142,11 @@ public class ViewPagerAdapter extends PagerAdapter {
         silentTimeTV = (TextView) itemView.findViewById(R.id.silentTime);
         
         int totalPredSum = 0;
-        for (int i : todayCotalCounts) {
+        for (int i : totalCounts) {
         	totalPredSum += i;
         }
         double totalPredTime = totalPredSum * PREDICTION_WINDOW;
         
-        SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-		int silenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
         double totalSilenceTime = silenceCount * PREDICTION_WINDOW;
         SimpleDateFormat df = new SimpleDateFormat("HH:mm");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -111,7 +160,6 @@ public class ViewPagerAdapter extends PagerAdapter {
         Date totalSilenceDate = new Date((long) totalSilenceTime*1000);
         String silenceTimeString = df.format(totalSilenceDate);
         silentTimeTV.setText(silenceTimeString + "h\nsilence");
-        
         
 
  
