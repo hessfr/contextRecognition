@@ -292,6 +292,9 @@ public class Globals {
 	public static final String LASTEST_RECORDING_TIMESTAMP = "lastestRecordingTimestamp";
 	public static final String CLASSES_BEING_ADDED = "classesBeingAdded";
 	public static final String CLASSES_BEING_REMOVED = "classesBeingRemoved";
+	public static final String DATE_FIRST_STARTED = "dateFirstStarted"; // For persisting historical predictions
+	public static final String DATE_LAST_PERSISTED = "dateLastPersisted"; // For persisting historical predictions
+	public static final String DATE_LAST_RECORDED = "dateLastPersisted"; // For persisting historical predictions
 	
 	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	

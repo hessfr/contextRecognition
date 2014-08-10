@@ -433,12 +433,10 @@ public class StateManager extends BroadcastReceiver {
 							//TODO
 							
 							
-							Calendar cal = Calendar.getInstance();
-							cal.add(Calendar.DATE, +10);
-							Date currentLocalTime = cal.getTime();
-							
-							persistPredictionData(currentLocalTime);
-
+//							// Persist the predictionData:
+//							Calendar cal = Calendar.getInstance();
+//							cal.add(Calendar.DATE, -1);
+//							Date date = cal.getTime();
 
 							
 							
@@ -461,6 +459,12 @@ public class StateManager extends BroadcastReceiver {
 						
 						// When day changes, create the new log files and reset the recording start time:
 						dayChangeTasks(context);
+						
+						/*
+						 *  Call method to persist the prediction data (it will only persist, if a day is
+						 *  completely finished):
+						 */
+						persistPredictionData(context);
 						
 						// Save to log file and send broadcast to change text, if prediction has changed
 						if (!predictionString.equals(prevPredictionString)) {
@@ -1342,7 +1346,7 @@ public class StateManager extends BroadcastReceiver {
 				Log.e(TAG, "Writing to GT log file failed");
 				e.printStackTrace();
 			}
-
+			
 		}
 		
 	}
@@ -1436,6 +1440,7 @@ public class StateManager extends BroadcastReceiver {
 		AppData appData = new AppData(initThresSet, thresSet, feedbackReceived, 
 				threshold, initThresBuffer, thresBuffer, thresQueriedInterval, numQueriesLeft);
 		
+		
 		String str = new Gson().toJson(appData);
 		
 		if(!str.equals("{}")) { //Only write to file, if string is not empty
@@ -1458,149 +1463,189 @@ public class StateManager extends BroadcastReceiver {
 	}
 	
 	/*
-	 * Save the prediction results (total numbers) from the last day, so that we can plot them
+	 * Save the prediction results (total numbers) from the last day, so that we can plot them. 
+	 * After that reset the values, so that we start counting at zero on the new day.
 	 * 
-	 * Date parameter has to be the date to when the predictions were made (normally yesterday...)
+	 * Call this method whenever a new prediction arrives
 	 */
-	private void persistPredictionData(Date date) {
+	private void persistPredictionData(Context context) {
 		
+		boolean persistData = false;
 		
-		//----------- writing --------------
+		Calendar cal = Calendar.getInstance();
+		Date today = cal.getTime();
 		
+		SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		totalSilenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
 		
-		if(!Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
+		long tmpFirstStarted = mPrefs.getLong(Globals.DATE_FIRST_STARTED, -1);
+		long tmpLastRecorded = mPrefs.getLong(Globals.DATE_LAST_RECORDED, -1);
+		Date lastRecorded = new Date(tmpLastRecorded);
+		
+		if (tmpFirstStarted != -1) {
 			
-			// If the file doesn't exists yet, create a completely new one:
-			HistoricPredictions historicPredictions = new HistoricPredictions(totalCount, 
-					totalSilenceCount, classNameArray, date);
+			Date firstStarted = new Date(tmpFirstStarted);
 			
-			String str = new Gson().toJson(historicPredictions);
-			
-			if(!str.equals("{}")) { //Only write to file, if string is not empty
-				FileOutputStream f = null;
-				try {
-					f = new FileOutputStream(Globals.HISTORIC_PREDICTIONS_FILE);
-					
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-				try {
-					
-					f.write(str.getBytes());
-					f.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} else {
+			/*
+			 *  lastPersisted refers to the date on which the data was recorded, not the day when we write the
+			 *  data to the storage (this is always later!) 
+			 */
+			long tmpLastPersisted = mPrefs.getLong(Globals.DATE_LAST_PERSISTED, -1);
+			if (tmpLastPersisted != -1) {
 				
-				Log.e(TAG, "Historic predictions could not be persisted, "
-						+ "as generated JSON string was empty");
+				/*
+				 *  Data has already been persisted before. So we only want to persist, if 
+				 *  lastPersisted != yesterday
+				 */
+				Date lastPersisted = new Date(tmpLastPersisted);
+				Calendar calLastPersisted = Calendar.getInstance();
+				calLastPersisted.setTime(lastPersisted);
+				Calendar calFirstStarted = Calendar.getInstance();
+				calFirstStarted.setTime(firstStarted);
+				if (calLastPersisted.get(Calendar.DAY_OF_YEAR) != calFirstStarted.get(Calendar.DAY_OF_YEAR)) {
+					
+					persistData = true;
+					
+				}
+				
+				
+			} else {
+				/*
+				 *  Data hasn't been persisted before, so we want to persist if we finished recording
+				 *  a whole day, i.e. if today is NOT the DATE_FIRST_STARTED
+				 */
+				Calendar calToday = Calendar.getInstance();
+				calToday.setTime(today);
+				Calendar calFirstStarted = Calendar.getInstance();
+				calFirstStarted.setTime(firstStarted);
+				if (calToday.get(Calendar.DAY_OF_YEAR) != calFirstStarted.get(Calendar.DAY_OF_YEAR)) {
+					
+					persistData = true;
+					
+				}
 			}
+			
 		} else {
 			
-			// If the file already exisists, we need to read it in and just append the newest values:
-			Gson gson = new Gson();
-			HistoricPredictions histRead;
-
-			if(Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
-				
-				Log.d(TAG,"JSON file found");
-				
-				try {
-					BufferedReader br = new BufferedReader(new FileReader(Globals.HISTORIC_PREDICTIONS_FILE));
-				
-					histRead = gson.fromJson(br, HistoricPredictions.class);
-					
-				} catch (IOException e) {
-					histRead = null;
-					Log.e(TAG,"Couldn't open JSON file");
-					e.printStackTrace();
-				}
-			} else {
-				histRead = null;
-				Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
-	        }
+			/*
+			 *  First date hasn't been set yet, so initialize it to today. We don't have to stored
+			 *  data here, as we just started using the app
+			 */
+			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putLong(Globals.DATE_FIRST_STARTED, today.getTime());
+			editor.commit();
 			
-			if (histRead != null) {
-				// Append elements to the HistoricPredictions object:
-				histRead.append_to_prediction_list(totalCount);
-				histRead.append_to_silence_list(totalSilenceCount);
-				histRead.append_to_context_class_list(classNameArray);
-				histRead.append_to_date_list(date);
-				
-				String str = new Gson().toJson(histRead);
-				
-				if(!str.equals("{}")) { // Only write to file, if string is not empty
-				FileOutputStream f = null;
-				try {
-					f = new FileOutputStream(Globals.HISTORIC_PREDICTIONS_FILE);
-					
-				} catch (FileNotFoundException e) {
-					
-					Log.e(TAG, "App data file to store JSON not found");
-					e.printStackTrace();
-				}
-				try {
-					
-					f.write(str.getBytes());
-					f.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} else {
-				Log.i(TAG, "histRead is null");
-				} 
-			}
-		
+			Log.i(TAG, "Date first started set");
+			
 		}
 		
+		if (persistData == true) {
+			if(!Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
+				
+				// If the file doesn't exists yet, create a completely new one:
+				HistoricPredictions historicPredictions = new HistoricPredictions(totalCount, 
+						totalSilenceCount, classNameArray, lastRecorded);
+				
+				String str = new Gson().toJson(historicPredictions);
+				
+				if(!str.equals("{}")) { //Only write to file, if string is not empty
+					FileOutputStream f = null;
+					try {
+						f = new FileOutputStream(Globals.HISTORIC_PREDICTIONS_FILE);
+						
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					}
+					try {
+						
+						f.write(str.getBytes());
+						f.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
+					
+					Log.e(TAG, "Historic predictions could not be persisted, "
+							+ "as generated JSON string was empty");
+				}
+			} else {
+				
+				// If the file already exists, we need to read it in and just append the newest values:
+				Gson gson = new Gson();
+				HistoricPredictions histRead;
+
+				if(Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
+					
+					Log.d(TAG,"JSON file found");
+					
+					try {
+						BufferedReader br = new BufferedReader(new FileReader(Globals.HISTORIC_PREDICTIONS_FILE));
+					
+						histRead = gson.fromJson(br, HistoricPredictions.class);
+						
+					} catch (IOException e) {
+						histRead = null;
+						Log.e(TAG,"Couldn't open JSON file");
+						e.printStackTrace();
+					}
+				} else {
+					histRead = null;
+					Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
+		        }
+				
+				if (histRead != null) {
+					// Append elements to the HistoricPredictions object:
+					histRead.append_to_prediction_list(totalCount);
+					histRead.append_to_silence_list(totalSilenceCount);
+					histRead.append_to_context_class_list(classNameArray);
+					histRead.append_to_date_list(lastRecorded);
+					
+					String str = new Gson().toJson(histRead);
+					
+					if(!str.equals("{}")) { // Only write to file, if string is not empty
+					FileOutputStream f = null;
+					try {
+						f = new FileOutputStream(Globals.HISTORIC_PREDICTIONS_FILE);
+						
+					} catch (FileNotFoundException e) {
+						
+						Log.e(TAG, "App data file to store JSON not found");
+						e.printStackTrace();
+					}
+					try {
+						
+						f.write(str.getBytes());
+						f.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				} else {
+					Log.i(TAG, "histRead is null");
+					} 
+				}
+			
+			}
+			
+			// Reset values to zero
+			for(int i=0; i<totalCount.size(); i++) {
+				totalCount.set(i, 0);
+			}
+			Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount);
+			totalSilenceCount = 0;
+			
+			Log.i(TAG, "Data persisted");
+			
+		} else {
+			// Do nothing
+		}
 		
-		
-//		// -----------reading --------------
-//		Gson gson2 = new Gson();
-//		
-//		HistoricPredictions histRead2;
-//
-//		if(Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
-//			
-//			Log.d(TAG,"JSON file found");
-//			
-//			try {
-//				BufferedReader br = new BufferedReader(new FileReader(Globals.HISTORIC_PREDICTIONS_FILE));
-//			
-//				histRead2 = gson2.fromJson(br, HistoricPredictions.class);
-//				
-//			} catch (IOException e) {
-//				histRead2 = null;
-//				Log.e(TAG,"Couldn't open JSON file");
-//				e.printStackTrace();
-//			}
-//		} else {
-//			histRead2 = null;
-//			Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
-//        }
-//		
-//		if (histRead2 != null) {
-//			Log.i(TAG, "Size: " + histRead2.get_size());
-//			Log.i(TAG, "prediction element: " + histRead2.get_prediction_list().get(1));
-//			Log.i(TAG, "date: " + histRead2.get_date_list().get(1).toString());
-//			Log.i(TAG, "classList element: " + histRead2.get_context_class_list().get(1));
-//		} else {
-//			Log.i(TAG, "histRead is null");
-//		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		/*
+		 * By saving the date when the last data was recorded, we know to which day
+		 * we have to assign the data when we detect a day change
+		 */
+		SharedPreferences.Editor editor = mPrefs.edit();
+		editor.putLong(Globals.DATE_LAST_RECORDED, today.getTime());
+		editor.commit();
 	}
 	
 	

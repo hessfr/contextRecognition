@@ -53,7 +53,7 @@ public class ViewPagerAdapter extends PagerAdapter {
     HistoricPredictions historicPredictions;
     
     public ViewPagerAdapter(Context context, String[] todayContextClasses,
-    		Integer[] todayCotalCounts, Integer todaySilenceCount) {
+    		Integer[] todayTotalCounts, Integer todaySilenceCount) {
         this.context = context;
         
 		Gson gson2 = new Gson();
@@ -74,14 +74,14 @@ public class ViewPagerAdapter extends PagerAdapter {
 			}
 		} else {
 			this.historicPredictions = null;
-			Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
+			Log.i(TAG, "Historic predictions file does not exist, only stats from today will be shown");
         }
 		
 		if (this.historicPredictions != null) {
 			
 			// Add the value from today:
 			this.historicPredictions.append_to_context_class_list(todayContextClasses);
-			this.historicPredictions.append_to_prediction_list(new ArrayList<Integer>(Arrays.asList(todayCotalCounts)));
+			this.historicPredictions.append_to_prediction_list(new ArrayList<Integer>(Arrays.asList(todayTotalCounts)));
 			this.historicPredictions.append_to_silence_list(todaySilenceCount);
 			
 			Calendar cal = Calendar.getInstance();
@@ -89,13 +89,26 @@ public class ViewPagerAdapter extends PagerAdapter {
 			this.historicPredictions.append_to_date_list(today);
 			
 		} else {
-			Log.i(TAG, "histRead is null");
+			Log.i(TAG, "historicPredictions is null, initializing array only with data from today");
+			
+			Calendar cal = Calendar.getInstance();
+			Date date = cal.getTime();
+			
+			// If the file doesn't exists yet, create a completely new one:
+			historicPredictions = new HistoricPredictions(new ArrayList<Integer>(Arrays.asList(todayTotalCounts)), 
+					todaySilenceCount, todayContextClasses, date);
+			
 		}
     }
  
     @Override
     public int getCount() {
-        return this.historicPredictions.get_size();
+    	if (this.historicPredictions != null) {
+    		return this.historicPredictions.get_size();
+    	} else {
+    		return 1;
+    	}
+        
     }
     
     @Override
@@ -121,14 +134,13 @@ public class ViewPagerAdapter extends PagerAdapter {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View itemView = inflater.inflate(R.layout.viewpager_diary_item, container,
                 false);
- 
+
         ArrayList<String> tmpContextClassesList = this.historicPredictions.get_context_class_list().get(position);
         ArrayList<Integer> tmpPredictionList = this.historicPredictions.get_prediction_list().get(position);
         
         String[] contextClasses = tmpContextClassesList.toArray(new String[tmpContextClassesList.size()]);
         Integer[] totalCounts = tmpPredictionList.toArray(new Integer[tmpPredictionList.size()]);
         Integer silenceCount = this.historicPredictions.get_silence_list().get(position);
-        
         
         legend = (ListView) itemView.findViewById(R.id.listView1);
         
