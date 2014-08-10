@@ -52,6 +52,7 @@ import ch.ethz.wearable.contextrecognition.communication.IncorporateNewClassGet;
 import ch.ethz.wearable.contextrecognition.communication.InitModelGet;
 import ch.ethz.wearable.contextrecognition.communication.ManageClassesGet;
 import ch.ethz.wearable.contextrecognition.data.AppData;
+import ch.ethz.wearable.contextrecognition.data.HistoricPredictions;
 import ch.ethz.wearable.contextrecognition.math.ModelAdaptor;
 import ch.ethz.wearable.contextrecognition.math.ModelAdaptor.onModelAdaptionCompleted;
 
@@ -429,7 +430,17 @@ public class StateManager extends BroadcastReceiver {
 						if (testBool == false) {
 							testBool = true;
 							
+							//TODO
+							
+							
+							Calendar cal = Calendar.getInstance();
+							cal.add(Calendar.DATE, -1);
+							Date currentLocalTime = cal.getTime();
+							
+							persistPredictionData(currentLocalTime);
 
+
+							
 							
 							
 						}
@@ -608,7 +619,7 @@ public class StateManager extends BroadcastReceiver {
 		if (intent.getAction().equals(Globals.PERSIST_DATA)) {
 
 			if (variablesInitialized == true) {
-				persistData();
+				persistAppData();
 			}
 
 		}
@@ -1420,7 +1431,7 @@ public class StateManager extends BroadcastReceiver {
 	/*
 	 * Save buffers, threshold values etc periodically to external storage
 	 */
-	private void persistData() {
+	private void persistAppData() {
 		
 		AppData appData = new AppData(initThresSet, thresSet, feedbackReceived, 
 				threshold, initThresBuffer, thresBuffer, thresQueriedInterval, numQueriesLeft);
@@ -1445,6 +1456,153 @@ public class StateManager extends BroadcastReceiver {
 			Log.e(TAG, "Data could not be persisted, as generated JSON string was empty");
 		}
 	}
+	
+	/*
+	 * Save the prediction results (total numbers) from the last day, so that we can plot them
+	 * 
+	 * Date parameter has to be the date to when the predictions were made (normally yesterday...)
+	 */
+	private void persistPredictionData(Date date) {
+		
+		
+		//----------- writing --------------
+		
+		
+		if(!Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
+			
+			// If the file doesn't exists yet, create a completely new one:
+			HistoricPredictions historicPredictions = new HistoricPredictions(totalCount, 
+					totalSilenceCount, classNameArray, date);
+			
+			String str = new Gson().toJson(historicPredictions);
+			
+			if(!str.equals("{}")) { //Only write to file, if string is not empty
+				FileOutputStream f = null;
+				try {
+					f = new FileOutputStream(Globals.HISTORIC_PREDICTIONS_FILE);
+					
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+				try {
+					
+					f.write(str.getBytes());
+					f.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				
+				Log.e(TAG, "Historic predictions could not be persisted, "
+						+ "as generated JSON string was empty");
+			}
+		} else {
+			
+			// If the file already exisists, we need to read it in and just append the newest values:
+			Gson gson = new Gson();
+			HistoricPredictions histRead;
+
+			if(Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
+				
+				Log.d(TAG,"JSON file found");
+				
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(Globals.HISTORIC_PREDICTIONS_FILE));
+				
+					histRead = gson.fromJson(br, HistoricPredictions.class);
+					
+				} catch (IOException e) {
+					histRead = null;
+					Log.e(TAG,"Couldn't open JSON file");
+					e.printStackTrace();
+				}
+			} else {
+				histRead = null;
+				Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
+	        }
+			
+			if (histRead != null) {
+				// Append elements to the HistoricPredictions object:
+				histRead.append_to_prediction_list(totalCount);
+				histRead.append_to_silence_list(totalSilenceCount);
+				histRead.append_to_context_class_list(classNameArray);
+				histRead.append_to_date_list(date);
+				
+				String str = new Gson().toJson(histRead);
+				
+				if(!str.equals("{}")) { // Only write to file, if string is not empty
+				FileOutputStream f = null;
+				try {
+					f = new FileOutputStream(Globals.HISTORIC_PREDICTIONS_FILE);
+					
+				} catch (FileNotFoundException e) {
+					
+					Log.e(TAG, "App data file to store JSON not found");
+					e.printStackTrace();
+				}
+				try {
+					
+					f.write(str.getBytes());
+					f.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				Log.i(TAG, "histRead is null");
+				} 
+			}
+		
+		}
+		
+		
+		
+//		// -----------reading --------------
+//		Gson gson2 = new Gson();
+//		
+//		HistoricPredictions histRead2;
+//
+//		if(Globals.HISTORIC_PREDICTIONS_FILE.exists()) {
+//			
+//			Log.d(TAG,"JSON file found");
+//			
+//			try {
+//				BufferedReader br = new BufferedReader(new FileReader(Globals.HISTORIC_PREDICTIONS_FILE));
+//			
+//				histRead2 = gson2.fromJson(br, HistoricPredictions.class);
+//				
+//			} catch (IOException e) {
+//				histRead2 = null;
+//				Log.e(TAG,"Couldn't open JSON file");
+//				e.printStackTrace();
+//			}
+//		} else {
+//			histRead2 = null;
+//			Log.e(TAG, "File does not exist: " + Globals.APP_DATA_FILE.toString());
+//        }
+//		
+//		if (histRead2 != null) {
+//			Log.i(TAG, "Size: " + histRead2.get_size());
+//			Log.i(TAG, "prediction element: " + histRead2.get_prediction_list().get(1));
+//			Log.i(TAG, "date: " + histRead2.get_date_list().get(1).toString());
+//			Log.i(TAG, "classList element: " + histRead2.get_context_class_list().get(1));
+//		} else {
+//			Log.i(TAG, "histRead is null");
+//		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	}
+	
 	
 	/*
 	 * Read in buffers, thresholds, ... is called when the application is started, to read in values

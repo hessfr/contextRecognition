@@ -73,6 +73,8 @@ public class Globals {
 	
 	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");
 	
+	public static final File HISTORIC_PREDICTIONS_FILE = new File(APP_PATH, "HistoricPredictions.json");
+	
 	public static long RECORDING_START_TIME = 0;
 	
 	public static int NUM_FEATURES = 13; // 12 features if only MFCCs, 13 if MFCCs & log energy

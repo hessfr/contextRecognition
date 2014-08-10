@@ -1,44 +1,24 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBar;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
+import ch.ethz.wearable.contextrecognition.utils.ViewPagerAdapter;
 
-import com.echo.holographlibrary.PieGraph;
-import com.echo.holographlibrary.PieSlice;
-
-
+import com.viewpagerindicator.TitlePageIndicator;
 
 public class DiaryActivity extends ActionBarActivity {
 	
@@ -46,71 +26,67 @@ public class DiaryActivity extends ActionBarActivity {
 	
 	Context context = this;
 	
-	private static double PREDICTION_WINDOW = 2.016; // in seconds
-	
-	ListView legend;
-	TextView recordingTimeTV;
-	TextView silentTimeTV;
+	ViewPager viewPager;
+    PagerAdapter adapter;
+    
+    String[] todayContextClasses;
+    Integer[] todayCotalCounts;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_diary);
- 
-        Log.d(TAG, "onCreate");
         
-        // get action bar   
-        ActionBar actionBar = getSupportActionBar();
- 
-        // Enabling Up / Back navigation
-        actionBar.setDisplayHomeAsUpEnabled(true);
-
-        String[] contextClasses = Globals.getStringArrayPref(this, Globals.CONTEXT_CLASSES);
+        // First check if classes loaded properly already, and finish activity if not:
+        todayContextClasses = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+        ArrayList<Integer> t = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
         
-        ArrayList<Integer> t = Globals.getIntListPref(this, Globals.CLASS_COUNTS);
-        Integer[] totalCounts = new Integer[t.size()];
-        t.toArray(totalCounts);
-
-        legend = (ListView) findViewById(R.id.listView1);
+        todayCotalCounts = new Integer[t.size()];
+        t.toArray(todayCotalCounts);
         
-        if (contextClasses.length == totalCounts.length) {
-        	createChart(totalCounts, contextClasses);
-        } else {
+        boolean startViewPager = true;
+        
+        if ((todayContextClasses == null) || (t == null)) {
         	Log.w(TAG, "Diary activity not opened, because new classes not fully incorporated yet");
-			Toast.makeText(this, (String) "Please wait until new class incorporated",
+			Toast.makeText(context, (String) "Please wait until new class incorporated",
 					Toast.LENGTH_LONG).show();
-        	finish();
+			
+			startViewPager = false;
+        	this.finish();
+        }
+        
+
+        
+        if ((todayContextClasses != null) && (t != null)) {
+        	
+            Integer[] totalCounts = new Integer[t.size()];
+            t.toArray(totalCounts);
+        	
+            if (todayContextClasses.length != totalCounts.length) {
+            	Log.w(TAG, "Diary activity not opened, because new classes not fully incorporated yet");
+    			Toast.makeText(context, (String) "Please wait until new class incorporated",
+    					Toast.LENGTH_LONG).show();
+    			
+    			startViewPager = false;
+            	this.finish();
+            }
         }
 
-        recordingTimeTV = (TextView) findViewById(R.id.recordingTime);
-        silentTimeTV = (TextView) findViewById(R.id.silentTime);
-        
-        int totalPredSum = 0;
-        for (int i : totalCounts) {
-        	totalPredSum += i;
+        if (startViewPager == true) {
+            setContentView(R.layout.viewpager_main);
+            
+            viewPager = (ViewPager) findViewById(R.id.pager);
+            // Pass results to ViewPagerAdapter Class
+            
+            adapter = new ViewPagerAdapter(DiaryActivity.this, todayContextClasses, todayCotalCounts);
+            // Binds the Adapter to the ViewPager
+            viewPager.setAdapter(adapter);
+            viewPager.setCurrentItem(adapter.getCount());
+            
+            //Bind the title indicator to the adapter
+            TitlePageIndicator titleIndicator = (TitlePageIndicator) findViewById(R.id.titles);
+            titleIndicator.setViewPager(viewPager);
+            
         }
-        double totalPredTime = totalPredSum * PREDICTION_WINDOW;
-        
-        SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-		int silenceCount = mPrefs.getInt(Globals.SILENCE_COUNTS, 0);
-        double totalSilenceTime = silenceCount * PREDICTION_WINDOW;
-        SimpleDateFormat df = new SimpleDateFormat("HH:mm");
-        df.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
-        double totalRecTime = totalPredTime + totalSilenceTime; // Total recording time in seconds
-        
-        Log.i(TAG, "total rec time: " + totalRecTime);
-        
-        Date totalRecDate = new Date((long) totalRecTime*1000);
-        String totalRecTimeString = df.format(totalRecDate);
-        recordingTimeTV.setText(totalRecTimeString + "h\nin total");
-
-        Log.i(TAG, "total silences time: " + totalSilenceTime);
-        
-        Date totalSilenceDate = new Date((long) totalSilenceTime*1000);
-        String silenceTimeString = df.format(totalSilenceDate);
-        silentTimeTV.setText(silenceTimeString + "h\nsilences");
-        
     }
     
     @Override
@@ -155,104 +131,7 @@ public class DiaryActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
     
-    private void createChart(final Integer[] t, String[] c) {
-    	
-    	String[] colors = {
-    			
-    			"#E9AB17", "#9DC209", "#C35817", "#966F33", "#566D7E",
-    			"#F87217", "#728C00", "#E55451", "#827839",	"#3090C7", 
-    			"#95B9C7", "#3BB9FF", "#4C4646", "#8EEBEC", "#78866B", 
-    			"#CD7F32", "#52D017", "#966F33", "#566D7E", "#6F4E37", 
-    			"#3090C7", "#438D80", "#566D7E", 
-
-    			};
-    			
-    	
-    	/*
-    	 * From http://stackoverflow.com/questions/112234/sorting-matched-arrays-in-java
-    	 */
-    	Integer[] idx = new Integer[t.length];
-    	for( int i = 0 ; i < idx.length; i++ ) idx[i] = i;              
-    	Arrays.sort(idx, new Comparator<Integer>() {
-    	    public int compare(Integer i1, Integer i2) {                        
-    	        return Double.compare(t[i1], t[i2]);
-    	    }                   
-    	});
-    	ArrayUtils.reverse(idx);
-    	
-    	Integer[] totalCounts = new Integer[t.length];
-    	String[] contextClasses = new String[t.length];
-    	
-    	
-    	for(int i=0; i<totalCounts.length; i++) {
-    		totalCounts[i] = t[idx[i]];
-    		contextClasses[i] = c[idx[i]];
-    	}
-    	
-    	// Calculate the percentage of each context and append it to the strings:
-    	int totalSum = 0;
-    	for(int i=0; i<t.length; i++) {
-    		totalSum += totalCounts[i];
-    	}
-    	for(int i=0; i<t.length; i++) {
-    		double percentage = 100 * totalCounts[i] / ((double) totalSum);
-    		contextClasses[i] = contextClasses[i] + " " + Math.round(percentage) + "%";
-//    		contextClasses[i] = contextClasses[i] + " " + String.format("%.1f",percentage) + "%";
-    	}
-
-    	PieGraph pg = (PieGraph) findViewById(R.id.piegraph);
-    	
-    	for(int i=0; i<totalCounts.length; i++) {
-    		PieSlice slice = new PieSlice();
-			slice.setColor(Color.parseColor(colors[i]));
-    		slice.setValue(1);
-    		pg.addSlice(slice);
-    	}
-
-		int holeSize = 100;
-        pg.setInnerCircleRatio(holeSize);	
-		
-		/*
-		 *  Workaround to avoid the bug, that diagram is not displayed anymore,
-		 *  if only one class:
-		 */
-        for(int i=0; i<totalCounts.length; i++) {
-        	// Add a tiny dummy slice, if there would be only one class:
-    		if (totalCounts[i] == 1) {
-    			PieSlice slice = new PieSlice();
-    			slice.setColor(Color.parseColor("#ffffff"));
-    	        slice.setValue(0.001f);
-    	        pg.addSlice(slice);
-    		}
-        }
-
-        
-		for(int i=0; i<pg.getSlices().size(); i++) {
-			PieSlice s = pg.getSlice(i);
-			if (i<totalCounts.length) {
-				s.setGoalValue(totalCounts[i]);
-			} else {
-				// The dummy slice:
-				s.setGoalValue(0.001f);
-			}
-			
-		}
-            
-        pg.setDuration(2000);
-        pg.setInterpolator(new AccelerateDecelerateInterpolator());
-        pg.animateToGoalValues();
-        
-        
-        // Create legend ListView:
-        final ArrayList<String> list = new ArrayList<String>();
-        for (int i = 0; i < contextClasses.length; ++i) {
-          list.add(contextClasses[i]);
-        }
-        
-        CustomListAdapter listAdapter = new CustomListAdapter(this, 
-        		R.layout.legend_list_element, list, colors);
-        legend.setAdapter(listAdapter);        
-    }
+    
     
     /**
      * Launch Settings activity
@@ -299,52 +178,5 @@ public class DiaryActivity extends ActionBarActivity {
 	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	    app.startActivity(intent);
-    }
-    
-    
-    /*
-     * Code from: http://stackoverflow.com/questions/7361135/how-to-change-color-and-font-on-listview
-     */
-    @SuppressWarnings("rawtypes")
-	private class CustomListAdapter extends ArrayAdapter {
-
-        private Context mContext;
-        private int id;
-        private List <String>items ;
-        private String[] mColors;
-
-        @SuppressWarnings("unchecked")
-		public CustomListAdapter(Context context, int textViewResourceId , List<String> list, String[] colors) 
-        {
-            super(context, textViewResourceId, list);      
-            mColors = colors;
-            mContext = context;
-            id = textViewResourceId;
-            items = list ;
-        }
-
-        @Override
-        public View getView(int position, View v, ViewGroup parent)
-        {
-            View mView = v ;
-            if(mView == null){
-                LayoutInflater vi = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                mView = vi.inflate(id, null);
-            }
-
-            TextView text = (TextView) mView.findViewById(R.id.textView);
-            
-            if(items.get(position) != null )
-            {
-                text.setTextColor(Color.WHITE);
-                text.setText(items.get(position));
-                text.setBackgroundColor(Color.parseColor(mColors[position]));
-                text.setTextSize(18);
-            }
-
-            return mView;
-        }
-
-    }
-    
+    }    
 }
