@@ -1661,7 +1661,7 @@ public class StateManager extends BroadcastReceiver {
 		}
 		
 		/*
-		 * By saving the date when the last data was recorded, we know to which day
+		 * By always saving the date when the last data was recorded, we know to which day
 		 * we have to assign the data when we detect a day change
 		 */
 		SharedPreferences.Editor editor = mPrefs.edit();

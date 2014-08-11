@@ -2,6 +2,7 @@ import numpy as np
 import math
 import csv
 import ipdb as pdb #pdb.set_trace()
+from classifiers import confusionMatrixMulti
 
 """
 Different methods to evaluate the results of the experiment
@@ -57,25 +58,42 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
     # Round every entry to 0.5s:
     for i in range(len(gtList)):
-        gtList[i][0] = 0.5 * math.ceil(2.0 * float(gtList[i][0]))
+        #gtList[i][0] = 0.5 * math.ceil(2.0 * float(gtList[i][0]))
+        gtList[i][0] = round(2 * float(gtList[i][0]))/2
 
     # Find start and stop time, i.e. min and max values:
     tmpArray = np.array(gtList)
     start_time_gt = float(min(tmpArray[:,0]))
     stop_time_gt = float(max(tmpArray[:,0]))
-    
-    y_GT = createGTArray(gtList, classesDict)
+   
+    #print(tmpArray)
 
+    y_GT = createGTArray(gtList, classesDict)
+    
+    #print("Length of y_GT: " + str(len(y_GT)))
+    #print(y_GT)
 
     for i in reversed(range(len(predList))):
         # Don't consider the RECORDING_STARTED entries for now:
         if len(predList[i]) <= 1:
             del predList[i]           
 
-    createPredictionArray(predList, start_time_gt, stop_time_gt, y_GT.shape[0], classesDict)
+    y_pred = createPredictionArray(predList, start_time_gt, 
+    stop_time_gt, y_GT.shape[0], classesDict)
 
+    #print(y_GT)
+    #print(y_pred)
 
+    # The method to plot the confusion matrix, needs a classes dictionary, 
+    # that is NOT bidirectional, so we remove all elements, where the keys
+    # are numbers:
 
+    uniDirectionalClassesDict = {}
+    for key in classesDict.keys():
+        if type(key) is str:
+            uniDirectionalClassesDict[key] = classesDict[key]
+
+    confusionMatrixMulti(y_GT, y_pred, uniDirectionalClassesDict)
 
 def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classesDict):
     """
@@ -93,7 +111,7 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
     #TODO: handle if the last timestamp in the GT wasn't a stop...
 
     offset = start_time_gt
-    print("offset: " + str(offset))
+    #print("offset: " + str(offset))
 
     # First delete all entries that were before the first ground truth label was provided:
     for i in reversed(range(len(predList))):
@@ -111,14 +129,15 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
     # Round every entry to 0.5s:
     for i in range(len(predList)):
         if predList[i][1]:
-            predList[i][1] = 0.5 * math.ceil(2.0 * float(predList[i][1]))
+            #predList[i][1] = 0.5 * math.ceil(2.0 * float(predList[i][1]))
+            predList[i][1] = round(2 * float(predList[i][1]))/2
         if predList[i][2]:
-            predList[i][2] = 0.5 * math.ceil(2.0 * float(predList[i][2]))
-
+            #predList[i][2] = 0.5 * math.ceil(2.0 * float(predList[i][2]))
+            predList[i][2] = round(2 * float(predList[i][2]))/2
 
     length = int(length)
-    print("Length in seconds: " + str((length+1)/2.0))
-    print("Array length: " + str(length))
+    #print("Length in seconds: " + str((length)/2.0))
+    #print("Array length: " + str(length))
 
     y_pred = np.empty(length)
     y_pred.fill(-1)
@@ -130,24 +149,22 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
         if line[2] != "":
             end = int(2 * (float(line[2]) - start_time_gt))
         else:
-            print("End time empty")
+            print("Entry end time empty, changed to " + str(length/2.0))
             end = length - 1
 
         if end >= length:
             #print("End time " + str((end+2.0*start_time_gt)/2.0) + " later than last GT label")
-            print("Index " + str(end) + " out of bound")
+            #print("Entry ended at " + str(end/2.0) + 
+            #"s, changed end time to " + str(length/2.0))
             end = length - 1
 
-        print("start: " + str(start) + " - end: " + str(end))
+        if start < length:
+            y_pred[start:end+1].fill(classesDict[line[0]])
+        else:
+            pass
+            #print("Entry ignore, because it started after the last entry of our GT array")
 
-        y_pred[start:end+1].fill(classesDict[line[0]])
-
-        #print(y_pred)
-        #pdb.set_trace()
-
-    #TODO: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-    print(y_pred)
+    return np.array(y_pred)
 
     
 
