@@ -1495,14 +1495,26 @@ public class StateManager extends BroadcastReceiver {
 				
 				/*
 				 *  Data has already been persisted before. So we only want to persist, if 
-				 *  lastPersisted != yesterday
+				 *  lastPersisted != lastRecorded != today
 				 */
+				Calendar calToday = Calendar.getInstance();
+				calToday.setTime(today);
 				Date lastPersisted = new Date(tmpLastPersisted);
 				Calendar calLastPersisted = Calendar.getInstance();
 				calLastPersisted.setTime(lastPersisted);
-				Calendar calFirstStarted = Calendar.getInstance();
-				calFirstStarted.setTime(firstStarted);
-				if (calLastPersisted.get(Calendar.DAY_OF_YEAR) != calFirstStarted.get(Calendar.DAY_OF_YEAR)) {
+				
+				Calendar calLastRecorded = Calendar.getInstance();
+				calLastRecorded.setTime(lastRecorded);
+				
+				// 
+				if ((calLastPersisted.get(Calendar.DAY_OF_YEAR) != calLastRecorded.get(Calendar.DAY_OF_YEAR))
+						&& (calToday.get(Calendar.DAY_OF_YEAR) != calLastRecorded.get(Calendar.DAY_OF_YEAR))
+						&& (calToday.get(Calendar.DAY_OF_YEAR) != calLastPersisted.get(Calendar.DAY_OF_YEAR))) {
+					
+					Log.i(TAG, "First if: ");
+					Log.i(TAG, "calLastPersisted: " + calLastPersisted.get(Calendar.DAY_OF_YEAR));
+					Log.i(TAG, "calLastRecorded: " + calLastRecorded.get(Calendar.DAY_OF_YEAR));
+					Log.i(TAG, "calToday: " + calToday.get(Calendar.DAY_OF_YEAR));
 					
 					persistData = true;
 					
@@ -1518,7 +1530,12 @@ public class StateManager extends BroadcastReceiver {
 				calToday.setTime(today);
 				Calendar calFirstStarted = Calendar.getInstance();
 				calFirstStarted.setTime(firstStarted);
+				
 				if (calToday.get(Calendar.DAY_OF_YEAR) != calFirstStarted.get(Calendar.DAY_OF_YEAR)) {
+					
+					Log.i(TAG, "Second if: ");
+					Log.i(TAG, "calToday: " + calToday.get(Calendar.DAY_OF_YEAR));
+					Log.i(TAG, "calFirstStarted: " + calFirstStarted.get(Calendar.DAY_OF_YEAR));
 					
 					persistData = true;
 					
@@ -1632,6 +1649,10 @@ public class StateManager extends BroadcastReceiver {
 			}
 			Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount);
 			totalSilenceCount = 0;
+			
+			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putLong(Globals.DATE_LAST_PERSISTED, tmpLastRecorded);
+			editor.commit();
 			
 			Log.i(TAG, "Data persisted");
 			
