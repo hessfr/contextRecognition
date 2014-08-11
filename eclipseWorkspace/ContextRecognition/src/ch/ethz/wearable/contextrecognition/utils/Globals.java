@@ -151,8 +151,8 @@ public class Globals {
 	public static final long MAX_RETRY_NEW_CLASS_ALREADY_DOWNLOADED = 30; // 30 * 2min -> 1h
 	public static final long MAX_RETRY_NEW_CLASS_NOT_DOWNLOADED = 12; // 12 * 15min -> 3h
 	
-	public static final long POLLING_INTERVAL_INITIAL_MODEL = 10 * 60 * 1000; // 10 * 60 * 1000 = 10min
-	public static final long MAX_RETRY_INITIAL_MODEL = 10; // 10 * 10min = 2h
+	public static final long POLLING_INTERVAL_INITIAL_MODEL = 15 * 60 * 1000; // 15 * 60 * 1000 = 15min
+	public static final long MAX_RETRY_INITIAL_MODEL = 24; // 24 * 15min = 6h
 	
 	public static final long POLLING_INTERVAL_UPLOAD = 1 * 3600 * 1000; // 1h
 	public static final long MAX_RETRY_UPLOAD = 5;

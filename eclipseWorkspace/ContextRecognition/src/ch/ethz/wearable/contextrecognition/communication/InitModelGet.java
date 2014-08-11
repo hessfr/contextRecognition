@@ -60,7 +60,7 @@ public class InitModelGet extends IntentService {
 
 		final String filenameOnServer = arg0.getStringExtra(Globals.CONN_INIT_MODEL_GET_FILENAME);
 		final String waitOrNoWait = arg0.getStringExtra(Globals.CONN_INIT_MODEL_GET_WAIT);
-
+		
 		Log.i(TAG, "onHandleIntent");
 
 		long pollingInterval;
