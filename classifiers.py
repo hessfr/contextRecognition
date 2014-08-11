@@ -702,6 +702,9 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
                         horizontalalignment='center',
                         verticalalignment='center')
 
+    # Force the min and max value, so that the colors will have the full range from 0 to 1:
+    pl.clim(0,1)
+
     pl.colorbar()
 
     pl.show()
