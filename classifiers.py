@@ -239,7 +239,7 @@ def trainGMM(featureData):
 
  
     for i in range(n_classes):
-        tmpClf = GMM(n_components=n_comp, covariance_type='full', n_iter=1000)
+        tmpClf = GMM(n_components=n_comp, covariance_type='full', n_iter=500)
         iTmp = (y_train == i)
 
         tmpTrain = X_train[iTmp]
