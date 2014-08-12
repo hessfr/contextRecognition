@@ -74,13 +74,10 @@ private LocationListener mLocationListener = new LocationListener() {
 	            	out.write(str);
 	            	out.close();
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -98,7 +95,6 @@ private LocationListener mLocationListener = new LocationListener() {
         	else
         		mRecFile= new File(Globals.getLogPath(), Globals.NETWORK_FILENAME);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}  
 		

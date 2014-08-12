@@ -68,7 +68,7 @@ public class RecService extends Service {
 		
 		Config.gyroWorker.stop();
 
-		Log.i(TAG, "RecService threads stopped");		
+		Log.i(TAG, "RecService threads stopped");	
 	}
 
 	@Override

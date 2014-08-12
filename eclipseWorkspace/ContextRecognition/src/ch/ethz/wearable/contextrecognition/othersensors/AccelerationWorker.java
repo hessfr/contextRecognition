@@ -74,12 +74,6 @@ private SensorEventListener mAccelerationListener = new SensorEventListener() {
 
     public void onAccelChanged(SensorEvent event)
     {
-        float aX,aY,aZ;
-        //wl.acquire();
-        aX = event.values[0];
-        aY = event.values[1];
-        aZ = event.values[2];
-        
         
 		String str = System.currentTimeMillis()	+ DELIMITER
 		+ event.timestamp   + DELIMITER
@@ -87,7 +81,6 @@ private SensorEventListener mAccelerationListener = new SensorEventListener() {
 		+ event.values[1] 	+ DELIMITER
 		+ event.values[2] 		+ DELIMITER +System.getProperty("line.separator");
 		
-
 		FileOutputStream os;
 		try {
 			os = new FileOutputStream(mRecFile, true);

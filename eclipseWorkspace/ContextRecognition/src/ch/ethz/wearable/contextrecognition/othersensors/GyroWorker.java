@@ -59,19 +59,12 @@ private SensorEventListener mGyroListener = new SensorEventListener() {
     }
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		// TODO Auto-generated method stub
 		
 	}
 };
 
     public void onGyroChanged(SensorEvent event)
     {
-        float gX,gY,gZ;
-        //wl.acquire();
-        gX = event.values[0];
-        gY = event.values[1];
-        gZ = event.values[2];
-        
         
 		String str = System.currentTimeMillis()	+ DELIMITER
 		+ event.timestamp   + DELIMITER
@@ -87,13 +80,10 @@ private SensorEventListener mGyroListener = new SensorEventListener() {
 			out.write(str);
 			out.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -104,7 +94,6 @@ private SensorEventListener mGyroListener = new SensorEventListener() {
         try {
         	mRecFile= new File(Globals.getLogPath(), Globals.GYRO_FILENAME);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
     }
