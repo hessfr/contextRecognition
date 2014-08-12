@@ -1,5 +1,8 @@
 package ch.ethz.wearable.contextrecognition.activities;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -30,6 +33,11 @@ public class QueryPopup extends Activity {
 	    
 	    addListenerOnButton();
 
+	    // Start TimerTask to finish the activity if nothing happens within 60s:
+		CustomTimerTask cancelQueryTask = new CustomTimerTask(context);
+        Timer cancelTimer = new Timer();
+        cancelTimer.schedule(cancelQueryTask, Globals.CANCEL_QUERY_TIME);
+	    
 	}
 	
 	/*
@@ -106,4 +114,21 @@ public class QueryPopup extends Activity {
     		}
 		});
     }
+    
+    /*
+     * TimerTask to finish the activity if nothing happens within 60s
+     */
+	class CustomTimerTask extends TimerTask {
+		
+		Context context;
+		
+		public CustomTimerTask(Context c) {
+			this.context = c;
+		}
+		public void run() {
+
+			((Activity) context).finish();
+			
+		}
+	}
 }

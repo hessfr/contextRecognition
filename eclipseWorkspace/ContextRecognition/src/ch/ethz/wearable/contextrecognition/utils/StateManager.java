@@ -434,9 +434,6 @@ public class StateManager extends BroadcastReceiver {
 							//TODO
 							
 							
-							sendQuery(context);
-							
-							
 							
 							
 //							// Persist the predictionData:
