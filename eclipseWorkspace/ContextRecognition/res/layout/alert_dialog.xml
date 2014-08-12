@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:theme="@android:style/Theme.Holo.Dialog" >
+
+    <View
+    android:layout_width="fill_parent"
+    android:layout_height="1dip"
+    android:background="?android:attr/dividerHorizontal" />
+<LinearLayout 
+    style="?android:attr/buttonBarStyle"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:divider="?android:dividerHorizontal"
+    android:dividerPadding="10dp"
+    android:showDividers="beginning|middle|end">
+
+    <Button 
+        android:id="@+id/okayButton"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="0dip"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/okay"/>
+    <Button 
+        android:id="@+id/cancelButton"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="0dip"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/no_thanks"/>
+</LinearLayout>
+    
+<!--         <Button -->
+<!--             android:id="@+id/okayButton" -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_height="wrap_content" -->
+<!--             android:layout_gravity="center" -->
+<!--             android:gravity="center" -->
+<!--             android:layout_alignParentTop="true" -->
+<!--             android:text="@string/okay" -->
+<!--             style="?android:attr/buttonBarStyle" /> -->
+        
+<!--         <View -->
+<!--             android:id="@+id/verticalDivider" -->
+<!--             android:layout_toRightOf="@+id/okayButton" -->
+<!--             android:layout_width="1dip" -->
+<!--             android:layout_height="match_parent" -->
+<!--             android:layout_marginLeft="4dip" -->
+<!--             android:layout_marginRight="4dip" -->
+<!--             android:background="?android:attr/dividerVertical" -->
+<!--             android:layout_alignParentTop="true" -->
+<!--             android:layout_alignParenBottom="true"/> -->
+        
+<!--         <Button -->
+<!--             android:id="@+id/cancelButton" -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_height="wrap_content" -->
+<!--             android:layout_toRightOf="@+id/verticalDivider" -->
+<!--             android:layout_gravity="center" -->
+<!--             android:gravity="center" -->
+<!--             android:layout_alignParentTop="true" -->
+<!--             android:text="@string/no_thanks" -->
+<!--             style="?android:attr/buttonBarStyle" /> -->
+
+</RelativeLayout>

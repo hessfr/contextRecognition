@@ -86,7 +86,7 @@ public class Globals {
 	public static long CANCEL_QUERY_TIME = 60000; // = 1min
 	
 	//Time after which the phone should vibrate a second time, after sending the query (in ms):
-	public static long QUERY_VIBRATE_AGAIN_TIME = 30000; // = 30s
+//	public static long QUERY_VIBRATE_AGAIN_TIME = 30000; // = 30s
 	
 	// Vibrate time (in ms):
 	public static long VIBRATE_TIME = 500;
@@ -295,7 +295,7 @@ public class Globals {
 	// For persisting historical predictions:
 	public static final String DATE_FIRST_STARTED = "dateFirstStarted"; 
 	public static final String DATE_LAST_PERSISTED = "dateLastPersisted"; // Refers to the day on which the data was recorded and not when it was persisted (always a later date...)
-	public static final String DATE_LAST_RECORDED = "dateLastPersisted";
+	public static final String DATE_LAST_RECORDED = "dateLastRecorded";
 	
 	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	

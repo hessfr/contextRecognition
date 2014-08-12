@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
+import ch.ethz.wearable.contextrecognition.R;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -41,9 +42,9 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
-import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.activities.ContextSelection;
 import ch.ethz.wearable.contextrecognition.activities.MainActivity;
+import ch.ethz.wearable.contextrecognition.activities.QueryPopup;
 import ch.ethz.wearable.contextrecognition.activities.UploadActivity;
 import ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility;
 import ch.ethz.wearable.contextrecognition.communication.CompressAndSendData;
@@ -433,13 +434,17 @@ public class StateManager extends BroadcastReceiver {
 							//TODO
 							
 							
+							sendQuery(context);
+							
+							
+							
+							
 //							// Persist the predictionData:
 //							Calendar cal = Calendar.getInstance();
 //							cal.add(Calendar.DATE, -1);
-//							Date date = cal.getTime();
+//							Date yesterday = cal.getTime();
+							
 
-							
-							
 							
 						}
 						
@@ -1122,7 +1127,7 @@ public class StateManager extends BroadcastReceiver {
 		context.startService(i);
 	}
 	
-	private void sendQuery(Context context) {
+	private void sendQuery(final Context context) {
 
 		long[] vibratePattern = {0, Globals.VIBRATE_TIME};
 		
@@ -1139,8 +1144,6 @@ public class StateManager extends BroadcastReceiver {
 				.setVibrate(vibratePattern)
 				.addAction(R.drawable.ic_stat_dismiss, "Dismiss", dismiss);
 		
-		
-		
 		Intent i = new Intent(context, ContextSelection.class);
 		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		
@@ -1153,6 +1156,16 @@ public class StateManager extends BroadcastReceiver {
 		NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		manager.notify(Globals.NOTIFICATION_ID_QUERY, builder.build());
 		
+		
+		// Also display a pop-up dialog:
+		Intent popupIntent= new Intent(context, QueryPopup.class);
+		popupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//		popupIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		context.startActivity(popupIntent);
+		
+		
+		
+		
 		waitingForFeedback = true;
 		timeQuerySent = System.currentTimeMillis();
 		
@@ -1161,10 +1174,10 @@ public class StateManager extends BroadcastReceiver {
         Timer cancelTimer = new Timer();
         cancelTimer.schedule(cancelQueryTask, Globals.CANCEL_QUERY_TIME);
         
-		// Start TimerTask to vibrate again after a certain time:
-        RemindTask remindTask = new RemindTask(context);
-        Timer remindTimer = new Timer();
-        remindTimer.schedule(remindTask, Globals.QUERY_VIBRATE_AGAIN_TIME);
+//		// Start TimerTask to vibrate again after a certain time:
+//        RemindTask remindTask = new RemindTask(context);
+//        Timer remindTimer = new Timer();
+//        remindTimer.schedule(remindTask, Globals.QUERY_VIBRATE_AGAIN_TIME);
         
         // Decrement the number of queries left (for today):
         numQueriesLeft--;
@@ -1472,6 +1485,11 @@ public class StateManager extends BroadcastReceiver {
 		
 		boolean persistData = false;
 		
+//		Log.i(TAG, "DATE_FIRST_STARTED: " + mPrefs.getLong(Globals.DATE_FIRST_STARTED, -1));
+//		Log.i(TAG, "DATE_LAST_RECORDED: " + mPrefs.getLong(Globals.DATE_LAST_RECORDED, -1));
+//		Log.i(TAG, "DATE_LAST_PERSISTED: " + mPrefs.getLong(Globals.DATE_LAST_PERSISTED, -1));
+		
+		
 		Calendar cal = Calendar.getInstance();
 		Date today = cal.getTime();
 		
@@ -1506,7 +1524,11 @@ public class StateManager extends BroadcastReceiver {
 				Calendar calLastRecorded = Calendar.getInstance();
 				calLastRecorded.setTime(lastRecorded);
 				
-				// 
+				/*
+				 *  Only persist, if TODAY, DATE_LAST_PERSISTED and DATE_LAST_RECORDED are
+				 *  each on days, so we make sure to only persist when the very first prediction
+				 *  of that date arrives:
+				 */
 				if ((calLastPersisted.get(Calendar.DAY_OF_YEAR) != calLastRecorded.get(Calendar.DAY_OF_YEAR))
 						&& (calToday.get(Calendar.DAY_OF_YEAR) != calLastRecorded.get(Calendar.DAY_OF_YEAR))
 						&& (calToday.get(Calendar.DAY_OF_YEAR) != calLastPersisted.get(Calendar.DAY_OF_YEAR))) {

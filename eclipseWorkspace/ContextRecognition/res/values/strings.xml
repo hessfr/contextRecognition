@@ -69,5 +69,10 @@
     <string name="delete">Delete</string>
     <string name="view">View</string>
     
+    <string name="okay">Okay</string>
+    <string name="no_thanks">No thanks</string>
+    
+    <string name="query_text">Tell us your current context</string>
+    
     
 </resources>

@@ -5,7 +5,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="7"
+        android:minSdkVersion="11"
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.BATTERY_STATS" />
@@ -140,9 +140,17 @@
             <meta-data
             android:name="android.support.PARENT_ACTIVITY"
             android:value="ch.ethz.wearable.contextrecognition.activities.MainActivity" />
-        </activity>  
-    
-        <!-- AudioWorker Service -->
+        </activity>
+        
+        <!-- Alert Dialog activity for the query pop-up -->
+        <activity
+            android:name="ch.ethz.wearable.contextrecognition.activities.QueryPopup"
+            android:launchMode="singleInstance" 
+            android:label="@string/query_text"
+            android:theme="@android:style/Theme.Holo.Dialog" >
+        </activity>
+        
+		<!-- AudioWorker Service -->
        	<service android:name="ch.ethz.wearable.contextrecognition.audio.AudioWorker" />
        	
        	<!-- IntentServices for communication -->
