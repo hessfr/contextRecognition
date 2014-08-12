@@ -71,6 +71,11 @@ public class Globals {
 	
 	public static final String AUDIO_FILENAME = "rawAudio";
 	
+	public static final String GPS_FILENAME = "GPS_Log.txt";
+	public static final String NETWORK_FILENAME = "NETWORK_Log.txt";
+	public static final String ACCEL_FILENAME = "ACCEL_Log.txt";
+	public static final String GYRO_FILENAME = "GYRO_Log.txt";
+	
 	public static final File APP_DATA_FILE = new File(APP_PATH, "AppData.json");
 	
 	public static final File HISTORIC_PREDICTIONS_FILE = new File(APP_PATH, "HistoricPredictions.json");

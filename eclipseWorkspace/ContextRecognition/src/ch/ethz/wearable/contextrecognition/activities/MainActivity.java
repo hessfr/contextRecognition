@@ -41,6 +41,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
+import ch.ethz.wearable.contextrecognition.othersensors.RecService;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 import ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity;
@@ -132,14 +133,17 @@ public class MainActivity extends ActionBarActivity {
 			// Start the AudioWorker service:
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);
+			
+			Intent i2 = new Intent(MainActivity.this,RecService.class);
+			startService(i2);
 
 			// Set app status to initializing:
 			AppStatus.getInstance().set(AppStatus.INIT);
 			Log.i(TAG, "New status: init");
 			
 			// Register the daily reset of the maximum number of queries and periodic data backup:
-			Intent i2 = new Intent(Globals.REGISTER_RECURRING_TASKS);
-			context.sendBroadcast(i2);
+			Intent i3 = new Intent(Globals.REGISTER_RECURRING_TASKS);
+			context.sendBroadcast(i3);
 			
 			// Set preferences initially if they haven't been set already:
 			int tmp = mPrefs.getInt(Globals.MAX_NUM_QUERIES, -1);	
@@ -214,6 +218,9 @@ public class MainActivity extends ActionBarActivity {
 			startService(i);
 			AppStatus.getInstance().set(AppStatus.INIT);
 			Log.i(TAG, "New status: init");
+			
+			Intent i2 = new Intent(MainActivity.this,RecService.class);
+			startService(i2);
 		}
 		
 		String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
