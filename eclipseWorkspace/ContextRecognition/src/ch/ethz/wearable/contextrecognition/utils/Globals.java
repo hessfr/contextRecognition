@@ -109,8 +109,8 @@ public class Globals {
 	public static short SILENCE_DETECTION_THRESHOLD = 1200;
 	
 	// How often do we want to check for unusual events:
-	public static long EVENT_DETECTION_INTERVAL = 10 * 1000; //15 * 60 * 1000; // = 15min //TODO
-	
+	public static long EVENT_DETECTION_INTERVAL = 10 * 1000; //10 * 60 * 1000; // = 10min //TODO
+
 	/*
 	 *  Array of context classes that can be selected initially: 
 	 *  (these classes have to match the classes of the default 
@@ -263,6 +263,10 @@ public class Globals {
 	
 	public static final String MAX_QUERY_NUMBER_CHANGED = "action.maxQueryNumberChanged";
 	
+	public static final String EVENT_START_TIME_LUNCH = "action.eventStartTimeLunch";
+	
+	public static final String EVENT_START_TIME_OVERTIME = "action.eventStartTimeOvertime";
+	
 	// Send by the StateManager:
 	public static final String PREDICTION_CHANGED_INTENT = "predictionChangedIntent";
 	public static final String NEW_PREDICTION_STRING = "newPredictionString";
@@ -304,6 +308,10 @@ public class Globals {
 	public static final String DATE_FIRST_STARTED = "dateFirstStarted"; 
 	public static final String DATE_LAST_PERSISTED = "dateLastPersisted"; // Refers to the day on which the data was recorded and not when it was persisted (always a later date...)
 	public static final String DATE_LAST_RECORDED = "dateLastRecorded";
+	// For event detection
+	public static final String LUNCH_BREAK_START_COUNT = "lunchBreakStartCount";
+	public static final String WORKING_OVERTIME_START_COUNT = "workingOvertimeStartCount";
+
 	
 	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	

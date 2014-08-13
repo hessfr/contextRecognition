@@ -203,6 +203,11 @@
     			<action android:name="action.callManageClasses" />		
     			<action android:name="action.connManageClassesReceive" />
     			<action android:name="action.connManageClassesFinish" />
+    			<action android:name="action.eventStartTimeLunch" />
+    			<action android:name="action.eventStartTimeOvertime" />
+    			
+    			
+    			
     			
     			
   			</intent-filter>

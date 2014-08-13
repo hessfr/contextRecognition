@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -818,6 +819,57 @@ public class StateManager extends BroadcastReceiver {
 			Log.i(TAG, "New status: model updated");
 			
 		}
+		
+		if (intent.getAction().equals(Globals.EVENT_START_TIME_LUNCH)) {
+			
+			// Get the number of counts for the restaurant class:
+			ArrayList<Integer> classCounts = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
+			String[] classNames = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+			int restCount;
+			if (Arrays.asList(classNames).contains("Restaurant")) {
+				restCount = classCounts.get(Arrays.asList(classNames).indexOf("Restaurant"));
+			} else {
+				restCount = 0;
+			}
+			
+			SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putInt(Globals.LUNCH_BREAK_START_COUNT,restCount);
+			editor.commit();
+			
+			Log.i(TAG, "----- EVENT_START_TIME_LUNCH broadcast received -----");
+			
+			
+		}
+		
+		if (intent.getAction().equals(Globals.EVENT_START_TIME_OVERTIME)) {
+			
+			// Get the number of counts for the restaurant class:
+			ArrayList<Integer> classCounts = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
+			String[] classNames = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
+			int restCount;
+			if (Arrays.asList(classNames).contains("Office")) {
+				restCount = classCounts.get(Arrays.asList(classNames).indexOf("Office"));
+			} else {
+				restCount = 0;
+			}
+			
+			SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putInt(Globals.WORKING_OVERTIME_START_COUNT,restCount);
+			editor.commit();
+			
+			Log.i(TAG, "----- EVENT_START_TIME_OVERTIME broadcast received -----");
+			
+			
+		}
+		
+		
+		
+		
+		
+		
+		
 		
 		// =====================================================================
 		// ============= Incorporate new class from server =====================
@@ -1668,9 +1720,16 @@ public class StateManager extends BroadcastReceiver {
 			Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount);
 			totalSilenceCount = 0;
 			SharedPreferences.Editor editor = mPrefs.edit();
+			
 			editor.putInt(Globals.SILENCE_COUNTS, totalSilenceCount);
 			
 			editor.putLong(Globals.DATE_LAST_PERSISTED, tmpLastRecorded);
+			
+			// Also reset the number of variable for the event detection:
+			editor.putInt(Globals.LUNCH_BREAK_START_COUNT, 0);
+			editor.putInt(Globals.WORKING_OVERTIME_START_COUNT, 0);
+			
+			
 			editor.commit();
 			
 			Log.i(TAG, "Data persisted");
