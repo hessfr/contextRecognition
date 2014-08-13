@@ -1486,7 +1486,6 @@ public class StateManager extends BroadcastReceiver {
 //		Log.i(TAG, "DATE_LAST_RECORDED: " + mPrefs.getLong(Globals.DATE_LAST_RECORDED, -1));
 //		Log.i(TAG, "DATE_LAST_PERSISTED: " + mPrefs.getLong(Globals.DATE_LAST_PERSISTED, -1));
 		
-		
 		Calendar cal = Calendar.getInstance();
 		Date today = cal.getTime();
 		
@@ -1668,8 +1667,9 @@ public class StateManager extends BroadcastReceiver {
 			}
 			Globals.setIntListPref(context, Globals.CLASS_COUNTS, totalCount);
 			totalSilenceCount = 0;
-			
 			SharedPreferences.Editor editor = mPrefs.edit();
+			editor.putInt(Globals.SILENCE_COUNTS, totalSilenceCount);
+			
 			editor.putLong(Globals.DATE_LAST_PERSISTED, tmpLastRecorded);
 			editor.commit();
 			

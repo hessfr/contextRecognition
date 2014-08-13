@@ -108,6 +108,9 @@ public class Globals {
 	// Silence detection threshold (higher means more samples will be considered silent):
 	public static short SILENCE_DETECTION_THRESHOLD = 1200;
 	
+	// How often do we want to check for unusual events:
+	public static long EVENT_DETECTION_INTERVAL = 10 * 1000; //15 * 60 * 1000; // = 15min //TODO
+	
 	/*
 	 *  Array of context classes that can be selected initially: 
 	 *  (these classes have to match the classes of the default 

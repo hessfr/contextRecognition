@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.othersensors.RecService;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
+import ch.ethz.wearable.contextrecognition.utils.EventDetection;
 
 /*
  * This class is used to stop the recording and finish the activity
@@ -25,7 +26,8 @@ public class ShutdownActivity extends Activity {
 		Log.i(TAG, "New status: stop recording");
 		Log.i(TAG, "Finishing activity");
 		
-		stopService(new Intent(ShutdownActivity.this,RecService.class));
+		stopService(new Intent(ShutdownActivity.this, RecService.class));
+		stopService(new Intent(ShutdownActivity.this, EventDetection.class));
 		
 		finish();
     }

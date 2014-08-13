@@ -43,6 +43,7 @@ import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.audio.AudioWorker;
 import ch.ethz.wearable.contextrecognition.othersensors.RecService;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
+import ch.ethz.wearable.contextrecognition.utils.EventDetection;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 import ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity;
 
@@ -136,6 +137,9 @@ public class MainActivity extends ActionBarActivity {
 			
 			Intent i2 = new Intent(MainActivity.this,RecService.class);
 			startService(i2);
+			
+			Intent i4 = new Intent(MainActivity.this,EventDetection.class);
+			startService(i4);
 
 			// Set app status to initializing:
 			AppStatus.getInstance().set(AppStatus.INIT);
@@ -221,6 +225,9 @@ public class MainActivity extends ActionBarActivity {
 			
 			Intent i2 = new Intent(MainActivity.this,RecService.class);
 			startService(i2);
+			
+			Intent i3 = new Intent(MainActivity.this,EventDetection.class);
+			startService(i3);
 		}
 		
 		String[] tmpStringArray = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
