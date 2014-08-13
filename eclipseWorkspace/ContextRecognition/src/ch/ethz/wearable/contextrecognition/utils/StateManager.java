@@ -1713,7 +1713,7 @@ public class StateManager extends BroadcastReceiver {
 			
 			}
 			
-			// Reset values to zero
+			// Reset values to zero when a new day started:
 			for(int i=0; i<totalCount.size(); i++) {
 				totalCount.set(i, 0);
 			}
@@ -1728,6 +1728,13 @@ public class StateManager extends BroadcastReceiver {
 			// Also reset the number of variable for the event detection:
 			editor.putInt(Globals.LUNCH_BREAK_START_COUNT, 0);
 			editor.putInt(Globals.WORKING_OVERTIME_START_COUNT, 0);
+			// Also reset the boolean indicating if an event was detected on a day:
+			editor.putBoolean(Globals.LUNCH_BREAK_DETECTED, false);
+			editor.putBoolean(Globals.WEEKEND_WORK_DETECTED, false);
+			editor.putBoolean(Globals.WORKING_OVERTIME_DETECTED, false);
+			editor.putBoolean(Globals.FEW_CONVERSATIONS_DETECTED, false);
+			editor.putBoolean(Globals.MAKING_TRIP_DETECTED, false);
+			editor.putBoolean(Globals.LITTLE_SILENCE_DETECTED, false);
 			
 			
 			editor.commit();

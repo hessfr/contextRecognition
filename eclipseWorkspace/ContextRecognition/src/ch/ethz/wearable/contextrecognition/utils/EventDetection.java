@@ -140,28 +140,72 @@ public class EventDetection extends Service {
 			}
 			
 			double totalRecTime = totalRecTime(classCounts, silenceCount);
-			
+					
+									
 			if (totalRecTime >= MIN_RECORDING_TIME) {
 			
-				if (longLunchBreak(classCounts, classNames)) {
-					//TODO
+				// We only want to detect each event once a day:
+				if(prefs.getBoolean(Globals.LUNCH_BREAK_DETECTED, false) == false) {
+					if (longLunchBreak(classCounts, classNames)) {
+						
+						// Save boolean to preferences:
+						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+						SharedPreferences.Editor editor = prefs1.edit();
+						editor.putBoolean(Globals.LUNCH_BREAK_DETECTED, true);
+						editor.commit();
+					}
 				}
-				if (weekendWork(classCounts, classNames)) {
-					//TODO
+				if(prefs.getBoolean(Globals.WEEKEND_WORK_DETECTED, false) == false) {
+					if (weekendWork(classCounts, classNames)) {
+						
+						// Save boolean to preferences:
+						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+						SharedPreferences.Editor editor = prefs1.edit();
+						editor.putBoolean(Globals.WEEKEND_WORK_DETECTED, true);
+						editor.commit();
+					}
 				}
-				if (workingOvertime(classCounts, classNames)) {
-					//TODO
+				if(prefs.getBoolean(Globals.WORKING_OVERTIME_DETECTED, false) == false) {
+					if (workingOvertime(classCounts, classNames)) {
+						
+						// Save boolean to preferences:
+						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+						SharedPreferences.Editor editor = prefs1.edit();
+						editor.putBoolean(Globals.WORKING_OVERTIME_DETECTED, true);
+						editor.commit();
+					}
 				}
-				if (fewConversations(classCounts, classNames, totalRecTime)) {
-					//TODO
+				if(prefs.getBoolean(Globals.FEW_CONVERSATIONS_DETECTED, false) == false) {
+					if (fewConversations(classCounts, classNames, totalRecTime)) {
+						
+						// Save boolean to preferences:
+						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+						SharedPreferences.Editor editor = prefs1.edit();
+						editor.putBoolean(Globals.FEW_CONVERSATIONS_DETECTED, true);
+						editor.commit();
+					}
 				}
-				if (makingTrip(classCounts, classNames)) {
-					//TODO
+				if(prefs.getBoolean(Globals.MAKING_TRIP_DETECTED, false) == false) {
+					if (makingTrip(classCounts, classNames)) {
+						
+						// Save boolean to preferences:
+						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+						SharedPreferences.Editor editor = prefs1.edit();
+						editor.putBoolean(Globals.MAKING_TRIP_DETECTED, true);
+						editor.commit();
+					}
+				}
+				if(prefs.getBoolean(Globals.LITTLE_SILENCE_DETECTED, false) == false) {
+					if (littleSilenceTime(silenceCount, totalRecTime)) {
+						
+						// Save boolean to preferences:
+						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+						SharedPreferences.Editor editor = prefs1.edit();
+						editor.putBoolean(Globals.LITTLE_SILENCE_DETECTED, true);
+						editor.commit();
+					} 
 				}
 
-				if (littleSilenceTime(silenceCount, totalRecTime)) {
-					//TODO
-				} 
 			} else {
 				Log.i(TAG, "Total recording time too short");
 			}
@@ -238,7 +282,7 @@ public class EventDetection extends Service {
 	
 	private boolean weekendWork(ArrayList<Integer> classCounts, String[] classNames) {
 		
-		final int MIN_TIME = 2 * 3600; // = 2h (in seconds)
+		final double MIN_TIME = 1.5 * 3600; // = 1.5h (in seconds)
 		
 		// Model has to be trained with office class:
 		if (Arrays.asList(classNames).contains("Office")) {

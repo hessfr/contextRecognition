@@ -311,6 +311,13 @@ public class Globals {
 	// For event detection
 	public static final String LUNCH_BREAK_START_COUNT = "lunchBreakStartCount";
 	public static final String WORKING_OVERTIME_START_COUNT = "workingOvertimeStartCount";
+	// For event detection: booleans to save if event already detected today:
+	public static final String LUNCH_BREAK_DETECTED = "lunchBreakDetected";
+	public static final String WEEKEND_WORK_DETECTED = "weekendWorkDetected";
+	public static final String WORKING_OVERTIME_DETECTED = "workingOvertimeDetected";
+	public static final String FEW_CONVERSATIONS_DETECTED = "fewConversationsDetected";
+	public static final String MAKING_TRIP_DETECTED = "makingTripDetected";
+	public static final String LITTLE_SILENCE_DETECTED = "littleSilenceDetected";
 
 	
 	public static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
