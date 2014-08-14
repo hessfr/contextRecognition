@@ -102,6 +102,13 @@ public class EventDetection extends Service {
         amWorkingOvertimeStart.setRepeating(AlarmManager.RTC_WAKEUP, overtimeStart, 
         		AlarmManager.INTERVAL_DAY, piOvertime);
 	
+        
+		// Create notification:
+		int icon = R.drawable.food_icon;
+		String text = "It's quite loud today, get some quiet time to relax";
+		
+		sendNotification(context, text, icon);
+        
 	}
 	
 	@Override
@@ -210,7 +217,7 @@ public class EventDetection extends Service {
 							
 							// Create notification:
 							int icon = R.drawable.conversation_icon;
-							String text = "You haven't talked to so many people today...";
+							String text = "You haven't talked so much today..";
 							
 							sendNotification(context, text, icon);
 							
@@ -246,7 +253,7 @@ public class EventDetection extends Service {
 							
 							// Create notification:
 							int icon = R.drawable.relax_icon;
-							String text = "It's quite loud today, better get some quiet time to relax";
+							String text = "It's loud today, better get some quiet time to relax";
 							
 							sendNotification(context, text, icon);
 							
@@ -600,6 +607,8 @@ public class EventDetection extends Service {
 		
 		long[] vibratePattern = {0, Globals.VIBRATE_TIME_EVENT_DETECTED};
 		
+		String titleString = "Event Detection"; 
+		
 		Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), icon);
 
 		Resources res = context.getResources();
@@ -610,15 +619,20 @@ public class EventDetection extends Service {
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(
 				context)
 				.setTicker(text)
+				.setContentText(text)
+				.setContentTitle(titleString)
 				.setSmallIcon(R.drawable.ic_audio)
 				//.setLargeIcon(largeIcon)
-				.setContentTitle(text)
 				.setAutoCancel(true)
 				.setWhen(System.currentTimeMillis())
 				.setVibrate(vibratePattern);
 		
 		Intent i = new Intent(context, MainActivity.class);
 		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		
+		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+				i, PendingIntent.FLAG_UPDATE_CURRENT);
+		builder.setContentIntent(contentIntent);
 		
 		NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		manager.notify(Globals.NOTIFICATION_ID_EVENT, builder.build());
