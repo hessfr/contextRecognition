@@ -19,7 +19,6 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
@@ -292,7 +291,7 @@ public class EventDetection extends Service {
 				cal.set(Calendar.MINUTE, 0);
 				long timeframeEnd = cal.getTime().getTime(); // 3pm
 				
-				if((now >= timeframeStart) && (now <= timeframeEnd)) {
+				if((now > timeframeStart) && (now < timeframeEnd)) {
 					
 					int totalRestCount = classCounts.get(Arrays.asList(classNames).indexOf("Restaurant"));
 					
@@ -458,7 +457,7 @@ public class EventDetection extends Service {
 			cal.set(Calendar.MILLISECOND, 0);
 			long checkingTime = cal.getTime().getTime(); // 9pm
 			
-			if (checkingTime > now) {
+			if (now > checkingTime) {
 				
 				// Check if less then 15min of conversations was recorded:
 				int convCount = classCounts.get(Arrays.asList(classNames).indexOf("Conversation"));
@@ -541,7 +540,7 @@ public class EventDetection extends Service {
 		cal.set(Calendar.MILLISECOND, 0);
 		long checkingTime = cal.getTime().getTime(); // 9pm
 		
-		if (checkingTime > now) {
+		if (now > checkingTime) {
 			if ((silenceTime/totalRecTime) < MAX_RATIO) {
 				
 				return true;
