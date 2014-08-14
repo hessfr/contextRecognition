@@ -100,15 +100,7 @@ public class EventDetection extends Service {
         
         amWorkingOvertimeStart = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         amWorkingOvertimeStart.setRepeating(AlarmManager.RTC_WAKEUP, overtimeStart, 
-        		AlarmManager.INTERVAL_DAY, piOvertime);
-	
-        
-		// Create notification:
-		int icon = R.drawable.food_icon;
-		String text = "It's quite loud today, get some quiet time to relax";
-		
-		sendNotification(context, text, icon);
-        
+        		AlarmManager.INTERVAL_DAY, piOvertime);       
 	}
 	
 	@Override
@@ -153,7 +145,7 @@ public class EventDetection extends Service {
 				
 				//TODO: Change to individual icons then fix the icons that they are displayed properly
 				
-				if (totalRecTime >= MIN_RECORDING_TIME) {
+				if (totalRecTime > MIN_RECORDING_TIME) {
 				
 					// We only want to detect each event once a day:
 					if(prefs.getBoolean(Globals.LUNCH_BREAK_DETECTED, false) == false) {

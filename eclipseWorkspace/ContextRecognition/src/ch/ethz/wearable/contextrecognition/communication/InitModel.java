@@ -244,8 +244,9 @@ public class InitModel extends IntentService {
 					this.cancel();
 					
 				} else {
-					handler.post(new DisplayToast(getBaseContext(), "Classes will be "
-							+ "available in some minutes, starting with default classes"));
+					
+					handler.post(new DisplayToast(getBaseContext(), "Server could not be "
+							+ "reached, starting with default classes"));
 				}
 				
 				if (++counter == maxRetries) {

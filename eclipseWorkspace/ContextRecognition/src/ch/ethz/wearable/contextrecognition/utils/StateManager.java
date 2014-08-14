@@ -793,8 +793,8 @@ public class StateManager extends BroadcastReceiver {
 				}
 				
 				// Display Toast if we have to wait for the server:
-				Toast.makeText(context, "Model will be created on server, starting with "
-						+ "default model", Toast.LENGTH_LONG).show();
+				Toast.makeText(context, "Model will be created on server until then "
+						+ "default classes will be used", Toast.LENGTH_LONG).show();
 				
 				// Start timer to periodically poll the server for the response:
 				Intent i = new Intent(context, InitModelGet.class);
@@ -805,6 +805,9 @@ public class StateManager extends BroadcastReceiver {
 				
 			 } else {
 				 
+				// Display Toast if we have to wait for the server:
+					Toast.makeText(context, "Server not responding, please try again later "
+							+ "by using the Manage Classes option", Toast.LENGTH_LONG).show();
 				 Log.e(TAG, "Unexpected server response: filename is null. Aborting request");
 				 
 			 }
