@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.activities;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,7 +45,6 @@ import ch.ethz.wearable.contextrecognition.othersensors.RecService;
 import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.EventDetection;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-import ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity;
 
 public class MainActivity extends ActionBarActivity {
 

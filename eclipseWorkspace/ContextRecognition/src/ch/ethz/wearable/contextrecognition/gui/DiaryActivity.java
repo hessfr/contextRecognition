@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.activities;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import java.util.ArrayList;
 
@@ -18,7 +18,6 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
-import ch.ethz.wearable.contextrecognition.utils.ViewPagerAdapter;
 
 import com.viewpagerindicator.TitlePageIndicator;
 
@@ -82,7 +81,7 @@ public class DiaryActivity extends ActionBarActivity {
             viewPager = (ViewPager) findViewById(R.id.pager);
             // Pass results to ViewPagerAdapter Class
             
-            adapter = new ViewPagerAdapter(DiaryActivity.this, todayContextClasses, todayCotalCounts, silenceCount);
+            adapter = new DiaryViewPagerAdapter(DiaryActivity.this, todayContextClasses, todayCotalCounts, silenceCount);
             // Binds the Adapter to the ViewPager
             viewPager.setAdapter(adapter);
             viewPager.setCurrentItem(adapter.getCount());

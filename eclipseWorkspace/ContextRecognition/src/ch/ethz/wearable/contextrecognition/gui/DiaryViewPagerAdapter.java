@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.utils;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -29,6 +29,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.data.HistoricPredictions;
+import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 import com.echo.holographlibrary.PieGraph;
 import com.echo.holographlibrary.PieSlice;
@@ -37,7 +38,7 @@ import com.google.gson.Gson;
 /*
  * Pager adapter for the ViewPager in the diary activity
  */
-public class ViewPagerAdapter extends PagerAdapter {
+public class DiaryViewPagerAdapter extends PagerAdapter {
 
 	private static final String TAG = "ViewPagerAdapter";
 	
@@ -52,7 +53,7 @@ public class ViewPagerAdapter extends PagerAdapter {
     
     HistoricPredictions historicPredictions;
     
-    public ViewPagerAdapter(Context context, String[] todayContextClasses,
+    public DiaryViewPagerAdapter(Context context, String[] todayContextClasses,
     		Integer[] todayTotalCounts, Integer todaySilenceCount) {
         this.context = context;
         

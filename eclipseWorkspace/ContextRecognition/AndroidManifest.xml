@@ -40,7 +40,7 @@
         
         <!-- Main activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.MainActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -52,7 +52,7 @@
         
         
         <activity 
-            android:name="ch.ethz.wearable.contextrecognition.welcomescreens.WelcomeActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.WelcomeActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -61,37 +61,37 @@
         
         <!-- Helper activity to close app -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.ShutdownActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.ShutdownActivity"
             android:excludeFromRecents="true"
             android:label="Exiting..."
             android:theme="@style/Theme.Transparent" />
         
 		<!-- Welcome activities -->
         <activity 
-            android:name="ch.ethz.wearable.contextrecognition.activities.Welcome1"
+            android:name="ch.ethz.wearable.contextrecognition.gui.Welcome1"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
         <activity 
-            android:name="ch.ethz.wearable.contextrecognition.activities.Welcome2"
+            android:name="ch.ethz.wearable.contextrecognition.gui.Welcome2"
             android:label="@string/app_name" >
         </activity>
         <activity 
-            android:name="ch.ethz.wearable.contextrecognition.activities.Welcome3"
+            android:name="ch.ethz.wearable.contextrecognition.gui.Welcome3"
             android:label="@string/app_name" >
         </activity>
         
         <!-- Context Selection activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.ContextSelection"
+            android:name="ch.ethz.wearable.contextrecognition.gui.ContextSelection"
             android:label="@string/label_context_selection" >
         </activity>
         
         <!-- Settings activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.SettingsActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.SettingsActivity"
             android:label="@string/label_settings" >
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
@@ -101,7 +101,7 @@
         
         <!-- Label activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.DiaryActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.DiaryActivity"
             android:label="@string/label_diary" >
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
@@ -111,7 +111,7 @@
         
         <!-- Help activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.HelpActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.HelpActivity"
             android:label="@string/label_help" >
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
@@ -121,7 +121,7 @@
         
         <!-- Manage classes activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.ManageClassesActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.ManageClassesActivity"
             android:label="@string/label_manage_classes" >
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
@@ -131,7 +131,7 @@
         
         <!-- Rating activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.RatingActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.RatingActivity"
             android:label="@string/label_rating" >
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
@@ -141,7 +141,7 @@
         
         <!-- Upload activity -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.UploadActivity"
+            android:name="ch.ethz.wearable.contextrecognition.gui.UploadActivity"
             android:label="@string/label_upload" >
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
@@ -151,7 +151,7 @@
         
         <!-- Alert Dialog activity for the query pop-up -->
         <activity
-            android:name="ch.ethz.wearable.contextrecognition.activities.QueryPopup"
+            android:name="ch.ethz.wearable.contextrecognition.gui.QueryPopup"
             android:launchMode="singleInstance" 
             android:label="@string/query_text"
             android:theme="@android:style/Theme.Holo.Dialog" >

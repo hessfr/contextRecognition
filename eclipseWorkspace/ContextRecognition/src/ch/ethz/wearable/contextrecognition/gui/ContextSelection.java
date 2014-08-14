@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.activities;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import android.app.Activity;
 import android.app.AlertDialog;

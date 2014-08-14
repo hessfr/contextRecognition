@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.activities;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import java.util.Timer;
 import java.util.TimerTask;

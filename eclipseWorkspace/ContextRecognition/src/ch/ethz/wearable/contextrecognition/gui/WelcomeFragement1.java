@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.welcomescreens;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import ch.ethz.wearable.contextrecognition.R;
 
-public class Fragement1 extends Fragment {
+public class WelcomeFragement1 extends Fragment {
 
 	private static final String TAG = "Welcome1";
 	
@@ -28,9 +28,9 @@ public class Fragement1 extends Fragment {
         return v;
     }
 
-    public static Fragement1 newInstance(String text) {
+    public static WelcomeFragement1 newInstance(String text) {
 
-        Fragement1 f = new Fragement1();
+        WelcomeFragement1 f = new WelcomeFragement1();
         Bundle b = new Bundle();
         b.putString("msg", text);
 

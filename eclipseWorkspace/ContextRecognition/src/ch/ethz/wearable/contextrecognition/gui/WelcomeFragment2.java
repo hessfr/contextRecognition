@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.welcomescreens;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -23,7 +23,7 @@ import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.R;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
-public class Fragment2 extends Fragment {
+public class WelcomeFragment2 extends Fragment {
 
 	private static final String TAG = "Welcome2";
 	
@@ -116,9 +116,9 @@ public class Fragment2 extends Fragment {
 		}
 	}
 	
-	public static Fragment2 newInstance(String text) {
+	public static WelcomeFragment2 newInstance(String text) {
 
-		Fragment2 f = new Fragment2();
+		WelcomeFragment2 f = new WelcomeFragment2();
 		Bundle b = new Bundle();
 		b.putString("msg", text);
 

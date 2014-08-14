@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.welcomescreens;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,13 +23,12 @@ import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 import ch.ethz.wearable.contextrecognition.R;
-import ch.ethz.wearable.contextrecognition.activities.MainActivity;
 import ch.ethz.wearable.contextrecognition.communication.InitModel;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder;
 import ch.ethz.wearable.contextrecognition.utils.DialogBuilder.onClickEvent;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
-public class Fragment3 extends Fragment {
+public class WelcomeFragment3 extends Fragment {
 
 	Button startButton;
 	ContextSelectorAdapter dataAdapter;
@@ -122,9 +121,9 @@ public class Fragment3 extends Fragment {
 		return v;
 	}
 
-	public static Fragment3 newInstance(String text) {
+	public static WelcomeFragment3 newInstance(String text) {
 
-		Fragment3 f = new Fragment3();
+		WelcomeFragment3 f = new WelcomeFragment3();
 		Bundle b = new Bundle();
 		b.putString("msg", text);
 

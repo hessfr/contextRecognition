@@ -1,4 +1,4 @@
-package ch.ethz.wearable.contextrecognition.welcomescreens;
+package ch.ethz.wearable.contextrecognition.gui;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -29,10 +29,10 @@ public class WelcomeActivity extends FragmentActivity {
         public Fragment getItem(int pos) {
             switch(pos) {
 
-            case 0: return Fragement1.newInstance("FirstFragment");
-            case 1: return Fragment2.newInstance("SecondFragment");
-            case 2: return Fragment3.newInstance("ThirdFragment");
-            default: return Fragment3.newInstance("ThirdFragment");
+            case 0: return WelcomeFragement1.newInstance("FirstFragment");
+            case 1: return WelcomeFragment2.newInstance("SecondFragment");
+            case 2: return WelcomeFragment3.newInstance("ThirdFragment");
+            default: return WelcomeFragment3.newInstance("ThirdFragment");
             }
         }
 

@@ -24,7 +24,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import ch.ethz.wearable.contextrecognition.R;
-import ch.ethz.wearable.contextrecognition.activities.MainActivity;
+import ch.ethz.wearable.contextrecognition.gui.MainActivity;
 
 /*
  * Service that regularly check if unusual events happens, i.e. read the class count array
