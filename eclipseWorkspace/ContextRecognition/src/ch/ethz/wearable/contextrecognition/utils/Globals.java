@@ -114,7 +114,7 @@ public class Globals {
 	public static short SILENCE_DETECTION_THRESHOLD = 1200;
 	
 	// How often do we want to check for unusual events:
-	public static long EVENT_DETECTION_INTERVAL = 10 * 1000; //10 * 60 * 1000; // = 10min //TODO
+	public static long EVENT_DETECTION_INTERVAL = 10 * 60 * 1000; // = 10min
 
 	/*
 	 *  Array of context classes that can be selected initially: 

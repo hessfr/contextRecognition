@@ -135,133 +135,136 @@ public class EventDetection extends Service {
 			ArrayList<Integer> classCounts = Globals.getIntListPref(context, Globals.CLASS_COUNTS);
 			String[] classNames = Globals.getStringArrayPref(context, Globals.CONTEXT_CLASSES);
 			int silenceCount = prefs.getInt(Globals.SILENCE_COUNTS, 0);
-			if (classCounts.size() != classNames.length) {
-				Log.e(TAG, "Dimension mismatch!");
-			}
 			
-			double totalRecTime = totalRecTime(classCounts, silenceCount);
-					
-			
-			//TODO: Change to individual icons then fix the icons that they are displayed properly
-			
-			if (totalRecTime >= MIN_RECORDING_TIME) {
-			
-				// We only want to detect each event once a day:
-				if(prefs.getBoolean(Globals.LUNCH_BREAK_DETECTED, false) == false) {
-					if (longLunchBreak(classCounts, classNames)) {
-						
-						// Create notification:
-						int icon = R.drawable.food_icon;
-						String text = "Taking a long lunch break today? ;)";
-						
-						sendNotification(context, text, icon);
-						
-						appendToLog("Long lunch break");
-						
-						// Save boolean to preferences:
-						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
-						SharedPreferences.Editor editor = prefs1.edit();
-						editor.putBoolean(Globals.LUNCH_BREAK_DETECTED, true);
-						editor.commit();
+			if ((classCounts != null) && (classNames != null)) {
+				
+				if (classCounts.size() != classNames.length) {
+					Log.e(TAG, "Dimension mismatch!");
+				}
+				
+				double totalRecTime = totalRecTime(classCounts, silenceCount);
+				
+				
+				//TODO: Change to individual icons then fix the icons that they are displayed properly
+				
+				if (totalRecTime >= MIN_RECORDING_TIME) {
+				
+					// We only want to detect each event once a day:
+					if(prefs.getBoolean(Globals.LUNCH_BREAK_DETECTED, false) == false) {
+						if (longLunchBreak(classCounts, classNames)) {
+							
+							// Create notification:
+							int icon = R.drawable.food_icon;
+							String text = "Taking a long lunch break today? ;)";
+							
+							sendNotification(context, text, icon);
+							
+							appendToLog("Long lunch break");
+							
+							// Save boolean to preferences:
+							SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+							SharedPreferences.Editor editor = prefs1.edit();
+							editor.putBoolean(Globals.LUNCH_BREAK_DETECTED, true);
+							editor.commit();
+						}
 					}
-				}
-				if(prefs.getBoolean(Globals.WEEKEND_WORK_DETECTED, false) == false) {
-					if (weekendWork(classCounts, classNames)) {
-						
-						// Create notification:
-						int icon = R.drawable.work_icon;
-						String text = "Don't work too much on the weekend";
-						
-						sendNotification(context, text, icon);
-						
-						
-						
-						appendToLog("Weekend work");
-						
-						// Save boolean to preferences:
-						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
-						SharedPreferences.Editor editor = prefs1.edit();
-						editor.putBoolean(Globals.WEEKEND_WORK_DETECTED, true);
-						editor.commit();
+					if(prefs.getBoolean(Globals.WEEKEND_WORK_DETECTED, false) == false) {
+						if (weekendWork(classCounts, classNames)) {
+							
+							// Create notification:
+							int icon = R.drawable.work_icon;
+							String text = "Don't work too much on the weekend";
+							
+							sendNotification(context, text, icon);
+							
+							
+							
+							appendToLog("Weekend work");
+							
+							// Save boolean to preferences:
+							SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+							SharedPreferences.Editor editor = prefs1.edit();
+							editor.putBoolean(Globals.WEEKEND_WORK_DETECTED, true);
+							editor.commit();
+						}
 					}
-				}
-				if(prefs.getBoolean(Globals.WORKING_OVERTIME_DETECTED, false) == false) {
-					if (workingOvertime(classCounts, classNames)) {
-						
-						// Create notification:
-						int icon = R.drawable.work_icon;
-						String text = "Don't work too long today";
-						
-						sendNotification(context, text, icon);
-						
-						appendToLog("Working overtime");
-						
-						// Save boolean to preferences:
-						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
-						SharedPreferences.Editor editor = prefs1.edit();
-						editor.putBoolean(Globals.WORKING_OVERTIME_DETECTED, true);
-						editor.commit();
+					if(prefs.getBoolean(Globals.WORKING_OVERTIME_DETECTED, false) == false) {
+						if (workingOvertime(classCounts, classNames)) {
+							
+							// Create notification:
+							int icon = R.drawable.work_icon;
+							String text = "Don't work too long today";
+							
+							sendNotification(context, text, icon);
+							
+							appendToLog("Working overtime");
+							
+							// Save boolean to preferences:
+							SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+							SharedPreferences.Editor editor = prefs1.edit();
+							editor.putBoolean(Globals.WORKING_OVERTIME_DETECTED, true);
+							editor.commit();
+						}
 					}
-				}
-				if(prefs.getBoolean(Globals.FEW_CONVERSATIONS_DETECTED, false) == false) {
-					if (fewConversations(classCounts, classNames, totalRecTime)) {
-						
-						// Create notification:
-						int icon = R.drawable.conversation_icon;
-						String text = "You haven't talked to so many people today...";
-						
-						sendNotification(context, text, icon);
-						
-						appendToLog("Few conversations");
-						
-						// Save boolean to preferences:
-						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
-						SharedPreferences.Editor editor = prefs1.edit();
-						editor.putBoolean(Globals.FEW_CONVERSATIONS_DETECTED, true);
-						editor.commit();
+					if(prefs.getBoolean(Globals.FEW_CONVERSATIONS_DETECTED, false) == false) {
+						if (fewConversations(classCounts, classNames, totalRecTime)) {
+							
+							// Create notification:
+							int icon = R.drawable.conversation_icon;
+							String text = "You haven't talked to so many people today...";
+							
+							sendNotification(context, text, icon);
+							
+							appendToLog("Few conversations");
+							
+							// Save boolean to preferences:
+							SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+							SharedPreferences.Editor editor = prefs1.edit();
+							editor.putBoolean(Globals.FEW_CONVERSATIONS_DETECTED, true);
+							editor.commit();
+						}
 					}
-				}
-				if(prefs.getBoolean(Globals.MAKING_TRIP_DETECTED, false) == false) {
-					if (makingTrip(classCounts, classNames)) {
-						
-						// Create notification:
-						int icon = R.drawable.trip_icon;
-						String text = "Are you on a trip today?";
-						
-						sendNotification(context, text, icon);
-						
-						appendToLog("Making a trip");
-						
-						// Save boolean to preferences:
-						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
-						SharedPreferences.Editor editor = prefs1.edit();
-						editor.putBoolean(Globals.MAKING_TRIP_DETECTED, true);
-						editor.commit();
+					if(prefs.getBoolean(Globals.MAKING_TRIP_DETECTED, false) == false) {
+						if (makingTrip(classCounts, classNames)) {
+							
+							// Create notification:
+							int icon = R.drawable.trip_icon;
+							String text = "Are you on a trip today?";
+							
+							sendNotification(context, text, icon);
+							
+							appendToLog("Making a trip");
+							
+							// Save boolean to preferences:
+							SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+							SharedPreferences.Editor editor = prefs1.edit();
+							editor.putBoolean(Globals.MAKING_TRIP_DETECTED, true);
+							editor.commit();
+						}
 					}
-				}
-				if(prefs.getBoolean(Globals.LITTLE_SILENCE_DETECTED, false) == false) {
-					if (littleSilenceTime(silenceCount, totalRecTime)) {
-						
-						// Create notification:
-						int icon = R.drawable.relax_icon;
-						String text = "It's quite loud today, better get some quiet time to relax";
-						
-						sendNotification(context, text, icon);
-						
-						appendToLog("Little silence");
-						
-						// Save boolean to preferences:
-						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
-						SharedPreferences.Editor editor = prefs1.edit();
-						editor.putBoolean(Globals.LITTLE_SILENCE_DETECTED, true);
-						editor.commit();
-					} 
-				}
+					if(prefs.getBoolean(Globals.LITTLE_SILENCE_DETECTED, false) == false) {
+						if (littleSilenceTime(silenceCount, totalRecTime)) {
+							
+							// Create notification:
+							int icon = R.drawable.relax_icon;
+							String text = "It's quite loud today, better get some quiet time to relax";
+							
+							sendNotification(context, text, icon);
+							
+							appendToLog("Little silence");
+							
+							// Save boolean to preferences:
+							SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
+							SharedPreferences.Editor editor = prefs1.edit();
+							editor.putBoolean(Globals.LITTLE_SILENCE_DETECTED, true);
+							editor.commit();
+						} 
+					}
 
-			} else {
-				Log.i(TAG, "Total recording time too short");
+				} else {
+					Log.i(TAG, "Total recording time too short");
+				}
 			}
-
 		}
 	}
 	private boolean longLunchBreak(ArrayList<Integer> classCounts, String[] classNames) {
