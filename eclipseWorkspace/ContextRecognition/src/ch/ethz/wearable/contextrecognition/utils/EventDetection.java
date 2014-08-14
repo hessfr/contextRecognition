@@ -1,5 +1,8 @@
 package ch.ethz.wearable.contextrecognition.utils;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -7,14 +10,22 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import ch.ethz.wearable.contextrecognition.R;
+import ch.ethz.wearable.contextrecognition.activities.MainActivity;
 
 /*
  * Service that regularly check if unusual events happens, i.e. read the class count array
@@ -54,8 +65,8 @@ public class EventDetection extends Service {
          */
         // ---- For long lunch break ----- 
 		Calendar calLunchBreakStart = Calendar.getInstance();
-		calLunchBreakStart.set(Calendar.HOUR_OF_DAY, 11); //TODO: change back to 11
-		calLunchBreakStart.set(Calendar.MINUTE, 00); //TODO: change back to 0
+		calLunchBreakStart.set(Calendar.HOUR_OF_DAY, 11);
+		calLunchBreakStart.set(Calendar.MINUTE, 00);
 	    
 	    // If App started after 11:00, the alarm would go off, so we have to add one day in that case
 	    long lunchBreakStart = 0;
@@ -72,11 +83,7 @@ public class EventDetection extends Service {
         amLunchBreakStart.setRepeating(AlarmManager.RTC_WAKEUP, lunchBreakStart, 
         		AlarmManager.INTERVAL_DAY, piLunch);
 	    
-        
-        
-        
-        
-     // ---- For working overtime -----
+        // ---- For working overtime -----
 		Calendar calOvertimeStart = Calendar.getInstance();
 		calOvertimeStart.set(Calendar.HOUR_OF_DAY, 19);
 		calOvertimeStart.set(Calendar.MINUTE, 00);
@@ -96,14 +103,7 @@ public class EventDetection extends Service {
         amWorkingOvertimeStart.setRepeating(AlarmManager.RTC_WAKEUP, overtimeStart, 
         		AlarmManager.INTERVAL_DAY, piOvertime);
 	
-        
-	
 	}
-	
-	
-	
-	// TODO make sure that events are only fired once a day!!
-	
 	
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -141,12 +141,22 @@ public class EventDetection extends Service {
 			
 			double totalRecTime = totalRecTime(classCounts, silenceCount);
 					
-									
+			
+			//TODO: Change to individual icons then fix the icons that they are displayed properly
+			
 			if (totalRecTime >= MIN_RECORDING_TIME) {
 			
 				// We only want to detect each event once a day:
 				if(prefs.getBoolean(Globals.LUNCH_BREAK_DETECTED, false) == false) {
 					if (longLunchBreak(classCounts, classNames)) {
+						
+						// Create notification:
+						int icon = R.drawable.food_icon;
+						String text = "Taking a long lunch break today? ;)";
+						
+						sendNotification(context, text, icon);
+						
+						appendToLog("Long lunch break");
 						
 						// Save boolean to preferences:
 						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
@@ -158,6 +168,16 @@ public class EventDetection extends Service {
 				if(prefs.getBoolean(Globals.WEEKEND_WORK_DETECTED, false) == false) {
 					if (weekendWork(classCounts, classNames)) {
 						
+						// Create notification:
+						int icon = R.drawable.work_icon;
+						String text = "Don't work too much on the weekend";
+						
+						sendNotification(context, text, icon);
+						
+						
+						
+						appendToLog("Weekend work");
+						
 						// Save boolean to preferences:
 						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
 						SharedPreferences.Editor editor = prefs1.edit();
@@ -167,6 +187,14 @@ public class EventDetection extends Service {
 				}
 				if(prefs.getBoolean(Globals.WORKING_OVERTIME_DETECTED, false) == false) {
 					if (workingOvertime(classCounts, classNames)) {
+						
+						// Create notification:
+						int icon = R.drawable.work_icon;
+						String text = "Don't work too long today";
+						
+						sendNotification(context, text, icon);
+						
+						appendToLog("Working overtime");
 						
 						// Save boolean to preferences:
 						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
@@ -178,6 +206,14 @@ public class EventDetection extends Service {
 				if(prefs.getBoolean(Globals.FEW_CONVERSATIONS_DETECTED, false) == false) {
 					if (fewConversations(classCounts, classNames, totalRecTime)) {
 						
+						// Create notification:
+						int icon = R.drawable.conversation_icon;
+						String text = "You haven't talked to so many people today...";
+						
+						sendNotification(context, text, icon);
+						
+						appendToLog("Few conversations");
+						
 						// Save boolean to preferences:
 						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
 						SharedPreferences.Editor editor = prefs1.edit();
@@ -188,6 +224,14 @@ public class EventDetection extends Service {
 				if(prefs.getBoolean(Globals.MAKING_TRIP_DETECTED, false) == false) {
 					if (makingTrip(classCounts, classNames)) {
 						
+						// Create notification:
+						int icon = R.drawable.trip_icon;
+						String text = "Are you on a trip today?";
+						
+						sendNotification(context, text, icon);
+						
+						appendToLog("Making a trip");
+						
 						// Save boolean to preferences:
 						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
 						SharedPreferences.Editor editor = prefs1.edit();
@@ -197,6 +241,14 @@ public class EventDetection extends Service {
 				}
 				if(prefs.getBoolean(Globals.LITTLE_SILENCE_DETECTED, false) == false) {
 					if (littleSilenceTime(silenceCount, totalRecTime)) {
+						
+						// Create notification:
+						int icon = R.drawable.relax_icon;
+						String text = "It's quite loud today, better get some quiet time to relax";
+						
+						sendNotification(context, text, icon);
+						
+						appendToLog("Little silence");
 						
 						// Save boolean to preferences:
 						SharedPreferences prefs1 = PreferenceManager.getDefaultSharedPreferences(context);
@@ -209,7 +261,6 @@ public class EventDetection extends Service {
 			} else {
 				Log.i(TAG, "Total recording time too short");
 			}
-			
 
 		}
 	}
@@ -526,6 +577,49 @@ public class EventDetection extends Service {
 			return false;
 		}
 		
+	}
+	
+	private void appendToLog(String text) {
+		
+		Log.d(TAG, "Appening to log file");
+		
+		try {
+			File file = new File(Globals.getLogPath(), Globals.EVENT_LOG_FILENAME);
+			FileWriter f = new FileWriter(file, true);
+			f.write(System.currentTimeMillis() + "\t" + text + "\n");
+			f.close();
+		} catch (IOException e) {
+			Log.e(TAG, "Writing to log file failed");
+			e.printStackTrace();
+		}
+	}
+	
+	private void sendNotification(Context context, String text, int icon) {
+		
+		long[] vibratePattern = {0, Globals.VIBRATE_TIME_EVENT_DETECTED};
+		
+		Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), icon);
+
+		Resources res = context.getResources();
+		int height = (int) res.getDimension(android.R.dimen.notification_large_icon_height);
+		int width = (int) res.getDimension(android.R.dimen.notification_large_icon_width);
+		largeIcon = Bitmap.createScaledBitmap(largeIcon, width, height, false); 
+		
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(
+				context)
+				.setTicker(text)
+				.setSmallIcon(R.drawable.ic_audio)
+				//.setLargeIcon(largeIcon)
+				.setContentTitle(text)
+				.setAutoCancel(true)
+				.setWhen(System.currentTimeMillis())
+				.setVibrate(vibratePattern);
+		
+		Intent i = new Intent(context, MainActivity.class);
+		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		
+		NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+		manager.notify(Globals.NOTIFICATION_ID_EVENT, builder.build());
 	}
 
 }

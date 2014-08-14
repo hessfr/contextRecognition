@@ -253,7 +253,7 @@ private void createChart(View itemView, final Integer[] t, String[] c) {
         	// Add a tiny dummy slice, if there would be only one class:
     		if (totalCounts[i] == 1) {
     			PieSlice slice = new PieSlice();
-    			slice.setColor(Color.parseColor("#ffffff"));
+    			slice.setColor(Color.parseColor("#ffffff")); // white
     	        slice.setValue(0.001f);
     	        pg.addSlice(slice);
     		}

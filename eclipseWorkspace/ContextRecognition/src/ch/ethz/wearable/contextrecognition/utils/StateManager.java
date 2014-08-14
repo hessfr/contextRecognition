@@ -1736,7 +1736,6 @@ public class StateManager extends BroadcastReceiver {
 			editor.putBoolean(Globals.MAKING_TRIP_DETECTED, false);
 			editor.putBoolean(Globals.LITTLE_SILENCE_DETECTED, false);
 			
-			
 			editor.commit();
 			
 			Log.i(TAG, "Data persisted");

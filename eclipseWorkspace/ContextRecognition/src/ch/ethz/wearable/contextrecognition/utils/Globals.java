@@ -69,6 +69,8 @@ public class Globals {
 	
 	public static final String MAX_QUERY_LOG_FILENAME = "MAX_QUERY_Log.txt";
 	
+	public static final String EVENT_LOG_FILENAME = "EVENT_Log.txt";
+	
 	public static final String AUDIO_FILENAME = "rawAudio";
 	
 	public static final String GPS_FILENAME = "GPS_Log.txt";
@@ -95,6 +97,9 @@ public class Globals {
 	
 	// Vibrate time (in ms):
 	public static long VIBRATE_TIME = 500;
+	
+	// Vibrate time if an unsual event was detected (in ms):
+	public static long VIBRATE_TIME_EVENT_DETECTED = 250;
 
 	//Default value for the max number of queries per day:
 	public static int MAX_QUERIES_PER_DAY = 10;
@@ -293,6 +298,7 @@ public class Globals {
 	public static final int NOTIFICATION_ID_QUERY = 2;
 	public static final int NOTIFICATION_ID_CLASSES_NOT_ADDED = 3;
 	public static final int NOTIFICATION_ID_STANDARD = 4;
+	public static final int NOTIFICATION_ID_EVENT = 5;
 	
 	// Preferences:
 	public static final String USER_ID = "userId";
