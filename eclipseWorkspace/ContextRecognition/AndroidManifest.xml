@@ -96,7 +96,7 @@
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="ch.ethz.wearable.contextrecognition.activities.MainActivity" />
+            android:value="ch.ethz.wearable.contextrecognition.gui.MainActivity" />
         </activity>
         
         <!-- Label activity -->
@@ -106,7 +106,7 @@
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="ch.ethz.wearable.contextrecognition.activities.MainActivity" />
+            android:value="ch.ethz.wearable.contextrecognition.gui.MainActivity" />
         </activity>
         
         <!-- Help activity -->
@@ -116,7 +116,7 @@
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="ch.ethz.wearable.contextrecognition.activities.MainActivity" />
+            android:value="ch.ethz.wearable.contextrecognition.gui.MainActivity" />
         </activity>
         
         <!-- Manage classes activity -->
@@ -126,7 +126,7 @@
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="ch.ethz.wearable.contextrecognition.activities.MainActivity" />
+            android:value="ch.ethz.wearable.contextrecognition.gui.MainActivity" />
         </activity>   
         
         <!-- Rating activity -->
@@ -136,7 +136,7 @@
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="ch.ethz.wearable.contextrecognition.activities.MainActivity" />
+            android:value="ch.ethz.wearable.contextrecognition.gui.MainActivity" />
         </activity>   
         
         <!-- Upload activity -->
@@ -146,7 +146,7 @@
 <!--             android:parentActivityName="ch.ethz.wearable.contextrecognition.activities.MainActivity" > -->
             <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="ch.ethz.wearable.contextrecognition.activities.MainActivity" />
+            android:value="ch.ethz.wearable.contextrecognition.gui.MainActivity" />
         </activity>
         
         <!-- Alert Dialog activity for the query pop-up -->
@@ -205,11 +205,6 @@
     			<action android:name="action.connManageClassesFinish" />
     			<action android:name="action.eventStartTimeLunch" />
     			<action android:name="action.eventStartTimeOvertime" />
-    			
-    			
-    			
-    			
-    			
   			</intent-filter>
 		</receiver>
 		
