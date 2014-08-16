@@ -166,8 +166,6 @@
        	<!-- Service to detect unusual events -->
        	<service android:name="ch.ethz.wearable.contextrecognition.utils.EventDetection" />
        	
-       	
-       	
        	<!-- IntentServices for communication -->
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.CheckClassFeasibility" />
        	<service android:name="ch.ethz.wearable.contextrecognition.communication.IncorporateNewClass" />

@@ -5,6 +5,15 @@
     android:orientation="vertical"
     android:padding="10dp">
     
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        
+    <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    
             <RelativeLayout
 		        android:layout_width="match_parent"
 		        android:layout_height="match_parent"
@@ -12,14 +21,14 @@
 			    <TextView android:layout_width="wrap_content"
 			        android:layout_height="wrap_content"
 			        android:layout_centerHorizontal="True"
-			        android:text="@string/rating_accuracy_satisfaction"/>
+			        android:text="@string/rating_performance_increase"/>
 		    </RelativeLayout>
 		    
             <RelativeLayout
 		        android:layout_width="match_parent"
 		        android:layout_height="match_parent" >
             	<RatingBar
-			        android:id="@+id/ratingBarAccuracy"
+			        android:id="@+id/ratingBarPerformanceIncrease"
 			        android:layout_width="wrap_content"
 			        android:layout_height="wrap_content"
 			        android:layout_centerHorizontal="True"
@@ -33,14 +42,14 @@
 			    <TextView android:layout_width="wrap_content"
 			        android:layout_height="wrap_content"
 			        android:layout_centerHorizontal="True"
-			        android:text="@string/rating_useful"/>
+			        android:text="@string/rating_disturbing"/>
 		    </RelativeLayout>
 		    
             <RelativeLayout
 		        android:layout_width="match_parent"
 		        android:layout_height="match_parent" >
             	<RatingBar
-			        android:id="@+id/ratingBarUsefulness"
+			        android:id="@+id/ratingBarDisturbing"
 			        android:layout_width="wrap_content"
 			        android:layout_height="wrap_content"
 			        android:layout_centerHorizontal="True"
@@ -54,35 +63,78 @@
 			    <TextView android:layout_width="wrap_content"
 			        android:layout_height="wrap_content"
 			        android:layout_centerHorizontal="True"
-			        android:text="@string/rating_free_text"/>
-			</RelativeLayout>
-		
+			        android:text="@string/rating_fixed_traing_phase"/>
+		    </RelativeLayout>
             <RelativeLayout
-		        android:layout_width="match_parent"
-		        android:layout_height="match_parent"
-		        android:layout_marginTop="10dp" >
-            	<EditText
-            	    android:id="@+id/feedbackText"
-            	    android:layout_width="wrap_content"
-            	    android:layout_height="wrap_content"
-            	    android:layout_centerHorizontal="True"
-            	    android:hint="@string/rating_hint"
-            	    android:ems="10" >
-            	    <requestFocus />
-            	</EditText>
+                android:layout_width="match_parent"
+		        android:layout_height="match_parent" >
+			    
+                <RadioGroup 
+    				android:id="@+id/RadioGroup01" 
+    				android:layout_height="wrap_content" 
+    				android:layout_width="fill_parent">
+    				<RadioButton
+                        android:id="@+id/radioButton1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RadioButton" />
+                    <RadioButton
+                        android:id="@+id/radioButton2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RadioButton" />
+                </RadioGroup>
+		    </RelativeLayout>
+            
+            
 
-            </RelativeLayout>
             
-            <RelativeLayout
-		        android:layout_width="match_parent"
-		        android:layout_height="match_parent"
-		        android:layout_marginTop="20dp" >
-		    <Button
-		        android:id="@+id/submitButton"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:layout_centerHorizontal="True"
-		        android:text="@string/rating_submit_button" />
-		    </RelativeLayout>
+            
+            
+            
+<!--             <RelativeLayout -->
+<!--                 android:layout_width="match_parent" -->
+<!--                 android:layout_height="match_parent" -->
+<!--                 android:layout_marginTop="20dp" > -->
+
+<!--                 <TextView -->
+<!--                     android:id="@+id/textView1" -->
+<!--                     android:layout_width="wrap_content" -->
+<!--                     android:layout_height="wrap_content" -->
+<!--                     android:layout_centerHorizontal="True" -->
+<!--                     android:text="@string/rating_free_text" /> -->
+<!--             </RelativeLayout> -->
+		
+<!--             <RelativeLayout -->
+<!-- 		        android:layout_width="match_parent" -->
+<!-- 		        android:layout_height="match_parent" -->
+<!-- 		        android:layout_marginTop="10dp" > -->
+<!--             	<EditText -->
+<!--             	    android:id="@+id/feedbackText" -->
+<!--             	    android:layout_width="wrap_content" -->
+<!--             	    android:layout_height="wrap_content" -->
+<!--             	    android:layout_centerHorizontal="True" -->
+<!--             	    android:hint="@string/rating_hint" -->
+<!--             	    android:ems="10" > -->
+<!--             	    <requestFocus /> -->
+<!--             	</EditText> -->
+
+<!--             </RelativeLayout> -->
+            
+<!--             <RelativeLayout -->
+<!-- 		        android:layout_width="match_parent" -->
+<!-- 		        android:layout_height="match_parent" -->
+<!-- 		        android:layout_marginTop="20dp" > -->
+<!-- 		    <Button -->
+<!-- 		        android:id="@+id/submitButton" -->
+<!-- 		        android:layout_width="wrap_content" -->
+<!-- 		        android:layout_height="wrap_content" -->
+<!-- 		        android:layout_centerHorizontal="True" -->
+<!-- 		        android:text="@string/rating_submit_button" /> -->
+<!-- 		    </RelativeLayout> -->
+	
+  	</LinearLayout>
+            	    
+	</ScrollView>
  
 </LinearLayout>

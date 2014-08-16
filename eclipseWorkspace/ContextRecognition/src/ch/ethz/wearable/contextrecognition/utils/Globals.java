@@ -122,10 +122,10 @@ public class Globals {
 	 *  model that is deployed in the assets folder)
 	 */
 	public static String[] initialContextClasses = {"Office", "Conversation", "Restaurant",
-		"Car", "Bus", "Train", "Street", "Vacuum", "Toilet", "Kitchen"};
+		"Car", "Bus", "Train", "Street", "Kitchen", "Vacuum", "Toilet"};
 	// Array indicating if the context class should be selected initially:
 	public static Boolean[] defaultClasses = {true, true, true, true, true,
-		true, true, true, true, true};
+		true, true, true, false, false};
 	
 	/*
 	 * Buffer lengths for the threshold calculation

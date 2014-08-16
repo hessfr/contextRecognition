@@ -26,10 +26,25 @@
     <string name="settings_query_text">The maximum number of feedback queries you are will to give per day:</string>
     <string name="settings_warning">Remember that the accurcy will be better when more feedback is given</string>
     
-    <string name="rating_accuracy_satisfaction">How satisfying was the prediction accuracy:</string>
-    <string name="rating_useful">How useful did you find using our app:</string>
-    <string name="rating_free_text">Feel free to give us more feedback:</string>
-    <string name="rating_hint">Enter any feedback here</string>
+    <!-- Rating Actitivity -->
+    <string name="rating_performance_increase">Did you feel that the prediction accuracy increased after using the 
+        app for a couple of days? </string>
+    <string name="rating_disturbing">Did you find the query requests disturbing?</string>
+    <string name="rating_fixed_traing_phase">Would you be more willing to answer more request 
+        in the following scenario: Queries can only be asked in a fixed training phase of e.g. two days
+        when starting to use the app, after that the user won’t be queried anymore at all.</string>
+    <string name="rating_visualization_useful">How useful did you find the visualization of 
+        your daily activities?</string>
+    <string name="rating_visualization_accurate">Did you find the visualization of your 
+        daily activities accurate?</string>
+    <string name="rating_other_applications">Could you think of other applications that would be possible 
+        with / would benefit from this kind of context prediction?</string>
+    <string name="rating_comforable">Do you feel comfortable with audio data used for recognition?</string>
+    <string name="rating_audio_concerns">What are your concern regarding audio data used 
+        for recognition?</string>
+    <string name="rating_privacy_imporovement">Could you think of ways to protect privacy 
+        of users better?</string>
+    <string name="rating_hint">Please feel free to give any other feedback</string>
     <string name="rating_submit_button">Submit</string>
     
     <string name="rating_ask_for_evaluation">Thanks you for your feedback! Would you like to help our 

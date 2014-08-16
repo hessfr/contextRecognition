@@ -136,53 +136,53 @@ public class RatingActivity extends ActionBarActivity {
     
 	public void addListenerOnButton() {
 		 
-		submitButton = (Button) findViewById(R.id.submitButton);
-		ratingBarAccuracy = (RatingBar) findViewById(R.id.ratingBarAccuracy);
-		ratingBarUsefulness = (RatingBar) findViewById(R.id.ratingBarUsefulness);
-		feedbackText = (EditText) findViewById(R.id.feedbackText);
-		
-		submitButton.setOnClickListener(new OnClickListener() {
- 
-			@SuppressWarnings("unused")
-			@Override
-			public void onClick(View arg0) {
-				float accuracyRating = ratingBarAccuracy.getRating();
-				float usefulnessRating = ratingBarUsefulness.getRating();
-				String feedbackString = feedbackText.getText().toString();
-				
-				//TODO: Call method to send feedback here
-				
-				// Show alert dialog to ask for full evaluation
-		  		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-				
-				alertDialogBuilder.setTitle("");
-				alertDialogBuilder.setMessage(R.string.rating_ask_for_evaluation);
-				
-				alertDialogBuilder.setPositiveButton("Sure!", new DialogInterface.OnClickListener() {
-					
-					public void onClick(DialogInterface dialog, int whichButton) {
-
-							//TODO: open new activity for the complete evaluation form
-					  
-					  }
-				});
-				
-				alertDialogBuilder.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
-					
-					  public void onClick(DialogInterface dialog, int whichButton) {
-					    // Canceled
-					  }
-				});
-				
-				// create alert dialog
-				AlertDialog alertDialog = alertDialogBuilder.create();
-				
-				// show it
-				alertDialog.show(); 
-				
-			}
- 
-		});
+//		submitButton = (Button) findViewById(R.id.submitButton);
+//		ratingBarAccuracy = (RatingBar) findViewById(R.id.ratingBarAccuracy);
+//		ratingBarUsefulness = (RatingBar) findViewById(R.id.ratingBarUsefulness);
+//		feedbackText = (EditText) findViewById(R.id.feedbackText);
+//		
+//		submitButton.setOnClickListener(new OnClickListener() {
+// 
+//			@SuppressWarnings("unused")
+//			@Override
+//			public void onClick(View arg0) {
+//				float accuracyRating = ratingBarAccuracy.getRating();
+//				float usefulnessRating = ratingBarUsefulness.getRating();
+//				String feedbackString = feedbackText.getText().toString();
+//				
+//				//TODO: Call method to send feedback here
+//				
+//				// Show alert dialog to ask for full evaluation
+//		  		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+//				
+//				alertDialogBuilder.setTitle("");
+//				alertDialogBuilder.setMessage(R.string.rating_ask_for_evaluation);
+//				
+//				alertDialogBuilder.setPositiveButton("Sure!", new DialogInterface.OnClickListener() {
+//					
+//					public void onClick(DialogInterface dialog, int whichButton) {
+//
+//							//TODO: open new activity for the complete evaluation form
+//					  
+//					  }
+//				});
+//				
+//				alertDialogBuilder.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
+//					
+//					  public void onClick(DialogInterface dialog, int whichButton) {
+//					    // Canceled
+//					  }
+//				});
+//				
+//				// create alert dialog
+//				AlertDialog alertDialog = alertDialogBuilder.create();
+//				
+//				// show it
+//				alertDialog.show(); 
+//				
+//			}
+// 
+//		});
 
  
 	}

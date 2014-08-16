@@ -61,9 +61,8 @@ import ch.ethz.wearable.contextrecognition.math.ModelAdaptor.onModelAdaptionComp
 import com.google.gson.Gson;
 
 /*
- * Handles all broadcasts and holds all prediction variables like current context, buffers, class names, ...
- * 
- * AL Queries are also initiated here...
+ * Handles all broadcasts and holds all prediction variables like current context, 
+ * buffers, class names, etc. The AL query criteria are also checked and send from here
  */
 @SuppressLint("SimpleDateFormat")
 public class StateManager extends BroadcastReceiver {
@@ -82,7 +81,7 @@ public class StateManager extends BroadcastReceiver {
 	private static String predictionString;
 	private static String prevPredictionString = "";
 	private static String[] classNameArray;
-	public static Map<String, Integer> classesDict = new HashMap<String, Integer>(); // Needed??
+	public static Map<String, Integer> classesDict = new HashMap<String, Integer>();
 	private static ArrayList<Integer> totalCount; // contains number of total predictions for each class
 	private static int totalSilenceCount; // contains number silences predictions
 	
@@ -177,8 +176,6 @@ public class StateManager extends BroadcastReceiver {
 							buffer = (ArrayList<double[]>) s1;
 							//Log.i(TAG, "Buffer size: " + buffer.size()/31.5 + " seconds");
 						}
-
-						//gmm = bundle.getParcelable(Globals.GMM_OBJECT); // Needed??
 
 						Serializable s2 = new HashMap<String, Integer>();
 						s2 = bundle.getSerializable(Globals.CLASSES_DICT);
