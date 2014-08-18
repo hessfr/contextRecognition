@@ -96,8 +96,9 @@ public class MainActivity extends ActionBarActivity {
 			}
 			
 			// Create folder on external storage is it doesn't exist already:
-			File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
-					+ "/" + Globals.APP_FOLDER);
+//			File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+//					+ "/" + Globals.APP_FOLDER);
+			File f = new File("/mnt/extSdCard/" + Globals.APP_FOLDER);			
 			if (!f.exists()) {
 				Log.i(TAG, "Createing app folder on external storage");
 			    f.mkdir();

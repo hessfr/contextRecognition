@@ -27,8 +27,10 @@ import android.preference.PreferenceManager;
 public class Globals {
 	
 	public static final String APP_FOLDER = "ContextRecognition";
-	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
-			+ "/" + APP_FOLDER);
+//	public static final File APP_PATH = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+//			+ "/" + APP_FOLDER);
+	public static final File APP_PATH = new File("/mnt/extSdCard/" + APP_FOLDER);
+	
 	
 	// Get the file to the current (today's) log folder
 	@SuppressLint("SimpleDateFormat")
