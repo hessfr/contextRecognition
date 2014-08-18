@@ -9,12 +9,17 @@ import java.util.Random;
 
 import org.ejml.simple.SimpleMatrix;
 
+import android.util.Log;
+
 import com.google.common.collect.Lists;
 
 /*
  * Cluster algorithm using kMeans. Used when training a new mixture model
  */
 public class KMeansClusterer {
+	
+	public final String TAG = "KMeansClusterer";
+	
 	private SimpleMatrix data;
 
 	public KMeansClusterer(SimpleMatrix data) {
@@ -96,7 +101,11 @@ public class KMeansClusterer {
 						minDistanceWithCentroid = distanceWithCentroid;
 					}
 				}
-				selectedCentroid.getDataPoints().add(i);
+				if (selectedCentroid != null) {
+					selectedCentroid.getDataPoints().add(i);
+				} else {
+					Log.e(TAG, "selectedCentroid is null");
+				}
 			}
 
 			// Step 2: move the centroids to the average of the assigned points

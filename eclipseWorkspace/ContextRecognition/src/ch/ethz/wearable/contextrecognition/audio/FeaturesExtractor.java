@@ -25,6 +25,7 @@ package ch.ethz.wearable.contextrecognition.audio;
 
 import java.util.Arrays;
 
+import android.util.Log;
 import ch.ethz.wearable.contextrecognition.data.Features;
 import ch.ethz.wearable.contextrecognition.math.FFT;
 import ch.ethz.wearable.contextrecognition.math.MFCC;
@@ -32,6 +33,8 @@ import ch.ethz.wearable.contextrecognition.math.Window;
 
 public class FeaturesExtractor {
 
+	public final String TAG = "FeaturesExtractor";
+	
 	private static int RECORDER_SAMPLERATE = 16000;
 	private static int FFT_SIZE = 8192;
 	private static int MFCCS_VALUE = 12;
@@ -107,7 +110,8 @@ public class FeaturesExtractor {
 	
 	private double calcLogEnergy(short[] data) {
 
-		double minE = 8.67e-19;
+//		double minE = 8.67e-18;
+		double minE = 1e-15;
 		// System.out.println("Length of short array: " + data.length);
 		int dim = data.length;
 
@@ -120,10 +124,10 @@ public class FeaturesExtractor {
 		double d = Math.sqrt(sum / ((double) dim));
 
 		if (d < minE) {
+			Log.w(TAG, "Log energy " + d + " smaller minE, changed to " + minE);
 			d = minE;
-			System.out.println("d smaller minE");
 		}
-
+		
 		return Math.log(d);
 	}
 

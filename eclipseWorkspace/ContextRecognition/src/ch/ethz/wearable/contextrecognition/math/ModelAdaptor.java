@@ -704,6 +704,8 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		DenseMatrix64F id = CommonOps.identity(n_features);
 		CommonOps.scale(1e-3, id);
 
+		Log.i(TAG, "X_train matrix:" + X_train);
+		
 		// ----- initialize means using kMeans -----
 		KMeansClusterer clusterer = new KMeansClusterer(new SimpleMatrix(
 				X_train));
