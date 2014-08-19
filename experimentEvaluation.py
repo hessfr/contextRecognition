@@ -140,6 +140,16 @@ def onlineAccuracy(gtLogFile, predLogFile):
     y_GT = y_GT[maskValid]
     y_pred = y_pred[maskValid]
 
+    # Calculate the overall accuracy and print it:
+    correctPred = 0
+    for i in range(y_pred.shape[0]):
+        if y_pred[i] in y_GT[i,:]:
+            correctPred += 1
+    
+    accuracy = correctPred / float(y_pred.shape[0])
+    print("Overall accuracy: " + str(round(accuracy*100,2)) + "%")
+    print("-----")
+
     # The method to plot the confusion matrix, needs a classes dictionary, 
     # that is NOT bidirectional, so we remove all elements, where the keys
     # are numbers:
@@ -202,7 +212,7 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
         if line[2] != "":
             end = int(2 * (float(line[2]) - start_time_gt))
         else:
-            print("Entry end time empty, changed to " + str(length/2.0))
+            #print("Entry end time empty, changed to " + str(length/2.0))
             end = length - 1
 
         if end >= length:
