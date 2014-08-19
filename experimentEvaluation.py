@@ -26,8 +26,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
         reader = csv.reader(f, delimiter="\t")
         predListOriginal = list(reader)
     
-    #TODO: handle if multiple RECORDING_STARTED entries in the same log file
-    
     n_maxLabels = 3 #
   
     numRecStartedGT = 0
@@ -39,7 +37,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
     recStartedListPred = []
 
     for i in range(len(gtListOriginal)):
-        # Don't consider the RECORDING_STARTED entries for now:
         if len(gtListOriginal[i]) <= 1:
             numRecStartedGT += 1
             recStartedListGT.append(i)
@@ -121,11 +118,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
         y_GT_tmp = createGTArray(gtList, classesDict)
 
-        #for i in reversed(range(len(predList))):
-        #    # Don't consider the RECORDING_STARTED entries for now:
-        #    if len(predList[i]) <= 1:
-        #        del predList[i]           
-
         y_pred_tmp = createPredictionArray(predList, start_time_gt, 
         stop_time_gt, len(y_GT_tmp), classesDict)
 
@@ -135,6 +127,18 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
     y_GT = np.array(y_GT)
     y_pred = np.array(y_pred)
+
+    # Whenever silence is predicted, we ignore those parts for the calculation 
+    # of the accuracy, i.e. we delete those entries from the GT and the
+    # prediction array:
+
+    silenceClassNum = classesDict["silence"]
+    
+    # Positions where no silence predicted:
+    maskValid = (y_pred != silenceClassNum)
+
+    y_GT = y_GT[maskValid]
+    y_pred = y_pred[maskValid]
 
     # The method to plot the confusion matrix, needs a classes dictionary, 
     # that is NOT bidirectional, so we remove all elements, where the keys
@@ -158,8 +162,6 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
     @return: Numpy array of the predicted labels
 
     """
-
-    #TODO: handle if the last timestamp in the GT wasn't a stop...
 
     offset = start_time_gt
     #print("offset: " + str(offset))
