@@ -178,8 +178,6 @@ def covarTest(data, covars_old):
 
     for i in range(n_samples):
         Y[i,:] = np.dot(L0inv, X[i,:])
-    
-    # pdb.set_trace()
 
     Sy = np.cov(Y, rowvar=0) # if rowvar = 0, each row represents an observation
 
@@ -196,18 +194,6 @@ def covarTest(data, covars_old):
 
     #if (n_samples < 30): # only compare if same component
         #print(w1)
-
-    # pdb.set_trace()
-        
-    # 0.05 -> lower threshold / 0.95 -> higher threshold
-
-    # print(str(test_statistic) + " - threshold: " + str(threshold))
-
-    # pdb.set_trace()
-
-    # return True
-
-    # tmpList.append(test_statistic)
 
     if test_statistic <= threshold:
         print("Covariance test passed")
@@ -229,8 +215,6 @@ def meanTest(data, means_old):
 
     S = np.cov(X, rowvar=0) # if rowvar = 0, each row represents an observation
     Sinv = linalg.inv(S)
-
-    # pdb.set_trace()
 
     m = X.mean(axis=0) - means_old
     T_squared = n_samples * np.dot(np.dot(m.T, Sinv), m)
