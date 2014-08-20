@@ -111,9 +111,11 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
         # Find start and stop time, i.e. min and max values:
         tmpArray = np.array(gtList)
-        start_time_gt = float(min(tmpArray[:,0]))
-        stop_time_gt = float(max(tmpArray[:,0]))
-   
+        #start_time_gt = float(min(tmpArray[:,0]))
+        #stop_time_gt = float(max(tmpArray[:,0]))
+        start_time_gt = min(tmpArray[:,0].astype(np.float32, copy=False))
+        stop_time_gt = max(tmpArray[:,0].astype(np.float32, copy=False))
+
         #print(tmpArray)
 
         y_GT_tmp = createGTArray(gtList, classesDict)
@@ -123,7 +125,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
         y_GT.extend(y_GT_tmp)
         y_pred.extend(y_pred_tmp)
-
 
     y_GT = np.array(y_GT)
     y_pred = np.array(y_pred)
@@ -140,6 +141,14 @@ def onlineAccuracy(gtLogFile, predLogFile):
     y_GT = y_GT[maskValid]
     y_pred = y_pred[maskValid]
 
+    # We also ignore those samples where not ground truth was provided, 
+    # i.e. we delete those entries from the GT and the prediction array:
+    invalidRow = np.array([-1,-1,-1])
+    maskValid = ~np.all(y_GT==invalidRow,axis=1)
+
+    y_GT = y_GT[maskValid]
+    y_pred = y_pred[maskValid]
+    
     # Calculate the overall accuracy and print it:
     correctPred = 0
     for i in range(y_pred.shape[0]):
@@ -161,6 +170,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     confusionMatrixMulti(y_GT, y_pred, uniDirectionalClassesDict)
 
 def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classesDict):
+        
     """
     Create a numpy array of the predictions for 0.5s long windows
 
@@ -243,8 +253,14 @@ def createGTArray(gtList, classesDict, n_max_labels=3):
 
     # Find start and stop time, i.e. min and max values:
     tmpArray = np.array(gtList)
-    start_time = float(min(tmpArray[:,0]))
-    end_time = float(max(tmpArray[:,0]))
+    #start_time = float(min(tmpArray[:,0]))
+    #end_time = float(max(tmpArray[:,0]))
+
+    start_time = min(tmpArray[:,0].astype(np.float32, copy=False))
+    end_time = max(tmpArray[:,0].astype(np.float32, copy=False))
+
+    #print("start_time: " + str(start_time))
+    #print("end_time: " + str(end_time))
 
     # We want ignore invalid (no class assigned) values, before the first class is
     # assigned, so we have to subtract the start_time offset later

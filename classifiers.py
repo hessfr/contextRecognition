@@ -631,7 +631,6 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     @param y_pred:
     @param classesDict:
     """
-    #TODO: Merge with other confusionMatrix method depending on the size of the input
 
     """ Sort classesDict to show labels in the CM: """
     sortedTmp = sorted(classesDict.iteritems(), key=operator.itemgetter(1))
@@ -654,6 +653,7 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
             gtLabels = y_GT[i,:]
             labels = gtLabels[gtLabels != -1] #ground truth labels assigned to that point (only valid ones)
             n_labels = len(labels) #number of valid labels assigned
+            
             weight = 1/float(n_labels) #value that will be added to each assigned (incorrect) label
 
             for label in labels:
