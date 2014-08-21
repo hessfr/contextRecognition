@@ -635,11 +635,11 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     """ Sort classesDict to show labels in the CM: """
     sortedTmp = sorted(classesDict.iteritems(), key=operator.itemgetter(1))
     sortedLabels = []
+    
     for j in range(len(sortedTmp)):
         sortedLabels.append(sortedTmp[j][0])
 
     n_classes = len(classesDict)
-    n_maxLabels = y_GT.shape[1]
 
     cm = np.zeros((n_classes,n_classes))
 
@@ -658,9 +658,8 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
 
             for label in labels:
                 cm[int(label), int(y_pred[i])] += weight
-
+    
     normalized = []
-
     for row in cm:
         rowSum = sum(row)
         normalized.append([round(x/float(rowSum),2) for x in row])
@@ -686,7 +685,6 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
         print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
         F1s.append(tmpF1)
 
-
     width = len(cm)
     height = len(cm[0])
 
@@ -710,6 +708,7 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     pl.show()
 
 def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
+    
     """
     Create ground truth array that allows multiple labels per point
     @param classesDict:

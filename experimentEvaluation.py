@@ -25,8 +25,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
     with open(predLogFile) as f:
         reader = csv.reader(f, delimiter="\t")
         predListOriginal = list(reader)
-    
-    n_maxLabels = 3 #
   
     numRecStartedGT = 0
     numRecStartedPred = 0
@@ -71,9 +69,9 @@ def onlineAccuracy(gtLogFile, predLogFile):
     classesDict = {}
     for i in range(len(class_name_set)):
         classesDict[class_name_set[i]] = i
-        print(class_name_set[i] + " = " + str(i))
+        #print(class_name_set[i] + " = " + str(i))
         
-    print("-----")
+    #print("-----")
     classesDict.update(dict((v, k) for k, v in classesDict.iteritems()))
 
     y_GT = []
@@ -111,20 +109,26 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
         # Find start and stop time, i.e. min and max values:
         tmpArray = np.array(gtList)
-        #start_time_gt = float(min(tmpArray[:,0]))
-        #stop_time_gt = float(max(tmpArray[:,0]))
-        start_time_gt = min(tmpArray[:,0].astype(np.float32, copy=False))
-        stop_time_gt = max(tmpArray[:,0].astype(np.float32, copy=False))
 
-        #print(tmpArray)
+        # If there is not more entry after a RECORDING_STARTED line, do nothing:
+        if tmpArray.shape[0] != 0:
 
-        y_GT_tmp = createGTArray(gtList, classesDict)
+            #start_time_gt = float(min(tmpArray[:,0]))
+            #stop_time_gt = float(max(tmpArray[:,0]))
+            start_time_gt = min(tmpArray[:,0].astype(np.float32, copy=False))
+            stop_time_gt = max(tmpArray[:,0].astype(np.float32, copy=False))
 
-        y_pred_tmp = createPredictionArray(predList, start_time_gt, 
-        stop_time_gt, len(y_GT_tmp), classesDict)
+            #print(tmpArray)
 
-        y_GT.extend(y_GT_tmp)
-        y_pred.extend(y_pred_tmp)
+            #pdb.set_trace()
+
+            y_GT_tmp = createGTArray(gtList, classesDict)
+
+            y_pred_tmp = createPredictionArray(predList, start_time_gt, 
+            stop_time_gt, len(y_GT_tmp), classesDict)
+
+            y_GT.extend(y_GT_tmp)
+            y_pred.extend(y_pred_tmp)
 
     y_GT = np.array(y_GT)
     y_pred = np.array(y_pred)
@@ -143,7 +147,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
     # We also ignore those samples where not ground truth was provided, 
     # i.e. we delete those entries from the GT and the prediction array:
-    invalidRow = np.array([-1,-1,-1])
+    invalidRow = np.array([-1,-1,-1,-1,-1]) # has to match the max allow GT labels per points
     maskValid = ~np.all(y_GT==invalidRow,axis=1)
 
     y_GT = y_GT[maskValid]
@@ -157,7 +161,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     
     accuracy = correctPred / float(y_pred.shape[0])
     print("Overall accuracy: " + str(round(accuracy*100,2)) + "%")
-    print("-----")
+    #print("-----")
 
     # The method to plot the confusion matrix, needs a classes dictionary, 
     # that is NOT bidirectional, so we remove all elements, where the keys
@@ -166,6 +170,25 @@ def onlineAccuracy(gtLogFile, predLogFile):
     for key in classesDict.keys():
         if type(key) is str:
             uniDirectionalClassesDict[key] = classesDict[key]
+
+    #pdb.set_trace()
+
+    # Adjust the classesDict by removing the entry for silence:
+    if "silence" in uniDirectionalClassesDict.keys():
+        silenceNumber = uniDirectionalClassesDict["silence"]
+        # Decrement numbers after the the position where silence was:
+        for key in uniDirectionalClassesDict.keys():
+            if uniDirectionalClassesDict[key] > silenceNumber:
+                uniDirectionalClassesDict[key] = uniDirectionalClassesDict[key] - 1
+        
+        # Delete the silence entry:
+        del uniDirectionalClassesDict["silence"]
+
+    # Adjust the ground truth and the prediction array, by decrementing class 
+    # numbers, larger than, the silence class number:
+    for i in range(silenceNumber+1, len(uniDirectionalClassesDict)+1):
+        y_GT[y_GT == i] = i-1
+        y_pred[y_pred == i] = i-1
 
     confusionMatrixMulti(y_GT, y_pred, uniDirectionalClassesDict)
 
@@ -241,15 +264,17 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
 
     
 
-def createGTArray(gtList, classesDict, n_max_labels=3):
+def createGTArray(gtList, classesDict):
     """
     Create the numpy ground truth array for 0.5s long windows
-    
+    The maximum number of simultatious ground thruth labels per points is 5
+
     @param gtList: List containg lines in the following format: [timestamp, context_class, "start"/"end"] and no RECORDING_STARTED entries etc. 
     @param classesDict: "Bidirectional" dict containg mapping from class name to numbers and vice versa
-    @param n_max_labels: maximum number of labels that can be assign to one point
     @return: Numpy array of the ground truth
     """
+
+    n_max_labels=5
 
     # Find start and stop time, i.e. min and max values:
     tmpArray = np.array(gtList)
@@ -275,12 +300,15 @@ def createGTArray(gtList, classesDict, n_max_labels=3):
             tmpContext = gtList[i][1]
 
             start = int(2 * (gtList[i][0] - start_time))
-            
+
+            #print("i: " + str(i) + " " + str(gtList[i][1]))
+
             # Find the end time of this context:
             for j in range(i,len(gtList)):
 
-                if ((gtList[j][1] == tmpContext) and (gtList[j][2] == "end")):
+                #print("j: " + str(j))
 
+                if ((gtList[j][1] == tmpContext) and (gtList[j][2] == "end")):
 
                     end = int(2 * (gtList[j][0] - start_time))
                     
@@ -288,6 +316,10 @@ def createGTArray(gtList, classesDict, n_max_labels=3):
                         print("Problem when calculating GT array: index too large")
                         end = y_GT.shape[0]
 
+                    if start == end:
+                        # GT annotation was less than 0.5s, so we just ignore it
+                        break
+                    
                     # Check if we can write into the first column of the y_GT array:
                     if ((len(np.unique(y_GT[start:end,0])) == 1) and 
                     (np.unique(y_GT[start:end,0])[0] == -1)):
@@ -306,11 +338,26 @@ def createGTArray(gtList, classesDict, n_max_labels=3):
 
                         y_GT[start:end,2].fill(classesDict[gtList[i][1]])
                     
-                    else:
-                        print("Problem occurred when filling ground truth array." +  
-                        "Maybe you are using more than 3 simultaneous context classes?")
+                    # Check if we can write into the third column of the y_GT array:
+                    elif ((len(np.unique(y_GT[start:end,3])) == 1) and 
+                    (np.unique(y_GT[start:end,3])[0] == -1)):
+
+                        y_GT[start:end,3].fill(classesDict[gtList[i][1]])
                     
+                    # Check if we can write into the third column of the y_GT array:
+                    elif ((len(np.unique(y_GT[start:end,4])) == 1) and 
+                    (np.unique(y_GT[start:end,4])[0] == -1)):
+
+                        y_GT[start:end,4].fill(classesDict[gtList[i][1]])
+                    
+                    else:
+                        print("Problem occurred when filling ground truth array in line " + 
+                        "Maybe you are using more than 3 simultaneous context classes?")
+                   
                     break
+    
+
+
     return y_GT
 
 
