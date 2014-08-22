@@ -184,6 +184,15 @@ def onlineAccuracy(gtLogFile, predLogFile):
     y_GT = y_GT[maskValid]
     y_pred = y_pred[maskValid]
 
+    # Print for how many points no ground truth was provided:
+    noGtFreq = itemfreq(maskValid).astype(int)
+    validCount = noGtFreq[np.where(noGtFreq[:,0] == 1)[0][0], 1]
+    totalCount = sum(noGtFreq[:,1])
+    percentValid = round(validCount/float(totalCount) * 100, 2)
+
+    print("GT was provided for " + str(percentValid) + "% of all (non-silent) samples")
+    print("-----")
+
     # Calculate the overall accuracy and print it:
     correctPred = 0
     for i in range(y_pred.shape[0]):
