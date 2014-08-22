@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import csv
+from scipy.stats import itemfreq
 import ipdb as pdb #pdb.set_trace()
 from classifiers import confusionMatrixMulti
 
@@ -50,7 +51,9 @@ def onlineAccuracy(gtLogFile, predLogFile):
     # of RECORDING_STARTED entry, it is useless for use and we stop here:
     if (numRecStartedPred != numRecStartedGT):
         print("Prediction and ground truth file don't match, cannot" +
-        " evaluate the accuracy")
+        " evaluate the accuracy:")
+        print("Prediction file has " + str(numRecStartedPred) + " RECORDING_STARTED entries " +
+        "and GT file has " + str(numRecStartedGT) + " RECORDING_STARTED entries")
         return None 
 
     
@@ -95,13 +98,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
         gtList = list(tmpGT[startIdxGT:endIdxGT])
         predList = list(tmpPred[startIdxPred:endIdxPred])
-
-        #print(":::::")
-        #print(np.array(gtList))
-        #print(np.array(predList))
-
-        
-
+       
         # Round every entry to 0.5s:
         for i in range(len(gtList)):
             #gtList[i][0] = 0.5 * math.ceil(2.0 * float(gtList[i][0]))
@@ -138,7 +135,41 @@ def onlineAccuracy(gtLogFile, predLogFile):
     # prediction array:
 
     silenceClassNum = classesDict["silence"]
+
+    # Calculate how many % of the predicitions are silent for each classes, 
+    # only points where GT provided will be considered here:
+    freq = itemfreq(y_pred).astype(int)
+
+    silenceCount = freq[np.where(freq[:,0] == silenceClassNum)[0][0], 1]
+    totalCount = freq[:,1].sum()
     
+    print("In total " + str(round(silenceCount/ (float(totalCount)), 2) * 100) + 
+    "% of all considered samples were silent")
+    print("-----")
+
+    # Calculate percentage of silence for each class:
+    silenceCountPerClass = np.zeros(len(classesDict)/2)
+    
+    for i in range(y_pred.shape[0]):
+        if y_pred[i] == silenceClassNum:
+            # increment each class that was the ground truth for that point: 
+            for j in range(y_GT.shape[1]):
+                if int(y_GT[i,j]) != -1:
+                    # ignore invalid (-1) class entries
+                    silenceCountPerClass[int(y_GT[i,j])] += 1
+    
+    gtFreq = itemfreq(y_GT.flat).astype(int)
+
+    for i in range(silenceCountPerClass.shape[0]):
+        if i in gtFreq[:,0]:
+            silencePercentage = round(silenceCountPerClass[i] / float(
+            gtFreq[np.where(gtFreq[:,0] == i)[0][0], 1]) * 100, 2)
+
+            print("Class " + classesDict[i] + " contains " + str(silencePercentage) + 
+            "% silence")
+    
+    print("-----")
+
     # Positions where no silence predicted:
     maskValid = (y_pred != silenceClassNum)
 
@@ -152,7 +183,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
     y_GT = y_GT[maskValid]
     y_pred = y_pred[maskValid]
-    
+
     # Calculate the overall accuracy and print it:
     correctPred = 0
     for i in range(y_pred.shape[0]):
@@ -161,7 +192,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     
     accuracy = correctPred / float(y_pred.shape[0])
     print("Overall accuracy: " + str(round(accuracy*100,2)) + "%")
-    #print("-----")
+    print("-----")
 
     # The method to plot the confusion matrix, needs a classes dictionary, 
     # that is NOT bidirectional, so we remove all elements, where the keys
