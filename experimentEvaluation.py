@@ -5,11 +5,6 @@ from scipy.stats import itemfreq
 import ipdb as pdb #pdb.set_trace()
 from classifiers import confusionMatrixMulti
 
-"""
-Different methods to evaluate the results of the experiment
-
-"""
-
 def onlineAccuracy(gtLogFile, predLogFile):
     """
     Evaluate the performance of the online prediction by comparing 
@@ -18,7 +13,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     @param gtLogFile:
     @param predLogFile:
     """
-    
+
     with open(gtLogFile) as f:
         reader = csv.reader(f, delimiter="\t")
         gtListOriginal = list(reader)
@@ -27,6 +22,13 @@ def onlineAccuracy(gtLogFile, predLogFile):
         reader = csv.reader(f, delimiter="\t")
         predListOriginal = list(reader)
   
+    # These classes will be completely removed from the prediction and the ground truth lists:
+    classesToIgnore = ["Home"]
+    for ignoreClass in classesToIgnore:
+        # Remove every class that should be ignored:
+        gtListOriginal = [el for el in gtListOriginal if ignoreClass not in el]
+        predListOriginal = [el for el in predListOriginal if ignoreClass not in el]
+    
     numRecStartedGT = 0
     numRecStartedPred = 0
 
@@ -56,26 +58,8 @@ def onlineAccuracy(gtLogFile, predLogFile):
         "and GT file has " + str(numRecStartedGT) + " RECORDING_STARTED entries")
         return None 
 
-    
-    class_name_set = []
-    for el in gtListOriginal:
-        if len(el) > 1:
-            class_name_set.append(el[1])
-    for el in predListOriginal:
-        if len(el) > 1:
-            class_name_set.append(el[0])
-    
-    class_name_set = list(set(class_name_set))
-    # Create a dict to map class name to number (this is a "bidirectional" dict,
-    # i.e. elements can be access by d["className"] and d[2]
-    # This dict contains all classes of both, the ground truth and the prediction array
-    classesDict = {}
-    for i in range(len(class_name_set)):
-        classesDict[class_name_set[i]] = i
-        #print(class_name_set[i] + " = " + str(i))
-        
-    #print("-----")
-    classesDict.update(dict((v, k) for k, v in classesDict.iteritems()))
+
+    classesDict = createClassesDict(gtListOriginal, predListOriginal)
 
     y_GT = []
     y_pred = []
@@ -101,17 +85,19 @@ def onlineAccuracy(gtLogFile, predLogFile):
        
         # Round every entry to 0.5s:
         for i in range(len(gtList)):
-            #gtList[i][0] = 0.5 * math.ceil(2.0 * float(gtList[i][0]))
-            gtList[i][0] = round(2 * float(gtList[i][0]))/2
+            try:
+                gtList[i][0] = round(2 * float(gtList[i][0]))/2
+            except:
+                pdb.set_trace()
 
         # Find start and stop time, i.e. min and max values:
         tmpArray = np.array(gtList)
 
+        #pdb.set_trace()
+
         # If there is not more entry after a RECORDING_STARTED line, do nothing:
         if tmpArray.shape[0] != 0:
 
-            #start_time_gt = float(min(tmpArray[:,0]))
-            #stop_time_gt = float(max(tmpArray[:,0]))
             start_time_gt = min(tmpArray[:,0].astype(np.float32, copy=False))
             stop_time_gt = max(tmpArray[:,0].astype(np.float32, copy=False))
 
@@ -395,15 +381,34 @@ def createGTArray(gtList, classesDict):
                         "Maybe you are using more than 3 simultaneous context classes?")
                    
                     break
-    
-
-
     return y_GT
 
+def createClassesDict(gtList, predList):
+    """
+    Create a dict to map class name to number (this is a "bidirectional" dict,
+    i.e. elements can be access by d["className"] and d[2]
+    This dict contains all classes of both, the ground truth and the prediction array
+    """
 
+    class_name_set = []
+    for el in gtList:
+        if len(el) > 1:
+            class_name_set.append(el[1])
+    for el in predList:
+        if len(el) > 1:
+            class_name_set.append(el[0])
+    
+    class_name_set = list(set(class_name_set))
 
+    classesDict = {}
+    for i in range(len(class_name_set)):
+        classesDict[class_name_set[i]] = i
+        #print(class_name_set[i] + " = " + str(i))
+        
+    #print("-----")
+    classesDict.update(dict((v, k) for k, v in classesDict.iteritems()))
 
-
+    return classesDict
 
 
 
