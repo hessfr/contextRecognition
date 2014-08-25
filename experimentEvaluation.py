@@ -14,6 +14,17 @@ def onlineAccuracy(gtLogFile, predLogFile):
     @param predLogFile:
     """
 
+    classesToIgnore = ["Home"]
+    #classesToIgnore = []
+
+    # Syntax: key = old class name, value = new class name:
+    classesToRename = {"Cycling": "Street"}
+    #classesToRename = {}
+
+    # Syntax key = new class name, value: list of old classes that should be merged:
+    #classesToMerge = {"Transport": ["Car", "Bus", "Train", "Tram"]}
+    classesToMerge = {}
+
     with open(gtLogFile) as f:
         reader = csv.reader(f, delimiter="\t")
         gtListOriginal = list(reader)
@@ -23,12 +34,43 @@ def onlineAccuracy(gtLogFile, predLogFile):
         predListOriginal = list(reader)
   
     # These classes will be completely removed from the prediction and the ground truth lists:
-    classesToIgnore = ["Home"]
     for ignoreClass in classesToIgnore:
         # Remove every class that should be ignored:
         gtListOriginal = [el for el in gtListOriginal if ignoreClass not in el]
         predListOriginal = [el for el in predListOriginal if ignoreClass not in el]
-    
+
+    # Rename equivalent classes, so that both classes will be treated as one:
+    for i in range(len(gtListOriginal)):
+        for j in range(len(gtListOriginal[i])):
+            if gtListOriginal[i][j] in classesToRename.keys():
+                gtListOriginal[i][j] = classesToRename[gtListOriginal[i][j]]
+    for i in range(len(predListOriginal)):
+        for j in range(len(predListOriginal[i])):
+            if predListOriginal[i][j] in classesToRename.keys():
+                predListOriginal[i][j] = classesToRename[predListOriginal[i][j]]
+
+    # Merge multiple classes into a new class:
+    for i in range(len(gtListOriginal)):
+        for j in range(len(gtListOriginal[i])):
+            for k in range(len(classesToMerge.values())):
+                if gtListOriginal[i][j] in classesToMerge.values()[k]:
+                    gtListOriginal[i][j] = classesToMerge.keys()[k]
+    for i in range(len(predListOriginal)):
+        for j in range(len(predListOriginal[i])):
+            for k in range(len(classesToMerge.values())):
+                if predListOriginal[i][j] in classesToMerge.values()[k]:
+                    predListOriginal[i][j] = classesToMerge.keys()[k]
+
+
+
+
+
+
+
+
+
+
+
     numRecStartedGT = 0
     numRecStartedPred = 0
 
@@ -65,7 +107,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     y_pred = []
 
     # Now create predictions and ground truth arrays from one RECORDING_STARTED
-    # element to the next one:
+    # entry the next one:
     for k in range(numRecStartedPred):
 
         tmpGT = np.array(gtListOriginal)
@@ -101,10 +143,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
             start_time_gt = min(tmpArray[:,0].astype(np.float32, copy=False))
             stop_time_gt = max(tmpArray[:,0].astype(np.float32, copy=False))
 
-            #print(tmpArray)
-
-            #pdb.set_trace()
-
             y_GT_tmp = createGTArray(gtList, classesDict)
 
             y_pred_tmp = createPredictionArray(predList, start_time_gt, 
@@ -133,51 +171,11 @@ def onlineAccuracy(gtLogFile, predLogFile):
     "% of all considered samples were silent")
     print("-----")
 
-    # Calculate percentage of silence for each class:
-    silenceCountPerClass = np.zeros(len(classesDict)/2)
-    
-    for i in range(y_pred.shape[0]):
-        if y_pred[i] == silenceClassNum:
-            # increment each class that was the ground truth for that point: 
-            for j in range(y_GT.shape[1]):
-                if int(y_GT[i,j]) != -1:
-                    # ignore invalid (-1) class entries
-                    silenceCountPerClass[int(y_GT[i,j])] += 1
-    
-    gtFreq = itemfreq(y_GT.flat).astype(int)
+    # Calculate how many percent of the samples are silent for each class in the ground truth:
+    silencePerClass(y_pred, y_GT, classesDict, silenceClassNum)
 
-    for i in range(silenceCountPerClass.shape[0]):
-        if i in gtFreq[:,0]:
-            silencePercentage = round(silenceCountPerClass[i] / float(
-            gtFreq[np.where(gtFreq[:,0] == i)[0][0], 1]) * 100, 2)
-
-            print("Class " + classesDict[i] + " contains " + str(silencePercentage) + 
-            "% silence")
-    
-    print("-----")
-
-    # Positions where no silence predicted:
-    maskValid = (y_pred != silenceClassNum)
-
-    y_GT = y_GT[maskValid]
-    y_pred = y_pred[maskValid]
-
-    # We also ignore those samples where not ground truth was provided, 
-    # i.e. we delete those entries from the GT and the prediction array:
-    invalidRow = np.array([-1,-1,-1,-1,-1]) # has to match the max allow GT labels per points
-    maskValid = ~np.all(y_GT==invalidRow,axis=1)
-
-    y_GT = y_GT[maskValid]
-    y_pred = y_pred[maskValid]
-
-    # Print for how many points no ground truth was provided:
-    noGtFreq = itemfreq(maskValid).astype(int)
-    validCount = noGtFreq[np.where(noGtFreq[:,0] == 1)[0][0], 1]
-    totalCount = sum(noGtFreq[:,1])
-    percentValid = round(validCount/float(totalCount) * 100, 2)
-
-    print("GT was provided for " + str(percentValid) + "% of all (non-silent) samples")
-    print("-----")
+    # Remove points that were silent or where no ground truth was provided:
+    y_pred, y_GT = removeInvalids(y_pred, y_GT, silenceClassNum)
 
     # Calculate the overall accuracy and print it:
     correctPred = 0
@@ -196,8 +194,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
     for key in classesDict.keys():
         if type(key) is str:
             uniDirectionalClassesDict[key] = classesDict[key]
-
-    #pdb.set_trace()
 
     # Adjust the classesDict by removing the entry for silence:
     if "silence" in uniDirectionalClassesDict.keys():
@@ -410,5 +406,60 @@ def createClassesDict(gtList, predList):
 
     return classesDict
 
+def silencePerClass(y_pred, y_GT, classesDict, silenceClassNum):
+    """
+    Calculate and print percentage of silence for each class
 
+    """
+    silenceCountPerClass = np.zeros(len(classesDict)/2)
+    
+    for i in range(y_pred.shape[0]):
+        if y_pred[i] == silenceClassNum:
+            # increment each class that was the ground truth for that point: 
+            for j in range(y_GT.shape[1]):
+                if int(y_GT[i,j]) != -1:
+                    # ignore invalid (-1) class entries
+                    silenceCountPerClass[int(y_GT[i,j])] += 1
+    
+    gtFreq = itemfreq(y_GT.flat).astype(int)
 
+    for i in range(silenceCountPerClass.shape[0]):
+        if i in gtFreq[:,0]:
+            silencePercentage = round(silenceCountPerClass[i] / float(
+            gtFreq[np.where(gtFreq[:,0] == i)[0][0], 1]) * 100, 2)
+            print("Class " + classesDict[i] + " contains " + str(silencePercentage) + 
+            "% silence")
+    
+    print("-----")
+
+def removeInvalids(y_pred, y_GT, silenceClassNum):
+    """
+    Remove all points from the prediction and the ground truth array where
+    not ground truth was provided or where the point was silent
+    
+    @return: y_pred, y_GT: the updated arrays
+    """
+    # Positions where no silence predicted:
+    maskValid = (y_pred != silenceClassNum)
+
+    y_GT = y_GT[maskValid]
+    y_pred = y_pred[maskValid]
+
+    # We also ignore those samples where not ground truth was provided, 
+    # i.e. we delete those entries from the GT and the prediction array:
+    invalidRow = np.array([-1,-1,-1,-1,-1]) # has to match the max allow GT labels per points
+    maskValid = ~np.all(y_GT==invalidRow,axis=1)
+
+    y_GT = y_GT[maskValid]
+    y_pred = y_pred[maskValid]
+
+    # Print for how many points no ground truth was provided:
+    noGtFreq = itemfreq(maskValid).astype(int)
+    validCount = noGtFreq[np.where(noGtFreq[:,0] == 1)[0][0], 1]
+    totalCount = sum(noGtFreq[:,1])
+    percentValid = round(validCount/float(totalCount) * 100, 2)
+
+    print("GT was provided for " + str(percentValid) + "% of all (non-silent) samples")
+    print("-----")
+
+    return y_pred, y_GT
