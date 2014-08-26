@@ -5,11 +5,11 @@ import wave
 import struct
 import ipdb as pdb
 
-def createWav(binary_file, output_file, sample_rate=16000, datatype=np.int16):
+def createWav(path, binary_file, output_file, sample_rate=16000, datatype=np.int16):
     """
 
     """
-    fin = open(binary_file, "rb")
+    fin = open(os.path.join(path, binary_file), "rb")
 
     fin.seek(0, os.SEEK_END)
     file_length = fin.tell()
@@ -21,7 +21,7 @@ def createWav(binary_file, output_file, sample_rate=16000, datatype=np.int16):
     n_iter = int(math.ceil(len_seconds/float(stepsize_seconds)))
 
     output_file = output_file + ".wav"
-    fout = wave.open(output_file, 'wb')
+    fout = wave.open(os.path.join(path, output_file), 'wb')
     fout.setparams((1, 2, sample_rate, 0, 'NONE', 'not compressed'))
     
     for i in range(n_iter):
