@@ -139,7 +139,7 @@ def simulateAL(trainedGMM, testFeatureData):
     majWrongCnt = 0 #only for evaluation
     
     
-        # This loop loads new data every 2sec
+    # This loop loads new data every 2sec:
     for i in range(simFeatures.shape[0]/b):
         start = i*b
         end = (i+1)*b
@@ -147,7 +147,7 @@ def simulateAL(trainedGMM, testFeatureData):
         actualLabel = int(simLabels[end]) # only the latest label is used to adapt the model, like in real-life
         currentTime = i*b*0.032
 
-        # Buffer points of the 30 last 2 second intervals, as we used want to update 
+        # Buffer points of the 30 last 2 second intervals, as we want to update 
         # our model with the last minute of data
         if len(updatePoints) < 1875:
             updatePoints.extend(currentPoints.tolist())
@@ -308,7 +308,6 @@ def simulateAL(trainedGMM, testFeatureData):
                             thresSet[i] = False
                             if(feedbackReceived[i]) == False:
                                 initThresBuffer[i] = []
-
 
                         prevTime = currentTime
 

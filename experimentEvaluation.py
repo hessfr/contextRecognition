@@ -22,8 +22,8 @@ def onlineAccuracy(gtLogFile, predLogFile):
     #classesToRename = {}
 
     # Syntax key = new class name, value: list of old classes that should be merged:
-    #classesToMerge = {"Transport": ["Car", "Bus", "Train", "Tram"]}
-    classesToMerge = {}
+    classesToMerge = {"Transport": ["Car", "Bus", "Train", "Tram"]}
+    #classesToMerge = {}
 
     with open(gtLogFile) as f:
         reader = csv.reader(f, delimiter="\t")

@@ -128,8 +128,7 @@ public class AudioWorker extends IntentService {
 						AppStatus.getInstance().get() == AppStatus.MODEL_ADAPTION) {
 					
 					//Check if sequence length is 2 seconds (more precisely 63 32ms windows)
-					if (data.length != 32256) { //data.length != 64512
-						// a single 32ms window has size 1024??
+					if (data.length != 32256) {
 						Log.e(TAG,"data sequence has wrong length, aborting calculation");
 						return;
 					}
@@ -202,7 +201,6 @@ public class AudioWorker extends IntentService {
 							PredictionResult predictionResult = clf.predict(gmm, samples);
 							int currentResult = predictionResult.get_class();
 							double currentEntropy = predictionResult.get_entropy();
-							//Log.i(TAG, "currentEntropy: " + currentEntropy);
 							
 							stringRes = gmm.get_class_name(currentResult);
 							

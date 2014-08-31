@@ -41,11 +41,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
     mergedComp = 0
     addedComp = 0
 
-    #n_old = 34275 # conv # TODO: save number of training points in tGMM dict! (and update later)
-    # n_old = 57567 # office
-    #n_old = 125351 # train
-
-
     """ Estimate number of components in the new data using BIC: """
     n_components_list = range(1,8)
     bicList = []
@@ -102,9 +97,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
     """ Compute components: """
     j = 0    
     for k in mapping:
-        # TODO: delete this later: xxxxxxxxxxxxxx
-        # tmpComponent = mergeComponents(n_old, n_novel, Mk[k], oldGMM.weights_[j], novelGMM.weights_[k], oldGMM.means_[j], novelGMM.means_[k], oldGMM.covars_[j], novelGMM.covars_[k])
-        # xxxxxxxx
         if k != -1:
             tmpComponent = mergeComponents(n_old, n_novel, Mk[k], oldGMM.weights_[j], novelGMM.weights_[k], oldGMM.means_[j], novelGMM.means_[k], oldGMM.covars_[j], novelGMM.covars_[k])
             mergedComp += 1
