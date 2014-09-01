@@ -1,34 +1,38 @@
 \chapter{Introduction}\label{cha1}
 \section{Motivation}
-Recent technological advances of mobile phone have created the possibility (goal??) to quantitatively (??) predict the context of the user. According to Lane et al. this is mainly the result of the following developments:
-\begin{itemize}
-  \item The first item
-  \item The second item
-  \item The third etc \ldots
-\end{itemize}
+Recent technological advances of mobile devices and exponentially increasing user numbers have created a new research area to quantitatively (??) predict the context of users. A wide range of sensors included in modern smart phone can be utilized for this purpose including accelerometers, gyroscopes, GPS, Wifi, cameras, proximity sensors, microphones etc.\\
+This additional information gives rise to a new kind of applications in various domains like public transport \cite{Thiagarajan2014}, healthcare \cite{Bricon-Souf2007} or social science \cite{Eagle2005} can provide the basis for more intuitive human-computer interaction \cite{Schmidt1999}.\\
+Most recognition system include many different sensor modalities and try to fuse them in a reasonable way. Nevertheless researchers also try to improve recognition results of individual sensor modalities independent from each other.\\
+In this work we will focus on how to use the contextual cues contained in ambient sound to predict the context of a user. Much of this information is not existing in other modalities (e.g. speech) and can therefore provide deeper insights of user contexts.\\
+A common challenge of many machine learning application is how to obtain data to train the algorithm without putting too much burden on the end user to collect / create this data.\\
+In this thesis we used sound files from the crowd-sourced sound repository Freesound\footnote{www.freesound.org} to initially train the classifier. However this crowd-sourced data can be different from the sound encountered by individual users. To fit this general model to specific users, stream-based active learning is used to query end users about their actual context from time to time and incorporate this information into the recognition system. 
 
-
-- Increasing performance of mobile platform enables context recognition
-
-- Help understanding human behaviour better (in a quantitative way)
-
-- Improve human-computer interaction (with example)
-
-- Audio modality can give deeper insights than other, more common modalities like only location
-
--  
 
 \section{Related Work}\label{relatedWork}
 bla
 
-\subsection{Audio based context recognition}\label{abc}
-abc
+\subsection{Audio-based Context Recognition}\label{abc}
+In 2006 Eronen et al. implemented an offline classification system with 18 different classes in \cite{Eronen2006} and compare the performance of different machine learning algorithms and features. Best recognition results (63\% accuracy) were achieved with twelve MFCC coefficients (TODO: ref) and a Gaussian Mixture Model (GMM) (TODO: ref).\\
+Lu et al. published a sound sensing systems in 2009 that runs on a mobile phone () and was able to achieve an average precision of 74\% and a recall of 80.75\% on a data set containing the classes \textit{walking}, \textit{taking an elevator}, \textit{driving a car} and \textit{taking a bus} \cite{Lu2009}. A Naive Bayes classifier combined with a Hidden Markov Model (HMM) to smoothen the output was used on a feature set of twelve MFCC coefficients.\\
+A real-time recognition system was published by Feki et al. in 2011 where the performance of Support Vector Machines (SVM) and HMM where investigated on 20 different sound classes (including many \textit{event-like} classes as explosions, police alarms and phone ringtones) \cite{Feki2011}. Like in previous paper, 12 MFCC values were used and resulted in an accuracy of around 85\%.\\
+Another real-time implementation of audio context recognition on a smart phone was proposed proposed by Rossi et al. and uses a SVM with a Gaussian Kernel and was able to achieve an overall accuracy of 58\% of 23 different context classes \cite{Rossi2013}. Additionally energy consumption and processing time was investigated and revealed that around 80\% of the processing time was spent on the feature computation.\\
+Choi 2013 also?? \\
+\\
+For all of the above mentioned approaches training data (i.e. audio samples) had to be collected and labelled manually, which can be a very time consuming process and does ensure to be viable for other users \cite{Rossi2012}.\\
+To tackle this problem Rossi et al. proposed to train a classifier with sound files from the crowd-sourced sound repository Freesound\footnote{www.freesound.org} and use this model to make predictions on real-world daily life audio data \cite{Rossi2012}. An accuracy of up to 60\% was achieved on 30s long test sequences with a GMM classifier.\\
+Nguyen-Dinh et al. showed in \cite{Nguyen-Dinh2013} that a classifier trained on crowd-sourced data .............
 
-\subsection{Crowd-sourcing}
-abc
+ 
+
+
+
+
 
 \subsection{Active learning}
-abc
+
+\subsubsection{Pool-based Active Learning}
+
+\subsubsection{Stream-based Active Learning}
 
 \subsection{Gaussian mixture model}
 abc
