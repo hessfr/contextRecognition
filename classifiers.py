@@ -267,7 +267,8 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, show
 
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of already extracted features of the test file
-    @param useMajorityVote: Set to False if you don't want to use majority vote. Default is True
+    @param useMajorityVote: Set to False if you don't want to use majority vote.
+    Default is True
     @param scale: Set to False if you do not want featureData to be scaled. Default is True
     @param showPlots:
     """
@@ -394,7 +395,10 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, show
 
 def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
     """
-    Always use majority vote and return the mean entropy of the 2second interval
+    This method is used for the active learning simutaltion and returns 
+    the prediction with a majority vote on the whole interval (normally it should be 2s).
+    The mean value of the entropy can also be returned.
+    
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of features of the points that should be tested
     @param scale: Set to False if you do not want featureData to be scaled. Default is True

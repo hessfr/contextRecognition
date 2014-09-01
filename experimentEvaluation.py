@@ -61,16 +61,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
                 if predListOriginal[i][j] in classesToMerge.values()[k]:
                     predListOriginal[i][j] = classesToMerge.keys()[k]
 
-
-
-
-
-
-
-
-
-
-
     numRecStartedGT = 0
     numRecStartedPred = 0
 
@@ -107,7 +97,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     y_pred = []
 
     # Now create predictions and ground truth arrays from one RECORDING_STARTED
-    # entry the next one:
+    # entry the until the next one:
     for k in range(numRecStartedPred):
 
         tmpGT = np.array(gtListOriginal)

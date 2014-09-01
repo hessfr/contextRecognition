@@ -43,7 +43,7 @@ def getFeaturesMultipleClasses(classesList):
     
     return featureData
 
-def getFeatures(className, downloadFileNum=30):
+def getFeatures(className, downloadFileNum=0):
     """
     If features are already extracted, just return them, if not use the Java perform the extraction.
     Combines download, conversion, outlier removal and feature extraction for a given class.
@@ -64,7 +64,7 @@ def getFeatures(className, downloadFileNum=30):
     else:
 
         """ Check if the class is downloaded already (but not yet extracted): """
-        if checkDownloaded(className, minNumber=10):
+        if checkDownloaded(className, minNumber=downloadFileNum):
             
             if FX_Java(className):
                 res = np.array(json.load(open(filename,"rb")))
