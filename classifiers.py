@@ -267,8 +267,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, show
 
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of already extracted features of the test file
-    @param useMajorityVote: Set to False if you don't want to use majority vote.
-    Default is True
+    @param useMajorityVote: Set to False if you don't want to use majority vote. Default is True
     @param scale: Set to False if you do not want featureData to be scaled. Default is True
     @param showPlots:
     """
@@ -395,10 +394,7 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, show
 
 def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
     """
-    This method is used for the active learning simutaltion and returns 
-    the prediction with a majority vote on the whole interval (normally it should be 2s).
-    The mean value of the entropy can also be returned.
-    
+    Always use majority vote and return the mean entropy of the 2second interval
     @param trainedGMM: already trained GMM
     @param featureData: Numpy array of features of the points that should be tested
     @param scale: Set to False if you do not want featureData to be scaled. Default is True
@@ -648,21 +644,26 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     cm = np.zeros((n_classes,n_classes))
 
     for i in range(y_pred.shape[0]):
-        if y_pred[i] in y_GT[i,:]:
-            """ If correct prediction made, add one on the corresponding diagonal element in the confusion matrix: """
-            cm[int(y_pred[i]),int(y_pred[i])] += 1
-        else:
-            """ If not predicted correctly, divide by the number of ground truth labels for that point and split
-            between corresponding non-diagonal elements: """
-            gtLabels = y_GT[i,:]
-            labels = gtLabels[gtLabels != -1] #ground truth labels assigned to that point (only valid ones)
-            n_labels = len(labels) #number of valid labels assigned
+        # Only count points where prediction value is valid:
+        if int(y_pred[i]) != -1:
             
-            weight = 1/float(n_labels) #value that will be added to each assigned (incorrect) label
+            if y_pred[i] in y_GT[i,:]:
+                """ If correct prediction made, add one on the corresponding diagonal element in the confusion matrix: """
+                
+                cm[int(y_pred[i]),int(y_pred[i])] += 1
 
-            for label in labels:
-                cm[int(label), int(y_pred[i])] += weight
-    
+            else:
+                """ If not predicted correctly, divide by the number of ground truth labels for that point and split
+                between corresponding non-diagonal elements: """
+                gtLabels = y_GT[i,:]
+                labels = gtLabels[gtLabels != -1] #ground truth labels assigned to that point (only valid ones)
+                n_labels = len(labels) #number of valid labels assigned
+                
+                weight = 1/float(n_labels) #value that will be added to each assigned (incorrect) label
+
+                for label in labels:
+                    cm[int(label), int(y_pred[i])] += weight
+                
     normalized = []
     for row in cm:
         rowSum = sum(row)
