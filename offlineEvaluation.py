@@ -26,10 +26,10 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
     #TODO: ignore, rename or merge classes
     
     # These classes will be completely removed from the ground truth lists:
-    classesToIgnore = ["Home"]
-    for ignoreClass in classesToIgnore:
-        # Remove every class that should be ignored:
-        gtListOriginal = [el for el in gtListOriginal if ignoreClass not in el]
+    #classesToIgnore = ["Home"]
+    #for ignoreClass in classesToIgnore:
+    #    # Remove every class that should be ignored:
+    #    gtListOriginal = [el for el in gtListOriginal if ignoreClass not in el]
 
     # List containing the indices of all RECORDING_STARTED entries
     recStartedList = []
@@ -75,6 +75,8 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
     y_gt = np.array(y_gt)
     y_pred = np.array(y_pred)
 
+    pdb.set_trace()
+    
     # Delete invalid rows:
     invalidRow = np.array([-1,-1,-1,-1,-1])
     maskValid = ~np.all(y_gt==invalidRow,axis=1)
@@ -86,8 +88,6 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
     for i in range(y_pred.shape[0]):
         if y_pred[i] in y_gt[i,:]:
             correctPred += 1
-
-    pdb.set_trace()
 
     accuracy = correctPred / float(y_pred.shape[0])
     print("Overall accuracy: " + str(round(accuracy*100,2)) + "%")
