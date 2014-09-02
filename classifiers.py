@@ -644,21 +644,26 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     cm = np.zeros((n_classes,n_classes))
 
     for i in range(y_pred.shape[0]):
-        if y_pred[i] in y_GT[i,:]:
-            """ If correct prediction made, add one on the corresponding diagonal element in the confusion matrix: """
-            cm[int(y_pred[i]),int(y_pred[i])] += 1
-        else:
-            """ If not predicted correctly, divide by the number of ground truth labels for that point and split
-            between corresponding non-diagonal elements: """
-            gtLabels = y_GT[i,:]
-            labels = gtLabels[gtLabels != -1] #ground truth labels assigned to that point (only valid ones)
-            n_labels = len(labels) #number of valid labels assigned
+        # Only count points where prediction value is valid:
+        if int(y_pred[i]) != -1:
             
-            weight = 1/float(n_labels) #value that will be added to each assigned (incorrect) label
+            if y_pred[i] in y_GT[i,:]:
+                """ If correct prediction made, add one on the corresponding diagonal element in the confusion matrix: """
+                
+                cm[int(y_pred[i]),int(y_pred[i])] += 1
 
-            for label in labels:
-                cm[int(label), int(y_pred[i])] += weight
-    
+            else:
+                """ If not predicted correctly, divide by the number of ground truth labels for that point and split
+                between corresponding non-diagonal elements: """
+                gtLabels = y_GT[i,:]
+                labels = gtLabels[gtLabels != -1] #ground truth labels assigned to that point (only valid ones)
+                n_labels = len(labels) #number of valid labels assigned
+                
+                weight = 1/float(n_labels) #value that will be added to each assigned (incorrect) label
+
+                for label in labels:
+                    cm[int(label), int(y_pred[i])] += weight
+                
     normalized = []
     for row in cm:
         rowSum = sum(row)

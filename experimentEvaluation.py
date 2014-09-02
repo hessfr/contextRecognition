@@ -61,16 +61,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
                 if predListOriginal[i][j] in classesToMerge.values()[k]:
                     predListOriginal[i][j] = classesToMerge.keys()[k]
 
-
-
-
-
-
-
-
-
-
-
     numRecStartedGT = 0
     numRecStartedPred = 0
 
@@ -211,6 +201,8 @@ def onlineAccuracy(gtLogFile, predLogFile):
     for i in range(silenceNumber+1, len(uniDirectionalClassesDict)+1):
         y_GT[y_GT == i] = i-1
         y_pred[y_pred == i] = i-1
+
+    #pdb.set_trace()
 
     confusionMatrixMulti(y_GT, y_pred, uniDirectionalClassesDict)
 
