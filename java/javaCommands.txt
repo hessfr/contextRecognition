@@ -3,3 +3,7 @@ javac -cp \* extractFeatures.java FFT.java MFCC.java Window.java Matrix.java
 
 executing:
 java -cp .:\* extractFeatures --folder test
+of
+
+java -cp .:\* extractFeatures --file test.wav
+

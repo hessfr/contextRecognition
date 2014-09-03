@@ -20,6 +20,13 @@ import com.google.common.primitives.Shorts;
  * 
  * Additionally the maximum amplitude value of each window is stored under the 
  * key "amps". Note that "features" and "amps" always have the exact same length
+ *
+ * USAGE:
+ * java -cp .:\* extractFeatures --file /path/to/audio.wav will create JSON file in the
+ * same directory
+ *
+ * java -cp .:\* extractFeatures --folder ContextClass will extract features from all 
+ * files stored in ../sound/ContextClass/ and save it in ../extractedFeatures/ContextClass.json
  */
 public class extractFeatures {
 
@@ -283,7 +290,14 @@ public class extractFeatures {
 
 				HashMap hm = extractor.extractFile(args[1]);
 
-				extractor.saveGson(hm, args[1]);
+                String newFilename = args[1];
+
+                // If the given filename have an extension (e.g. *.wav) remove it: 
+                if (newFilename.indexOf(".") != -1) {
+                    newFilename = newFilename.substring(0, newFilename.lastIndexOf('.'));
+                }
+
+				extractor.saveGson(hm, newFilename);
 
 			} else {
 				System.out
