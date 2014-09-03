@@ -5,7 +5,7 @@ import pickle
 import json
 from scipy.stats import itemfreq
 import ipdb as pdb #pdb.set_trace()
-from classifiers import testGMM, getIndex, confusionMatrixMulti
+from classifiers import getIndex, confusionMatrixMulti, logProb
 
 def offlineAccuracy(gmm, jsonFileList, gtLogFile):
     """
@@ -50,9 +50,8 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
     # Make prediction and compare it to GT for each RECORDING_STARTED entry to the next one:
     for k in range(len(jsonFileList)):
         
-        features = np.array(json.load(open(jsonFileList[k],"rb")))
-
-        y_pred_tmp = testGMM(gmm, features)
+        silenceClassNum = max(gmm["classesDict"].values())+1
+        y_pred_tmp = createPrediction(gmm, jsonFileList[k], silenceClassNum)
         y_pred_tmp = y_pred_tmp.tolist()
 
         tmpGT = np.array(gtListOriginal)
@@ -74,15 +73,23 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
 
     y_gt = np.array(y_gt)
     y_pred = np.array(y_pred)
-
-    pdb.set_trace()
     
     # Delete invalid rows:
     invalidRow = np.array([-1,-1,-1,-1,-1])
     maskValid = ~np.all(y_gt==invalidRow,axis=1)
     y_gt = y_gt[maskValid]
     y_pred = y_pred[maskValid]
-   
+  
+    # Calculate how many percent of the samples are silent and delete silent samples from
+    # y_gt and y_pred:
+    maskNonSilent = (y_pred != silenceClassNum)
+    numSilentSamples = np.sum(~maskNonSilent)
+    silentPercentage = numSilentSamples / float(y_pred.shape[0])
+    print(str(round(silentPercentage*100,2)) + "% percent of all samples are silent")
+
+    y_gt = y_gt[maskNonSilent]
+    y_pred = y_pred[maskNonSilent]
+
     # Calculate the overall accuracy and print it:
     correctPred = 0
     for i in range(y_pred.shape[0]):
@@ -175,6 +182,107 @@ def createGTMulti(classesDict, length, gtList):
             el + "'. It will not be considered for testing.")
     return y_GT
 
+def createPrediction(trainedGMM, jsonFile, silenceClassNum):
+    """
+    Create prediction with a 2s majority vote. Like in the Android app, 2s windows where all
+    amplitude values are below the threshold will be ignored, and no prediction will be made.
+
+    @param trainedGMM: already trained GMM
+    @param jsonFile: path the json file that contains the features and amplitude values. This
+    file has to have the features under the key "features" and the amplitude values under the
+    key "amps"
+    @param silenceClassNum: The class number to which silent sequences will be assigned
+    """
+    n_classes = len(trainedGMM['clfs'])
+
+    jsonData = json.load(open(jsonFile, "rb"))
+    featureData = np.array(jsonData["features"])
+    amps = np.array(jsonData["amps"])
+
+    X_test = trainedGMM['scaler'].transform(featureData)
+
+    logLikelihood = np.zeros((n_classes, X_test.shape[0]))
+
+    """ Compute log-probability for each class for all points: """
+    for i in range(n_classes):
+
+        # logLikelihood[i] = trainedGMM['clfs'][i].score(X_test) # uses scikit function
+        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_, trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_) # uses logProb function defined below
+
+    """ Select the class with the highest log-probability: """
+    y_pred = np.argmax(logLikelihood, 0)
+
+    return majorityVoteSilence(y_pred, amps, silenceClassNum)
+
+def majorityVoteSilence(y_Raw, amps, silenceClassNum):
+    """
+    The method first checks for every 2s windows, if all amplitude values lie below
+    the silence threshold and returns silences for those interval.
+    After that a majority vote of 2s length will be applied.
+    
+    @param y_Raw: Input data as 1D numpy array
+    @param amps: Max amplitude values as 1D numpy array. Same size as y_Raw
+    @param silenceClassNum: The class number to which silent sequences will be assigned
+    @return: Result of the same size as input
+    """
+    y_raw = y_Raw.copy()
+    silenceThreshold = 1000
+    majVotWindowLength = 2.0 #in seconds
+    windowLength = 0.032
+    frameLengthFloat = math.ceil(majVotWindowLength/windowLength)
+
+    frameLength = int(frameLengthFloat)
+
+    resArray = np.empty(y_raw.shape)
+
+    n_frames = int(math.ceil(y_raw.shape[0]/frameLengthFloat))
+
+    for i in range(n_frames):
+        if ((i+1) * frameLength) < y_raw.shape[0]:
+
+            tmpAmps = amps[(i * frameLength):(((i+1) * frameLength))]
+           
+            if tmpAmps.max() >= silenceThreshold:
+
+                tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
+                
+                """ Get most frequent number in that frames: """
+                count = np.bincount(tmpArray)
+                tmpMostFrequent = np.argmax(count)
+
+                """ Fill all elements with most frequent number: """
+                tmpArray.fill(tmpMostFrequent)
+
+                """ Write it into our result array: """
+                resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
+            
+            else:
+                
+                resArray[(i * frameLength):(((i+1) * frameLength))] = silenceClassNum
+        else:
+
+            tmpAmps = amps[(i * frameLength):y_raw.shape[0]]
+
+
+            if tmpAmps.max() >= silenceThreshold: 
+            
+                tmpArray = y_raw[(i * frameLength):y_raw.shape[0]]
+                """ Get most frequent number in that frames and fill 
+                all elements in the frame with it: """
+                count = np.bincount(tmpArray)
+                tmpMostFrequent = np.argmax(count)
+
+                """ Fill all elements with most frequent number: """
+                tmpArray.fill(tmpMostFrequent)
+
+                """ Write it into our result array: """
+                resArray[(i * frameLength):y_raw.shape[0]] = tmpArray
+            
+            else:
+
+                resArray[(i * frameLength):y_raw.shape[0]] = silenceClassNum
+
+    return resArray
 
 
 

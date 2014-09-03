@@ -13,7 +13,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.common.primitives.Shorts;
 
-
 /*
  * This class extracts 12 MFCC coefficients and the log energy of given sound files or
  * folders for 32ms windows and stores it in a JSON file under the key "features".
