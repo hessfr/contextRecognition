@@ -106,6 +106,7 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
 def createGTMulti(classesDict, length, gtList):
     """
     Create ground truth array that allows multiple labels per point
+    
     @param classesDict:
     @param length: length of the final array (=length of prediction array)
     @param gtList:
@@ -286,7 +287,51 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
 
     return resArray
 
+def createGTUnique(classesDict, length, gtList):
+    """
+    Create ground truth array where only one label is allowed per point
 
+    @param classesDict:
+    @param length: length of the final array (=length of prediction array)
+    @param gtList:
+    @return:
+    """
+
+    y_GT = np.empty([length])
+    y_GT.fill(-1) #-1 corresponds to no label given
+
+    classesNotTrained = []
+    for i in range(len(gtList)):
+        """ Fill array from start to end of each ground truth label with the correct label: """
+        if gtList[i][2] == "start":
+            tmpContext = gtList[i][1]
+            start = getIndex(float(gtList[i][0]))
+
+            # Find the end time of this context:
+            for j in range(i,len(gtList)):
+                if ((gtList[j][1] == tmpContext) and (gtList[j][2] == "end")):
+
+                    end = getIndex(float(gtList[j][0]))
+                    if end >= y_GT.shape[0]:
+                        end = y_GT.shape[0] - 1
+
+                    """ Fill ground truth array, and check if our classifier was 
+                    trained with all labels of the test file, if not give warning: """
+
+                    if gtList[i][1] not in classesDict.keys():
+                        classesNotTrained.append(gtList[i][1])
+                        y_GT[start:end+1].fill(-1)
+                    
+                    else:
+                        y_GT[start:end+1].fill(classesDict[tmpContext])
+                    
+                    break
+    
+    if classesNotTrained:
+        for el in set(classesNotTrained):
+            print("The classifier wasn't trained with class '" + 
+            el + "'. It will not be considered for testing.")
+    return y_GT
 
 
 

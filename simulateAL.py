@@ -8,51 +8,139 @@ import pylab as pl
 from scipy.stats import itemfreq
 from sklearn.mixture import GMM
 from sklearn import preprocessing
-from classifiers import getIndex
-from classifiers import testGMM
-from classifiers import predictGMM
-from classifiers import majorityVote
-from classifiers import createGTUnique
-from classifiers import createGTMulti
+from classifiers import getIndex, predictGMM, majorityVote
+from offlineEvaluation import createGTMulti, createGTUnique, createPrediction
 from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
 import ipdb as pdb #pdb.set_trace()
 
-def simulateAL(trainedGMM, testFeatureData, groundTruthFileMulti, groundTruthFileUnique):
+def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     """
     Query criteria is the mean entropy value on the 2 second interval.
     
     @param trainedGMM: already trained GMM
-    @param testFeatureData: Numpy array of already extracted, but not scaled features of the test file
+    @param jsonFileList: List of files containing the extracted features for the
+    indivdual parts of the file.
+    @param gtFileMulti: Normal ground truth file with multiple labels
+    @param gtFileUnique: Ground truth file used to give the query feedback -> only
+    one label allowed per point
     """
-    # Create a ground truth array with only one entry for each data point
-    # that will be used to provide the query feedback:
-    y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0],
-    groundTruthFileUnique)
-    # Ground truth array with multiple labels is used to evaluate the performance:
-    y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0],
-    groundTruthFileMulti)
-
-    classesInGT = np.unique(y_GT)
-    classesInGT = classesInGT[classesInGT != -1]
-
     n_classes = len(trainedGMM["classesDict"])
 
-    """ Create index arrays to define which elements are used to evaluate performance and which for simulation of the AL
-    behavior: """
+    """ Create ground truth array with multiple labels is used to evaluate the performance: """
+    with open(gtFileMulti) as f:
+        reader = csv.reader(f, delimiter="\t")
+        gtListMulti = list(reader)
+
+    recStartedListMulti = []
+    for i in range(len(gtListMulti)):
+        if len(gtListMulti[i]) <= 1:
+            recStartedListMulti.append(i)
+
+    # The number of given feature file has to match the number of RECORDING_STARTED entries:
+    if (len(recStartedListMulti) != len(jsonFileList)):
+        print("Ground truth file does not match the number of provided feature files "
+        + "evaluation will be stopped: ")
+        print(str(len(jsonFileList)) + " feature files were provided, but ground truth " +
+        "file contains only " + str(len(recStartedListMulti)) + " RECORDING_STARTED entries")
+        return None
+    
+    y_gt_multi = []
+    for k in range(len(jsonFileList)):
+        tmp_gt_multi = np.array(gtListMulti)    
+        startIdx = recStartedListMulti[k]+1
+
+        if (k < (len(recStartedListMulti)-1)):
+            endIdx = recStartedListMulti[k+1]
+        else:
+            endIdx = len(gtListMulti)
+
+        # Get the desired length of the ground truth array by reading in the length
+        # of the sample points:
+        jd = json.load(open(jsonFileList[k], "rb"))
+        num_samples = np.array(jd["features"]).shape[0]
+        
+        gt_list_multi = list(tmp_gt_multi[startIdx:endIdx])
+        y_gt_tmp = createGTMulti(trainedGMM["classesDict"], num_samples, gt_list_multi)
+        y_gt_tmp = y_gt_tmp.tolist()
+
+        y_gt_multi.extend(y_gt_tmp)
+
+    y_gt_multi = np.array(y_gt_multi)
+   
+    """ Create a ground truth array with only one entry for each data point
+    that will be used to provide the query feedback: """
+    with open(gtFileUnique) as f:
+        reader = csv.reader(f, delimiter="\t")
+        gtListUnique = list(reader)
+
+    recStartedListUnique = []
+    for i in range(len(gtListUnique)):
+        if len(gtListUnique[i]) <= 1:
+            recStartedListUnique.append(i)
+
+    # The number of given feature file has to match the number of RECORDING_STARTED entries:
+    if (len(recStartedListUnique) != len(jsonFileList)):
+        print("Ground truth file does not match the number of provided feature files "
+        + "evaluation will be stopped: ")
+        print(str(len(jsonFileList)) + " feature files were provided, but ground truth " +
+        "file contains only " + str(len(recStartedListUnique)) + " RECORDING_STARTED entries")
+        return None
+    
+    y_gt_unique = []
+    for k in range(len(jsonFileList)):
+        tmp_gt_unique = np.array(gtListUnique)    
+        startIdx = recStartedListUnique[k]+1
+
+        if (k < (len(recStartedListUnique)-1)):
+            endIdx = recStartedListUnique[k+1]
+        else:
+            endIdx = len(gtListUnique)
+
+        # Get the desired length of the ground truth array by reading in the length
+        # of the sample points:
+        jd = json.load(open(jsonFileList[k], "rb"))
+        num_samples = np.array(jd["features"]).shape[0]
+        
+        gt_list_unique = list(tmp_gt_unique[startIdx:endIdx])
+        y_gt_tmp = createGTUnique(trainedGMM["classesDict"], num_samples, gt_list_unique)
+        
+        pdb.set_trace()
+        
+        y_gt_tmp = y_gt_tmp.tolist()
+
+        y_gt_unique.extend(y_gt_tmp)
+
+    y_gt_unique = np.array(y_gt_unique)
+
+    classesInGT = np.unique(y_gt_multi)
+    classesInGT = classesInGT[classesInGT != -1]
+
+    """ Save all features and amplitude values in single numpy arrays: """
+    featureData = []
+    amps = []
+    for k in range(len(jsonFileList)):
+        jd = json.load(open(jsonFileList[k], "rb"))
+        featureData.append(np.array(jd["features"]).tolist())
+        amps.append(np.array(jd["amps"]).tolist())
+
+    featureData = np.array(featureData)
+    amps = np.array(amps) #TODO: until now we don't use this!
+
+    """ Create index arrays to define which elements are used to evaluate performance 
+    and which for simulation of the AL behavior: """
     [evalIdx, simIdx] = splitData(y_GT)
 
-    evalFeatures = testFeatureData[evalIdx == 1]
-    evalLabels = y_GTMulti[evalIdx == 1] # contains multiple labels for each point
+    evalFeatures = featureData[evalIdx == 1]
+    evalLabels = y_gt_multi[evalIdx == 1] # contains multiple labels for each point
 
-    simFeatures = testFeatureData[simIdx == 1]
+    simFeatures = featureData[simIdx == 1]
     simFeatures = trainedGMM['scaler'].transform(simFeatures)
     simLabels = y_GT[simIdx == 1]
 
-    """ simLabels contains unique label for each point that will be used to update the model later,
-    e.g. if a point has the labels office and conversation, it will be trained with conversation (accoring to the provided
-    groundTruthLabels """
-
+    """ simLabels contains unique label for each point that will be used to update 
+    the model later, e.g. if a point has the labels office and conversation, 
+    it will be trained with conversation (accoring to the provided groundTruthLabels """
     currentGMM = copy.deepcopy(trainedGMM)
 
     allGMM = [] 
@@ -413,10 +501,9 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
     @param evalLabels: Ground truth label array with multiple labels per data points
     @return:
     """
-    #TODO: move this method in classifiers.py and use it there as well to avoid redundancy!
 
     """ Calculate the predictions on the evaluation features: """
-    y_pred = testGMM(trainedGMM, evalFeatures, useMajorityVote=True, showPlots=False)
+    y_pred = createPrediction(trainedGMM, evalFeatures) #TODO:xxxxx
 
     n_classes = len(trainedGMM["classesDict"])
     validCounter = 0

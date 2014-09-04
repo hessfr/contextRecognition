@@ -453,3 +453,4 @@ def removeInvalids(y_pred, y_GT, silenceClassNum):
     print("-----")
 
     return y_pred, y_GT
+
