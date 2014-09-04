@@ -18,15 +18,20 @@ from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
 import ipdb as pdb #pdb.set_trace()
 
-def simulateAL(trainedGMM, testFeatureData):
+def simulateAL(trainedGMM, testFeatureData, groundTruthFileMulti, groundTruthFileUnique):
     """
     Query criteria is the mean entropy value on the 2 second interval.
     
     @param trainedGMM: already trained GMM
     @param testFeatureData: Numpy array of already extracted, but not scaled features of the test file
     """
-    y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0], 'labelsAdapted.txt')
-    y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0], 'labels.txt')
+    # Create a ground truth array with only one entry for each data point
+    # that will be used to provide the query feedback:
+    y_GT = createGTUnique(trainedGMM['classesDict'], testFeatureData.shape[0],
+    groundTruthFileUnique)
+    # Ground truth array with multiple labels is used to evaluate the performance:
+    y_GTMulti = createGTMulti(trainedGMM["classesDict"],testFeatureData.shape[0],
+    groundTruthFileMulti)
 
     classesInGT = np.unique(y_GT)
     classesInGT = classesInGT[classesInGT != -1]
