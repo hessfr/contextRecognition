@@ -104,7 +104,6 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
 
 
 def createGTMulti(classesDict, length, gtList):
-    
     """
     Create ground truth array that allows multiple labels per point
     @param classesDict:
@@ -206,8 +205,8 @@ def createPrediction(trainedGMM, jsonFile, silenceClassNum):
     """ Compute log-probability for each class for all points: """
     for i in range(n_classes):
 
-        # logLikelihood[i] = trainedGMM['clfs'][i].score(X_test) # uses scikit function
-        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_, trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_) # uses logProb function defined below
+        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_,
+        trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_)
 
     """ Select the class with the highest log-probability: """
     y_pred = np.argmax(logLikelihood, 0)
@@ -238,12 +237,13 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
     n_frames = int(math.ceil(y_raw.shape[0]/frameLengthFloat))
 
     for i in range(n_frames):
+
         if ((i+1) * frameLength) < y_raw.shape[0]:
 
             tmpAmps = amps[(i * frameLength):(((i+1) * frameLength))]
            
-            if tmpAmps.max() >= silenceThreshold:
-
+            #if tmpAmps.max() >= silenceThreshold:
+            if True:
                 tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
                 
                 """ Get most frequent number in that frames: """
@@ -257,15 +257,16 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
                 resArray[(i * frameLength):(((i+1) * frameLength))] = tmpArray
             
             else:
-                
+                """If all amplitudes are below threshold, the 
+                sample is considered silent:"""            
                 resArray[(i * frameLength):(((i+1) * frameLength))] = silenceClassNum
         else:
 
             tmpAmps = amps[(i * frameLength):y_raw.shape[0]]
 
 
-            if tmpAmps.max() >= silenceThreshold: 
-            
+            #if tmpAmps.max() >= silenceThreshold: 
+            if True:
                 tmpArray = y_raw[(i * frameLength):y_raw.shape[0]]
                 """ Get most frequent number in that frames and fill 
                 all elements in the frame with it: """
@@ -279,7 +280,8 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
                 resArray[(i * frameLength):y_raw.shape[0]] = tmpArray
             
             else:
-
+                """If all amplitudes are below threshold, the 
+                sample is considered silent:"""            
                 resArray[(i * frameLength):y_raw.shape[0]] = silenceClassNum
 
     return resArray
