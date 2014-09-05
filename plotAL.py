@@ -1,7 +1,6 @@
 import numpy as np
 import pickle
 import matplotlib.pyplot as pl
-from simulateAL import reverseDict
 import ipdb as pdb #pdb.set_trace()
 
 def plotAL(results):
@@ -107,3 +106,13 @@ def plotAL(results):
     pl.show()
     """
 
+def reverseDict(oldDict):
+    """
+    Return new array were keys are the values of the old array and the other way around
+
+    """
+    newDict = {}
+    for i, j in zip(oldDict.keys(), oldDict.values()):
+        newDict[j] = i
+
+    return newDict

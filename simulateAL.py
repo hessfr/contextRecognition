@@ -15,6 +15,7 @@ from classifiers import getIndex, predictGMM, majorityVote, logProb, confusionMa
 from offlineEvaluation import createGTMulti, createGTUnique, majorityVoteSilence
 from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
+from plotAL import plotAL
 import ipdb as pdb #pdb.set_trace()
 
 
@@ -426,7 +427,7 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
             #pl.show()
             fig.savefig("plotsTmp/Class_" + revClassesDict[i] + ".jpg")
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
 
     """ Evaluate performance of all GMMs: """
@@ -443,6 +444,8 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
         resultDict["classesInGT"] = classesInGT
         results.append(resultDict)
         i += 1
+
+    plotAL(results)
 
     return results
 
