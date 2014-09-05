@@ -624,12 +624,14 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
 
     return resDict
 
-def confusionMatrixMulti(y_GT, y_pred, classesDict):
+def confusionMatrixMulti(y_GT, y_pred, classesDict, ssh=False):
     """
 
     @param y_GT: Ground truth array that can contain multiple labels for each data point
     @param y_pred:
-    @param classesDict:
+    @param classesDict:i
+    @param ssh: If True the plot will only be saved in the plotsTmp folder. If False, the
+    plot will be displayed
     """
 
     """ Sort classesDict to show labels in the CM: """
@@ -709,8 +711,21 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     pl.clim(0,1)
 
     pl.colorbar()
+    if ssh == False:
+        pl.show()
+    else:
+        # When saving to disk, don't overwrite previous files, but instead
+        # create new file with increased index:
+        # "plotsTmp/CM_0.jpg"
+        filename_beginning = "plotsTmp/CM_"
+        cnt = 0
+        filename_extension = ".jpg"
+        filename = filename_beginning + str(cnt) + filename_extension 
+        while os.path.isfile(filename):
+            cnt += 1
+            filename = filename_beginning + str(cnt) + filename_extension
 
-    pl.show()
+        pl.savefig(filename)
 
 def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
     

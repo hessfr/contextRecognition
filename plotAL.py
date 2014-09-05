@@ -40,13 +40,13 @@ def plotAL(results):
         for i in range(len(classesDict)):
             # Only append classes that are in the ground truth:
             if i in classesInGT:
-                tmp.append(el["F1dict"][revClassesDict[i]])
+                if np.isnan(el["F1dict"][revClassesDict[i]]):
+                    tmp.append(0)
+                else:
+                    tmp.append(el["F1dict"][revClassesDict[i]])
 
         F1list.append(tmp)
-        #Conversation.append(el["F1dict"]["Conversation"])
-        #Office.append(el["F1dict"]["Office"])
-        #TrainInside.append(el["F1dict"]["Train"])
-        
+
         timestamps.append(el["timestamp"])
         if el["label"] != -1:
             labels.append(revClassesDict[el["label"]])
@@ -87,14 +87,14 @@ def plotAL(results):
             pl.plot(idx, F1array[:,j], label=revClassesDict[i])
             j += 1
     
-    #pl.plot(idx, Conversation, label="Conversation")
-    #pl.plot(idx, Office, label="Office")
-    #pl.plot(idx, TrainInside, label="Train")
-    
+    ax = pl.subplot(111)
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
     pl.title("F1 of individual classes")
     pl.xticks(range(len(labels)),labels, rotation=45)
-    legend = pl.legend(loc='upper left', shadow=True)
-    fig.savefig("plotsTmp/F1s.jpg")
+    ax.legend = pl.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    fig.savefig("plotsTmp/F1s.jpg", bbox_inches='tight')
     #pl.show()
 
     """

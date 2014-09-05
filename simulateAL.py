@@ -1,18 +1,23 @@
+# To save figures on ssh server:
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pylab as pl
 import numpy as np
 import pickle
 import json
 import csv
 import copy
 import operator
-import pylab as pl
 from scipy.stats import itemfreq
 from sklearn.mixture import GMM
 from sklearn import preprocessing
-from classifiers import getIndex, predictGMM, majorityVote
-from offlineEvaluation import createGTMulti, createGTUnique, createPrediction
+from classifiers import getIndex, predictGMM, majorityVote, logProb, confusionMatrixMulti
+from offlineEvaluation import createGTMulti, createGTUnique, majorityVoteSilence
 from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
 import ipdb as pdb #pdb.set_trace()
+
+
 
 def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     """
@@ -26,6 +31,7 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     one label allowed per point
     """
     n_classes = len(trainedGMM["classesDict"])
+    silenceClassNum = max(trainedGMM["classesDict"].values())+1
 
     """ Create ground truth array with multiple labels is used to evaluate the performance: """
     with open(gtFileMulti) as f:
@@ -129,9 +135,8 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     and which for simulation of the AL behavior: """
     [evalIdx, simIdx] = splitData(y_gt_unique)
 
-    pdb.set_trace()
-    
     evalFeatures = featureData[evalIdx == 1]
+    evalAmps = amps[evalIdx == 1]
     evalLabels = y_gt_multi[evalIdx == 1] # contains multiple labels for each point
 
     simFeatures = featureData[simIdx == 1]
@@ -365,7 +370,8 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
                         print("Query for " + str(revClassesDict[actualLabel]) + 
                         " class (predicted as " + str(revClassesDict[predictedLabel]) + 
                         ") received at " + str(currentTime) + " seconds.")
-                      
+                        print("-----")
+                        
                         # Add tick marks for that actual label to the plot of 
                         # the predicted label (as the exceeding of the threshold 
                         # of the predicted label caused that query):
@@ -407,9 +413,10 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     print("Total number of queries: " + str(sum(numQueries)))
     print(str(round(100.0 * majWrongCnt/float(majWrongCnt+majCorrectCnt),2)) + "% of all majority votes were wrong")
 
-    # ---- for plotting only: query criteria and threshold values over time for each class separately: ---
+    # ---- for plotting only: query criteria and threshold values over time for
+    # each class separately: ---
     for i in range(n_classes):
-        # Don't show plots for classes with too few samples:
+        # Only plot classes where enough data is available:
         if (len(plotValues[i]) > 0):
             fig = pl.figure()
             pl.title(revClassesDict[i])
@@ -427,7 +434,7 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     results = []
     i=0
     for GMM in allGMM:
-        resultDict = evaluateGMM(GMM, evalFeatures, evalLabels)
+        resultDict = evaluateGMM(GMM, evalFeatures, evalAmps, evalLabels, silenceClassNum)
         resultDict["label"] = givenLabels[i]
         resultDict["labelAccuracy"] = labelAccuracy[i]
         resultDict["timestamp"] = timestamps[i]
@@ -493,45 +500,46 @@ def checkLabelAccuracy(actualLabels, label):
 
     return accuracy
 
-def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
+def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum):
     """
 
     @param trainedGMM:
     @param evalFeatures: not scaled, as scaling is done in testGMM method
+    @param evalAmps: Amplitude values
     @param evalLabels: Ground truth label array with multiple labels per data points
+    @param silenceClassNum:
     @return:
     """
 
     """ Calculate the predictions on the evaluation features: """
-    y_pred = createPrediction(trainedGMM, evalFeatures) #TODO:xxxxx
+    y_pred = makePrediction(trainedGMM, evalFeatures, evalAmps, silenceClassNum)
 
     n_classes = len(trainedGMM["classesDict"])
-    validCounter = 0
-    delIdx = [] #list of indexes of the rows that should be deleted
-    correctlyPredicted = [0] * n_classes #list to count how often each class is predicted correctly
-    for j in range(y_pred.shape[0]):
+    
+    # Delete invalid rows:
+    invalidRow = np.array([-1,-1,-1,-1,-1])
+    maskValid = ~np.all(evalLabels==invalidRow,axis=1)
+    evalLabels = evalLabels[maskValid]
+    y_pred = y_pred[maskValid]
 
-        if y_pred[j] in evalLabels[j,:]:
-            #We don't have to consider invalid (=-1) entries, because y_pred never contains -1, so we will never count them
-            correctlyPredicted[int(y_pred[j])] = correctlyPredicted[int(y_pred[j])] + 1 #count correctly predicted for the individual class
+    # Calculate how many percent of the samples are silent and delete silent samples:
+    maskNonSilent = (y_pred != silenceClassNum)
+    numSilentSamples = np.sum(~maskNonSilent)
+    silentPercentage = numSilentSamples / float(y_pred.shape[0])
+    print(str(round(silentPercentage*100,2)) + "% percent of all samples are silent")
 
-        if evalLabels[j,:].sum() != -3:
-            #Ignore points were no GT label provided and ignore points of classes we didn't train our classifier with:
-            validCounter = validCounter + 1
-        else:
-            delIdx.append(j)
+    evalLabels = evalLabels[maskNonSilent]
+    y_pred = y_pred[maskNonSilent]
 
-    agreement = 100 * sum(correctlyPredicted)/float(validCounter)
-    print(str(round(agreement,2)) + " % of all valid samples predicted correctly")
+    # Calculate the overall accuracy and print it:
+    correctPred = 0
+    for i in range(y_pred.shape[0]):
+        if y_pred[i] in evalLabels[i,:]:
+            correctPred += 1
 
-    notConsidered = 100*(y_pred.shape[0]-validCounter)/float(y_pred.shape[0])
-    if notConsidered != 0.0:
-        print(str(round(notConsidered,2)) + "% of all entries were not evaluated, because no label was provided,"
-                                                                " or the classifier wasn't trained with all classes specified in the ground truth")
-
-    """ Delete invalid entries in evalLabels and y_pred: """
-    y_pred = np.delete(y_pred,delIdx)
-    evalLabels = np.delete(evalLabels,delIdx,axis=0)
+    accuracy = correctPred / float(y_pred.shape[0])
+    print("Overall accuracy: " + str(round(accuracy*100,2)) + "%")
+    print("-----")
 
     """ Calculate confusion matrix: """
     cm = np.zeros((n_classes,n_classes))
@@ -585,9 +593,37 @@ def evaluateGMM(trainedGMM, evalFeatures, evalLabels):
         # print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
         F1s[sortedLabels[i]] = tmpF1
 
-    resDict = {"accuracy": agreement, "F1dict": F1s}
+    # Plot a confusion matrix:
+    confusionMatrixMulti(evalLabels, y_pred, trainedGMM["classesDict"], ssh=True)
+
+    resDict = {"accuracy": accuracy, "F1dict": F1s}
 
     return resDict
+
+def makePrediction(trainedGMM, evalFeatures, evalAmps, silenceClassNum):
+    """
+
+    @param trainedGMM:
+    @param evalFeatures: not scaled!!
+    @param evalAmps: Amplitude values
+    @param silenceClassNum:
+    @return:
+    """
+    n_classes = len(trainedGMM['clfs'])
+
+    X_test = trainedGMM['scaler'].transform(evalFeatures)
+
+    logLikelihood = np.zeros((n_classes, X_test.shape[0]))
+
+    """ Compute log-probability for each class for all points: """
+    for i in range(n_classes):
+        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_,
+        trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_)
+
+    """ Select the class with the highest log-probability: """
+    y_pred = np.argmax(logLikelihood, 0)
+
+    return majorityVoteSilence(y_pred, evalAmps, silenceClassNum)
 
 def splitData(y_GT):
     """
