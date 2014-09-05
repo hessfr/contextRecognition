@@ -105,8 +105,6 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
         gt_list_unique = list(tmp_gt_unique[startIdx:endIdx])
         y_gt_tmp = createGTUnique(trainedGMM["classesDict"], num_samples, gt_list_unique)
         
-        pdb.set_trace()
-        
         y_gt_tmp = y_gt_tmp.tolist()
 
         y_gt_unique.extend(y_gt_tmp)
@@ -121,22 +119,24 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     amps = []
     for k in range(len(jsonFileList)):
         jd = json.load(open(jsonFileList[k], "rb"))
-        featureData.append(np.array(jd["features"]).tolist())
-        amps.append(np.array(jd["amps"]).tolist())
+        featureData.extend(np.array(jd["features"]).tolist())
+        amps.extend(np.array(jd["amps"]).tolist())
 
     featureData = np.array(featureData)
     amps = np.array(amps) #TODO: until now we don't use this!
 
     """ Create index arrays to define which elements are used to evaluate performance 
     and which for simulation of the AL behavior: """
-    [evalIdx, simIdx] = splitData(y_GT)
+    [evalIdx, simIdx] = splitData(y_gt_unique)
 
+    pdb.set_trace()
+    
     evalFeatures = featureData[evalIdx == 1]
     evalLabels = y_gt_multi[evalIdx == 1] # contains multiple labels for each point
 
     simFeatures = featureData[simIdx == 1]
     simFeatures = trainedGMM['scaler'].transform(simFeatures)
-    simLabels = y_GT[simIdx == 1]
+    simLabels = y_gt_unique[simIdx == 1]
 
     """ simLabels contains unique label for each point that will be used to update 
     the model later, e.g. if a point has the labels office and conversation, 
@@ -361,7 +361,7 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
                     #if (str(revClassesDict[actualLabel]) != "Conversation" and 
                     #str(revClassesDict[predictedLabel]) != "Conversation"):
                     if True:
-
+                        print("-----")
                         print("Query for " + str(revClassesDict[actualLabel]) + 
                         " class (predicted as " + str(revClassesDict[predictedLabel]) + 
                         ") received at " + str(currentTime) + " seconds.")
