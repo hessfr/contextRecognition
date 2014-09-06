@@ -243,8 +243,8 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
 
             tmpAmps = amps[(i * frameLength):(((i+1) * frameLength))]
            
-            #if tmpAmps.max() >= silenceThreshold:
-            if True:
+            if tmpAmps.max() >= silenceThreshold:
+            #if True:
                 tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
                 
                 """ Get most frequent number in that frames: """
@@ -266,8 +266,8 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
             tmpAmps = amps[(i * frameLength):y_raw.shape[0]]
 
 
-            #if tmpAmps.max() >= silenceThreshold: 
-            if True:
+            if tmpAmps.max() >= silenceThreshold: 
+            #if True:
                 tmpArray = y_raw[(i * frameLength):y_raw.shape[0]]
                 """ Get most frequent number in that frames and fill 
                 all elements in the frame with it: """

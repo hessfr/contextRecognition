@@ -19,8 +19,6 @@ from adaptGMM import adaptGMM
 from plotAL import plotAL
 import ipdb as pdb #pdb.set_trace()
 
-
-
 def simulateAL(trainedGMM, jsonFileList, gtFileMulti):
     """
     Query criteria is the mean entropy value on the 2 second interval.
@@ -512,7 +510,7 @@ def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum)
 
     evalLabels = evalLabels[maskNonSilent]
     y_pred = y_pred[maskNonSilent]
-
+    
     # Calculate the overall accuracy and print it:
     correctPred = 0
     for i in range(y_pred.shape[0]):
@@ -575,7 +573,7 @@ def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum)
         # print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
         F1s[sortedLabels[i]] = tmpF1
 
-    # Plot a confusion matrix:
+    # Plot the confusion matrix:
     confusionMatrixMulti(evalLabels, y_pred, trainedGMM["classesDict"], ssh=True)
 
     resDict = {"accuracy": accuracy, "F1dict": F1s}
