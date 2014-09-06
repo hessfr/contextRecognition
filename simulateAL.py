@@ -19,50 +19,51 @@ from adaptGMM import adaptGMM
 from plotAL import plotAL
 import ipdb as pdb #pdb.set_trace()
 
-def simulateAL(trainedGMM, jsonFileList, gtFileMulti):
+def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     """
     Query criteria is the mean entropy value on the 2 second interval.
     
     @param trainedGMM: already trained GMM
+    @param path: path to the folder of the extracted features and the ground truth file
     @param jsonFileList: List of files containing the extracted features for the
     indivdual parts of the file.
-    @param gtFileMulti: Normal ground truth file with multiple labels
+    @param gtFile: Normal ground truth file with multiple labels
     one label allowed per point
     """
     n_classes = len(trainedGMM["classesDict"])
     silenceClassNum = max(trainedGMM["classesDict"].values())+1
 
     """ Create ground truth array with multiple labels is used to evaluate the performance: """
-    with open(gtFileMulti) as f:
+    with open((path+gtFile)) as f:
         reader = csv.reader(f, delimiter="\t")
-        gtListMulti = list(reader)
+        gtList = list(reader)
 
-    recStartedListMulti = []
-    for i in range(len(gtListMulti)):
-        if len(gtListMulti[i]) <= 1:
-            recStartedListMulti.append(i)
+    recStartedList = []
+    for i in range(len(gtList)):
+        if len(gtList[i]) <= 1:
+            recStartedList.append(i)
 
     # The number of given feature file has to match the number of RECORDING_STARTED entries:
-    if (len(recStartedListMulti) != len(jsonFileList)):
+    if (len(recStartedList) != len(jsonFileList)):
         print("Ground truth file does not match the number of provided feature files "
         + "evaluation will be stopped: ")
         print(str(len(jsonFileList)) + " feature files were provided, but ground truth " +
-        "file contains only " + str(len(recStartedListMulti)) + " RECORDING_STARTED entries")
+        "file contains only " + str(len(recStartedList)) + " RECORDING_STARTED entries")
         return None
     
     y_gt_multi = []
     for k in range(len(jsonFileList)):
-        tmp_gt_multi = np.array(gtListMulti)    
-        startIdx = recStartedListMulti[k]+1
+        tmp_gt_multi = np.array(gtList)    
+        startIdx = recStartedList[k]+1
 
-        if (k < (len(recStartedListMulti)-1)):
-            endIdx = recStartedListMulti[k+1]
+        if (k < (len(recStartedList)-1)):
+            endIdx = recStartedList[k+1]
         else:
-            endIdx = len(gtListMulti)
+            endIdx = len(gtList)
 
         # Get the desired length of the ground truth array by reading in the length
         # of the sample points:
-        jd = json.load(open(jsonFileList[k], "rb"))
+        jd = json.load(open((path+jsonFileList[k]), "rb"))
         num_samples = np.array(jd["features"]).shape[0]
         
         gt_list_multi = list(tmp_gt_multi[startIdx:endIdx])
@@ -96,7 +97,7 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti):
     featureData = []
     amps = []
     for k in range(len(jsonFileList)):
-        jd = json.load(open(jsonFileList[k], "rb"))
+        jd = json.load(open((path+jsonFileList[k]), "rb"))
         featureData.extend(np.array(jd["features"]).tolist())
         amps.extend(np.array(jd["amps"]).tolist())
 
