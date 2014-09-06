@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pylab as pl
 import os
 from os import listdir
 import numpy as np
@@ -13,7 +16,6 @@ from sklearn import cluster
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.cross_validation import KFold
-import pylab as pl
 from featureExtraction import FX_Test
 from featureExtraction import FX_Folder
 from featureExtraction import FX_multiFolders
@@ -695,6 +697,7 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict, ssh=False):
     width = len(cm)
     height = len(cm[0])
 
+    pl.figure(figsize=(15,15))
     pl.matshow(normalized)
     pl.ylabel('True label')
     pl.xlabel('Predicted label')
@@ -724,7 +727,9 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict, ssh=False):
         while os.path.isfile(filename):
             cnt += 1
             filename = filename_beginning + str(cnt) + filename_extension
-
+        
+        fig = matplotlib.pyplot.gcf()
+        fig.set_size_inches(15,15)
         pl.savefig(filename)
 
 def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):

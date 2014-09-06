@@ -8,6 +8,7 @@ import json
 import csv
 import copy
 import operator
+import random
 from scipy.stats import itemfreq
 from sklearn.mixture import GMM
 from sklearn import preprocessing
@@ -20,7 +21,7 @@ import ipdb as pdb #pdb.set_trace()
 
 
 
-def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
+def simulateAL(trainedGMM, jsonFileList, gtFileMulti):
     """
     Query criteria is the mean entropy value on the 2 second interval.
     
@@ -28,7 +29,6 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
     @param jsonFileList: List of files containing the extracted features for the
     indivdual parts of the file.
     @param gtFileMulti: Normal ground truth file with multiple labels
-    @param gtFileUnique: Ground truth file used to give the query feedback -> only
     one label allowed per point
     """
     n_classes = len(trainedGMM["classesDict"])
@@ -75,48 +75,21 @@ def simulateAL(trainedGMM, jsonFileList, gtFileMulti, gtFileUnique):
 
     y_gt_multi = np.array(y_gt_multi)
    
-    """ Create a ground truth array with only one entry for each data point
-    that will be used to provide the query feedback: """
-    with open(gtFileUnique) as f:
-        reader = csv.reader(f, delimiter="\t")
-        gtListUnique = list(reader)
+    """ To give the AL feedback we have to have an array with only one element for
+    each sample point. Create this array be randomly selecting a single label for every
+    sample points in the ground truth: """
+    y_gt_unique = np.empty(y_gt_multi.shape[0])
+    emptyRow = np.array([-1,-1,-1,-1,-1])
+    for i in range(y_gt_multi.shape[0]):
+        if np.array_equal(y_gt_multi[i,:], emptyRow):
+            y_gt_unique[i] = -1
+        else:          
+            choice = -1
+            while choice == -1:
+                choice = random.choice(y_gt_multi[i,:])
+                y_gt_unique[i] = choice
 
-    recStartedListUnique = []
-    for i in range(len(gtListUnique)):
-        if len(gtListUnique[i]) <= 1:
-            recStartedListUnique.append(i)
-
-    # The number of given feature file has to match the number of RECORDING_STARTED entries:
-    if (len(recStartedListUnique) != len(jsonFileList)):
-        print("Ground truth file does not match the number of provided feature files "
-        + "evaluation will be stopped: ")
-        print(str(len(jsonFileList)) + " feature files were provided, but ground truth " +
-        "file contains only " + str(len(recStartedListUnique)) + " RECORDING_STARTED entries")
-        return None
-    
-    y_gt_unique = []
-    for k in range(len(jsonFileList)):
-        tmp_gt_unique = np.array(gtListUnique)    
-        startIdx = recStartedListUnique[k]+1
-
-        if (k < (len(recStartedListUnique)-1)):
-            endIdx = recStartedListUnique[k+1]
-        else:
-            endIdx = len(gtListUnique)
-
-        # Get the desired length of the ground truth array by reading in the length
-        # of the sample points:
-        jd = json.load(open(jsonFileList[k], "rb"))
-        num_samples = np.array(jd["features"]).shape[0]
-        
-        gt_list_unique = list(tmp_gt_unique[startIdx:endIdx])
-        y_gt_tmp = createGTUnique(trainedGMM["classesDict"], num_samples, gt_list_unique)
-        
-        y_gt_tmp = y_gt_tmp.tolist()
-
-        y_gt_unique.extend(y_gt_tmp)
-
-    y_gt_unique = np.array(y_gt_unique)
+    #pdb.set_trace()
 
     classesInGT = np.unique(y_gt_multi)
     classesInGT = classesInGT[classesInGT != -1]
