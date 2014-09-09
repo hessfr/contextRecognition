@@ -103,15 +103,25 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     each sample point. Create this array be randomly selecting a single label for every
     sample points in the ground truth: """
     y_gt_unique = np.empty(y_gt_multi.shape[0])
-    emptyRow = np.array([-1,-1,-1,-1,-1]) # = no ground truth provided
+    #emptyRow = np.array([-1,-1,-1,-1,-1]) # = no ground truth provided
+    emptyRow = {-1}
+    onlyConv = {-1, trainedGMM["classesDict"]["Conversation"]}
+    itemsToDelete = [-1, trainedGMM["classesDict"]["Conversation"]]
     for i in range(y_gt_multi.shape[0]):
-        if np.array_equal(y_gt_multi[i,:], emptyRow):
+        #if np.array_equal(y_gt_multi[i,:], emptyRow):
+        rowSet = set(y_gt_multi[i,:].tolist())
+        if (rowSet == emptyRow or rowSet == onlyConv):
             y_gt_unique[i] = -1
-        else:          
-            choice = -1
-            while choice == -1:
-                choice = random.choice(y_gt_multi[i,:])
-                y_gt_unique[i] = choice
+        else:
+            rowList = list(rowSet)
+            for el in itemsToDelete:
+                if el in rowList:
+                    rowList.remove(el)
+            y_gt_unique[i] = random.choice(rowList)        
+            #choice = -1
+            #while choice == -1:
+            #    choice = random.choice(y_gt_multi[i,:])
+            #    y_gt_unique[i] = choice
 
     #pdb.set_trace()
 
@@ -171,7 +181,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     # When adaption the model, use only data points of the last minute, if the amplitude,
     # is above this value:
-    silenceThresholdModelAdaption = -1 # TODO: if all point should be used, set this to -1 
+    silenceThresholdModelAdaption = 400 # TODO: if all point should be used, set this to -1 
 
     """ Initialize buffers etc. """
     # Booleans that indicate if the initial threshold was already set:
