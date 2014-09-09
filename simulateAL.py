@@ -38,6 +38,30 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
         reader = csv.reader(f, delimiter="\t")
         gtList = list(reader)
 
+    # These classes will be completely removed from the ground truth lists:
+    classesToIgnore = ["Home"]
+    for ignoreClass in classesToIgnore:
+        # Remove every class that should be ignored:
+        gtList = [el for el in gtList if ignoreClass not in el]
+
+    # These classes will be renamed:
+    # Syntax: key = old class name, value = new class name:
+    classesToRename = {"Cycling": "Street"}
+    for i in range(len(gtList)):
+        for j in range(len(gtList[i])):
+            if gtList[i][j] in classesToRename.keys():
+                gtList[i][j] = classesToRename[gtList[i][j]]
+    
+    # Merging of multiple classes not implemented yet!!!
+    # Merge multiple classes into a new class (only for the evaluation):
+    # Syntax key = new class name, value: list of old classes that should be merged:
+    #classesToMerge = {"Transport": ["Car", "Bus", "Train", "Tram"]}
+    #for i in range(len(gtList)):
+    #    for j in range(len(gtList[i])):
+    #        for k in range(len(classesToMerge.values())):
+    #            if gtList[i][j] in classesToMerge.values()[k]:
+    #                gtList[i][j] = classesToMerge.keys()[k]
+
     recStartedList = []
     for i in range(len(gtList)):
         if len(gtList[i]) <= 1:
@@ -53,6 +77,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     y_gt_multi = []
     for k in range(len(jsonFileList)):
+        
         tmp_gt_multi = np.array(gtList)    
         startIdx = recStartedList[k]+1
 
@@ -78,7 +103,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     each sample point. Create this array be randomly selecting a single label for every
     sample points in the ground truth: """
     y_gt_unique = np.empty(y_gt_multi.shape[0])
-    emptyRow = np.array([-1,-1,-1,-1,-1])
+    emptyRow = np.array([-1,-1,-1,-1,-1]) # = no ground truth provided
     for i in range(y_gt_multi.shape[0]):
         if np.array_equal(y_gt_multi[i,:], emptyRow):
             y_gt_unique[i] = -1
@@ -102,7 +127,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
         amps.extend(np.array(jd["amps"]).tolist())
 
     featureData = np.array(featureData)
-    amps = np.array(amps) #TODO: until now we don't use this!
+    amps = np.array(amps)
 
     """ Create index arrays to define which elements are used to evaluate performance 
     and which for simulation of the AL behavior: """
@@ -141,7 +166,12 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     currentTime = 0
     prevTime = -1000000.0
 
+    # If all amplitudes in a 2s window are below this threshold, consider it as silent:
     silenceThreshold = 1000
+    
+    # When adaption the model, use only data points of the last minute, if the amplitude,
+    # is above this value:
+    silenceThresholdModelAdaption = -1 # TODO: if all point should be used, set this to -1 
 
     """ Initialize buffers etc. """
     # Booleans that indicate if the initial threshold was already set:
@@ -161,6 +191,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     threshold = []
  
     updatePoints = []
+    updateAmps = []
 
     # ---- for plotting only ---
     plotValues = [] # only for evaluation
@@ -228,9 +259,12 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             # our model with the last minute of data
             if len(updatePoints) < 1875:
                 updatePoints.extend(currentPoints.tolist())
+                updateAmps.extend(currentAmps.tolist())
             else:
                 updatePoints.extend(currentPoints.tolist())
                 del updatePoints[0:b]
+                updateAmps.extend(currentAmps.tolist())
+                del updateAmps[0:b]
 
             resArray, entropy = predictGMM(currentGMM, currentPoints, scale=False, returnEntropy=True)
             predictedLabel = int(resArray.mean())
@@ -356,9 +390,16 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             # of the predicted label caused that query):
                             plotActualTicks[predictedLabel].append(str(revClassesDict[actualLabel]))
                             plotActualIdx[predictedLabel].append(len(plotValues[predictedLabel]))
-
+                            
                             # adapt the model:
                             upd = np.array(updatePoints)
+                            
+                            #only consider non-silent samples here:
+                            amp = np.array(updateAmps)                            
+                            upd = upd[amp > silenceThresholdModelAdaption]
+                            print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
+                            "% of all samples of the last minute used to adapt the model, " + 
+                            "the rest is silent ---")
 
                             currentGMM = adaptGMM(currentGMM, upd, actualLabel)
 

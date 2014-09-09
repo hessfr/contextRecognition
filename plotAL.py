@@ -47,8 +47,9 @@ def plotAL(results):
         F1list.append(tmp)
 
         timestamps.append(el["timestamp"])
+        maxLength = 9 # Max number of characters in a label (for plotting only)
         if el["label"] != -1:
-            labels.append(revClassesDict[el["label"]])
+            labels.append(revClassesDict[el["label"]][0:maxLength])
         if el["labelAccuracy"] != -1:
             labelAccuracy.append(el["labelAccuracy"])
 

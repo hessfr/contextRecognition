@@ -121,6 +121,8 @@ def createGTMulti(classesDict, length, gtList):
     classesNotTrained = []
     for i in range(len(gtList)):
         """ Fill array from start to end of each ground truth label with the correct label: """
+        gtList[i][2]
+
         if gtList[i][2] == "start":
             tmpContext = gtList[i][1]
             start = getIndex(float(gtList[i][0]))
@@ -172,8 +174,7 @@ def createGTMulti(classesDict, length, gtList):
                             y_GT[start:end+1,4].fill(classesDict[gtList[i][1]])
                         
                         else:
-                            print("Problem occurred when filling ground truth array." +  
-                            "Maybe you are using more than 3 simultaneous context classes?")
+                            print("Problem occurred when filling ground truth array!")
                     break
     
     if classesNotTrained:
