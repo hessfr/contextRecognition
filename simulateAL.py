@@ -19,6 +19,14 @@ from adaptGMM import adaptGMM
 from plotAL import plotAL
 import ipdb as pdb #pdb.set_trace()
 
+# --- simulation commands: ---
+# res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/allDays/", ["user1_part1.json", "user1_part2.json", "user1_part3.json", "user1_part4.json", "user1_part5.json", "user1_part6.json", "user1_part7.json"], "GT_user1.txt")
+
+# res = simulateAL(gmm2, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user2_358848046667739/allDays/", ["user2_part1.json", "user2_part2.json", "user2_part3.json", "user2_part4.json", "user2_part5.json", "user2_part6.json"], "GT_user2.txt")
+
+# res = simulateAL(gmm4, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user4_355577053607766/allDays/", ["user4_part1.json", "user4_part2.json", "user4_part3.json", "user4_part4.json", "user4_part5.json", "user4_part6.json", "user4_part7.json", "user4_part8.json"], "GT_user4.txt")
+# ----------------------------
+
 def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     """
     Query criteria is the mean entropy value on the 2 second interval.
@@ -181,7 +189,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     # When adaption the model, use only data points of the last minute, if the amplitude,
     # is above this value:
-    silenceThresholdModelAdaption = 400 # TODO: if all point should be used, set this to -1 
+    silenceThresholdModelAdaption = 200 # TODO: if all point should be used, set this to -1 
 
     """ Initialize buffers etc. """
     # Booleans that indicate if the initial threshold was already set:
@@ -495,7 +503,7 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    return (mean + std)
+    return (mean - 0.25 * std)
 
 def metricAfterFeedback(mean, std):
     """
@@ -518,7 +526,6 @@ def metricBeforeFeedback(mean, std):
     @return: Scalar value used to calculate part of the threshold
     """
     return (mean + std)
-
 
 
 def checkLabelAccuracy(actualLabels, label):
