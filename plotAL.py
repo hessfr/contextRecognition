@@ -27,7 +27,7 @@ def plotAL(results):
     labels = []
     labels.append("")
     labelAccuracy = []
-    labelAccuracy.append([0.0 ,0.0])
+    labelAccuracy.append([-0.005 ,-0.005])
     duration = results[0]["duration"]
     classesInGT = results[0]["classesInGT"]
 
@@ -98,14 +98,15 @@ def plotAL(results):
    
     fig, ax = pl.subplots()   
     width = 0.35       # the width of the bars
-    accuracyLabel = [el[0] for el in labelAccuracy]
-    accuracyMulti = [el[1] for el in labelAccuracy]
+    accuracyLabel = [(el[0]+0.005) for el in labelAccuracy]
+    accuracyMulti = [(el[1]+0.005) for el in labelAccuracy]
     rects1 = ax.bar(idx, accuracyLabel, width, color='r')
     
     rects2 = ax.bar([(el+width) for el in idx], accuracyMulti, width, color='y')
     pl.title("Accuracy of labels")
     pl.xlabel('number of queries')
     pl.xticks([(n+width) for n in range(len(labels))],labels, rotation=45)
+    pl.ylim([0,1.02])
 
     ax.legend((rects1[0], rects2[0]), 
     ('% correct', '% correct, but containing also other labels'), prop={'size':10},

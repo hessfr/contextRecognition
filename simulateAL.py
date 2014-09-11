@@ -22,6 +22,8 @@ import ipdb as pdb #pdb.set_trace()
 # --- simulation commands: ---
 # res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/allDays/", ["user1_part1.json", "user1_part2.json", "user1_part3.json", "user1_part4.json", "user1_part5.json", "user1_part6.json", "user1_part7.json"], "GT_user1.txt")
 
+# res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/", ["user1_short.json"], "GT_user1_short.txt")
+
 # res = simulateAL(gmm2, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user2_358848046667739/allDays/", ["user2_part1.json", "user2_part2.json", "user2_part3.json", "user2_part4.json", "user2_part5.json", "user2_part6.json"], "GT_user2.txt")
 
 # res = simulateAL(gmm4, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user4_355577053607766/allDays/", ["user4_part1.json", "user4_part2.json", "user4_part3.json", "user4_part4.json", "user4_part5.json", "user4_part6.json", "user4_part7.json", "user4_part8.json"], "GT_user4.txt")
@@ -460,7 +462,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
         results.append(resultDict)
         i += 1
 
-    #plotAL(results)
+    plotAL(results)
 
     return results
 
@@ -524,7 +526,6 @@ def checkLabelAccuracy(actualLabels, label):
         if label in actualLabels[i,:]:
             correctCnt += 1
             if len(set(actualLabels[i,:].tolist())) != 2:
-                pdb.set_trace()
                 correctMultipleCnt += 1
     
     accuracy = correctCnt / (float(len(actualLabels)))
