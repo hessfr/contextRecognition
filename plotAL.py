@@ -27,7 +27,7 @@ def plotAL(results):
     labels = []
     labels.append("")
     labelAccuracy = []
-    labelAccuracy.append(1)
+    labelAccuracy.append([0.0 ,0.0])
     duration = results[0]["duration"]
     classesInGT = results[0]["classesInGT"]
 
@@ -50,7 +50,7 @@ def plotAL(results):
         maxLength = 9 # Max number of characters in a label (for plotting only)
         if el["label"] != -1:
             labels.append(revClassesDict[el["label"]][0:maxLength])
-        if el["labelAccuracy"] != -1:
+        if el["labelAccuracy"] != [-1, -1]:
             labelAccuracy.append(el["labelAccuracy"])
 
     F1array = np.array(F1list)
@@ -72,7 +72,6 @@ def plotAL(results):
 
     fig = pl.figure()
     pl.plot(idx, accuracy, label="Accuracy")
-    #pl.plot(idx, labelAccuracy,label="Label correctness")
     pl.title("Total accuracy")
     pl.xlabel('number of queries')
     pl.xticks(range(len(labels)),labels, rotation=45)
@@ -96,16 +95,23 @@ def plotAL(results):
     ax.legend = pl.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     fig.savefig("plotsTmp/F1s.jpg", bbox_inches='tight')
     #pl.show()
-
-    """
-    pl.plot(idx, labelAccuracy, label="LabelAccuracy")
-    #pl.plot(idx, labelAccuracy,label="Label correctness")
+   
+    fig, ax = pl.subplots()   
+    width = 0.35       # the width of the bars
+    accuracyLabel = [el[0] for el in labelAccuracy]
+    accuracyMulti = [el[1] for el in labelAccuracy]
+    rects1 = ax.bar(idx, accuracyLabel, width, color='r')
+    
+    rects2 = ax.bar([(el+width) for el in idx], accuracyMulti, width, color='y')
     pl.title("Accuracy of labels")
     pl.xlabel('number of queries')
-    pl.xticks(range(len(labels)),labels, rotation=45)
-    #legend = pl.legend(loc='upper left', shadow=True)
-    pl.show()
-    """
+    pl.xticks([(n+width) for n in range(len(labels))],labels, rotation=45)
+
+    ax.legend((rects1[0], rects2[0]), 
+    ('% correct', '% correct, but containing also other labels'), prop={'size':10},
+    loc='lower right')
+    
+    fig.savefig("plotsTmp/labelAccuracy.jpg")
 
 def reverseDict(oldDict):
     """

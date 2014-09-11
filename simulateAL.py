@@ -60,16 +60,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             if gtList[i][j] in classesToRename.keys():
                 gtList[i][j] = classesToRename[gtList[i][j]]
     
-    # Merging of multiple classes not implemented yet!!!
-    # Merge multiple classes into a new class (only for the evaluation):
-    # Syntax key = new class name, value: list of old classes that should be merged:
-    #classesToMerge = {"Transport": ["Car", "Bus", "Train", "Tram"]}
-    #for i in range(len(gtList)):
-    #    for j in range(len(gtList[i])):
-    #        for k in range(len(classesToMerge.values())):
-    #            if gtList[i][j] in classesToMerge.values()[k]:
-    #                gtList[i][j] = classesToMerge.keys()[k]
-
     recStartedList = []
     for i in range(len(gtList)):
         if len(gtList[i]) <= 1:
@@ -126,12 +116,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                 if el in rowList:
                     rowList.remove(el)
             y_gt_unique[i] = random.choice(rowList)        
-            #choice = -1
-            #while choice == -1:
-            #    choice = random.choice(y_gt_multi[i,:])
-            #    y_gt_unique[i] = choice
-
-    #pdb.set_trace()
 
     classesInGT = np.unique(y_gt_multi)
     classesInGT = classesInGT[classesInGT != -1]
@@ -158,11 +142,15 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     simFeatures = featureData[simIdx == 1]
     simFeatures = trainedGMM['scaler'].transform(simFeatures)
     simAmps = amps[simIdx == 1]
-    simLabels = y_gt_unique[simIdx == 1]
+    # simLabelsUnique contains unique label for each point that will be used to update 
+    # the model later, e.g. if a point has the labels office and conversation, 
+    # it will be trained with conversation (accoring to the provided groundTruthLabels:
+    simLabelsUnique = y_gt_unique[simIdx == 1]
+   
+    # simLabelsMulti is used to evaluate, what actual labels the points have, that are
+    # incorporated into the model:
+    simLabelsMulti = y_gt_multi[simIdx == 1]
 
-    """ simLabels contains unique label for each point that will be used to update 
-    the model later, e.g. if a point has the labels office and conversation, 
-    it will be trained with conversation (accoring to the provided groundTruthLabels """
     currentGMM = copy.deepcopy(trainedGMM)
 
     allGMM = [] 
@@ -170,7 +158,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     givenLabels = []
     givenLabels.append(-1) #because first classifiers is without active learning yet
     labelAccuracy = []
-    labelAccuracy.append(-1)
+    labelAccuracy.append([-1, -1])
     timestamps = [] #time when the query was sent on the simulation data set -> only half the length of the complete data set
     timestamps.append(0)
     
@@ -208,7 +196,10 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     # Thresholds for the different classes:
     threshold = []
  
+    # Feature values, ground truth values (for evaluation only) and amplitude 
+    # that the model is updated with:
     updatePoints = []
+    updateGT = []
     updateAmps = []
 
     # ---- for plotting only ---
@@ -269,18 +260,22 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
         # Only do something if this sequence is not silent:
         if currentAmps.max() >= silenceThreshold:
             currentPoints = simFeatures[start:end,:]
+            currentGT = simLabelsMulti[start:end,:]
             # only the latest label is used to adapt the model, like in real-life
-            actualLabel = int(simLabels[end])
+            actualLabel = int(simLabelsUnique[end])
             currentTime = i*b*0.032
 
             # Buffer points of the 30 last 2 second intervals, as we want to update 
             # our model with the last minute of data
             if len(updatePoints) < 1875:
                 updatePoints.extend(currentPoints.tolist())
+                updateGT.extend(currentGT)
                 updateAmps.extend(currentAmps.tolist())
             else:
                 updatePoints.extend(currentPoints.tolist())
                 del updatePoints[0:b]
+                updateGT.extend(currentGT)
+                del updateGT[0:b]
                 updateAmps.extend(currentAmps.tolist())
                 del updateAmps[0:b]
 
@@ -301,20 +296,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                 actBuffer.append(actualLabel)
                 del actBuffer[0]
 
-            # --- for plotting only:
-           # if len(plotBuffer[predictedLabel]) < 30:
-           #     # fill buffer:
-           #     plotBuffer[predictedLabel].append(entropy)
-           # else:
-           #     # buffer full, so we want to add this value to the plot:
-           #     tmp = np.array(plotBuffer[predictedLabel])
-           #     plotValues[predictedLabel].append(queryCriteria(tmp))
-           #     plotThres[predictedLabel].append(threshold[predictedLabel])
-           #     plotBuffer[predictedLabel] = []
-
             # --- Setting initial threshold: ---
             if (initThresSet[predictedLabel] == False):
-                    if len(initThresBuffer[predictedLabel]) < 90:
+                    if len(initThresBuffer[predictedLabel]) < 45: #TODO: 90
                         # Fill init threshold buffer
                         initThresBuffer[predictedLabel].append(entropy)
 
@@ -341,8 +325,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                         # set threshold after a model adaption:
                         tmp = np.array(thresBuffer[predictedLabel])
                         thres = metricAfterFeedback(tmp.mean(), tmp.std())
-                        #prevThreshold = threshold[predictedLabel]
-                        #threshold[predictedLabel] = (thres + prevThreshold) / 2.0
                         
                         threshold[predictedLabel] = (thres + thresQueriedInterval[predictedLabel]) / 2.0
                         
@@ -350,15 +332,11 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                               str(round(threshold[predictedLabel],4)) + ". Set " + 
                               str(round(currentTime-prevTime)) + "s after model adaption")
                         
-                        #print("thresQueriedInterval for class " + str(revClassesDict[predictedLabel]) + 
-                        #": " + str(thresQueriedInterval[predictedLabel]))
-                        
-                        
                         thresSet[predictedLabel] = True
 
 
             # if the buffer is filled, check if we want to query:
-            if (thresSet[predictedLabel] == True) and (len(queryBuffer) == 30): #(len(buffers[predictedLabel]) == 30)
+            if (thresSet[predictedLabel] == True) and (len(queryBuffer) == 30):
 
                 # --- calculate current query criteria: ---
                 npCrit = np.array(queryBuffer)
@@ -423,7 +401,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
                             allGMM.append(currentGMM)
                             givenLabels.append(actualLabel)
-                            labelAccuracy.append(checkLabelAccuracy(simLabels[start:end], actualLabel))
+                            labelAccuracy.append(checkLabelAccuracy(simLabelsMulti[start:end], actualLabel))
                             timestamps.append(currentTime)
 
                             numQueries[actualLabel] += 1
@@ -482,7 +460,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
         results.append(resultDict)
         i += 1
 
-    plotAL(results)
+    #plotAL(results)
 
     return results
 
@@ -530,14 +508,33 @@ def metricBeforeFeedback(mean, std):
 
 def checkLabelAccuracy(actualLabels, label):
     """
-    Calculate how many percent of the samples that are used to adapt the model, are actually of the correct class
-    @param actualLabels: Ground truth labels of all points with which the model will be adapted
+    Calculate how many percent of the samples that are used to adapt the model, are 
+    actually of the correct class and how many percent of these points have the 
+    correct label AND another additional label
+    
+    @param actualLabels: Ground truth labels of all points with which the model will be adapted.
+    Contains multiple labels per point
     @param label: The label of the class with which the model should be adapted
+    @return: accuracy, multiLabels in percent
     """
-    accuracy = len(actualLabels[actualLabels == label]) / float(len(actualLabels))
-    #print(str(round(accuracy*100,1)) + "% of the labels used to adapt the model were correct")
+    #accuracy = len(actualLabels[actualLabels == label]) / float(len(actualLabels))
+    correctCnt = 0
+    correctMultipleCnt = 0 # label is correct, but other classes also in GT
+    for i in range(actualLabels.shape[0]):
+        if label in actualLabels[i,:]:
+            correctCnt += 1
+            if len(set(actualLabels[i,:].tolist())) != 2:
+                pdb.set_trace()
+                correctMultipleCnt += 1
+    
+    accuracy = correctCnt / (float(len(actualLabels)))
+    multiLabels = correctMultipleCnt / (float(len(actualLabels)))
 
-    return accuracy
+    print(str(round(accuracy*100,1)) + "% of the labels used to adapt the model correct")
+    print(str(round(multiLabels*100,1)) + "% of all labels correct, but also contained " + 
+    "another label")
+
+    return [accuracy, multiLabels]
 
 def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum):
     """
