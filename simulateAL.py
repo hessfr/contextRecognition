@@ -742,6 +742,9 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
     @param classesDict: 
 
     """
+    givenLabelsCopy = copy.deepcopy(givenLabels)
+    timestampsCopy = copy.deepcopy(timestamps)
+    
     fig = pl.figure(figsize=(20, 15))
     ax = pl.subplot(1,1,1)
 
@@ -781,17 +784,17 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
 
     # Add the queries timestamps to the x-axis:
     scale_time = 63*0.032
-    timestamps = [(el/scale_time) for el in timestamps]
+    timestampsCopy = [(el/scale_time) for el in timestampsCopy]
     
-    del timestamps[0]
-    del givenLabels[0]
+    del timestampsCopy[0]
+    del givenLabelsCopy[0]
 
     revDict = reverseDict(classesDict)
 
-    for i in range(len(givenLabels)):
-        givenLabels[i] = revDict[givenLabels[i]]
+    for i in range(len(givenLabelsCopy)):
+        givenLabelsCopy[i] = revDict[givenLabelsCopy[i]]
 
-    pl.xticks(timestamps, givenLabels, rotation=45)
+    pl.xticks(timestampsCopy, givenLabelsCopy, rotation=45)
 
 
 
