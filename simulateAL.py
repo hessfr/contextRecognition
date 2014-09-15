@@ -12,6 +12,7 @@ import random
 from scipy.stats import itemfreq
 from sklearn.mixture import GMM
 from sklearn import preprocessing
+from operator import itemgetter
 from classifiers import getIndex, predictGMM, majorityVote, logProb, confusionMatrixMulti
 from offlineEvaluation import createGTMulti, createGTUnique, majorityVoteSilence
 from featureExtraction import FX_multiFolders
@@ -251,7 +252,11 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
     majCorrectCnt = 0 #only for evaluation
     majWrongCnt = 0 #only for evaluation
-    
+
+    # To create the overall plot (with GT classes, predicted classes, entropy and query)
+    actual_labels = []
+    entropy_values = []
+    # we also use the "timestamps" list and and the "givenLabels" list to create this plot 
     
     # This loop loads new data every 2sec:
     for i in range(simFeatures.shape[0]/b):
@@ -283,7 +288,11 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
             resArray, entropy = predictGMM(currentGMM, currentPoints, scale=False, returnEntropy=True)
             predictedLabel = int(resArray.mean())
+            
+            # For the overall plot:
             predictedLabels.append(predictedLabel)
+            actual_labels.append(actualLabel)
+            entropy_values.append(entropy)
 
             # Buffer last 30 points for each class
             if len(queryBuffer) < 30:
@@ -300,7 +309,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
             # --- Setting initial threshold: ---
             if (initThresSet[predictedLabel] == False):
-                    if len(initThresBuffer[predictedLabel]) < 45: #TODO: 90
+                    if len(initThresBuffer[predictedLabel]) < 30: #TODO: 90
                         # Fill init threshold buffer
                         initThresBuffer[predictedLabel].append(entropy)
 
@@ -370,12 +379,21 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
            
                 # only query if more than 10min since the last query:
                 if (currentTime - prevTime) > 600:
-                    # check if we want to query these points and update our threshold value if we adapt the model:
+                    # check if we want to query these points and update 
+                    # our threshold value if we adapt the model:
                     if queryCrit > threshold[predictedLabel]:
 
-                        # ignore queries that are labeled as conversation or that were predicted as conversation
+                        # ignore queries that are labeled as conversation 
+                        # or that were predicted as conversation
                         #if (str(revClassesDict[actualLabel]) != "Conversation" and 
                         #str(revClassesDict[predictedLabel]) != "Conversation"):
+                        
+                       # queryPermitted = True
+                       # if (str(revClassesDict[actualLabel]) in maxQueries):
+                       #     if (numQueries[actualLabel] >= 
+                       #     maxQueries[str(revClassesDict[actualLabel])]):
+                       #         queryPermitted = False
+                        
                         if True:
                             print("-----")
                             print("Query for " + str(revClassesDict[actualLabel]) + 
@@ -427,6 +445,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                                     initThresBuffer[i] = []
 
                             prevTime = currentTime
+
+    createOverallPlot(actual_labels, predictedLabels, entropy_values, 
+    givenLabels, timestamps, currentGMM["classesDict"])
 
     print("Total number of queries: " + str(sum(numQueries)))
     print(str(round(100.0 * majWrongCnt/float(majWrongCnt+majCorrectCnt),2)) + "% of all majority votes were wrong")
@@ -483,7 +504,7 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    return (mean - 0.25 * std)
+    return (mean - 0.5 * std)
 
 def metricAfterFeedback(mean, std):
     """
@@ -494,7 +515,8 @@ def metricAfterFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return (mean + std)
+    return mean
+    #return (mean + std)
 
 def metricBeforeFeedback(mean, std):
     """
@@ -505,7 +527,8 @@ def metricBeforeFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return (mean + std)
+    return mean
+    #return (mean + std)
 
 
 def checkLabelAccuracy(actualLabels, label):
@@ -704,6 +727,85 @@ def splitData(y_GT):
         #print("Sequence ending at frame " + str(i) + " not saved.")
 
     return [evalIdx, simIdx]
+
+def createOverallPlot(actual_labels, predictedLabels, entropy_values, 
+    givenLabels, timestamps, classesDict):
+    """
+    Create an overall plot of predicted label, actual labels, entropy values and given feedbacks 
+
+    @param actual_labels: Ground truth labels for every 2s interval
+    @param predictedLabels: Predicted label for every 2s interval
+    @param entropy_values: Mean entropy value for every 2s interval
+    @param givenLabels: List containing the user feedback
+    @param timestamps: List of the same length as givenLabels, containing the timestamps
+    when user feedback occured in seconds (needs to be converted first to match other lists) ...
+    @param classesDict: 
+
+    """
+    fig = pl.figure(figsize=(20, 15))
+    ax = pl.subplot(1,1,1)
+
+    # Index of the 2s intervals:
+    idx = range(len(actual_labels))
+
+    ax.scatter(idx, actual_labels, marker="s",   color="m")
+
+    # Place the predicted labels a bit higher, so the they don't overlap the GT labels:
+    predictedLabels = [(el+0.1) for el in predictedLabels]
+    ax.scatter(idx, predictedLabels, marker="o", color="b", s=1)
+    
+    # Set class names as labels on the y-axis:
+    sortedLabels = [list(x) for x in zip(*sorted(zip(classesDict.values(), 
+    classesDict.keys()), key=itemgetter(0)))][1]
+    pl.yticks(range(len(sortedLabels)), sortedLabels)
+
+    pl.xlim([0, len(predictedLabels)])
+
+    
+    # Scale entropy values:
+    scale_factor = max(classesDict.values())/max(entropy_values)
+    entropy_values = [(el*scale_factor) for el in entropy_values]
+    
+    # Calculate mean of entropy values over the last 1min:
+    entropy_values = np.array(entropy_values)
+    filtered_entropy_values = np.zeros(len(entropy_values))
+    # From the entropy values on the 2s interval, calulcate the mean values of the last 30 elements:
+    for i in range(1, len(entropy_values)):
+        if i > 30:
+            filtered_entropy_values[i] = np.mean(entropy_values[(i-30):i])
+        else:
+            filtered_entropy_values[i] = np.mean(entropy_values[0:i])
+    
+    ax.plot(idx, filtered_entropy_values, c="y")
+
+
+    # Add the queries timestamps to the x-axis:
+    scale_time = 63*0.032
+    timestamps = [(el/scale_time) for el in timestamps]
+    
+    del timestamps[0]
+    del givenLabels[0]
+
+    revDict = reverseDict(classesDict)
+
+    for i in range(len(givenLabels)):
+        givenLabels[i] = revDict[givenLabels[i]]
+
+    pl.xticks(timestamps, givenLabels, rotation=45)
+
+
+
+    fig.savefig("plotsTmp/overall_plot.jpg")
+
+    pdb.set_trace()
+
+
+
+
+
+
+
+
 
 def reverseDict(oldDict):
     """
