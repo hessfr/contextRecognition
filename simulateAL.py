@@ -229,10 +229,12 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     thresQueriedInterval = []
 
+    pdb.set_trace()
+
     # List of points to query (i.e. indices in the simulateAL array:
-    points_to_query_in_gt = [10*63]
+    points_to_query_idx = [10*63]
     
-    points_to_query = [(el/63.0) for el in points_to_query_in_gt]
+    points_to_query = [(el/63.0) for el in points_to_query_idx]
 
     for i in range(n_classes):
         initThresSet.append(False)
