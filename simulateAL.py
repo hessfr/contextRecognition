@@ -229,6 +229,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     thresQueriedInterval = []
 
+    # Limit the number of allowed queries for certain classes:
+    maxQueries = {"Office": 5, "Restaurant": 2}
+
     for i in range(n_classes):
         initThresSet.append(False)
         thresSet.append(False)
@@ -388,13 +391,13 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                         #if (str(revClassesDict[actualLabel]) != "Conversation" and 
                         #str(revClassesDict[predictedLabel]) != "Conversation"):
                         
-                       # queryPermitted = True
-                       # if (str(revClassesDict[actualLabel]) in maxQueries):
-                       #     if (numQueries[actualLabel] >= 
-                       #     maxQueries[str(revClassesDict[actualLabel])]):
-                       #         queryPermitted = False
+                        queryPermitted = True
+                        if (str(revClassesDict[actualLabel]) in maxQueries):
+                            if (numQueries[actualLabel] >= 
+                            maxQueries[str(revClassesDict[actualLabel])]):
+                                queryPermitted = False
                         
-                        if True:
+                        if queryPermitted:
                             print("-----")
                             print("Query for " + str(revClassesDict[actualLabel]) + 
                             " class (predicted as " + str(revClassesDict[predictedLabel]) + 
@@ -800,7 +803,7 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
 
     fig.savefig("plotsTmp/overall_plot.jpg")
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
 
 
