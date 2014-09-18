@@ -180,7 +180,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     # When adaption the model, use only data points of the last minute, if the amplitude,
     # is above this value:
-    silenceThresholdModelAdaption = 200 # TODO: if all point should be used, set this to -1 
+    silenceThresholdModelAdaption = -1 # TODO: if all point should be used, set this to -1 
 
     """ Initialize buffers etc. """
     # Booleans that indicate if the initial threshold was already set:
@@ -229,12 +229,10 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     thresQueriedInterval = []
 
-    pdb.set_trace()
-
-    # List of points to query (i.e. indices in the simulateAL array:
-    points_to_query_idx = [10*63]
+    # List of points to query in seconds (in the simulateAL array):
+    points_to_query_sec = [753.984, 1372.896, 3943.296, 5175.072, 25075.008, 33116.832]
     
-    points_to_query = [(el/63.0) for el in points_to_query_idx]
+    points_to_query = [int(el/2.016) for el in points_to_query_sec]
 
     for i in range(n_classes):
         initThresSet.append(False)
