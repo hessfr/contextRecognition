@@ -108,9 +108,12 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     emptyRow = {-1}
     onlyConv = {-1, trainedGMM["classesDict"]["Conversation"]}
     itemsToDelete = [-1, trainedGMM["classesDict"]["Conversation"]]
+    #itemsToDelete = [-1]
+    
     for i in range(y_gt_multi.shape[0]):
-        #if np.array_equal(y_gt_multi[i,:], emptyRow):
         rowSet = set(y_gt_multi[i,:].tolist())
+        
+        # In case we don't want to incorporate Conversation: 
         if (rowSet == emptyRow or rowSet == onlyConv):
             y_gt_unique[i] = -1
         else:
@@ -119,6 +122,16 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                 if el in rowList:
                     rowList.remove(el)
             y_gt_unique[i] = random.choice(rowList)        
+        
+        # If we want to also incorporate Conversation:
+        #if rowSet == emptyRow:
+        #    y_gt_unique[i] = -1
+        #else:
+        #    rowList = list(rowSet)
+        #    for el in itemsToDelete:
+        #        if el in rowList:
+        #            rowList.remove(el)
+        #    y_gt_unique[i] = random.choice(rowList)        
 
     classesInGT = np.unique(y_gt_multi)
     classesInGT = classesInGT[classesInGT != -1]
@@ -259,7 +272,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     # To create the overall plot (with GT classes, predicted classes, entropy and query)
     actual_labels = []
     entropy_values = []
-    # we also use the "timestamps" list and and the "givenLabels" list to create this plot 
+    idx_cnt = 0 # counts index of non-silent samples
+    query_idx = [] # contains the indices in the simFeatures array of when a query was sent
+    # we also use the "givenLabels" list to create this plot 
     
     # This loop loads new data every 2sec:
     for i in range(simFeatures.shape[0]/b):
@@ -296,6 +311,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             predictedLabels.append(predictedLabel)
             actual_labels.append(actualLabel)
             entropy_values.append(entropy)
+            idx_cnt += 1
 
             # Buffer last 30 points for each class
             if len(queryBuffer) < 30:
@@ -312,7 +328,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
             # --- Setting initial threshold: ---
             if (initThresSet[predictedLabel] == False):
-                    if len(initThresBuffer[predictedLabel]) < 30: #TODO: 90
+                    if len(initThresBuffer[predictedLabel]) < 90: #TODO: 90
                         # Fill init threshold buffer
                         initThresBuffer[predictedLabel].append(entropy)
 
@@ -385,19 +401,16 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                     # check if we want to query these points and update 
                     # our threshold value if we adapt the model:
                     if queryCrit > threshold[predictedLabel]:
+                        
+                        if True:
 
-                        # ignore queries that are labeled as conversation 
-                        # or that were predicted as conversation
-                        #if (str(revClassesDict[actualLabel]) != "Conversation" and 
-                        #str(revClassesDict[predictedLabel]) != "Conversation"):
-                        
-                        queryPermitted = True
-                        if (str(revClassesDict[actualLabel]) in maxQueries):
-                            if (numQueries[actualLabel] >= 
-                            maxQueries[str(revClassesDict[actualLabel])]):
-                                queryPermitted = False
-                        
-                        if queryPermitted:
+                        #queryPermitted = True
+                        #if (str(revClassesDict[actualLabel]) in maxQueries):
+                        #    if (numQueries[actualLabel] >= 
+                        #    maxQueries[str(revClassesDict[actualLabel])]):
+                        #        queryPermitted = False
+                        #
+                        #if queryPermitted:
                             print("-----")
                             print("Query for " + str(revClassesDict[actualLabel]) + 
                             " class (predicted as " + str(revClassesDict[predictedLabel]) + 
@@ -425,6 +438,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             allGMM.append(currentGMM)
                             givenLabels.append(actualLabel)
                             labelAccuracy.append(checkLabelAccuracy(simLabelsMulti[start:end], actualLabel))
+                            
+                            query_idx.append(idx_cnt)
+
                             timestamps.append(currentTime)
 
                             numQueries[actualLabel] += 1
@@ -450,7 +466,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             prevTime = currentTime
 
     createOverallPlot(actual_labels, predictedLabels, entropy_values, 
-    givenLabels, timestamps, currentGMM["classesDict"])
+    givenLabels, query_idx, currentGMM["classesDict"])
 
     print("Total number of queries: " + str(sum(numQueries)))
     print(str(round(100.0 * majWrongCnt/float(majWrongCnt+majCorrectCnt),2)) + "% of all majority votes were wrong")
@@ -507,7 +523,8 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    return (mean - 0.5 * std)
+    return (mean + std)
+    #return mean
 
 def metricAfterFeedback(mean, std):
     """
@@ -518,8 +535,8 @@ def metricAfterFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return mean
-    #return (mean + std)
+    #return mean
+    return (mean + std)
 
 def metricBeforeFeedback(mean, std):
     """
@@ -530,8 +547,8 @@ def metricBeforeFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return mean
-    #return (mean + std)
+    #return mean
+    return (mean + std)
 
 
 def checkLabelAccuracy(actualLabels, label):
@@ -732,7 +749,7 @@ def splitData(y_GT):
     return [evalIdx, simIdx]
 
 def createOverallPlot(actual_labels, predictedLabels, entropy_values, 
-    givenLabels, timestamps, classesDict):
+    givenLabels, query_idx, classesDict):
     """
     Create an overall plot of predicted label, actual labels, entropy values and given feedbacks 
 
@@ -740,13 +757,13 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
     @param predictedLabels: Predicted label for every 2s interval
     @param entropy_values: Mean entropy value for every 2s interval
     @param givenLabels: List containing the user feedback
-    @param timestamps: List of the same length as givenLabels, containing the timestamps
+    @param timestamps: List of the same length as givenLabels, indices when a
+    query was sent
     when user feedback occured in seconds (needs to be converted first to match other lists) ...
     @param classesDict: 
 
     """
     givenLabelsCopy = copy.deepcopy(givenLabels)
-    timestampsCopy = copy.deepcopy(timestamps)
     
     fig = pl.figure(figsize=(20, 15))
     ax = pl.subplot(1,1,1)
@@ -784,12 +801,6 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
     
     ax.plot(idx, filtered_entropy_values, c="y")
 
-
-    # Add the queries timestamps to the x-axis:
-    scale_time = 63*0.032
-    timestampsCopy = [(el/scale_time) for el in timestampsCopy]
-    
-    del timestampsCopy[0]
     del givenLabelsCopy[0]
 
     revDict = reverseDict(classesDict)
@@ -797,21 +808,9 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
     for i in range(len(givenLabelsCopy)):
         givenLabelsCopy[i] = revDict[givenLabelsCopy[i]]
 
-    pl.xticks(timestampsCopy, givenLabelsCopy, rotation=45)
-
-
+    pl.xticks(query_idx, givenLabelsCopy, rotation=45)
 
     fig.savefig("plotsTmp/overall_plot.jpg")
-
-    #pdb.set_trace()
-
-
-
-
-
-
-
-
 
 def reverseDict(oldDict):
     """
