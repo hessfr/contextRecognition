@@ -28,6 +28,11 @@ import ipdb as pdb #pdb.set_trace()
 # res = simulateAL(gmm2, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user2_358848046667739/allDays/", ["user2_part1.json", "user2_part2.json", "user2_part3.json", "user2_part4.json", "user2_part5.json", "user2_part6.json"], "GT_user2.txt")
 
 # res = simulateAL(gmm4, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user4_355577053607766/allDays/", ["user4_part1.json", "user4_part2.json", "user4_part3.json", "user4_part4.json", "user4_part5.json", "user4_part6.json", "user4_part7.json", "user4_part8.json"], "GT_user4.txt")
+
+# res = simulateAL(gmm5, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user5_358848046667556/allDays/", ["user5_part1.json", "user5_part2.json", "user5_part3.json", "user5_part4.json", "user5_part5.json", "user5_part6.json", "user5_part7.json", "user5_part8.json"], "GT_user5.txt")
+
+# res = simulateAL(gmm7, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part5.json", "user7_part6.json"], "GT_user7.txt")
+
 # ----------------------------
 
 def simulateAL(trainedGMM, path, jsonFileList, gtFile):
@@ -288,6 +293,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             currentGT = simLabelsMulti[start:end,:]
             # only the latest label is used to adapt the model, like in real-life
             actualLabel = int(simLabelsUnique[end])
+            actualLabelMulti = simLabelsMulti[end]
             currentTime = i*b*0.032
 
             # Buffer points of the 30 last 2 second intervals, as we want to update 
@@ -309,7 +315,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             
             # For the overall plot:
             predictedLabels.append(predictedLabel)
-            actual_labels.append(actualLabel)
+            actual_labels.append(actualLabelMulti)
             entropy_values.append(entropy)
             idx_cnt += 1
 
@@ -484,7 +490,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             #pl.show()
             fig.savefig("plotsTmp/Class_" + revClassesDict[i] + ".jpg")
 
-    #pdb.set_trace()
+    pdb.set_trace()
 
 
     """ Evaluate performance of all GMMs: """
@@ -523,8 +529,8 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    return (mean + std)
-    #return mean
+    #return (mean + std)
+    return (mean - std)
 
 def metricAfterFeedback(mean, std):
     """
@@ -535,8 +541,8 @@ def metricAfterFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    #return mean
-    return (mean + std)
+    return (mean - 0.5 * std)
+    #return (mean - 0.5 * std)
 
 def metricBeforeFeedback(mean, std):
     """
@@ -547,8 +553,8 @@ def metricBeforeFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    #return mean
-    return (mean + std)
+    return (mean - 0.5 * std)
+    #return (mean + std)
 
 
 def checkLabelAccuracy(actualLabels, label):
@@ -753,7 +759,7 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
     """
     Create an overall plot of predicted label, actual labels, entropy values and given feedbacks 
 
-    @param actual_labels: Ground truth labels for every 2s interval
+    @param actual_labels: Ground truth labels of all classes for every 2s interval
     @param predictedLabels: Predicted label for every 2s interval
     @param entropy_values: Mean entropy value for every 2s interval
     @param givenLabels: List containing the user feedback
@@ -765,18 +771,31 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
     """
     givenLabelsCopy = copy.deepcopy(givenLabels)
     
-    fig = pl.figure(figsize=(20, 15))
-    ax = pl.subplot(1,1,1)
+    fig = pl.figure(figsize=(25, 15))
+    ax1 = pl.subplot(1,1,1)
+
+    ax1.set_ylabel("Predicted and Actual Classes")
 
     # Index of the 2s intervals:
     idx = range(len(actual_labels))
+    
+    # Convert actual_labels to numpy array:
+    actual_labels_array = np.array(actual_labels)
 
-    ax.scatter(idx, actual_labels, marker="s",   color="m")
+    pl.xticks(rotation=45)
+
+    # Replace all -1 values by NaN, so that they won't be plotted:
+    actual_labels_array[actual_labels_array == -1] = np.NAN
+    for i in range(actual_labels_array.shape[1]):
+        ax1.scatter(idx, actual_labels_array[:,i], marker="s", color="m",
+        s=1, label="Ground Truth" if i == 0 else "")
 
     # Place the predicted labels a bit higher, so the they don't overlap the GT labels:
     predictedLabels = [(el+0.1) for el in predictedLabels]
-    ax.scatter(idx, predictedLabels, marker="o", color="b", s=1)
-    
+    ax1.scatter(idx, predictedLabels, marker="o", color="b", s=1, label="Prediction")
+   
+    ax1.set_ylim(bottom=0)
+
     # Set class names as labels on the y-axis:
     sortedLabels = [list(x) for x in zip(*sorted(zip(classesDict.values(), 
     classesDict.keys()), key=itemgetter(0)))][1]
@@ -784,31 +803,37 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
 
     pl.xlim([0, len(predictedLabels)])
 
-    
     # Scale entropy values:
-    scale_factor = max(classesDict.values())/max(entropy_values)
-    entropy_values = [(el*scale_factor) for el in entropy_values]
+    #scale_factor = max(classesDict.values())/max(entropy_values)
+    #entropy_values = [(el*scale_factor) for el in entropy_values]
     
     # Calculate mean of entropy values over the last 1min:
     entropy_values = np.array(entropy_values)
     filtered_entropy_values = np.zeros(len(entropy_values))
-    # From the entropy values on the 2s interval, calulcate the mean values of the last 30 elements:
+    # From the entropy values on the 2s interval, calulcate the mean values of
+    # the last k elements:
+    k=150
     for i in range(1, len(entropy_values)):
-        if i > 30:
-            filtered_entropy_values[i] = np.mean(entropy_values[(i-30):i])
+        if i > k:
+            filtered_entropy_values[i] = np.mean(entropy_values[(i-k):i])
         else:
             filtered_entropy_values[i] = np.mean(entropy_values[0:i])
-    
-    ax.plot(idx, filtered_entropy_values, c="y")
 
-    del givenLabelsCopy[0]
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('Entropy', color='y')
+    for tl in ax2.get_yticklabels():
+        tl.set_color('y')
+    ax2.plot(idx, filtered_entropy_values, c="y", label="Entropy")
 
     revDict = reverseDict(classesDict)
-
+    del givenLabelsCopy[0]
     for i in range(len(givenLabelsCopy)):
         givenLabelsCopy[i] = revDict[givenLabelsCopy[i]]
+    pl.xticks(query_idx, givenLabelsCopy)
 
-    pl.xticks(query_idx, givenLabelsCopy, rotation=45)
+    pl.xlim([0, len(predictedLabels)])
+
+    ax1.legend(loc='upper left')
 
     fig.savefig("plotsTmp/overall_plot.jpg")
 
