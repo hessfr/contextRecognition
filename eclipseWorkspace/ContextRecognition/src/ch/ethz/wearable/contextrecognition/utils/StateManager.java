@@ -432,8 +432,6 @@ public class StateManager extends BroadcastReceiver {
 							//TODO
 							
 							
-							
-							
 //							// Persist the predictionData:
 //							Calendar cal = Calendar.getInstance();
 //							cal.add(Calendar.DATE, -1);
@@ -623,7 +621,7 @@ public class StateManager extends BroadcastReceiver {
 		if (intent.getAction().equals(Globals.PERSIST_DATA)) {
 
 			if (variablesInitialized == true) {
-				persistAppData();
+				//persistAppData();
 			}
 
 		}

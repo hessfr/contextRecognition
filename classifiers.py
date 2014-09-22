@@ -774,6 +774,8 @@ def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
                             y_GT[start:end+1,2].fill(classesDict[labelList[i][1]])
                         
                         else:
+                            pdb.set_trace()
+    
                             print("Problem occurred when filling ground truth array." +  
                             "Maybe you are using more than 3 simultaneous context classes?")
                     break

@@ -134,8 +134,8 @@ public class MainActivity extends ActionBarActivity {
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);
 			
-			Intent i2 = new Intent(MainActivity.this,RecService.class);
-			startService(i2);
+//			Intent i2 = new Intent(MainActivity.this,RecService.class);
+//			startService(i2);
 			
 			Intent i4 = new Intent(MainActivity.this,EventDetection.class);
 			startService(i4);
@@ -222,8 +222,8 @@ public class MainActivity extends ActionBarActivity {
 			AppStatus.getInstance().set(AppStatus.INIT);
 			Log.i(TAG, "New status: init");
 			
-			Intent i2 = new Intent(MainActivity.this,RecService.class);
-			startService(i2);
+//			Intent i2 = new Intent(MainActivity.this,RecService.class);
+//			startService(i2);
 			
 			Intent i3 = new Intent(MainActivity.this,EventDetection.class);
 			startService(i3);
