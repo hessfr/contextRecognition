@@ -174,6 +174,8 @@ def createGTMulti(classesDict, length, gtList):
                             y_GT[start:end+1,4].fill(classesDict[gtList[i][1]])
                         
                         else:
+                            pdb.set_trace()
+
                             print("Problem occurred when filling ground truth array!")
                     break
     

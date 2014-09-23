@@ -451,7 +451,7 @@ def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
     else:
         return majorityVote(y_pred, returnDisagreement=False)
 
-def logProb(X, weights, means, covars):
+def logProb(X, weights, means, covars, return_component_matrix=False):
     """
     Calculate the log probability of multiple points under a GMM represented by the weights, means, covars parameters
 
@@ -459,6 +459,8 @@ def logProb(X, weights, means, covars):
     @param weights: Component weights
     @param means: Means
     @param covars: Full covariance matrix of the mixture
+    @param return_component_matrix: Set to true to return a (1 x n_samples) boolean matrix, indicating
+    if most likely component for every point was from user (True) or from Freesound (False)
     @return:
     """
     X = copy.copy(X)
@@ -507,19 +509,29 @@ def logProb(X, weights, means, covars):
     tmpArray = np.rollaxis(tmp_log_prob, axis=1) # transpose
     vmax = tmpArray.max(axis=0)
 
-    #TODO: if we want to check which components is the most likely one: -> evaluate this for every class:
-    # To check if most likely component was from freesound model or user adaption:
-    #FS_COMPONENTS = 16
-    #mostLikelyComp = tmpArray.argmax(axis=0)
-    #num_freesound_components = (mostLikelyComp < FS_COMPONENTS).sum()
-    #num_user_components = (mostLikelyComp >= FS_COMPONENTS).sum()
+    if return_component_matrix == True:
+        #TODO: if we want to check which components is the most likely one: -> evaluate this for every class:
+        # To check if most likely component was from freesound model or user adaption:
+        FS_COMPONENTS = 16
+        mostLikelyComp = tmpArray.argmax(axis=0)
+        #num_freesound_components = (mostLikelyComp < FS_COMPONENTS).sum()
+        #num_user_components = (mostLikelyComp >= FS_COMPONENTS).sum()
+
+        #print("num_freesound_components: " + str(num_freesound_components))
+        #print("num_user_components: " + str(num_user_components))
+        
+        # Matrix indicating for every point, if most likely component was from user-centric
+        # model (True) or from Freesound model (False)
+        user_component_matrix = (mostLikelyComp >= FS_COMPONENTS)
 
     final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
 
     final_log_prob = final_log_prob + vmax # shape = (n_samples,)
     
-
-    return final_log_prob
+    if return_component_matrix == True:
+        return final_log_prob, user_component_matrix
+    else:
+        return final_log_prob
 
 def lpr(X, weights, means, covars):
     """

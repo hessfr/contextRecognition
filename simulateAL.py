@@ -31,7 +31,9 @@ import ipdb as pdb #pdb.set_trace()
 
 # res = simulateAL(gmm5, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user5_358848046667556/allDays/", ["user5_part1.json", "user5_part2.json", "user5_part3.json", "user5_part4.json", "user5_part5.json", "user5_part6.json", "user5_part7.json", "user5_part8.json"], "GT_user5.txt")
 
-# res = simulateAL(gmm7, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part5.json", "user7_part6.json"], "GT_user7.txt")
+# res = simulateAL(gmm79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part5.json", "user7_part6.json"], "GT_user7.txt")
+
+# res = simulateAL(gmm_79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user9_358848046667739/allDays/", ["user9_part1.json", "user9_part2.json", "user9_part3.json", "user9_part4.json", "user9_part5.json", "user9_part6.json", "user9_part7.json", "user9_part8.json", "user9_part9.json", "user9_part10.json"], "GT_user9.txt")
 
 # ----------------------------
 
@@ -109,7 +111,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     each sample point. Create this array be randomly selecting a single label for every
     sample points in the ground truth: """
     y_gt_unique = np.empty(y_gt_multi.shape[0])
-    #emptyRow = np.array([-1,-1,-1,-1,-1]) # = no ground truth provided
     emptyRow = {-1}
     onlyConv = {-1, trainedGMM["classesDict"]["Conversation"]}
     itemsToDelete = [-1, trainedGMM["classesDict"]["Conversation"]]
@@ -282,6 +283,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     # we also use the "givenLabels" list to create this plot 
     
     # This loop loads new data every 2sec:
+    
     for i in range(simFeatures.shape[0]/b):
         start = i*b
         end = (i+1)*b
@@ -470,7 +472,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                                     initThresBuffer[i] = []
 
                             prevTime = currentTime
-
+    
     createOverallPlot(actual_labels, predictedLabels, entropy_values, 
     givenLabels, query_idx, currentGMM["classesDict"])
 
@@ -479,6 +481,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
     # ---- for plotting only: query criteria and threshold values over time for
     # each class separately: ---
+    
     for i in range(n_classes):
         # Only plot classes where enough data is available:
         if (len(plotValues[i]) > 0):
@@ -491,7 +494,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             fig.savefig("plotsTmp/Class_" + revClassesDict[i] + ".jpg")
 
     pdb.set_trace()
-
 
     """ Evaluate performance of all GMMs: """
     print("Evaluating performance of classifiers:")
@@ -529,8 +531,8 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    #return (mean + std)
-    return (mean - std)
+    return (mean + std)
+    #return (mean - 0.5 * std)
 
 def metricAfterFeedback(mean, std):
     """
@@ -541,8 +543,8 @@ def metricAfterFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return (mean - 0.5 * std)
-    #return (mean - 0.5 * std)
+    #return mean 
+    return (mean + std)
 
 def metricBeforeFeedback(mean, std):
     """
@@ -553,8 +555,8 @@ def metricBeforeFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return (mean - 0.5 * std)
-    #return (mean + std)
+    #return mean
+    return (mean + std)
 
 
 def checkLabelAccuracy(actualLabels, label):
@@ -701,13 +703,19 @@ def makePrediction(trainedGMM, evalFeatures, evalAmps, silenceClassNum):
 
     logLikelihood = np.zeros((n_classes, X_test.shape[0]))
 
+    user_component_matrix = np.empty((n_classes, X_test.shape[0]), dtype=np.bool_)
     """ Compute log-probability for each class for all points: """
     for i in range(n_classes):
-        logLikelihood[i] = logProb(X_test, trainedGMM['clfs'][i].weights_,
-        trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_)
+        logLikelihood[i], tmp_comp_matrix = logProb(X_test, trainedGMM['clfs'][i].weights_,
+        trainedGMM['clfs'][i].means_, trainedGMM['clfs'][i].covars_, return_component_matrix=True)
+        user_component_matrix[i] = tmp_comp_matrix
 
     """ Select the class with the highest log-probability: """
     y_pred = np.argmax(logLikelihood, 0)
+
+    most_likely_components = np.take(user_component_matrix, y_pred)
+    
+    #pdb.set_trace()
 
     return majorityVoteSilence(y_pred, evalAmps, silenceClassNum)
 
