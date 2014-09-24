@@ -524,6 +524,8 @@ def logProb(X, weights, means, covars, return_component_matrix=False):
         # model (True) or from Freesound model (False)
         user_component_matrix = (mostLikelyComp >= FS_COMPONENTS)
 
+        #pdb.set_trace()
+
     final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
 
     final_log_prob = final_log_prob + vmax # shape = (n_samples,)

@@ -18,6 +18,7 @@ def plotAL(results):
     #for el in classesDict:
     #    F1list.append([])
 
+    percent_user_component = []
 
     #Conversation = []
     #Office = []
@@ -34,6 +35,7 @@ def plotAL(results):
     for el in results:
         accuracy.append(el["accuracy"])
        
+        percent_user_component.append(el["percent_user_component"])
         
         tmp = []
         for i in range(len(classesDict)):
@@ -78,7 +80,18 @@ def plotAL(results):
     #legend = pl.legend(loc='upper left', shadow=True)
     #pl.show()
     fig.savefig("plotsTmp/accuracy.jpg")
+   
+    fig = pl.figure()
+    pl.plot(idx, percent_user_component, label="% samples, where most" + 
+    "likely component added by user")
+    pl.title("% samples, where most likely component trained by user")
+    pl.xlabel('number of queries')
+    pl.xticks(range(len(labels)),labels, rotation=45)
+    #legend = pl.legend(loc='upper left', shadow=True)
+    #pl.show()
+    fig.savefig("plotsTmp/user_components.jpg")
     
+
     fig = pl.figure()
     j=0
     for i in range(len(classesDict)):

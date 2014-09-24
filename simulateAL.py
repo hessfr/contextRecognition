@@ -285,6 +285,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     # This loop loads new data every 2sec:
     
     for i in range(simFeatures.shape[0]/b):
+        
+        #break
+        
         start = i*b
         end = (i+1)*b
         currentAmps = simAmps[start:end]
@@ -336,7 +339,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
             # --- Setting initial threshold: ---
             if (initThresSet[predictedLabel] == False):
-                    if len(initThresBuffer[predictedLabel]) < 90: #TODO: 90
+                    if len(initThresBuffer[predictedLabel]) < 30: #TODO: 90
                         # Fill init threshold buffer
                         initThresBuffer[predictedLabel].append(entropy)
 
@@ -531,8 +534,8 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    return (mean + std)
-    #return (mean - 0.5 * std)
+    #return (mean)
+    return (mean - 0.5 * std)
 
 def metricAfterFeedback(mean, std):
     """
@@ -543,8 +546,8 @@ def metricAfterFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    #return mean 
-    return (mean + std)
+    return mean 
+    #return mean + 0.5 * std)
 
 def metricBeforeFeedback(mean, std):
     """
@@ -555,8 +558,8 @@ def metricBeforeFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    #return mean
-    return (mean + std)
+    return mean
+    #return (mean + 0.5 * std)
 
 
 def checkLabelAccuracy(actualLabels, label):
@@ -600,7 +603,8 @@ def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum)
     """
 
     """ Calculate the predictions on the evaluation features: """
-    y_pred = makePrediction(trainedGMM, evalFeatures, evalAmps, silenceClassNum)
+    y_pred, percent_user_component = makePrediction(trainedGMM, evalFeatures, 
+    evalAmps, silenceClassNum)
 
     n_classes = len(trainedGMM["classesDict"])
     
@@ -684,7 +688,7 @@ def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum)
     # Plot the confusion matrix:
     confusionMatrixMulti(evalLabels, y_pred, trainedGMM["classesDict"], ssh=True)
 
-    resDict = {"accuracy": accuracy, "F1dict": F1s}
+    resDict = {"accuracy": accuracy, "F1dict": F1s, "percent_user_component": percent_user_component}
 
     return resDict
 
@@ -713,11 +717,20 @@ def makePrediction(trainedGMM, evalFeatures, evalAmps, silenceClassNum):
     """ Select the class with the highest log-probability: """
     y_pred = np.argmax(logLikelihood, 0)
 
-    most_likely_components = np.take(user_component_matrix, y_pred)
-    
+    # Number of predictions where most likely component from user-centric model:
+    n_user_component = 0
+    for i in range(X_test.shape[0]):
+        if user_component_matrix[y_pred[i],i] == True:
+            n_user_component += 1
+
+    percent_user_component = round(100 * (n_user_component / float(X_test.shape[0])), 2)
+
+    print(str(percent_user_component) + "% of all predictions had component from user" + 
+    " as most likely component")
+
     #pdb.set_trace()
 
-    return majorityVoteSilence(y_pred, evalAmps, silenceClassNum)
+    return majorityVoteSilence(y_pred, evalAmps, silenceClassNum), percent_user_component
 
 def splitData(y_GT):
     """
