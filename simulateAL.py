@@ -134,6 +134,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     featureData = np.array(featureData)
     amps = np.array(amps)
 
+    # Remove log energy as a feature:
+    #featureData = featureData[:, 0:-1]
+
     """ Create index arrays to define which elements are used to evaluate performance 
     and which for simulation of the AL behavior: """
     [evalIdx, simIdx] = splitData(y_gt_unique)
@@ -180,7 +183,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     # When adaption the model, use only data points of the last minute, if the amplitude,
     # is above this value:
-    silenceThresholdModelAdaption = -1 # TODO: if all point should be used, set this to -1 
+    silenceThresholdModelAdaption = 200 # TODO: if all point should be used, set this to -1 
 
     """ Initialize buffers etc. """
     # Booleans that indicate if the initial threshold was already set:
@@ -230,9 +233,12 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     thresQueriedInterval = []
 
     # List of points to query in seconds (in the simulateAL array):
-    points_to_query_sec = [753.984, 1372.896, 3943.296, 5175.072, 25075.008, 33116.832]
+    #points_to_query_sec = [753.984, 1372.896, 3943.296, 5175.072, 25075.008, 33116.832]
+    points_to_query_sec = [753.984, 1372.896, 5175.072, 25075.008]
     
     points_to_query = [int(el/2.016) for el in points_to_query_sec]
+
+    #pdb.set_trace()
 
     for i in range(n_classes):
         initThresSet.append(False)
@@ -405,18 +411,30 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             # adapt the model:
             upd = np.array(updatePoints)
             
+            update_gt_tmp = np.array(updateGT)
+
             #only consider non-silent samples here:
             amp = np.array(updateAmps)                            
+            
+            # Only incorporate points of the correct context classes (for testing only):
+            #mask_correct_gt = np.sum((update_gt_tmp == actualLabel), axis=1)
+            #upd = upd[(mask_correct_gt == 1)]
+            #amp = amp[(mask_correct_gt == 1)]
+
             upd = upd[amp > silenceThresholdModelAdaption]
-            print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
-            "% of all samples of the last minute used to adapt the model, " + 
-            "the rest is silent ---")
+            #print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
+            #"% of all samples of the last minute used to adapt the model, " + 
+            #"the rest is silent ---")
+            print("--- " + str(round(upd.shape[0] * 0.032, 2)) + 
+            "s of of data incorporated into the model")
+            print(str(upd.shape))
 
             currentGMM = adaptGMM(currentGMM, upd, actualLabel)
 
             allGMM.append(currentGMM)
             givenLabels.append(actualLabel)
-            labelAccuracy.append(checkLabelAccuracy(simLabelsMulti[start:end], actualLabel))
+            labelAccuracy.append(checkLabelAccuracy(update_gt_tmp, 
+            actualLabel, currentGMM["classesDict"]))
             timestamps.append(currentTime)
 
             numQueries[actualLabel] += 1
@@ -526,7 +544,7 @@ def metricBeforeFeedback(mean, std):
     #return (mean + std)
 
 
-def checkLabelAccuracy(actualLabels, label):
+def checkLabelAccuracy(actualLabels, label, classesDict):
     """
     Calculate how many percent of the samples that are used to adapt the model, are 
     actually of the correct class and how many percent of these points have the 
@@ -535,16 +553,22 @@ def checkLabelAccuracy(actualLabels, label):
     @param actualLabels: Ground truth labels of all points with which the model will be adapted.
     Contains multiple labels per point
     @param label: The label of the class with which the model should be adapted
+    @param classesDict: Dictionary object containing a mapping from class names to class
+    numbers
     @return: accuracy, multiLabels in percent
     """
-    #accuracy = len(actualLabels[actualLabels == label]) / float(len(actualLabels))
     correctCnt = 0
     correctMultipleCnt = 0 # label is correct, but other classes also in GT
+    wrong_labels = [-1]
     for i in range(actualLabels.shape[0]):
         if label in actualLabels[i,:]:
             correctCnt += 1
             if len(set(actualLabels[i,:].tolist())) != 2:
                 correctMultipleCnt += 1
+        else:
+            for el in actualLabels[i,:]:
+                if el not in wrong_labels:
+                    wrong_labels.append(el)
     
     accuracy = correctCnt / (float(len(actualLabels)))
     multiLabels = correctMultipleCnt / (float(len(actualLabels)))
@@ -553,6 +577,17 @@ def checkLabelAccuracy(actualLabels, label):
     print(str(round(multiLabels*100,1)) + "% of all labels correct, but also contained " + 
     "another label")
 
+    revDict = reverseDict(classesDict)
+    wrong_label_names = []
+    for el in wrong_labels:
+        if el != -1:
+            wrong_label_names.append(revDict[el])
+
+    if len(wrong_labels) != 1:
+        print("Points incorprated, also contain the following class(es): ")
+        for el in wrong_label_names:
+            print(str(el))
+    
     return [accuracy, multiLabels]
 
 def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum):
