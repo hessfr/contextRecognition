@@ -207,6 +207,8 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     updatePoints = []
     updateGT = []
     updateAmps = []
+    updateEntropies = []
+    updatePredictions = []
 
     # ---- for plotting only ---
     plotValues = [] # only for evaluation
@@ -299,7 +301,17 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
         resArray, entropy = predictGMM(currentGMM, currentPoints, scale=False, returnEntropy=True)
         predictedLabel = int(resArray.mean())
-        
+
+        # Buffer entropy values of the 30 last 2 second intervals:
+        if len(updateEntropies) < 30:
+            updateEntropies.append(entropy)
+            updatePredictions.extend(resArray.tolist())
+        else:
+            updateEntropies.append(entropy)
+            del updateEntropies[0]
+            updatePredictions.extend(resArray.tolist())
+            del updatePredictions[0:b]
+
         # For the overall plot:
         predictedLabels.append(predictedLabel)
         actual_labels.append(actualLabel)
@@ -422,9 +434,9 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             #amp = amp[(mask_correct_gt == 1)]
 
             upd = upd[amp > silenceThresholdModelAdaption]
-            #print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
-            #"% of all samples of the last minute used to adapt the model, " + 
-            #"the rest is silent ---")
+            print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
+            "% of all samples of the last minute used to adapt the model, " + 
+            "the rest is silent ---")
             print("--- " + str(round(upd.shape[0] * 0.032, 2)) + 
             "s of of data incorporated into the model")
             print(str(upd.shape))
@@ -456,6 +468,8 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                 thresSet[i] = False
                 if(feedbackReceived[i]) == False:
                     initThresBuffer[i] = []
+
+            pdb.set_trace()
 
             prevTime = currentTime
 
