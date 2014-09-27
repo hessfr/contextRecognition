@@ -18,7 +18,7 @@ from offlineEvaluation import createGTMulti, createGTUnique, majorityVoteSilence
 from featureExtraction import FX_multiFolders
 from adaptGMM import adaptGMM
 from plotAL import plotAL
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb 
 
 # --- simulation commands: ---
 # res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/allDays/", ["user1_part1.json", "user1_part2.json", "user1_part3.json", "user1_part4.json", "user1_part5.json", "user1_part6.json", "user1_part7.json"], "GT_user1.txt")
@@ -555,7 +555,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             #pl.show()
             fig.savefig("plotsTmp/Class_" + revClassesDict[i] + ".jpg")
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     """ Evaluate performance of all GMMs: """
     print("Evaluating performance of classifiers:")
@@ -593,8 +593,8 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    #return (mean)
-    return (mean - 0.5 * std)
+    return (mean)
+    #return (mean - 0.5 * std)
 
 def metricAfterFeedback(mean, std):
     """
@@ -605,8 +605,8 @@ def metricAfterFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return mean 
-    #return mean + 0.5 * std)
+    #return mean 
+    return (mean + 0.5 * std)
 
 def metricBeforeFeedback(mean, std):
     """
@@ -617,8 +617,8 @@ def metricBeforeFeedback(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value used to calculate part of the threshold
     """
-    return mean
-    #return (mean + 0.5 * std)
+    #return mean
+    return (mean + 0.5 * std)
 
 
 def checkLabelAccuracy(actualLabels, label, classesDict):
