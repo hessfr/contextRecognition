@@ -180,7 +180,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     givenLabels = []
     givenLabels.append(-1) #because first classifiers is without active learning yet
     labelAccuracy = []
-    labelAccuracy.append([-1, -1])
+    labelAccuracy.append([-1, -1, -1])
     timestamps = [] #time when the query was sent on the simulation data set -> only half the length of the complete data set
     timestamps.append(0)
     
@@ -223,6 +223,8 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     updatePoints = []
     updateGT = []
     updateAmps = []
+    updateEntropies = []
+    updatePredictions = []
 
     # ---- for plotting only ---
     plotValues = [] # only for evaluation
@@ -318,6 +320,16 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             resArray, entropy = predictGMM(currentGMM, currentPoints, scale=False, returnEntropy=True)
             predictedLabel = int(resArray.mean())
             
+            # Buffer entropy values of the 30 last 2 second intervals:
+            if len(updateEntropies) < 30:
+                updateEntropies.append(entropy)
+                updatePredictions.extend(resArray.tolist())
+            else:
+                updateEntropies.append(entropy)
+                del updateEntropies[0]
+                updatePredictions.extend(resArray.tolist())
+                del updatePredictions[0:b]
+
             # For the overall plot:
             predictedLabels.append(predictedLabel)
             actual_labels.append(actualLabelMulti)
@@ -444,25 +456,57 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             
                             # Only incorporate points of the correct context classes 
                             # (for testing only):
-                            #mask_correct_gt = np.sum((update_gt_tmp == actualLabel), axis=1)
+                            mask_correct_gt = np.sum((update_gt_tmp == actualLabel), axis=1)
                             #upd = upd[(mask_correct_gt == 1)]
                             #amp = amp[(mask_correct_gt == 1)]
+
+                            # Only incorporate points with a similar entropy to the last point:
+                            mask_similar_entropy, percentage_removed = filterPoints(
+                            np.array(updateEntropies), percentage=0.25)
+
+                            # Check if any points of the wrong class are incorporated into
+                            # the model after we applied the filter:
+                            mask_cnt_wrong = 0
+                            for i in range(len(mask_similar_entropy)):
+                                if mask_similar_entropy[i] != mask_correct_gt[i]:
+                                    if mask_similar_entropy[i] == 1:
+                                        mask_cnt_wrong += 1
+
+                            gt_correct_percentage = round(100 * mask_correct_gt.sum()/
+                            float(len(mask_correct_gt)), 1)
+                            print(str(gt_correct_percentage) + "% of all GT labels in last minute same " +
+                            "label as the feedback label")
+
+                            points_used_percentage = 100.0 - percentage_removed
+                            print(str(points_used_percentage) + "% of points of last minute used for " +
+                            "model adaptation")
+
+                            filter_wrong_percentage = round(100 *
+                            mask_cnt_wrong/float(len(mask_similar_entropy)), 1)
+                            print(str(filter_wrong_percentage) + "% of the incorporated points have " +
+                            "the wrong context class")
+
+                            labelAccuracy.append([gt_correct_percentage, points_used_percentage,
+                            filter_wrong_percentage])
+
+                            upd = upd[(mask_similar_entropy == 1)]
+                            amp = amp[(mask_similar_entropy == 1)]
 
                             upd = upd[amp > silenceThresholdModelAdaption]
                             #print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
                             #"% of all samples of the last minute used to adapt the model, " + 
                             #"the rest is silent ---")
 
-                            print("--- " + str(round(upd.shape[0] * 0.032, 2)) +
-                            "s of of data incorporated into the model")
-                            print(str(upd.shape))
+                            #print("--- " + str(round(upd.shape[0] * 0.032, 2)) +
+                            #"s of of data incorporated into the model")
+                            #print(str(upd.shape))
 
                             currentGMM = adaptGMM(currentGMM, upd, actualLabel)
 
                             allGMM.append(currentGMM)
                             givenLabels.append(actualLabel)
-                            labelAccuracy.append(checkLabelAccuracy(update_gt_tmp,
-                            actualLabel, currentGMM["classesDict"]))
+                            #labelAccuracy.append(checkLabelAccuracy(update_gt_tmp,
+                            #actualLabel, currentGMM["classesDict"]))
                             
                             query_idx.append(idx_cnt)
 
@@ -806,6 +850,64 @@ def splitData(y_GT):
         #print("Sequence ending at frame " + str(i) + " not saved.")
 
     return [evalIdx, simIdx]
+
+
+def filterPoints(entropies, percentage=0.25):
+    """
+    Calculate which points have entropies similiar to the last point, and create a mask
+    by low-pass-filtering and only using that points, that are continuously connected to
+    the end of the sequence.
+
+    @param entropies: Numpy array of mean entropy values of 2 s intervals
+    @param percentage: Values within the band (last_entropy - percentage*last_entropy) and 
+    (last_entropy + percentage*last_entropy) will be considered similar to the last point
+    @return: Numpy array of size 1890 (to directly match the feature points)
+    """
+    lower_limit = entropies[-1] - entropies[-1] * percentage
+    upper_limit = entropies[-1] + entropies[-1] * percentage
+
+    within_band = ((entropies > lower_limit) & (entropies < upper_limit))
+
+    # To find the number of points that should be included, start from MIN_INCLUDED and
+    # iterate through the points backwards, and if 3 values in a row lie outside the
+    # allow standard dev band, set the limit there:
+    MIN_INCLUDED = int(8/2.016) # = 8s
+    BUFFER_LENGTH = 3
+    band_buffer = [True] * BUFFER_LENGTH
+
+    iter_reverse = range(len(entropies))
+    iter_reverse.reverse()
+    iter_reverse = np.array(iter_reverse)[MIN_INCLUDED:-1]
+
+    threshold = 0 # indicate until which index points should be included
+
+    for i in iter_reverse:
+        band_buffer.pop()
+        band_buffer.insert(0, within_band[i])
+
+        if any(band_buffer) == False:
+            threshold = i+3
+            break
+            
+
+    # The mask indicating which points are kept and which are filtered out:
+    # 1 = keep, 0 = remove:
+    mask = np.zeros(len(entropies))
+    mask[0:threshold] = 0
+    mask[threshold:len(mask)] = 1
+
+    percentage_removed = round(100 * threshold/float(len(entropies)), 1)
+    #print(str(percentage_removed) + "% of all points filtered out")
+
+    # We want to return a array, that contains one entry for each feature point,
+    # therfore we have to change to size of the mask from 30 to 1890:
+    final_mask = np.empty(int(len(mask) * 2.016 / 0.032))
+    for i in range(len(mask)):
+        start = int(i * 2.016 / 0.032)
+        end = int((i+1) * 2.016 / 0.032)
+        final_mask[start:end] = mask[i]
+        
+    return final_mask, percentage_removed
 
 def createOverallPlot(actual_labels, predictedLabels, entropy_values, 
     givenLabels, query_idx, classesDict):
