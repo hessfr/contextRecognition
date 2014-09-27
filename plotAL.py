@@ -27,7 +27,7 @@ def plotAL(results):
     labels = []
     labels.append("")
     labelAccuracy = []
-    labelAccuracy.append([-0.005 ,-0.005])
+    labelAccuracy.append([-0.5 , -0.5, -0.5])
     duration = results[0]["duration"]
     classesInGT = results[0]["classesInGT"]
 
@@ -50,7 +50,7 @@ def plotAL(results):
         maxLength = 9 # Max number of characters in a label (for plotting only)
         if el["label"] != -1:
             labels.append(revClassesDict[el["label"]][0:maxLength])
-        if el["labelAccuracy"] != [-1, -1]:
+        if el["labelAccuracy"] != [-1, -1, -1]:
             labelAccuracy.append(el["labelAccuracy"])
 
     F1array = np.array(F1list)
@@ -96,20 +96,40 @@ def plotAL(results):
     fig.savefig("plotsTmp/F1s.jpg", bbox_inches='tight')
     #pl.show()
    
+
+
     fig, ax = pl.subplots()   
-    width = 0.35       # the width of the bars
-    accuracyLabel = [(el[0]+0.005) for el in labelAccuracy]
-    accuracyMulti = [(el[1]+0.005) for el in labelAccuracy]
-    rects1 = ax.bar(idx, accuracyLabel, width, color='r')
+    width = 0.175 # the width of the bars
+
+    correct_last_min = []
+    used_for_model_adaption = []
+    wrong_points_incorporated = []
     
-    rects2 = ax.bar([(el+width) for el in idx], accuracyMulti, width, color='y')
+    label_accuracy = np.array(labelAccuracy)
+    label_accuracy += 0.5
+    correct_last_min = label_accuracy[:,0]
+    used_for_model_adaption  = label_accuracy[:,1]
+    wrong_points_incorporated = label_accuracy[:,2]
+    
+    #correct_last_min = [(el[0]+0.5) for el[0] in labelAccuracy]
+    rects1 = ax.bar(idx, correct_last_min, width, color='b')
+    
+    #used_for_model_adaption = [(el[1]+0.5) for el[1] in labelAccuracy]
+    rects2 = ax.bar([(el+width) for el in idx], used_for_model_adaption, width, color='g')
+
+    #wrong_points_incorporated = [(el[2]+0.5) for el[2] in labelAccuracy]
+    rects3 = ax.bar([(el+2*width) for el in idx], wrong_points_incorporated, width, color='r')
+    
     pl.title("Accuracy of labels")
     pl.xlabel('number of queries')
-    pl.xticks([(n+width) for n in range(len(labels))],labels, rotation=45)
-    pl.ylim([0,1.02])
+    pl.xticks([(n + 1.5*width) for n in range(len(labels))],labels, rotation=45)
+    pl.ylim([0,102])
 
-    ax.legend((rects1[0], rects2[0]), 
-    ('% correct', '% correct, but containing also other labels'), prop={'size':10},
+    ax.legend((rects1[0], rects2[0], rects3[0]), 
+    ('% labels correct in last min', 
+    '% of points in last min used for model adaption', 
+    '% of incorporated points have wrong label'),
+    prop={'size':8},
     loc='lower right')
     
     fig.savefig("plotsTmp/labelAccuracy.jpg")
