@@ -238,10 +238,19 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     
     #points_to_query_sec = [753.984, 1372.896, 3943.296, 5175.072, 25075.008, 33116.832]
     
-    # First 3 Office correct, last one Toilet containing ~66% Office samples:
-    points_to_query_sec = [753.984, 1372.896, 5175.072, 25075.008]
-    
-    
+    # First 3 Office correct, last one Toilet containing ~66% Office samples (for user 4):
+    #points_to_query_sec = [753.984, 1372.896, 5175.072, 25075.008]
+   
+    # Query points just after context switch: accoring to spreadsheet for user 1:
+    points_to_query_sec = [775.0, 8279.0, 9820.0, 17105.0, 26165.0, 
+    33687.0, 41216.0, 50127.0, 51936.0, 59495.0, 66458.0]
+
+    #for i in range(len(simLabelsUnique)):
+    #    if simLabelsUnique[i] != simLabelsUnique[i-1]:
+    #        print(str(i*0.032))
+
+    #pdb.set_trace()
+
     points_to_query = [int(el/2.016) for el in points_to_query_sec]
 
     for i in range(n_classes):
