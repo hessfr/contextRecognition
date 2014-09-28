@@ -111,6 +111,8 @@ def plotAL(results):
     used_for_model_adaption  = label_accuracy[:,1]
     wrong_points_incorporated = label_accuracy[:,2]
     
+    #pdb.set_trace()
+    
     #correct_last_min = [(el[0]+0.5) for el[0] in labelAccuracy]
     rects1 = ax.bar(idx, correct_last_min, width, color='b')
     

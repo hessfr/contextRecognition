@@ -460,38 +460,65 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             #upd = upd[(mask_correct_gt == 1)]
                             #amp = amp[(mask_correct_gt == 1)]
 
+                            # --------------- filter out points ----------------
                             # Only incorporate points with a similar entropy to the last point:
-                            mask_similar_entropy, percentage_removed = filterPoints(
-                            np.array(updateEntropies), percentage=0.25)
+                            #mask_similar_entropy, percentage_removed = filterPoints(
+                            #np.array(updateEntropies), percentage=0.25)
 
-                            # Check if any points of the wrong class are incorporated into
-                            # the model after we applied the filter:
-                            mask_cnt_wrong = 0
-                            for i in range(len(mask_similar_entropy)):
-                                if mask_similar_entropy[i] != mask_correct_gt[i]:
-                                    if mask_similar_entropy[i] == 1:
-                                        mask_cnt_wrong += 1
+                            ## Check if any points of the wrong class are incorporated into
+                            ## the model after we applied the filter:
+                            #mask_cnt_wrong = 0
+                            #for i in range(len(mask_similar_entropy)):
+                            #    if mask_similar_entropy[i] != mask_correct_gt[i]:
+                            #        if mask_similar_entropy[i] == 1:
+                            #            mask_cnt_wrong += 1
 
-                            gt_correct_percentage = round(100 * mask_correct_gt.sum()/
-                            float(len(mask_correct_gt)), 1)
-                            print(str(gt_correct_percentage) + "% of all GT labels in last minute same " +
-                            "label as the feedback label")
+                            #gt_correct_percentage = round(100 * mask_correct_gt.sum()/
+                            #float(len(mask_correct_gt)), 1)
+                            #print(str(gt_correct_percentage) + "% of all GT labels in last minute same " +
+                            #"label as the feedback label")
 
-                            points_used_percentage = 100.0 - percentage_removed
-                            print(str(points_used_percentage) + "% of points of last minute used for " +
-                            "model adaptation")
+                            #points_used_percentage = 100.0 - percentage_removed
+                            #print(str(points_used_percentage) + "% of points of last minute used for " +
+                            #"model adaptation")
 
-                            filter_wrong_percentage = round(100 *
-                            mask_cnt_wrong/float(len(mask_similar_entropy)), 1)
-                            print(str(filter_wrong_percentage) + "% of the incorporated points have " +
-                            "the wrong context class")
+                            #filter_wrong_percentage = round(100 *
+                            #mask_cnt_wrong/float(len(mask_similar_entropy)), 1)
+                            #print(str(filter_wrong_percentage) + "% of the incorporated points have " +
+                            #"the wrong context class")
 
-                            labelAccuracy.append([gt_correct_percentage, points_used_percentage,
-                            filter_wrong_percentage])
+                            #labelAccuracy.append([gt_correct_percentage, points_used_percentage,
+                            #filter_wrong_percentage])
 
-                            upd = upd[(mask_similar_entropy == 1)]
-                            amp = amp[(mask_similar_entropy == 1)]
+                            #upd = upd[(mask_similar_entropy == 1)]
+                            #amp = amp[(mask_similar_entropy == 1)]
+                            ## -----------------------------------------------------
 
+                            #pdb.set_trace()
+
+                            # -----------------
+                            # only incorporate the last 30s, but count every point twice, that the model is
+                            # changed enough
+                            #upd[0:int(len(upd)/2.0)-1] = upd[int(len(upd)/2.0):-1]
+                            #amp[0:int(len(amp)/2.0)-1] = amp[int(len(amp)/2.0):-1]
+                            # ----------------
+                            
+                            # -----------------
+                            # only incorporate the last 20s, but count every point three times, 
+                            # that the model is changed enough
+                            #upd[0:(int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+                            #upd[int(len(upd)/3.0):(2 * int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+                            #
+                            #amp[0:(int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+                            #amp[int(len(amp)/3.0):(2 * int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+                            # 
+                            # ----------------
+                            
+                            
+                            
+                            
+                            labelAccuracy.append([0.1, 0.1, 0.1])
+                            
                             upd = upd[amp > silenceThresholdModelAdaption]
                             #print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
                             #"% of all samples of the last minute used to adapt the model, " + 
