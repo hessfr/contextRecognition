@@ -298,16 +298,16 @@ public class ManageClassesActivity extends ActionBarActivity {
 								   }
 
 								   if (cb.isChecked() == true) {
+									   
 									   // CheckBox got selected just now:
-
 									   if (idx != -1) {
 										   currentStatuses.set(idx, true);
 										   cbStatus.set(idx, true);
 									   }
 									   
 								   } else {
+									   
 									   // CheckBox got unselected just now:
-
 									   if (idx != -1) {
 										   currentStatuses.set(idx, false);
 										   cbStatus.set(idx, false);
@@ -443,19 +443,6 @@ public class ManageClassesActivity extends ActionBarActivity {
 						}
 					}
 					
-//					Log.i(TAG, "contextList size: " + contextList.size());
-//					Log.i(TAG, "dataAdapter size: " + dataAdapter.getStringArray().length);
-					
-//					Log.i(TAG, "------------- dataAdapter: ---------");
-//					for(int i=0; i<dataAdapter.getStringArray().length; i++) {
-//						Log.i(TAG, dataAdapter.getStringArray()[i]);
-//					}
-					
-//					Log.i(TAG, "------------- contextList: ---------");
-//					for(int i=0; i<contextList.size(); i++) {
-//						Log.i(TAG, contextList.get(i));
-//					}
-					
 					// Add the classes we added on top of previous classes:
 					// ignore the "DEFINE OWN CONTEXT CLASS" element:
 					for(int i=(contextList.size()-1); i<(dataAdapter.getStringArray().length-1); i++) {
@@ -465,11 +452,6 @@ public class ManageClassesActivity extends ActionBarActivity {
 					}
 					
 					String[] classesToRequest = classesToRequestList.toArray(new String[classesToRequestList.size()]);
-					
-//					Log.i(TAG, "------ classes to request ----");
-//					for(int i=0; i<classesToRequest.length; i++) {
-//						Log.i(TAG, classesToRequest[i]);
-//					}
 					
 					if (isDifferent == true) {
 						// request model from server is it's not the default classifier:

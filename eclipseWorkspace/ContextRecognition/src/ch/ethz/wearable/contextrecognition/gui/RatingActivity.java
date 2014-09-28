@@ -1,10 +1,8 @@
 package ch.ethz.wearable.contextrecognition.gui;
 
 //import android.app.ActionBar;
-import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -12,8 +10,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RatingBar;
@@ -67,11 +63,6 @@ public class RatingActivity extends ActionBarActivity {
         	callLabel();
         	return true;
         }
-//        if (id == R.id.action_help) {
-//        	//Go to help activity
-//            callHelp();
-//        	return true;
-//        }
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -102,13 +93,6 @@ public class RatingActivity extends ActionBarActivity {
         Intent i = new Intent(RatingActivity.this, DiaryActivity.class);
         startActivity(i);
     }
-    /**
-     * Launch Help activity
-     * */
-//    private void callHelp() {
-//        Intent i = new Intent(RatingActivity.this, HelpActivity.class);
-//        startActivity(i);
-//    }
     /**
      * Launch manage classes activity
      * */

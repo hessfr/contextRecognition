@@ -32,6 +32,10 @@ import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
+/*
+ * This request adds a new context class to the existing model. It is only called when a new class is requested
+ * from within the ContextSelection activity.
+ */
 public class IncorporateNewClass extends IntentService {
 
 	private static final String TAG = "IncorporateNewClass";

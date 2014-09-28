@@ -25,9 +25,6 @@ import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
-/*
- * Structure of this class similar to: github.com/sumeetkr
- */
 public class AudioWorker extends IntentService {
 
 	private static final String TAG = "AudioWorker";

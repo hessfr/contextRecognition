@@ -24,14 +24,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
  * This request checks if a certain class is feasible to train (i.e. if there are enough
- * sound files on freesound to train a classifier
+ * sound files on Freesound to train a classifier
  */
 public class CheckClassFeasibility extends IntentService {
 

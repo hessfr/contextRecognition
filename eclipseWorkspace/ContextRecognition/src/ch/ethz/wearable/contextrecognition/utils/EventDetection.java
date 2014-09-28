@@ -614,7 +614,6 @@ public class EventDetection extends Service {
 				.setContentText(text)
 				.setContentTitle(titleString)
 				.setSmallIcon(R.drawable.ic_audio)
-				//.setLargeIcon(largeIcon)
 				.setAutoCancel(true)
 				.setWhen(System.currentTimeMillis())
 				.setVibrate(vibratePattern);

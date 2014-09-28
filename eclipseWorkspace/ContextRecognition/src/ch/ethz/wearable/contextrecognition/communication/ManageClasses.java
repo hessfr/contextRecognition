@@ -98,8 +98,6 @@ public class ManageClasses extends IntentService {
 			    String paramString = URLEncodedUtils.format(par, "utf-8");
 		        String URL = Globals.MANAGE_CLASSES_URL + paramString;     
 		        
-		        //Log.i(TAG, URL);
-		        
 		        //Set timeout parameters:
 		        HttpParams httpParameters = new BasicHttpParams();
 		        int timeoutConnection = 10000;
@@ -110,7 +108,7 @@ public class ManageClasses extends IntentService {
 		        HttpClient client = new DefaultHttpClient(httpParameters);
 			    HttpPost post = new HttpPost(URL);
 			    
-//			    //Add headers to URL
+			    //Add headers to URL
 			    post.setHeader("Accept", "application/json");
 		    	post.setHeader("Content-type", "application/json");
 		    	
@@ -140,8 +138,6 @@ public class ManageClasses extends IntentService {
 						
 						jsonString = strBuffer.toString();
 
-						//Log.i(TAG, jsonString);
-						
 					} catch (IOException e) {
 						Log.e(TAG,"Couldn't open JSON file");
 						e.printStackTrace();
@@ -186,7 +182,7 @@ public class ManageClasses extends IntentService {
 			    		List<String> classesBeingAddedList = new ArrayList<String>();
 			    		List<String> classesBeingRemovedList = new ArrayList<String>();
 
-			    		// DOn't consider the invalid classes:
+			    		// Don't consider the invalid classes:
 			    		for(int i=0; i<classesArray.length; i++) {
 			    			if (!invalidClassesList.contains(classesArray[i])) {
 			    				classesInNewModel.add(classesArray[i]);
@@ -223,17 +219,6 @@ public class ManageClasses extends IntentService {
 			    		 */
 			    		Intent i = new Intent(Globals.CLASSES_BEING_ADDED_INTENT);
 			    		context.sendBroadcast(i);
-			    		
-//			    		Log.i(TAG, "----- classes being added: ----");
-//			    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
-//			    		for(int i=0; i<tmp1.length; i++) {
-//			    			Log.i(TAG, tmp1[i]);
-//			    		}
-//			    		Log.i(TAG, "----- classes being removed: ----");
-//			    		String[] tmp2=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_REMOVED);
-//			    		for(int i=0; i<tmp2.length; i++) {
-//			    			Log.i(TAG, tmp2[i]);
-//			    		}
 			    		
 			    		handler.post(new DisplayToast(getBaseContext(), "New model will be trained on"
 			    				+ " our server. This might take a while"));
@@ -285,16 +270,12 @@ public class ManageClasses extends IntentService {
 					
 					this.cancel();
 				}
-
 			}
 		};
 		Timer timer = new Timer();
 		timer.schedule(task, 0, pollingInterval);
 		
 		Log.i(TAG, "IntentService finished");
-		
-
-		
 	}
 
 }

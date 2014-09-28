@@ -3,7 +3,7 @@ package ch.ethz.wearable.contextrecognition.utils;
 
 /*
  * Singleton class containing the current status of algorithm, i.e. if we are adapting the model, 
- * waiting for a new model from the server, ...
+ * waiting for a new model from the server, etc.
  * To set the current status: appStatus.getInstance().set(int)
  * To get the current status: appStatus.getInstance().get()
  */

@@ -3,7 +3,8 @@ package ch.ethz.wearable.contextrecognition.data;
 import java.util.ArrayList;
 
 /*
- * Class containing data of buffers, threshold values, ... to be stored in JSON file
+ * Class containing the current values of buffers, threshold values, ... needed for the threshold 
+ * calculation. To be stored in JSON file using GSON.
  */
 public class AppData {
 	
@@ -73,33 +74,3 @@ public class AppData {
 		return this.numQueriesLeft;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

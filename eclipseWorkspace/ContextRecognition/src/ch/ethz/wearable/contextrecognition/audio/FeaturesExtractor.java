@@ -30,6 +30,9 @@ import ch.ethz.wearable.contextrecognition.math.FFT;
 import ch.ethz.wearable.contextrecognition.math.MFCC;
 import ch.ethz.wearable.contextrecognition.math.Window;
 
+/*
+ * Extract 12 MFCC features and the log energy of a short-encoded audio sequence with 16 kHz
+ */
 public class FeaturesExtractor {
 
 	private static int RECORDER_SAMPLERATE = 16000;

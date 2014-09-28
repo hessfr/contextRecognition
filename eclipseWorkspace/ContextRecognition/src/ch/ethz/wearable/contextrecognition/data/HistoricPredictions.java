@@ -6,9 +6,9 @@ import java.util.Date;
 
 /*
  * Data container class to persist the predictions (i.e. the class names and the numbers how often 
- * they were predicted as a JSON file to the storage. 
+ * they were predicted) as a JSON file to the storage using GSON.
  * 
- * This persisting will be once at the end of the day
+ * This persisting will be done once at the end of the day.
  */
 public class HistoricPredictions {
 

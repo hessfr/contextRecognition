@@ -45,6 +45,7 @@ import android.util.Log;
 import ch.ethz.wearable.contextrecognition.utils.CustomTimerTask;
 import ch.ethz.wearable.contextrecognition.utils.DisplayToast;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
+
 /*
  * This IntentService compresses every logging folders (expect the one of the current date) into a tar.gz file
  * and deletes the folder when done. After that it will start a TimerTask to transfer the data to the server.

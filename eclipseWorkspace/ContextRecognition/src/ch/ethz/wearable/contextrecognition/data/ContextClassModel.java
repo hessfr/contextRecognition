@@ -5,7 +5,7 @@ import java.io.Serializable;
 import org.ejml.data.DenseMatrix64F;
 
 /*
- * Contains context class specific parameter of a single class:
+ * Contains the mixture model parameter (means, covars, ...) of a single class.
 */
 public class ContextClassModel implements Serializable {
 

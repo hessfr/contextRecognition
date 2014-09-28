@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -34,7 +36,7 @@ import com.google.gson.GsonBuilder;
 
 /*
  * AsyncTask incorporating new data points into the existing mixture model. Overwrites
- * the Json GMM file and the storage with the resulting model
+ * the JSON GMM file and the storage with the resulting model
  */
 public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 	/*
@@ -337,9 +339,6 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		Log.i(TAG, n_added + " component(s) added and " + n_merged
 				+ " component(s) merged");
 
-		// ----- Merge statistically equivalent components (compare each component with each other): -----
-		// TODO
-
 		// ----- Create and fill GMM object that should be returned: -----
 		GMM finalGMM = new GMM(oldGMM);
 
@@ -432,14 +431,18 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		double test_statistic = (n_samples * W * n_features) / 2.0;
 
 		double alphaPercentile = 0.05;
+		
+		ChiSquaredDistribution chi2 = new ChiSquaredDistribution((0.5 * 
+				(n_features * (n_features + 1))));
+		
+		double threshold = chi2.inverseCumulativeProbability(alphaPercentile);
 
-		// if(n_samples < 30) { //only compare if same component
-		// System.out.println(w1);
-		// }
-
-		// TODO: XXXXXXXXXXXXXXX implement chi_squared check XXXXXXXXXXXXXXXX
-
-		return false;
+		if (test_statistic <= threshold) {
+			System.out.println("Covariance test passed");
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	/*
@@ -465,9 +468,44 @@ public class ModelAdaptor extends AsyncTask<Context, Void, GMM> {
 		DenseMatrix64F Sinv = new DenseMatrix64F(n_features, n_features);
 		CommonOps.invert(S, Sinv);
 
-		// TODO: XXXXXXXXXXXXXXXXXXXXXXXXX implement mean test here XXXXXXXXXXXxXXXXX
-
-		return false;
+		// Calculate mean values of each column:
+				DenseMatrix64F colMean = new DenseMatrix64F(1, n_features);
+				CommonOps.sumCols(data, colMean);
+				
+				CommonOps.scale(1/((double) n_samples), colMean);
+				
+				DenseMatrix64F m = new DenseMatrix64F(1, n_features);	
+				DenseMatrix64F mT = new DenseMatrix64F(n_features, 1);
+				
+				CommonOps.sub(colMean, means_old, m);
+				
+				CommonOps.transpose(m, mT);
+				
+				DenseMatrix64F innerProd = new DenseMatrix64F(1, n_features);
+				
+				CommonOps.mult(m, Sinv, innerProd);
+				
+				DenseMatrix64F outerProd = new DenseMatrix64F(1, 1);
+				
+				CommonOps.mult(innerProd, mT, outerProd);
+				
+				double T_squared = n_samples * outerProd.get(0,0);
+				
+				double test_statistic = ((n_samples - n_features) * T_squared) /
+						((double) n_features*(n_samples - 1));
+				
+				double alphaPercentile = 0.05;
+				
+				FDistribution f = new FDistribution(n_features, (n_samples - n_features));
+				
+				double threshold = f.inverseCumulativeProbability(alphaPercentile);
+				
+				if (test_statistic <= threshold) {
+					System.out.println("Mean test passed");
+					return true;
+				} else {
+					return false;
+				}
 	}
 
 	/*

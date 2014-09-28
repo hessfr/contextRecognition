@@ -3,9 +3,10 @@ package ch.ethz.wearable.contextrecognition.data;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 /*
-This class is meant to stored the data from the JSON file containing the information of the GMM. It represents a Gaussian model for one context class
-It should only used initially and should then be converted to a contextClassModel
+This class is used to convert the GMM object into a JSON file using GSON. It represents a Gaussian model for 
+one context class.
 */
 public class JsonModel {
 	

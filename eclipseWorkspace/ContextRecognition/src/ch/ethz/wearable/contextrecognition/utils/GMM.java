@@ -24,7 +24,7 @@ import ch.ethz.wearable.contextrecognition.data.JsonModel;
 import com.google.gson.Gson;
 /*
  * Contains parameters for the Gaussian Mixture Model of all context classes and
- * several utility methods
+ * several utility methods.
 */
 public class GMM implements Parcelable {
 

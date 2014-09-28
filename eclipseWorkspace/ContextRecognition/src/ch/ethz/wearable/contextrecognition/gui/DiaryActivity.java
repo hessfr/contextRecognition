@@ -58,8 +58,6 @@ public class DiaryActivity extends ActionBarActivity {
         	this.finish();
         }
         
-
-        
         if ((todayContextClasses != null) && (t != null)) {
         	
             Integer[] totalCounts = new Integer[t.size()];
@@ -114,11 +112,6 @@ public class DiaryActivity extends ActionBarActivity {
 //            callRating();
 //        	return true;
 //        }
-//        if (id == R.id.action_help) {
-//        	//Go to help activity
-//            callHelp();
-//        	return true;
-//        }
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -149,13 +142,6 @@ public class DiaryActivity extends ActionBarActivity {
 //     * */
 //    private void callRating() {
 //        Intent i = new Intent(DiaryActivity.this, RatingActivity.class);
-//        startActivity(i);
-//    }
-    /**
-     * Launch Help activity
-     * */
-//    private void callHelp() {
-//        Intent i = new Intent(DiaryActivity.this, HelpActivity.class);
 //        startActivity(i);
 //    }
     /**

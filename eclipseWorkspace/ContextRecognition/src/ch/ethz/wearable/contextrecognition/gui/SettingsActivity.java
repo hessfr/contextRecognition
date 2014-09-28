@@ -138,11 +138,6 @@ public class SettingsActivity extends ActionBarActivity {
 //        	callRating();
 //        	return true;
 //        }
-//        if (id == R.id.action_help) {
-//        	//Go to help activity
-//            callHelp();
-//        	return true;
-//        }
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -171,13 +166,6 @@ public class SettingsActivity extends ActionBarActivity {
 //     * */
 //    private void callRating() {
 //        Intent i = new Intent(SettingsActivity.this, RatingActivity.class);
-//        startActivity(i);
-//    }
-    /**
-     * Launch Help activity
-     * */
-//    private void callHelp() {
-//        Intent i = new Intent(SettingsActivity.this, HelpActivity.class);
 //        startActivity(i);
 //    }
     /**

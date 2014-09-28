@@ -119,9 +119,6 @@ public class Classifier {
 		double div = elSum / ((double) n_samples);
 		int resultInt = (int) Math.round(div);
 		
-//		Log.i(TAG, String.valueOf(elSum));
-//		Log.i(TAG, String.valueOf(div));
-
 		PredictionResult predictionResult = new PredictionResult(resultInt, entropyMean);
 		
     	return predictionResult;
@@ -181,7 +178,6 @@ public class Classifier {
 			CommonOps.transpose(distMean, distMeanTransp);
 			
 			DenseMatrix64F solved = new DenseMatrix64F(n_samples,n_features);
-//			GenericMatrixOps.copy(distMeanTransp, solved);
 
 			CommonOps.solve(L0, distMeanTransp, solved);
 			
@@ -239,7 +235,7 @@ public class Classifier {
 			vmax.set(0,i,colMax);
 		}
 		
-		// Substract vmax vector from every column in logProbs and substract it from log prob value
+		// Subtract vmax vector from every column in logProbs and substract it from log prob value
 		DenseMatrix64F substracted = new DenseMatrix64F(n_components, n_samples); //refers to (tmpArray - vmax) in Python
 		DenseMatrix64F tmpRow = new DenseMatrix64F(1, n_samples);
 		// DenseMatrix64F vmaxNeg = new DenseMatrix64F(1, n_samples);
@@ -247,10 +243,7 @@ public class Classifier {
 			
 			CommonOps.extract(logProbs, i, (i+1), 0, logProbs.numCols, tmpRow, 0, 0);
 			
-			// CommonOps.scale(-1,tmpRow);
-			// CommonOps.scale(-1,vmax,vmaxNeg);
-			
-			//Substract the tmpRow from all vmax values:
+			//Subtract the tmpRow from all vmax values:
 			CommonOps.sub(tmpRow, vmax, tmpRow); //used to be CommonOps.add(tmpRow, vmax, tmpRow);
 			
 			//Fill the column for the correct feature in the substracted matrix:
@@ -316,10 +309,6 @@ public class Classifier {
 		int frameLength = (int) Math.ceil(MAJORITY_WINDOW/WINDOW_LENGTH);
 		
 		int n_frames = (int) Math.ceil(( (double) y_in.length) / ((double) frameLength) );
-		
-		//System.out.print(frameLength + "\n");
-		//System.out.print(y_in.length + "\n");
-		//System.out.print(n_frames + "\n");
 
 		double[] resArray = new double[y_in.length];
 		
@@ -394,58 +383,6 @@ public class Classifier {
 	  }
 	  return popular;
 	}
-	
-	/*
-	// to delete:
-	public DenseMatrix64F getPointsFromJSON(String filename) {
-		
-		Gson gson = new Gson();
-		
-		//Map<String, ArrayList> points = new HashMap<String, ArrayList>();
-
-		featurePoint points;
-		
-		try {
-
-			FileReader fileReader = new FileReader(filename);
-
-			BufferedReader buffered = new BufferedReader(fileReader);
-
-			points = gson.fromJson(buffered, featurePoint.class);
-
-		} catch (IOException e) {
-			points = null;
-			e.printStackTrace();
-		}
-		
-		DenseMatrix64F res = convertToEJML_2D(points.get());
-		
-		return res;
-	}
-
-	*/
-	
-/*
-	// Converts a 2 dimensional ArrayList into a EJML DenseMatrix64F
-	private DenseMatrix64F convertToEJML_2D(ArrayList<ArrayList<Double>> in) {
-		
-		int nRows = in.size();
-		int nCols = in.get(0).size();		
-		
-		DenseMatrix64F out = new DenseMatrix64F(nRows, nCols);
-		
-		for(int r=0; r<nRows; r++) {
-			for(int c=0; c<nCols; c++) {
-				out.set(r, c, in.get(r).get(c));
-			}
-			
-		}
-		
-		return out;
-		
-	}
-*/
-	
 
 }
 

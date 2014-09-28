@@ -179,8 +179,6 @@ public class WelcomeFragment3 extends Fragment {
 					i.putExtra(Globals.CONN_INIT_MODEL_CLASSES, classesToRequest);
 					getActivity().startService(i);
 					
-//					InitModel initReq = new InitModel();
-					
 				} else {
 					Log.i(TAG, "Context classes not changed, using the default classifier");
 				}

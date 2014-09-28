@@ -36,7 +36,7 @@ import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
  * This IntentService requests the initial model from the server. In case the server is not 
- * reachable, it retries it several times
+ * reachable, it retries it several times.
  */
 public class InitModel extends IntentService {
 
@@ -201,24 +201,12 @@ public class InitModel extends IntentService {
 				    		Intent i = new Intent(Globals.CLASSES_BEING_ADDED_INTENT);
 				    		context.sendBroadcast(i);
 				    		
-//				    		Log.i(TAG, "----- classes being added: ----");
-//				    		String[] tmp1=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_ADDED);
-//				    		for(int i=0; i<tmp1.length; i++) {
-//				    			Log.i(TAG, tmp1[i]);
-//				    		}
-//				    		Log.i(TAG, "----- classes being removed: ----");
-//				    		String[] tmp2=Globals.getStringArrayPref(context, Globals.CLASSES_BEING_REMOVED);
-//				    		for(int i=0; i<tmp2.length; i++) {
-//				    			Log.i(TAG, tmp2[i]);
-//				    		}
-				    		
 				    	} else {
 				    		Log.e(TAG, "Invalid response received after POST request");
 				    		Log.e(TAG, String.valueOf(response.getStatusLine()));
 
 				    	}
 
-				    	
 				    } catch (UnsupportedEncodingException e) {
 				        e.printStackTrace();
 				    } catch (ClientProtocolException e) {
@@ -267,8 +255,6 @@ public class InitModel extends IntentService {
 		};
 		Timer timer = new Timer();
 		timer.schedule(task, 0, pollingInterval);
-		
-
 	}
 	
 

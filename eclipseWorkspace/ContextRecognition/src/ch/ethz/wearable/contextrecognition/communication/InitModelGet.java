@@ -34,7 +34,7 @@ import ch.ethz.wearable.contextrecognition.utils.Globals;
 
 /*
  * Intent service that regularly checks if the request to create the initial model on the server 
- * is finished and downloads the new classifiers if so
+ * is finished and downloads the new classifiers if so.
  */
 public class InitModelGet extends IntentService {
 
@@ -214,7 +214,6 @@ public class InitModelGet extends IntentService {
 		timer.schedule(task, delay, pollingInterval);
 	}
 	
-
 }
 
 

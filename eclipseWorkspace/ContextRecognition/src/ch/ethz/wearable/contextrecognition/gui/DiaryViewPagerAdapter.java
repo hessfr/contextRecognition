@@ -36,7 +36,7 @@ import com.echo.holographlibrary.PieSlice;
 import com.google.gson.Gson;
 
 /*
- * Pager adapter for the ViewPager in the diary activity
+ * Pager adapter for the ViewPager in the diary activity.
  */
 public class DiaryViewPagerAdapter extends PagerAdapter {
 
@@ -98,7 +98,6 @@ public class DiaryViewPagerAdapter extends PagerAdapter {
 			// If the file doesn't exists yet, create a completely new one:
 			historicPredictions = new HistoricPredictions(new ArrayList<Integer>(Arrays.asList(todayTotalCounts)), 
 					todaySilenceCount, todayContextClasses, date);
-			
 		}
     }
  
