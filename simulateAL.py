@@ -21,16 +21,21 @@ from plotAL import plotAL
 import ipdb as pdb 
 
 # --- simulation commands: ---
+#gmm1 = pickle.load(open("experimentData/user1_355593052044182/allDays/gmm_user1.p","rb"))
 # res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/allDays/", ["user1_part1.json", "user1_part2.json", "user1_part3.json", "user1_part4.json", "user1_part5.json", "user1_part6.json", "user1_part7.json"], "GT_user1.txt")
 
 # res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/", ["user1_short.json"], "GT_user1_short.txt")
 
+#gmm2 = pickle.load(open("experimentData/user2_358848046667739/allDays/gmm_user2.p","rb"))
 # res = simulateAL(gmm2, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user2_358848046667739/allDays/", ["user2_part1.json", "user2_part2.json", "user2_part3.json", "user2_part4.json", "user2_part5.json", "user2_part6.json"], "GT_user2.txt")
 
+#gmm4 = pickle.load(open("experimentData/user4_355577053607766/allDays/gmm_user4.p","rb"))
 # res = simulateAL(gmm4, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user4_355577053607766/allDays/", ["user4_part1.json", "user4_part2.json", "user4_part3.json", "user4_part4.json", "user4_part5.json", "user4_part6.json", "user4_part7.json", "user4_part8.json"], "GT_user4.txt")
 
+#gmm5 = pickle.load(open("experimentData/user5_358848046667556/allDays/gmm_user5.p","rb"))
 # res = simulateAL(gmm5, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user5_358848046667556/allDays/", ["user5_part1.json", "user5_part2.json", "user5_part3.json", "user5_part4.json", "user5_part5.json", "user5_part6.json", "user5_part7.json", "user5_part8.json"], "GT_user5.txt")
 
+#gmm79 = pickle.load(open("experimentData/user7_358848047145412/allDays/gmm_user79.p","rb"))
 # res = simulateAL(gmm79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part5.json", "user7_part6.json"], "GT_user7.txt")
 
 # res = simulateAL(gmm_79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user9_358848046667739/allDays/", ["user9_part1.json", "user9_part2.json", "user9_part3.json", "user9_part4.json", "user9_part5.json", "user9_part6.json", "user9_part7.json", "user9_part8.json", "user9_part9.json", "user9_part10.json"], "GT_user9.txt")
