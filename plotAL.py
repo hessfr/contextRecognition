@@ -5,6 +5,8 @@ import ipdb as pdb #pdb.set_trace()
 
 def plotAL(results):
     """
+    Plot accuracies, F1 scores, time stamps of model adaption and accuracy of the 
+    points incorporated (bar graphs)
 
     @param results: Dictionary containing the results of the active learning simulation,
     created by simulateAL.py
@@ -15,13 +17,6 @@ def plotAL(results):
     revClassesDict = reverseDict(results[0]["classesDict"])
 
     F1list = []
-    #for el in classesDict:
-    #    F1list.append([])
-
-
-    #Conversation = []
-    #Office = []
-    #TrainInside = []
 
     timestamps = []
     labels = []
@@ -67,15 +62,11 @@ def plotAL(results):
     #pl.show()
     fig.savefig("plotsTmp/time.jpg")
 
-    #ax.grid(True)
-    #ax.set_xticklabels([])
-
     fig = pl.figure()
     pl.plot(idx, accuracy, label="Accuracy")
     pl.title("Total accuracy")
     pl.xlabel('number of queries')
     pl.xticks(range(len(labels)),labels, rotation=45)
-    #legend = pl.legend(loc='upper left', shadow=True)
     #pl.show()
     fig.savefig("plotsTmp/accuracy.jpg")
     
@@ -95,8 +86,6 @@ def plotAL(results):
     ax.legend = pl.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     fig.savefig("plotsTmp/F1s.jpg", bbox_inches='tight')
     #pl.show()
-   
-
 
     fig, ax = pl.subplots()   
     width = 0.175 # the width of the bars
@@ -110,8 +99,6 @@ def plotAL(results):
     correct_last_min = label_accuracy[:,0]
     used_for_model_adaption  = label_accuracy[:,1]
     wrong_points_incorporated = label_accuracy[:,2]
-    
-    #pdb.set_trace()
     
     #correct_last_min = [(el[0]+0.5) for el[0] in labelAccuracy]
     rects1 = ax.bar(idx, correct_last_min, width, color='b')

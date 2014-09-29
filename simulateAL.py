@@ -44,14 +44,18 @@ import ipdb as pdb
 
 def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     """
+    Simulate active learning behaviour of a given GMM classifier on feature data given as a
+    list of JSON files. The corresponding ground truth file has to have one section (separated by
+    a RECORDING_STARTED) for each of these files.
     Query criteria is the mean entropy value on the 2 second interval.
     
     @param trainedGMM: already trained GMM
     @param path: path to the folder of the extracted features and the ground truth file
     @param jsonFileList: List of files containing the extracted features for the
     indivdual parts of the file.
-    @param gtFile: Normal ground truth file with multiple labels
-    one label allowed per point
+    @param gtFile: Ground truth file with multiple labels, where each part (separated by a 
+    RECORDING_STARTED entry) corresponds to one JSON file.  
+    @return: Dictionary containing simulation results (e.g. the accuracy change...)
     """
     n_classes = len(trainedGMM["classesDict"])
     silenceClassNum = max(trainedGMM["classesDict"].values())+1
@@ -256,7 +260,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     thresQueriedInterval = []
 
     # Limit the number of allowed queries for certain classes:
-    maxQueries = {"Office": 5, "Restaurant": 2}
+    #maxQueries = {"Office": 5, "Restaurant": 2}
 
     for i in range(n_classes):
         initThresSet.append(False)
@@ -499,8 +503,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             #amp = amp[(mask_similar_entropy == 1)]
                             ## -----------------------------------------------------
 
-                            #pdb.set_trace()
-
                             # -----------------
                             # only incorporate the last 30s, but count every point twice, that the model is
                             # changed enough
@@ -570,10 +572,8 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     givenLabels, query_idx, currentGMM["classesDict"])
 
     print("Total number of queries: " + str(sum(numQueries)))
-    #print(str(round(100.0 * majWrongCnt/float(majWrongCnt+majCorrectCnt),2)) + 
-    #"% of all majority votes were wrong")
 
-    # ---- for plotting only: query criteria and threshold values over time for
+    # ---- for plotting only: query criteria and threshold values over time, for
     # each class separately: ---
     
     for i in range(n_classes):
@@ -777,20 +777,17 @@ def evaluateGMM(trainedGMM, evalFeatures, evalAmps, evalLabels, silenceClassNum)
     precisions = []
     for i in range(n_classes):
         tmpPrecision = cm[i,i] / float(colSum[i])
-        # print("Precision " + str(sortedLabels[i]) + ": " + str(tmpPrecision))
         precisions.append(tmpPrecision)
 
     """ Calculate recall: """
     recalls = []
     for i in range(n_classes):
         recalls.append(normCM[i][i])
-        # print("Recall " + str(sortedLabels[i]) + ": " + str(normCM[i][i]))
 
     """ Calculate F1-score: """
     F1s = {}
     for i in range(n_classes):
         tmpF1 = 2 * (precisions[i] * recalls[i]) / float(precisions[i] + recalls[i])
-        # print("F1 " + str(sortedLabels[i]) + ": " + str(tmpF1))
         F1s[sortedLabels[i]] = tmpF1
 
     # Plot the confusion matrix:
@@ -836,8 +833,6 @@ def makePrediction(trainedGMM, evalFeatures, evalAmps, silenceClassNum):
     print(str(percent_user_component) + "% of all predictions had component from user" + 
     " as most likely component")
 
-    #pdb.set_trace()
-
     return majorityVoteSilence(y_pred, evalAmps, silenceClassNum), percent_user_component
 
 def splitData(y_GT):
@@ -862,7 +857,6 @@ def splitData(y_GT):
                 """ If it is a invalid entry, don't save it, but continue in the loop: """
                 prevEntry = y_GT[i]
                 prevTransition = i
-                #print("Sequence ending at frame " + str(i) + " not saved.")
             else:
                 """ If the entry is valid: """
                 split = int(prevTransition + (i - prevTransition)/2.0)
@@ -878,8 +872,6 @@ def splitData(y_GT):
             split = int(prevTransition + (i - prevTransition)/2.0)
             evalIdx[prevTransition:split] = True
             simIdx[split:i] = True
-    #else:
-        #print("Sequence ending at frame " + str(i) + " not saved.")
 
     return [evalIdx, simIdx]
 
@@ -929,7 +921,6 @@ def filterPoints(entropies, percentage=0.25):
     mask[threshold:len(mask)] = 1
 
     percentage_removed = round(100 * threshold/float(len(entropies)), 1)
-    #print(str(percentage_removed) + "% of all points filtered out")
 
     # We want to return a array, that contains one entry for each feature point,
     # therfore we have to change to size of the mask from 30 to 1890:
@@ -990,10 +981,6 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
 
     pl.xlim([0, len(predictedLabels)])
 
-    # Scale entropy values:
-    #scale_factor = max(classesDict.values())/max(entropy_values)
-    #entropy_values = [(el*scale_factor) for el in entropy_values]
-    
     # Calculate mean of entropy values over the last 1min:
     entropy_values = np.array(entropy_values)
     filtered_entropy_values = np.zeros(len(entropy_values))
