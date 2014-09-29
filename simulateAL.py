@@ -28,6 +28,13 @@ import ipdb as pdb #pdb.set_trace()
 # res = simulateAL(gmm2, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user2_358848046667739/allDays/", ["user2_part1.json", "user2_part2.json", "user2_part3.json", "user2_part4.json", "user2_part5.json", "user2_part6.json"], "GT_user2.txt")
 
 # res = simulateAL(gmm4, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user4_355577053607766/allDays/", ["user4_part1.json", "user4_part2.json", "user4_part3.json", "user4_part4.json", "user4_part5.json", "user4_part6.json", "user4_part7.json", "user4_part8.json"], "GT_user4.txt")
+
+# res = simulateAL(gmm5, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user5_3588480466675     56/allDays/", ["user5_part1.json", "user5_part2.json", "user5_part3.json", "user5_part4.json", "user5_part5     .json", "user5_part6.json", "user5_part7.json", "user5_part8.json"], "GT_user5.txt")
+
+# res = simulateAL(gmm79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145     412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part     5.json", "user7_part6.json"], "GT_user7.txt")
+
+# res = simulateAL(gmm_79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user9_35884804666     7739/allDays/", ["user9_part1.json", "user9_part2.json", "user9_part3.json", "user9_part4.json", "user9_par     t5.json", "user9_part6.json", "user9_part7.json", "user9_part8.json", "user9_part9.json", "user9_part10.jso     n"], "GT_user9.txt")
+
 # ----------------------------
 
 def simulateAL(trainedGMM, path, jsonFileList, gtFile):
@@ -444,37 +451,60 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             #upd = upd[(mask_correct_gt == 1)]
             #amp = amp[(mask_correct_gt == 1)]
 
+            # --------------- filter out points ----------------
             # Only incorporate points with a similar entropy to the last point:
-            mask_similar_entropy, percentage_removed = filterPoints(
-            np.array(updateEntropies), percentage=0.25)
-            
-            # Check if any points of the wrong class are incorporated into
-            # the model after we applied the filter:
-            mask_cnt_wrong = 0
-            for i in range(len(mask_similar_entropy)):
-                if mask_similar_entropy[i] != mask_correct_gt[i]:
-                    if mask_similar_entropy[i] == 1:
-                        mask_cnt_wrong += 1
+            #mask_similar_entropy, percentage_removed = filterPoints(
+            #np.array(updateEntropies), percentage=0.25)
+            #
+            ## Check if any points of the wrong class are incorporated into
+            ## the model after we applied the filter:
+            #mask_cnt_wrong = 0
+            #for i in range(len(mask_similar_entropy)):
+            #    if mask_similar_entropy[i] != mask_correct_gt[i]:
+            #        if mask_similar_entropy[i] == 1:
+            #            mask_cnt_wrong += 1
    
-            gt_correct_percentage = round(100 * mask_correct_gt.sum()/
-            float(len(mask_correct_gt)), 1)
-            print(str(gt_correct_percentage) + "% of all GT labels in last minute same " + 
-            "label as the feedback label")
+            #gt_correct_percentage = round(100 * mask_correct_gt.sum()/
+            #float(len(mask_correct_gt)), 1)
+            #print(str(gt_correct_percentage) + "% of all GT labels in last minute same " + 
+            #"label as the feedback label")
 
-            points_used_percentage = 100.0 - percentage_removed
-            print(str(points_used_percentage) + "% of points of last minute used for " + 
-            "model adaptation")
+            #points_used_percentage = 100.0 - percentage_removed
+            #print(str(points_used_percentage) + "% of points of last minute used for " + 
+            #"model adaptation")
 
-            filter_wrong_percentage = round(100 * 
-            mask_cnt_wrong/float(len(mask_similar_entropy)), 1)
-            print(str(filter_wrong_percentage) + "% of the incorporated points have " + 
-            "the wrong context class")
+            #filter_wrong_percentage = round(100 * 
+            #mask_cnt_wrong/float(len(mask_similar_entropy)), 1)
+            #print(str(filter_wrong_percentage) + "% of the incorporated points have " + 
+            #"the wrong context class")
 
-            labelAccuracy.append([gt_correct_percentage, points_used_percentage,
-            filter_wrong_percentage])
+            #labelAccuracy.append([gt_correct_percentage, points_used_percentage,
+            #filter_wrong_percentage])
 
-            upd = upd[(mask_similar_entropy == 1)]
-            amp = amp[(mask_similar_entropy == 1)]
+            #upd = upd[(mask_similar_entropy == 1)]
+            #amp = amp[(mask_similar_entropy == 1)]
+            # -----------------------------------------------------
+
+            #pdb.set_trace()
+
+            # -----------------
+            # only incorporate the last 30s, but count every point twice, that the model is
+            # changed enough
+            #upd[0:int(len(upd)/2.0)-1] = upd[int(len(upd)/2.0):-1]
+            #amp[0:int(len(amp)/2.0)-1] = amp[int(len(amp)/2.0):-1]
+            # ----------------
+
+            # -----------------
+            # only incorporate the last 20s, but count every point three times,
+            # that the model is changed enough
+            upd[0:(int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+            upd[int(len(upd)/3.0):(2 * int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+            
+            amp[0:(int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+            amp[int(len(amp)/3.0):(2 * int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+            # ----------------
+
+            labelAccuracy.append([0.1, 0.1, 0.1])
 
             upd = upd[amp > silenceThresholdModelAdaption]
             #print("--- " + str(round(100 * upd.shape[0]/(float(len(updatePoints))), 2)) + 
