@@ -249,9 +249,14 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     #points_to_query_sec = [753.984, 1372.896, 5175.072, 25075.008]
    
     # Query points just after context switch: accoring to spreadsheet for user 1:
-    points_to_query_sec = [775.0, 8279.0, 9820.0, 17105.0, 26165.0, 
-    33687.0, 41216.0, 50127.0, 51936.0, 59495.0, 66458.0]
+    #points_to_query_sec = [775.0, 8279.0, 9820.0, 17105.0, 26165.0, 
+    #33687.0, 41216.0, 50127.0, 51936.0, 59495.0, 66458.0]
 
+    # Query points to compare 60s to 20s to 3*20s when incorporating data for user 1:
+    points_to_query_sec = [181.44, 897.12, 2122.848, 2735.712, 5281.92, 9969.12, 11708.928,
+    15664.32, 17202.528, 22942.08, 24943.968, 32165.28, 41469.12, 45868.032, 50063.328,
+    51690.24, 58576.896, 65681.28]
+    
     #for i in range(len(simLabelsUnique)):
     #    if simLabelsUnique[i] != simLabelsUnique[i-1]:
     #        print(str(i*0.032))
@@ -497,12 +502,18 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             # -----------------
             # only incorporate the last 20s, but count every point three times,
             # that the model is changed enough
-            upd[0:(int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
-            upd[int(len(upd)/3.0):(2 * int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
-            
-            amp[0:(int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
-            amp[int(len(amp)/3.0):(2 * int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+            #upd[0:(int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+            #upd[int(len(upd)/3.0):(2 * int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+            #
+            #amp[0:(int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+            #amp[int(len(amp)/3.0):(2 * int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
             # ----------------
+
+            upd = upd[(2*int(len(upd)/3.0)):-1] # only include the last 20 seconds
+            amp = amp[(2*int(len(amp)/3.0)):-1]
+
+            print(upd.shape)
+            print(amp.shape)
 
             labelAccuracy.append([0.1, 0.1, 0.1])
 
