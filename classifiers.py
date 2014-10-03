@@ -37,7 +37,6 @@ def majorityVote(y_Raw, returnDisagreement=False):
     @return: Result of the same size as input
     """
     y_raw = y_Raw.copy()
-    #TODO: implement properly with parameters:
     majVotWindowLength = 2.0 #in seconds
     windowLength = 0.032
     frameLengthFloat = math.ceil(majVotWindowLength/windowLength)
@@ -510,7 +509,7 @@ def logProb(X, weights, means, covars, return_component_matrix=False):
     vmax = tmpArray.max(axis=0)
 
     if return_component_matrix == True:
-        #TODO: if we want to check which components is the most likely one: -> evaluate this for every class:
+        #If we want to check which components is the most likely one: -> evaluate this for every class:
         # To check if most likely component was from freesound model or user adaption:
         FS_COMPONENTS = 16
         mostLikelyComp = tmpArray.argmax(axis=0)

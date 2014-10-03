@@ -11,13 +11,7 @@ from sklearn.mixture import GMM
 from classifiers import trainGMMJava
 import ipdb as pdb #pdb.set_trace()
 
-# tGMM = pickle.load(open("tGMM.p","rb"))
-# realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
-# fewPoints = pickle.load(open("fewPoints.p","rb"))
-
 EPS = np.finfo(float).eps
-
-# tmpList = []
 
 def adaptGMM(trainedGMM, updatePoints, label):
     """
@@ -85,10 +79,9 @@ def adaptGMM(trainedGMM, updatePoints, label):
         for j in range(n_components_old):
             # print("Old comp: " + str(j) + " new comp: " + str(k))
             # if True:            
-            if covarTest(Dk[k], oldGMM.covars_[j]) == True: #TODO: removed for to test meanTest!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if covarTest(Dk[k], oldGMM.covars_[j]) == True:
                 if meanTest(Dk[k], oldGMM.means_[j]) == True:
                     mapping[j] = k
-                    #TODO: compute log-likelihood of novel points of that new component under component j of old model.
 
     new_model = [] # List containing parameters (weight, means, covars) for each component
 
@@ -112,15 +105,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
             addedComp += 1
             new_model.append(tmpComponent)
 
-    """ Merge statistically equivalent components: """
-    final_model = []
-
-    for el1 in new_model:
-            for el2 in new_model:
-                pass
-                #TODO: implement function to check if covars / means are equivalent using a "similar strategy". Function need to have 2 covars matrices as input instead of points...
-
-
     """ Create GMM object that should be return: """
     finalGMM = copy.deepcopy(trainedGMM)
 
@@ -140,10 +124,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
 
     print("Model adapted: new model has " + str(finalGMM["clfs"][label].n_components) +
           " component(s). " + str(mergedComp) + " component(s) merged, " + str(addedComp) + " component(s) added.")
-
-
-
-    # pdb.set_trace()
 
     return finalGMM
 
@@ -272,13 +252,6 @@ def mergeComponentTest(tGMM, label):
     mergeComponents(n_old, n_novel, n_comp, tGMM["clfs"][label].weights_[0], 
                     newGMM["clfs"][0].weights_[0], tGMM["clfs"][label].means_[0,:], 
                     newGMM["clfs"][0].means_[0,:], tGMM["clfs"][label].covars_[0], newGMM["clfs"][0].covars_[0])
-    
-    
-    
-    
-    
-    
-
 
 def addHistoricalComponent(n_old, n_novel, weight_old, means_old, covars_old):
     """
@@ -479,8 +452,6 @@ def adaptGMM_OLD(trainedGMM, updatePoints, label, nSteps=100):
         # compute log-likelihoods:
         F = np.dot(proba,weights[np.newaxis].T)
 
-  #      pdb.set_trace()
-
         logLik = np.mean(np.log(F))
 
         """ update best values: """
@@ -489,12 +460,6 @@ def adaptGMM_OLD(trainedGMM, updatePoints, label, nSteps=100):
             best_covars = copy.deepcopy(covars)
             best_means = copy.deepcopy(means)
             best_weights = copy.deepcopy(weights)
-
-        # if abs((logLik/float(prevLogLik)) - 1) < loglik_threshold:
-        #     converged = True
-        #     break
-
-        # pdb.set_trace()
 
         if abs(logLik - prevLogLik) < loglik_threshold * abs(logLik):
             converged = True

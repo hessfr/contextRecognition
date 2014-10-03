@@ -35,10 +35,14 @@ import ipdb as pdb
 #gmm5 = pickle.load(open("experimentData/user5_358848046667556/allDays/gmm_user5.p","rb"))
 # res = simulateAL(gmm5, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user5_358848046667556/allDays/", ["user5_part1.json", "user5_part2.json", "user5_part3.json", "user5_part4.json", "user5_part5.json", "user5_part6.json", "user5_part7.json", "user5_part8.json"], "GT_user5.txt")
 
-#gmm79 = pickle.load(open("experimentData/user7_358848047145412/allDays/gmm_user79.p","rb"))
-# res = simulateAL(gmm79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part5.json", "user7_part6.json"], "GT_user7.txt")
+#gmm6 = pickle.load(open("../../contextRecognition/experimentData/user6_358848046667598/gmm_user6.p","rb"))
+#res = simulateAL(gmm6, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user6_358848046667598/allDays/", ["user6_part1.json", "user6_part2.json", "user6_part3.json", "user6_part4.json", "user6_part5.json", "user6_part6.json", "user6_part7.json", "user6_part8.json"], "GT_user6.txt")
 
-# res = simulateAL(gmm_79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user9_358848046667739/allDays/", ["user9_part1.json", "user9_part2.json", "user9_part3.json", "user9_part4.json", "user9_part5.json", "user9_part6.json", "user9_part7.json", "user9_part8.json", "user9_part9.json", "user9_part10.json"], "GT_user9.txt")
+#gmm7 = pickle.load(open("experimentData/user7_358848047145412/allDays/gmm_user7.p","rb"))
+# res = simulateAL(gmm7, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part5.json", "user7_part6.json"], "GT_user7.txt")
+
+#gmm9 = pickle.load(open("experimentData/user9_358848046667739/allDays/gmm_user9.p","rb"))
+# res = simulateAL(gmm9, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user9_358848046667739/allDays/", ["user9_part1.json", "user9_part2.json", "user9_part3.json", "user9_part4.json", "user9_part5.json", "user9_part6.json", "user9_part7.json", "user9_part8.json", "user9_part9.json", "user9_part10.json"], "GT_user9.txt")
 
 # ----------------------------
 
@@ -139,14 +143,14 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             y_gt_unique[i] = random.choice(rowList)        
         
         # If we want to also incorporate Conversation:
-        #if rowSet == emptyRow:
-        #    y_gt_unique[i] = -1
-        #else:
-        #    rowList = list(rowSet)
-        #    for el in itemsToDelete:
-        #        if el in rowList:
-        #            rowList.remove(el)
-        #    y_gt_unique[i] = random.choice(rowList)        
+       # if rowSet == emptyRow:
+       #     y_gt_unique[i] = -1
+       # else:
+       #     rowList = list(rowSet)
+       #     for el in itemsToDelete:
+       #         if el in rowList:
+       #             rowList.remove(el)
+       #     y_gt_unique[i] = random.choice(rowList)        
 
     classesInGT = np.unique(y_gt_multi)
     classesInGT = classesInGT[classesInGT != -1]
@@ -513,11 +517,11 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             # -----------------
                             # only incorporate the last 20s, but count every point three times, 
                             # that the model is changed enough
-                            #upd[0:(int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
-                            #upd[int(len(upd)/3.0):(2 * int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+                            upd[0:(int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
+                            upd[int(len(upd)/3.0):(2 * int(len(upd)/3.0)-1)] = upd[(2*int(len(upd)/3.0)):-1]
                             #
-                            #amp[0:(int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
-                            #amp[int(len(amp)/3.0):(2 * int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+                            amp[0:(int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
+                            amp[int(len(amp)/3.0):(2 * int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
                             # 
                             # ----------------
                             
@@ -625,8 +629,8 @@ def initMetric(mean, std):
     @param std: Standard deviation value (scalar) of the 2 second interval
     @return: Scalar value that is used to set the initial threshold
     """
-    return (mean)
-    #return (mean - 0.5 * std)
+    return (mean - 0.5 * std)
+    #return (mean + 0.5 * std)
 
 def metricAfterFeedback(mean, std):
     """
