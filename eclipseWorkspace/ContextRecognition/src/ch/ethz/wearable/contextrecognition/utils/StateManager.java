@@ -131,8 +131,6 @@ public class StateManager extends BroadcastReceiver {
 	
 	// -------------------------------------------------------------
 	
-	private static boolean testBool = false; // for testing only
-	
 	private static boolean classNamesRequested = false;
 	
 	private static String[] prevClassnames;
@@ -166,11 +164,7 @@ public class StateManager extends BroadcastReceiver {
 						predictionString = bundle.getString(Globals.PREDICTION_STRING);
 						
 						classNameArray = bundle.getStringArray(Globals.CLASS_STRINGS);
-						
-//						bufferStatus = bundle
-//								.getBoolean(Globals.BUFFER_STATUS);
-//						Log.i(TAG, String.valueOf(bufferStatus));
-						
+
 						Serializable s1 = bundle.getSerializable(Globals.BUFFER);
 						if (waitingForFeedback == false) {
 							buffer = (ArrayList<double[]>) s1;
@@ -183,8 +177,6 @@ public class StateManager extends BroadcastReceiver {
 		
 						boolean firstPredAfterModelChange = bundle.getBoolean(Globals.FIRST_PRED_AFTER_MODEL_CHANGE);
 						
-//						Log.i(TAG, "Current Prediction: " + predictionString + ": " + currentPrediction);
-
 						//=================================================================================
 						//============ Handle sending of query, threshold calculations, ... ===============
 						//=================================================================================
@@ -350,8 +342,6 @@ public class StateManager extends BroadcastReceiver {
 								
 							}
 
-							//Log.i(TAG, "thresBuffer length: " + thresBuffer.get(currentPrediction).size());
-
 						}
 						
 						// ----- Check if we want to query -----
@@ -424,23 +414,6 @@ public class StateManager extends BroadcastReceiver {
 						//=================================================================================
 						//=================================================================================
 
-						
-						// For testing only:
-						if (testBool == false) {
-							testBool = true;
-							
-							//TODO
-							
-							
-//							// Persist the predictionData:
-//							Calendar cal = Calendar.getInstance();
-//							cal.add(Calendar.DATE, -1);
-//							Date yesterday = cal.getTime();
-							
-
-							
-						}
-						
 						
 						/*
 						 * Increase the total number of predictions per class to 
@@ -621,7 +594,7 @@ public class StateManager extends BroadcastReceiver {
 		if (intent.getAction().equals(Globals.PERSIST_DATA)) {
 
 			if (variablesInitialized == true) {
-				//persistAppData();
+				persistAppData();
 			}
 
 		}
@@ -862,13 +835,6 @@ public class StateManager extends BroadcastReceiver {
 			
 		}
 		
-		
-		
-		
-		
-		
-		
-		
 		// =====================================================================
 		// ============= Incorporate new class from server =====================
 		// =====================================================================
@@ -1012,7 +978,7 @@ public class StateManager extends BroadcastReceiver {
 				
 			} else {
 				
-				Log.e(TAG, ""); //TODO
+				Log.e(TAG, "");
 
 			}
 		}
@@ -1220,11 +1186,6 @@ public class StateManager extends BroadcastReceiver {
 		CancelQueryTask cancelQueryTask = new CancelQueryTask(context);
         Timer cancelTimer = new Timer();
         cancelTimer.schedule(cancelQueryTask, Globals.CANCEL_QUERY_TIME);
-        
-//		// Start TimerTask to vibrate again after a certain time:
-//        RemindTask remindTask = new RemindTask(context);
-//        Timer remindTimer = new Timer();
-//        remindTimer.schedule(remindTask, Globals.QUERY_VIBRATE_AGAIN_TIME);
         
         // Decrement the number of queries left (for today):
         numQueriesLeft--;
@@ -1531,10 +1492,6 @@ public class StateManager extends BroadcastReceiver {
 	private void persistPredictionData(Context context) {
 		
 		boolean persistData = false;
-		
-//		Log.i(TAG, "DATE_FIRST_STARTED: " + mPrefs.getLong(Globals.DATE_FIRST_STARTED, -1));
-//		Log.i(TAG, "DATE_LAST_RECORDED: " + mPrefs.getLong(Globals.DATE_LAST_RECORDED, -1));
-//		Log.i(TAG, "DATE_LAST_PERSISTED: " + mPrefs.getLong(Globals.DATE_LAST_PERSISTED, -1));
 		
 		Calendar cal = Calendar.getInstance();
 		Date today = cal.getTime();
