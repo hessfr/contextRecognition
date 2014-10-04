@@ -15,6 +15,8 @@ def createWav(path, binary_file, output_file, sample_rate=16000, datatype=np.int
     file_length = fin.tell()
     len_seconds = fin.tell() / (sample_rate * 2)
 
+    #pdb.set_trace()
+
     stepsize_seconds = 600
     stepsize = int(sample_rate * stepsize_seconds)
     
@@ -35,7 +37,11 @@ def createWav(path, binary_file, output_file, sample_rate=16000, datatype=np.int
         data_size = data.shape[0]
 
         data_struct = struct.pack('%sh' % data_size, *data)
-        fout.writeframes(data_struct)
+        
+        try:
+            fout.writeframes(data_struct)
+        except:
+            print("Writing of data element failed, skipping this element")
 
     fout.close()
 
