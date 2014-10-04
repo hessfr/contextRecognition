@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.lang.Double;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.AudioInputStream;
@@ -10,7 +11,22 @@ import java.io.FileWriter;
 import java.io.Writer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.common.primitives.Shorts;
 
+/*
+ * This class extracts 12 MFCC coefficients and the log energy of given sound files or
+ * folders for 32ms windows and stores it in a JSON file under the key "features".
+ * 
+ * Additionally the maximum amplitude value of each window is stored under the 
+ * key "amps". Note that "features" and "amps" always have the exact same length
+ *
+ * USAGE:
+ * java -cp .:\* extractFeatures --file /path/to/audio.wav will create JSON file in the
+ * same directory
+ *
+ * java -cp .:\* extractFeatures --folder ContextClass will extract features from all 
+ * files stored in ../sound/ContextClass/ and save it in ../extractedFeatures/ContextClass.json
+ */
 public class extractFeatures {
 
 	private static int SAMPLERATE = 16000;
@@ -24,7 +40,7 @@ public class extractFeatures {
 	private transient MFCC featureMFCC = null;
 	private transient Window featureWin = null;
 
-	private ArrayList<double[]> extractFile(String fileName) {
+	private HashMap extractFile(String fileName) {
 
 		int frameSize = (int) Math.round(SAMPLERATE * WINDOW_LENGTH);
 		int totalSamplesRead = 0;
@@ -40,7 +56,14 @@ public class extractFeatures {
 																
 		double logEnergy;
 
+
+
+        // ArrayList containing the features:
 		ArrayList<double[]> features = new ArrayList<double[]>();
+        
+        // ArrayList containing the max amplitude value of one window to calculate
+        // silece later:
+        ArrayList<Short> amps = new ArrayList<Short>();
 
 		File fileIn = new File(fileName);
 
@@ -59,7 +82,6 @@ public class extractFeatures {
 			// System.out.println("Number bytes: " + numBytes); // = 1024 data will be written to this array
 			byte[] audioBytes = new byte[numBytes];  
 													 
-
 			/*
 			 * We need the data in short (16-bit) format instead of byte
 			 * (8-bit), so we have to convert each chunk of data
@@ -133,8 +155,12 @@ public class extractFeatures {
 						features.add(featureArray);
 
 						featureArray = new double[MFCCS_VALUE + 1];
-
+                    
+                        // Store the maximum aplitude for silence detection:
+                        amps.add(Shorts.max(audioShorts));
 					}
+
+
 
 				}
 			} catch (Exception e) {
@@ -146,11 +172,15 @@ public class extractFeatures {
 			e.printStackTrace();
 		}
 
-		return features;
+        HashMap hm = new HashMap();
+        hm.put("features", features);
+        hm.put("amps", amps);
+
+		return hm;
 
 	}
 
-	private void saveGson(ArrayList<double[]> data, String outFile) {
+	private void saveGson(HashMap hm, String outFile) {
 		try {
 
 			// Save data as JSON:
@@ -158,7 +188,7 @@ public class extractFeatures {
 			Writer writer = new FileWriter(fileName);
 
 			Gson gson = new GsonBuilder().create();
-			gson.toJson(data, writer);
+			gson.toJson(hm, writer);
 
 			writer.close();
 		} catch (Exception e) {
@@ -166,12 +196,15 @@ public class extractFeatures {
 		}
 	}
 
-	private ArrayList<double[]> extractFolder(String folderName) {
+	private HashMap extractFolder(String folderName) {
 		File folder = new File(folderName);
 		File[] listOfFiles = folder.listFiles();
 
 		// This array contais all features of the folder:
 		ArrayList<double[]> allFeatures = new ArrayList<double[]>();
+		ArrayList<Short> allAmps = new ArrayList<Short>();
+
+        HashMap hm = new HashMap();
 
 		for (int i = 0; i < listOfFiles.length; i++) {
 
@@ -184,23 +217,26 @@ public class extractFeatures {
 				// Check if wav-file:
 				if (ext.equals(".wav")) {
 					String fileName = listOfFiles[i].getName();
-					ArrayList<double[]> currentFeatures = new ArrayList<double[]>();
 
+    
 					String filePath = folderName + "/" + fileName;
 
 					System.out.println("Extracting " + fileName);
 
 					// Extract features for current file:
-					currentFeatures = extractFile(filePath);
+					hm = extractFile(filePath);
+					ArrayList<double[]> currentFeatures = new ArrayList<double[]>();
+                    ArrayList<Short> currentAmps = new ArrayList<Short>();
 
 					// Add extracted features to arrayList of all features of
 					// the class (=folder):
 					allFeatures.addAll(currentFeatures);
+                    allAmps.addAll(currentAmps);
 				}
 			}
 		}
 
-		return allFeatures;
+		return hm;
 	}
 
 	private double calcLogEnergy(short[] data) {
@@ -232,30 +268,35 @@ public class extractFeatures {
 
 				String className = args[1];
 
-				// TODO: define paths properly at a single points in the code
-				// later
-				// System.getProperty("user.dir")
-
 				String folderPath = "../sound/" + className;
 				String jsonPath = "../extractedFeatures/" + className;
 
 				extractFeatures extractor = new extractFeatures();
 
-				ArrayList<double[]> arrComplete = new ArrayList<double[]>();
+				ArrayList<double[]> features = new ArrayList<double[]>();
+                ArrayList<Short> amps = new ArrayList<Short>();
 
-				arrComplete = extractor.extractFolder(folderPath);
+				HashMap hm = extractor.extractFolder(folderPath);
 
-				extractor.saveGson(arrComplete, jsonPath);
+				extractor.saveGson(hm, jsonPath);
 
 			} else if (args[0].equals("--file")) {
 
 				extractFeatures extractor = new extractFeatures();
 
-				ArrayList<double[]> arr = new ArrayList<double[]>();
+				ArrayList<double[]> features = new ArrayList<double[]>();
+                ArrayList<Short> amps = new ArrayList<Short>();
 
-				arr = extractor.extractFile(args[1]);
+				HashMap hm = extractor.extractFile(args[1]);
 
-				extractor.saveGson(arr, args[1]);
+                String newFilename = args[1];
+
+                // If the given filename have an extension (e.g. *.wav) remove it: 
+                if (newFilename.indexOf(".") != -1) {
+                    newFilename = newFilename.substring(0, newFilename.lastIndexOf('.'));
+                }
+
+				extractor.saveGson(hm, newFilename);
 
 			} else {
 				System.out

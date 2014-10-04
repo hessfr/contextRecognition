@@ -22,8 +22,8 @@ def onlineAccuracy(gtLogFile, predLogFile):
     #classesToRename = {}
 
     # Syntax key = new class name, value: list of old classes that should be merged:
-    classesToMerge = {"Transport": ["Car", "Bus", "Train", "Tram"]}
-    #classesToMerge = {}
+    #classesToMerge = {"Transport": ["Car", "Bus", "Train", "Tram"]}
+    classesToMerge = {}
 
     with open(gtLogFile) as f:
         reader = csv.reader(f, delimiter="\t")
@@ -97,7 +97,7 @@ def onlineAccuracy(gtLogFile, predLogFile):
     y_pred = []
 
     # Now create predictions and ground truth arrays from one RECORDING_STARTED
-    # entry the next one:
+    # entry the until the next one:
     for k in range(numRecStartedPred):
 
         tmpGT = np.array(gtListOriginal)
@@ -143,6 +143,17 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
     y_GT = np.array(y_GT)
     y_pred = np.array(y_pred)
+
+    y_gt_ravel = y_GT.ravel()
+    y_gt_ravel = y_gt_ravel[y_gt_ravel != -1]
+    freq = itemfreq(y_gt_ravel)
+    n_entries = sum(freq[:,1])
+    
+    print("--- GT distribution: ---")
+    for i in range(freq.shape[0]):
+        perc = round( 100 * (freq[i,1] / n_entries), 1)
+        print(classesDict[int(freq[i,0])] + " " + str(perc) + "%")
+    print("------")
 
     # Whenever silence is predicted, we ignore those parts for the calculation 
     # of the accuracy, i.e. we delete those entries from the GT and the
@@ -367,7 +378,8 @@ def createGTArray(gtList, classesDict):
                     else:
                         print("Problem occurred when filling ground truth array in line " + 
                         "Maybe you are using more than 3 simultaneous context classes?")
-                   
+                        pdb.set_trace()
+
                     break
     return y_GT
 
@@ -455,3 +467,4 @@ def removeInvalids(y_pred, y_GT, silenceClassNum):
     print("-----")
 
     return y_pred, y_GT
+

@@ -123,11 +123,7 @@ class RawAudio():
         
         print("Writing raw audio file to disk finished")     
 
-
-
-
-
-        return "abc" #TODO
+        return "ok"
         
         
          

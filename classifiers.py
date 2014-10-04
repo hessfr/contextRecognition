@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pylab as pl
 import os
 from os import listdir
 import numpy as np
@@ -13,7 +16,6 @@ from sklearn import cluster
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.cross_validation import KFold
-import pylab as pl
 from featureExtraction import FX_Test
 from featureExtraction import FX_Folder
 from featureExtraction import FX_multiFolders
@@ -35,7 +37,6 @@ def majorityVote(y_Raw, returnDisagreement=False):
     @return: Result of the same size as input
     """
     y_raw = y_Raw.copy()
-    #TODO: implement properly with parameters:
     majVotWindowLength = 2.0 #in seconds
     windowLength = 0.032
     frameLengthFloat = math.ceil(majVotWindowLength/windowLength)
@@ -449,7 +450,7 @@ def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
     else:
         return majorityVote(y_pred, returnDisagreement=False)
 
-def logProb(X, weights, means, covars):
+def logProb(X, weights, means, covars, return_component_matrix=False):
     """
     Calculate the log probability of multiple points under a GMM represented by the weights, means, covars parameters
 
@@ -457,6 +458,8 @@ def logProb(X, weights, means, covars):
     @param weights: Component weights
     @param means: Means
     @param covars: Full covariance matrix of the mixture
+    @param return_component_matrix: Set to true to return a (1 x n_samples) boolean matrix, indicating
+    if most likely component for every point was from user (True) or from Freesound (False)
     @return:
     """
     X = copy.copy(X)
@@ -505,19 +508,31 @@ def logProb(X, weights, means, covars):
     tmpArray = np.rollaxis(tmp_log_prob, axis=1) # transpose
     vmax = tmpArray.max(axis=0)
 
-    #TODO: if we want to check which components is the most likely one: -> evaluate this for every class:
-    # To check if most likely component was from freesound model or user adaption:
-    #FS_COMPONENTS = 16
-    #mostLikelyComp = tmpArray.argmax(axis=0)
-    #num_freesound_components = (mostLikelyComp < FS_COMPONENTS).sum()
-    #num_user_components = (mostLikelyComp >= FS_COMPONENTS).sum()
+    if return_component_matrix == True:
+        #If we want to check which components is the most likely one: -> evaluate this for every class:
+        # To check if most likely component was from freesound model or user adaption:
+        FS_COMPONENTS = 16
+        mostLikelyComp = tmpArray.argmax(axis=0)
+        #num_freesound_components = (mostLikelyComp < FS_COMPONENTS).sum()
+        #num_user_components = (mostLikelyComp >= FS_COMPONENTS).sum()
+
+        #print("num_freesound_components: " + str(num_freesound_components))
+        #print("num_user_components: " + str(num_user_components))
+        
+        # Matrix indicating for every point, if most likely component was from user-centric
+        # model (True) or from Freesound model (False)
+        user_component_matrix = (mostLikelyComp >= FS_COMPONENTS)
+
+        #pdb.set_trace()
 
     final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
 
     final_log_prob = final_log_prob + vmax # shape = (n_samples,)
     
-
-    return final_log_prob
+    if return_component_matrix == True:
+        return final_log_prob, user_component_matrix
+    else:
+        return final_log_prob
 
 def lpr(X, weights, means, covars):
     """
@@ -624,12 +639,14 @@ def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt',
 
     return resDict
 
-def confusionMatrixMulti(y_GT, y_pred, classesDict):
+def confusionMatrixMulti(y_GT, y_pred, classesDict, ssh=False):
     """
 
     @param y_GT: Ground truth array that can contain multiple labels for each data point
     @param y_pred:
-    @param classesDict:
+    @param classesDict:i
+    @param ssh: If True the plot will only be saved in the plotsTmp folder. If False, the
+    plot will be displayed
     """
 
     """ Sort classesDict to show labels in the CM: """
@@ -693,6 +710,7 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     width = len(cm)
     height = len(cm[0])
 
+    pl.figure(figsize=(15,15))
     pl.matshow(normalized)
     pl.ylabel('True label')
     pl.xlabel('Predicted label')
@@ -709,8 +727,23 @@ def confusionMatrixMulti(y_GT, y_pred, classesDict):
     pl.clim(0,1)
 
     pl.colorbar()
-
-    pl.show()
+    if ssh == False:
+        pl.show()
+    else:
+        # When saving to disk, don't overwrite previous files, but instead
+        # create new file with increased index:
+        # "plotsTmp/CM_0.jpg"
+        filename_beginning = "plotsTmp/CM_"
+        cnt = 0
+        filename_extension = ".jpg"
+        filename = filename_beginning + str(cnt) + filename_extension 
+        while os.path.isfile(filename):
+            cnt += 1
+            filename = filename_beginning + str(cnt) + filename_extension
+        
+        fig = matplotlib.pyplot.gcf()
+        fig.set_size_inches(15,15)
+        pl.savefig(filename)
 
 def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
     
@@ -774,6 +807,8 @@ def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
                             y_GT[start:end+1,2].fill(classesDict[labelList[i][1]])
                         
                         else:
+                            pdb.set_trace()
+    
                             print("Problem occurred when filling ground truth array." +  
                             "Maybe you are using more than 3 simultaneous context classes?")
                     break
