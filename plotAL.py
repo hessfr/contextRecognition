@@ -1,11 +1,12 @@
 import numpy as np
 import pickle
 import matplotlib.pyplot as pl
-from simulateAL import reverseDict
 import ipdb as pdb #pdb.set_trace()
 
 def plotAL(results):
     """
+    Plot accuracies, F1 scores, time stamps of model adaption and accuracy of the 
+    points incorporated (bar graphs)
 
     @param results: Dictionary containing the results of the active learning simulation,
     created by simulateAL.py
@@ -16,19 +17,12 @@ def plotAL(results):
     revClassesDict = reverseDict(results[0]["classesDict"])
 
     F1list = []
-    #for el in classesDict:
-    #    F1list.append([])
-
-
-    #Conversation = []
-    #Office = []
-    #TrainInside = []
 
     timestamps = []
     labels = []
     labels.append("")
     labelAccuracy = []
-    labelAccuracy.append(1)
+    labelAccuracy.append([-0.5 , -0.5, -0.5])
     duration = results[0]["duration"]
     classesInGT = results[0]["classesInGT"]
 
@@ -40,17 +34,18 @@ def plotAL(results):
         for i in range(len(classesDict)):
             # Only append classes that are in the ground truth:
             if i in classesInGT:
-                tmp.append(el["F1dict"][revClassesDict[i]])
+                if np.isnan(el["F1dict"][revClassesDict[i]]):
+                    tmp.append(0)
+                else:
+                    tmp.append(el["F1dict"][revClassesDict[i]])
 
         F1list.append(tmp)
-        #Conversation.append(el["F1dict"]["Conversation"])
-        #Office.append(el["F1dict"]["Office"])
-        #TrainInside.append(el["F1dict"]["Train"])
-        
+
         timestamps.append(el["timestamp"])
+        maxLength = 9 # Max number of characters in a label (for plotting only)
         if el["label"] != -1:
-            labels.append(revClassesDict[el["label"]])
-        if el["labelAccuracy"] != -1:
+            labels.append(revClassesDict[el["label"]][0:maxLength])
+        if el["labelAccuracy"] != [-1, -1, -1]:
             labelAccuracy.append(el["labelAccuracy"])
 
     F1array = np.array(F1list)
@@ -67,16 +62,11 @@ def plotAL(results):
     #pl.show()
     fig.savefig("plotsTmp/time.jpg")
 
-    #ax.grid(True)
-    #ax.set_xticklabels([])
-
     fig = pl.figure()
     pl.plot(idx, accuracy, label="Accuracy")
-    #pl.plot(idx, labelAccuracy,label="Label correctness")
     pl.title("Total accuracy")
     pl.xlabel('number of queries')
     pl.xticks(range(len(labels)),labels, rotation=45)
-    #legend = pl.legend(loc='upper left', shadow=True)
     #pl.show()
     fig.savefig("plotsTmp/accuracy.jpg")
     
@@ -87,23 +77,59 @@ def plotAL(results):
             pl.plot(idx, F1array[:,j], label=revClassesDict[i])
             j += 1
     
-    #pl.plot(idx, Conversation, label="Conversation")
-    #pl.plot(idx, Office, label="Office")
-    #pl.plot(idx, TrainInside, label="Train")
-    
+    ax = pl.subplot(111)
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
     pl.title("F1 of individual classes")
     pl.xticks(range(len(labels)),labels, rotation=45)
-    legend = pl.legend(loc='upper left', shadow=True)
-    fig.savefig("plotsTmp/F1s.jpg")
+    ax.legend = pl.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    fig.savefig("plotsTmp/F1s.jpg", bbox_inches='tight')
     #pl.show()
 
-    """
-    pl.plot(idx, labelAccuracy, label="LabelAccuracy")
-    #pl.plot(idx, labelAccuracy,label="Label correctness")
+    fig, ax = pl.subplots()   
+    width = 0.175 # the width of the bars
+
+    correct_last_min = []
+    used_for_model_adaption = []
+    wrong_points_incorporated = []
+    
+    label_accuracy = np.array(labelAccuracy)
+    label_accuracy += 0.5
+    correct_last_min = label_accuracy[:,0]
+    used_for_model_adaption  = label_accuracy[:,1]
+    wrong_points_incorporated = label_accuracy[:,2]
+    
+    #correct_last_min = [(el[0]+0.5) for el[0] in labelAccuracy]
+    rects1 = ax.bar(idx, correct_last_min, width, color='b')
+    
+    #used_for_model_adaption = [(el[1]+0.5) for el[1] in labelAccuracy]
+    rects2 = ax.bar([(el+width) for el in idx], used_for_model_adaption, width, color='g')
+
+    #wrong_points_incorporated = [(el[2]+0.5) for el[2] in labelAccuracy]
+    rects3 = ax.bar([(el+2*width) for el in idx], wrong_points_incorporated, width, color='r')
+    
     pl.title("Accuracy of labels")
     pl.xlabel('number of queries')
-    pl.xticks(range(len(labels)),labels, rotation=45)
-    #legend = pl.legend(loc='upper left', shadow=True)
-    pl.show()
-    """
+    pl.xticks([(n + 1.5*width) for n in range(len(labels))],labels, rotation=45)
+    pl.ylim([0,102])
 
+    ax.legend((rects1[0], rects2[0], rects3[0]), 
+    ('% labels correct in last min', 
+    '% of points in last min used for model adaption', 
+    '% of incorporated points have wrong label'),
+    prop={'size':8},
+    loc='lower right')
+    
+    fig.savefig("plotsTmp/labelAccuracy.jpg")
+
+def reverseDict(oldDict):
+    """
+    Return new array were keys are the values of the old array and the other way around
+
+    """
+    newDict = {}
+    for i, j in zip(oldDict.keys(), oldDict.values()):
+        newDict[j] = i
+
+    return newDict

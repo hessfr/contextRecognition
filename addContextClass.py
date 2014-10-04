@@ -17,10 +17,6 @@ def addNewClass(jsonGMM, newClassName, newClassData=None):
     
     jGMM = copy.deepcopy(jsonGMM)
 
-#    if newClassData == None:
-#        tmp = getFeatures(newClassName) # TODO: do this properly
-#        newClassData = tmp["features"]
-
     newClassData = getFeatures(newClassName)
 
     scaler = preprocessing.StandardScaler()
@@ -48,8 +44,6 @@ def addNewClass(jsonGMM, newClassName, newClassData=None):
     for i in range(len(jGMM)):
         jGMM[i]["classesDict"] = newClassDict
         jGMM[i]["n_classes"] = new_n_classes
-     
-    #pdb.set_trace()    
 
     """ Add the new class to the list: """
     jGMM.append({})   

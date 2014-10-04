@@ -121,6 +121,8 @@ def createGTMulti(classesDict, length, gtList):
     classesNotTrained = []
     for i in range(len(gtList)):
         """ Fill array from start to end of each ground truth label with the correct label: """
+        gtList[i][2]
+
         if gtList[i][2] == "start":
             tmpContext = gtList[i][1]
             start = getIndex(float(gtList[i][0]))
@@ -172,8 +174,9 @@ def createGTMulti(classesDict, length, gtList):
                             y_GT[start:end+1,4].fill(classesDict[gtList[i][1]])
                         
                         else:
-                            print("Problem occurred when filling ground truth array." +  
-                            "Maybe you are using more than 3 simultaneous context classes?")
+                            pdb.set_trace()
+
+                            print("Problem occurred when filling ground truth array!")
                     break
     
     if classesNotTrained:
@@ -243,8 +246,8 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
 
             tmpAmps = amps[(i * frameLength):(((i+1) * frameLength))]
            
-            #if tmpAmps.max() >= silenceThreshold:
-            if True:
+            if tmpAmps.max() >= silenceThreshold:
+            #if True:
                 tmpArray = y_raw[(i * frameLength):(((i+1) * frameLength))]
                 
                 """ Get most frequent number in that frames: """
@@ -266,8 +269,8 @@ def majorityVoteSilence(y_Raw, amps, silenceClassNum):
             tmpAmps = amps[(i * frameLength):y_raw.shape[0]]
 
 
-            #if tmpAmps.max() >= silenceThreshold: 
-            if True:
+            if tmpAmps.max() >= silenceThreshold: 
+            #if True:
                 tmpArray = y_raw[(i * frameLength):y_raw.shape[0]]
                 """ Get most frequent number in that frames and fill 
                 all elements in the frame with it: """
