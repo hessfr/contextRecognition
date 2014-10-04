@@ -25,9 +25,6 @@ import ch.ethz.wearable.contextrecognition.utils.AppStatus;
 import ch.ethz.wearable.contextrecognition.utils.GMM;
 import ch.ethz.wearable.contextrecognition.utils.Globals;
 
-/*
- * Structure of this class similar to: github.com/sumeetkr
- */
 public class AudioWorker extends IntentService {
 
 	private static final String TAG = "AudioWorker";
@@ -135,8 +132,7 @@ public class AudioWorker extends IntentService {
 					
 					super.handleData(data, silenceBuffer);
 
-					// Check if max loudness of all chunks in the 2s 
-                    // sequence is below silence threshold:
+					// Check if loudness of all chunks in the 2s sequence is below silence threshold:
 					int silenceCount=0;
 					for(int i=0; i<silenceBuffer.length; i++) {
 						if(silenceBuffer[i] == true) {

@@ -134,8 +134,8 @@ public class MainActivity extends ActionBarActivity {
 			Intent i = new Intent(this, AudioWorker.class);
 			startService(i);
 			
-//			Intent i2 = new Intent(MainActivity.this,RecService.class);
-//			startService(i2);
+			Intent i2 = new Intent(MainActivity.this,RecService.class);
+			startService(i2);
 			
 			Intent i4 = new Intent(MainActivity.this,EventDetection.class);
 			startService(i4);
@@ -222,8 +222,8 @@ public class MainActivity extends ActionBarActivity {
 			AppStatus.getInstance().set(AppStatus.INIT);
 			Log.i(TAG, "New status: init");
 			
-//			Intent i2 = new Intent(MainActivity.this,RecService.class);
-//			startService(i2);
+			Intent i2 = new Intent(MainActivity.this,RecService.class);
+			startService(i2);
 			
 			Intent i3 = new Intent(MainActivity.this,EventDetection.class);
 			startService(i3);
@@ -286,11 +286,6 @@ public class MainActivity extends ActionBarActivity {
 //			callRating();
 //			return true;
 //		}
-//		if (id == R.id.action_help) {
-//			// Go to help activity
-//			callHelp();
-//			return true;
-//		}
 		if (id == R.id.action_exit) {
 			// Quit the app and stop the recording:
 			callShutdown();
@@ -331,13 +326,6 @@ public class MainActivity extends ActionBarActivity {
 //		startActivity(i);
 //	}
 
-	/**
-	 * Launch Help activity
-	 * */
-//	private void callHelp() {
-//		Intent i = new Intent(MainActivity.this, HelpActivity.class);
-//		startActivity(i);
-//	}
     /**
      * Launch manage classes activity
      * */
@@ -445,7 +433,6 @@ public class MainActivity extends ActionBarActivity {
 		 *  Initialize the array containing the ground truth information (to set the check boxes
 		 *  correctly when we come back to this activity):
 		 */		
-		
 		if (stringArray == null) {
 			Log.e(TAG, "Failed to create ListView for the GT logger, as stringArray is empty");
 			return;
@@ -626,13 +613,6 @@ public class MainActivity extends ActionBarActivity {
 					   CheckBox cb = (CheckBox) v;
 					   String contextClass = cb.getText().toString();
 					   
-//					   // Find position of this string in the contextClasses array:
-//					   int idx = -1;
-//					   for(int i=0; i<contextClasses.length; i++) {
-//						   if (contextClass.equals(contextClasses[i])) {
-//							   idx = i;
-//						   }
-//					   }
 					   // Find position of this string in the contextClasses array:
 					   int idx = -1;
 					   for(int i=0; i<contextList.size(); i++) {

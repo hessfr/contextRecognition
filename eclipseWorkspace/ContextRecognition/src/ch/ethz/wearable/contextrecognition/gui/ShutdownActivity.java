@@ -26,7 +26,7 @@ public class ShutdownActivity extends Activity {
 		Log.i(TAG, "New status: stop recording");
 		Log.i(TAG, "Finishing activity");
 		
-//		stopService(new Intent(ShutdownActivity.this, RecService.class));
+		stopService(new Intent(ShutdownActivity.this, RecService.class));
 		stopService(new Intent(ShutdownActivity.this, EventDetection.class));
 		
 		finish();

@@ -111,7 +111,7 @@ public class Globals {
 	public static long PERSIST_PERIOD = 10 * 60 * 1000; // = 10min
 	
 	// Silence detection threshold (higher means more samples will be considered silent):
-	public static short SILENCE_DETECTION_THRESHOLD = -1;
+	public static short SILENCE_DETECTION_THRESHOLD = 1000;
 	
 	// How often do we want to check for unusual events:
 	public static long EVENT_DETECTION_INTERVAL = 10 * 60 * 1000; // = 10min
