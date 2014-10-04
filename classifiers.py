@@ -16,15 +16,11 @@ from sklearn import cluster
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.cross_validation import KFold
-from featureExtraction import FX_Test
-from featureExtraction import FX_Folder
-from featureExtraction import FX_multiFolders
-from createJSON import pointsToJSON
 import math
 import operator
 import copy
 from scipy.stats import itemfreq
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
 
 EPS = np.finfo(float).eps
 
@@ -93,129 +89,6 @@ def majorityVote(y_Raw, returnDisagreement=False):
     else:
         return resArray, disagreement
 
-def trainGMMJava(featureData, n_comp=16):
-    """
-    Method to be rebuild in Java, not actually used. Build a Gaussian Mixture Model on the given data WITHOUT using Scikit-Learn to train,
-    but create scikit-learn GMMs anyway to test if it works properly
-    @param featureData: Numpy array of already scaled features
-    @return: Dictionary containing trained scikit-learn GMM classifiers in 'clfs' and 'classesDict' for mapping of class names to numbers
-    """
-#    X_train = featureData['features']
-#    scaler = preprocessing.StandardScaler().fit(X_train)
-#    X_train = scaler.transform(X_train)
-#    y_train = featureData['labels']
-    
-    X_train = featureData
-
-    # n_comp = 16 # number of components
-    n_features = 12
-
-    nSteps = 1000
-    
-    n_train_list = []
-
-    # Train with sklearn to create the GMM object, but we will overwrite everything later anyway:
-    clf = GMM(n_components=n_comp, covariance_type='full', n_iter=3)
-    tmpTrain = X_train
-    n_tmp = tmpTrain.shape[0]
-    clf.fit(tmpTrain)
-
-    # -------------------------------
-    clf.weights_ = 0
-    clf.means_ = 0
-    clf.covars_ = 0
-    
-#        weights = clf.weights_
-#        means = clf.means_
-#        covars = clf.covars_
-
-    # --- Initialization ----
-    means = cluster.KMeans(n_clusters=n_comp).fit(tmpTrain).cluster_centers_    
-    
-    means = np.array(json.load(open("morePointsMeans.json","rb"))) #xxxxxxxxxxxxxx
-    
-    # pointsToJSON(means, "means")   
-    
-    weights = np.zeros(n_comp)
-    weights.fill(1.0 / n_comp)
-    
-    cc = np.cov(tmpTrain.T) + 1e-3 * np.eye(n_features) # -> 12x12 matrix
-    covars = np.tile(cc, (n_comp, 1, 1)) # this creates 16x12x12 matrix with each 12x12 matrix equal to cc
-
-    # --------------------
-    # --- EM Algorithm ---
-    log_likelihood = [] # to check for convergence
-    converged = False
-
-    # pdb.set_trace()
-    
-    for i in range(nSteps):
-        
-        # print(i)
-        
-        # ------- E-Step: -------
-        # calculate the probabilities:
-
-        proba = logProb(tmpTrain, weights, means, covars)
-        
-        log_likelihood.append(proba.sum())
-
-
-        # calculate the responsibilities:  
-        lp = lpr(tmpTrain, weights, means, covars) + np.log(weights) # lprTmp in Java
-        
-        responsibilities = np.exp(lp - proba[:, np.newaxis])
-    
-#        print(proba)
-#        print(weights.sum())
-#        print(means.sum())
-#        print(covars[0].sum())
-                
-        
-        # Check for convergence:
-        if i>0 and abs(log_likelihood[-1] - log_likelihood[-2]) < 0.01:
-            print("Convergence reached after " + str(i) + " steps" )                
-            
-            # pdb.set_trace()           
-            
-            converged = True
-            break
-
-        # ------- M-Step: -------
-
-        tWeights = responsibilities.sum(axis=0) # sum up each column
-        weighted_X_sum = np.dot(responsibilities.T, tmpTrain)
-        inverse_weights = 1.0 / (tWeights[:, np.newaxis])
-
-        # update weights:
-        weights = tWeights / float(tWeights.sum() + 10 * EPS) + EPS
-
-        # update means:      
-        means = weighted_X_sum * inverse_weights
-
-        #update covars:
-        for c in range(n_comp):
-            post = responsibilities[:, c]
-            avg_cv = np.dot((post * tmpTrain.T), tmpTrain) / (post.sum() + 10 * EPS) # post * tmpTrain.T = tmp1 in Java
-            mu = means[c][np.newaxis]
-            
-            covars[c] = avg_cv - np.dot(mu.T, mu) + (1e-3 * np.eye(n_features))
-
-    n_train_list.append(n_tmp)
-    clf.weights_ = weights
-    clf.means_ = means
-    clf.covars_ = covars
-    clf.converged_ = converged
-    
-    resDict = {}
-    resDict["clfs"] = []
-    resDict["clfs"].append(clf)
-    resDict["n_train"] = n_train_list
-        
-    
-    return resDict
-
-
 def trainGMM(featureData):
     """
     Build a Gaussian Mixture Model on the given data using Scikit-Learn.
@@ -263,7 +136,7 @@ def trainGMM(featureData):
 
     return trainedGMM
     
-def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, showPlots=False):
+def testGMM(trainedGMM, featureData, useMajorityVote=True, scale=True, showPlots=False):
     """
 
     @param trainedGMM: already trained GMM
@@ -274,13 +147,10 @@ def testGMM(trainedGMM, featureData=None, useMajorityVote=True, scale=True, show
     """
     n_classes = len(trainedGMM['clfs'])
 
-    if featureData==None:
-        X_test = trainedGMM['scaler'].transform(FX_Test("test.wav"))
+    if scale==True:
+        X_test = trainedGMM['scaler'].transform(featureData)
     else:
-        if scale==True:
-            X_test = trainedGMM['scaler'].transform(featureData)
-        else:
-            X_test = featureData
+        X_test = featureData
 
     logLikelihood = np.zeros((n_classes, X_test.shape[0]))
 
@@ -534,48 +404,6 @@ def logProb(X, weights, means, covars, return_component_matrix=False):
     else:
         return final_log_prob
 
-def lpr(X, weights, means, covars):
-    """
-    Helper method to compute the responsibilities
-
-    @param X: Numpy array representing the input data. Each row refers to one point
-    @param weights: Component weights
-    @param means: Means
-    @param covars: Full covariance matrix of the mixture
-    @return:
-    """
-    X = copy.copy(X)
-    n_samples, n_features = X.shape
-    n_components = means.shape[0]
-
-    min_covar = 1e-7
-
-    if X.ndim == 1:
-        X = X[:, np.newaxis]
-    if X.size == 0:
-        return np.array([]), np.empty((0, n_components))
-    if X.shape[1] != means.shape[1]:
-        raise ValueError('The shape of X  is not compatible with self')
-
-    log_prob = np.empty((n_samples, n_components))
-
-
-    for c, (mu, cv) in enumerate(zip(means, covars)):
-        # loops through each component in means and covars, i.e. cv has shape (12,12) and mu has shape (12,)
-        try:
-            cv_chol = linalg.cholesky(cv, lower=True) # = L0 in Java
-        except linalg.LinAlgError:
-            # reinitialize component, because it might be stuck with too few observations
-            cv_chol = linalg.cholesky(cv + min_covar * np.eye(n_features),lower=True)
-
-        cv_log_det = 2 * np.sum(np.log(np.diagonal(cv_chol)))
-
-        cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T # = solved in Java
-
-        log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det) #=rowSum in Java
-    
-    return log_prob
-
 def compareGTMulti(trainedGMM, featureData=None, groundTruthLabels='labels.txt', useMajorityVote=True):
     """
 
@@ -819,103 +647,6 @@ def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
             el + "'. It will not be considered for testing.")
     return y_GT
 
-def createGTUnique(classesDict, length, groundTruthLabels='labelsAdapted.txt'):
-    """
-    Create ground truth array where only one label is allowed per point
-    @param classesDict:
-    @param length:
-    @param groundTruthLabels:
-    @return:
-    """
-
-    """ Preprocess ground truth labels: """
-    with open(groundTruthLabels) as f:
-        reader = csv.reader(f, delimiter="\t")
-        labelList = list(reader)
-
-    y_GT = np.empty([length])
-    y_GT.fill(-1) #-1 corresponds to no label given
-
-    classesNotTrained = []
-    for i in range(len(labelList)):
-        """ Fill array from start to end of each ground truth label with the correct label: """
-        if labelList[i][2] == "start":
-            tmpContext = labelList[i][1]
-            start = getIndex(float(labelList[i][0]))
-
-            # Find the end time of this context:
-            for j in range(i,len(labelList)):
-                if ((labelList[j][1] == tmpContext) and (labelList[j][2] == "end")):
-
-                    end = getIndex(float(labelList[j][0]))
-                    if end >= y_GT.shape[0]:
-                        end = y_GT.shape[0] - 1
-
-                    """ Fill ground truth array, and check if our classifier was 
-                    trained with all labels of the test file, if not give warning: """
-
-                    if labelList[i][1] not in classesDict.keys():
-                        classesNotTrained.append(labelList[i][1])
-                        y_GT[start:end+1].fill(-1)
-                    
-                    else:
-                        y_GT[start:end+1].fill(classesDict[tmpContext])
-                    
-                    break
-    
-    if classesNotTrained:
-        for el in set(classesNotTrained):
-            print("The classifier wasn't trained with class '" + 
-            el + "'. It will not be considered for testing.")
-    return y_GT
-
-def confusionMatrix(y_GT, y_pred, classesDict):
-    """
-
-    @param y_GT: Ground truth array containing exactly one label per data point
-    @param y_pred:
-    @param classesDict:
-    """
-    #TODO: Merge with other confusionMatrix method depending on the size of the input
-
-    """ Sort classesDict to show labels in the CM: """
-    sortedTmp = sorted(classesDict.iteritems(), key=operator.itemgetter(1))
-    sortedLabels = []
-    for j in range(len(sortedTmp)):
-        sortedLabels.append(sortedTmp[j][0])
-
-    cm = confusion_matrix(y_GT, y_pred)
-
-    print(cm)
-
-    normalized = []
-
-    for row in cm:
-        rowSum = sum(row)
-        normalized.append([round(x/float(rowSum),2) for x in row])
-
-    width = len(cm)
-    height = len(cm[0])
-
-    pl.matshow(normalized)
-    pl.ylabel('True label')
-    pl.xlabel('Predicted label')
-    pl.xticks(range(len(sortedLabels)), sortedLabels)
-    pl.yticks(range(len(sortedLabels)), sortedLabels)
-
-    for x in xrange(width):
-        for y in xrange(height):
-            pl.annotate(str(normalized[x][y]), xy=(y, x),
-                        horizontalalignment='center',
-                        verticalalignment='center')
-    
-    # Force the min and max value, so that the colors will have the full range from 0 to 1:
-    pl.clim(0,1)
-
-    pl.colorbar()
-
-    pl.show()
-
 def getIndex(timeStamp, windowLength=0.032):
     """
     Calculates index in the feature array of a given time given no overlapping of frames. Will return the beginning
@@ -989,49 +720,42 @@ def k_FoldGMM(featureData, k):
             agreementCounter += 1
  
     print str(100 * agreementCounter/y_test.shape[0]) + " % of all samples predicted correctly (without majority vote...)"
+
+    """ Sort classesDict to show labels in the CM: """
+    sortedTmp = sorted(featureData["classesDict"].iteritems(), key=operator.itemgetter(1))
+    sortedLabels = []
+    for j in range(len(sortedTmp)):
+        sortedLabels.append(sortedTmp[j][0])
+
+    cm = confusion_matrix(y_test, y_pred)
+
+    print(cm)
+
+    normalized = []
+
+    for row in cm:
+        rowSum = sum(row)
+        normalized.append([round(x/float(rowSum),2) for x in row])
+
+    width = len(cm)
+    height = len(cm[0])
+
+    pl.matshow(normalized)
+    pl.ylabel('True label')
+    pl.xlabel('Predicted label')
+    pl.xticks(range(len(sortedLabels)), sortedLabels)
+    pl.yticks(range(len(sortedLabels)), sortedLabels)
+
+    for x in xrange(width):
+        for y in xrange(height):
+            pl.annotate(str(normalized[x][y]), xy=(y, x),
+                        horizontalalignment='center',
+                        verticalalignment='center')
     
-    confusionMatrix(y_test, y_pred, featureData["classesDict"])
+    # Force the min and max value, so that the colors will have the full range from 0 to 1:
+    pl.clim(0,1)
 
-def pdf(data, means, covars):
-    """
-    Calculate Probability Density Function of Gaussian in multiple dimensions. Call this function for each component
-    of the mixture individually
-    @param data:
-    @param means: Means of one component only, shape = n_features
-    @param covars: Covars of one component ony, shape = (n_feature, n_features)
-    @return:
-    """
-    n_features = data.shape[1]
-    n_samples = data.shape[0]
+    pl.colorbar()
 
-    data = data - np.tile(means,(n_samples,1))
-    data = data.T
-
-    prob = np.sum(np.dot(data.T, linalg.inv(covars)).T * data, axis=0)
-
-    prob = np.exp(-0.5*prob) / float(np.sqrt((2*math.pi) ** n_features * (abs(np.linalg.det(covars)) + EPS)))
-
-    return prob
-    
-def bic(data, means, covars, weights, n_comp):
-    """
-    Calculate BIC criteria (the lower this value, the better)
-    @param data: Numpy array - already scale. shape = (n_samples, n_features)
-    @param means: Means of one component only, shape = n_features
-    @param covars: Covars of one component ony, shape = (n_feature, n_features)
-    @return: BIC criteria (the lower this value, the better)
-    """
-    n_points = data.shape[0] #number of points
-    n_feat = data.shape[1] # number of features
-
-    logLik = -2.0 * logProb(data, weights, means, covars).sum()
-
-    complexity = ((n_comp/2.0 * (n_feat+1) * (n_feat+2)) - 1.0) * np.log(n_points)
-
-    # bic = (logLik + complexity)
-
-    return (logLik + complexity)
-
-from classifiers import *
-
+    pl.show()
 

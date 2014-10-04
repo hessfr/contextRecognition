@@ -85,32 +85,6 @@ def removeOutliers(folderName, minPts=10):
             print("Problems occured, when removing outliers for the class " + str(folderName))
             return False
 
-def LOF_Folder(folderName, minPts):
-    """
-    Calculate Local Outlier Factor (LOF) for all files in the given folder by using the mean values of the 12 MFCC features
-    @param folderName: Name of the folder in the "sound" folder, i.e. if you want to folder the folder ./sound/car give "car" a folderName
-    @param minPts: Parameter for LOF algorithm: number of nearest neighbors used in defining the local neighborhood of the object (see Breunig paper for details)
-    @return: Local Outlier Factor object containing results of the local outlier factor computations
-    """
-    
-    fileFeatureDict = extractFeatures(folderName)
-    
-    if(fileFeatureDict is not None):
-         
-        """ Build list of the mean values: """
-        values = fileFeatureDict.values()
-        featureList = []
-        for entry in values:
-            featureList.append(tuple(entry))
-
-        """ Calulcate local outlier factors for each file: """
-        lof = outliers(minPts, featureList)
-
-        #for outlier in lof:
-            #print "File " + str(fileFeatureDict.keys()[outlier["index"]]) + " has LOF of " + str(outlier["lof"])
-            
-    return lof
-            
 def extractFeatures(folderName):
     """
     Extract features from given folder, extract e.g., mean feature values for each file (for each MFCC) and return a dict containing them
