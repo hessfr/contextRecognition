@@ -24,16 +24,12 @@ new_filename = str(sys.argv[3])
 
 newClasses = json.loads(classes_list_str)
 
-#print(context_classes_list)
-
 oldGMM = json.load(open(old_filename,"rb"))
 
 classesDict = oldGMM[0]["classesDict"]
 
 # remove unicode notation:
 oldClasses = [str(k) for k in classesDict]
-
-#print(oldClasses)
 
 """ Delete classes that user deselected: """
 #classesToDelete = []
@@ -48,13 +44,6 @@ for i in range(len(oldClasses)):
 indicesToDelete = sorted(indicesToDelete, reverse=True)
 numberClassesDelete = len(indicesToDelete)
 
-#print(classesDict)
-#print("The following indice(s) will be deleted:")
-#for el in indicesToDelete:
-#   print(el)
-#print("---")
-
-
 # Delete classes in the GMM models
 tmpGMM = copy.deepcopy(oldGMM)
 newGMM = [i for j, i in enumerate(tmpGMM) if j not in indicesToDelete]
@@ -67,19 +56,13 @@ sortedList = []
 for el in sortedTupleList:
     sortedList.append(list(el))
 
-
-#print("Before removing:")
-#print sortedList
-#print("---")
-
 for i in indicesToDelete:
     del sortedList[i]
 
 for i in range(len(sortedList)):
     sortedList[i][1] = i
 
-#print("After removing, following class(es) left: ")    
-print(sortedList)
+#print(sortedList)
 
 # Convert back to dictionary:
 newClassesDict = {}

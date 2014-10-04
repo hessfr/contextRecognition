@@ -24,8 +24,3 @@ print("Incorporation of context class " + newClassName + " finished")
 json.dump(newGMM, open(filenameClassifier, "wb"))
 
 os.remove(filenameTmp)
-
-#shutil.copy('jsonGMM.json', filename) # later call a external method and save the GMM into the right location
-
-#f = open(filename, 'w')
-#f.write("This is a test, the requested class is " + classname)

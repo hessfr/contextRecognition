@@ -9,13 +9,9 @@ import csv
 import copy
 import operator
 import random
-from scipy.stats import itemfreq
-from sklearn.mixture import GMM
-from sklearn import preprocessing
 from operator import itemgetter
-from classifiers import getIndex, predictGMM, majorityVote, logProb, confusionMatrixMulti
-from offlineEvaluation import createGTMulti, createGTUnique, majorityVoteSilence
-from featureExtraction import FX_multiFolders
+from classifiers import predictGMM, majorityVote, logProb, confusionMatrixMulti
+from offlineEvaluation import createGTMulti, majorityVoteSilence
 from adaptGMM import adaptGMM
 from plotAL import plotAL
 import ipdb as pdb 
@@ -364,7 +360,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
             # --- Setting initial threshold: ---
             if (initThresSet[predictedLabel] == False):
-                    if len(initThresBuffer[predictedLabel]) < 30: #TODO: 90
+                    if len(initThresBuffer[predictedLabel]) < 30:
                         # Fill init threshold buffer
                         initThresBuffer[predictedLabel].append(entropy)
 
@@ -525,9 +521,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
                             # 
                             # ----------------
                             
-                            
-                            
-                            
                             labelAccuracy.append([0.1, 0.1, 0.1])
                             
                             upd = upd[amp > silenceThresholdModelAdaption]
@@ -543,8 +536,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
                             allGMM.append(currentGMM)
                             givenLabels.append(actualLabel)
-                            #labelAccuracy.append(checkLabelAccuracy(update_gt_tmp,
-                            #actualLabel, currentGMM["classesDict"]))
                             
                             query_idx.append(idx_cnt)
 
@@ -1026,9 +1017,6 @@ def reverseDict(oldDict):
         newDict[j] = i
 
     return newDict
-
-from simulateAL import *
-
 
 
 

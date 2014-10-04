@@ -7,14 +7,7 @@ import operator
 import pylab as pl
 from sklearn.mixture import GMM
 from sklearn import preprocessing
-import ipdb as pdb #pdb.set_trace()
-
-#tGMM = pickle.load(open("tGMM.p","rb"))
-#realWorldFeatures = np.array(json.load(open("realWorldFeatures.json","rb")))
-#updatePoints = pickle.load(open("updatePoints_label1.p","rb"))
-# fewPoints = json.load(open("fewPoints.json","rb"))
-# fewPoints = np.array(fewPoints["points"])
-
+import ipdb as pdb
 
 def dictToJSON(trainedGMM, returnGMM=False, filename=None):
     """
@@ -54,8 +47,6 @@ def dictToJSON(trainedGMM, returnGMM=False, filename=None):
         seriGMM[i]["weights"] = trainedGMM["clfs"][i].weights_.tolist()
         seriGMM[i]["means"] = trainedGMM["clfs"][i].means_.tolist()
         seriGMM[i]["covars"] = trainedGMM["clfs"][i].covars_.tolist()
-
-    # pdb.set_trace()
 
     if filename != None:
         path = filename
@@ -103,9 +94,6 @@ def listToJSON(trainedGMM, returnGMM=False, filename=None):
         seriGMM[i]["weights"] = trainedGMM["clfs"][i].weights_.tolist()
         seriGMM[i]["means"] = trainedGMM["clfs"][i].means_.tolist()
         seriGMM[i]["covars"] = trainedGMM["clfs"][i].covars_.tolist()
-
-
-    # pdb.set_trace()
 
     if filename != None:
         path = filename + ".json"

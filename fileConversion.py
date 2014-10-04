@@ -7,7 +7,7 @@ import numpy as np
 import subprocess
 from subprocess import Popen, PIPE
 import time
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
 
 def convertFolder(folderName):
     """
@@ -44,7 +44,7 @@ def convertFolder(folderName):
                 
                 """ convert into temporary file first: """
                 tmpFile = str(dir + "/tmp.wav")
-                commandString = str("sox '" + file + "' -V1 -b 16 -c 1 -r 16000 '" + tmpFile + "'") #TODO: implement later that files without ending are also considered
+                commandString = str("sox '" + file + "' -V1 -b 16 -c 1 -r 16000 '" + tmpFile + "'")
                 p = subprocess.Popen(commandString, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 out, err = p.communicate()
                 
@@ -80,8 +80,6 @@ def isAudio(fileName):
     Check if file is an audio file
     @param fileName: the given file with the corresponding path
     """
-    # assumes that only valid audio files and the metadata.txt are in the folder
-    # TODO: implement this properly
     try:
         extension = str(fileName.rsplit('.', 1)[1])
     except:

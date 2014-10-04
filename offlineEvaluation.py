@@ -4,7 +4,7 @@ import csv
 import pickle
 import json
 from scipy.stats import itemfreq
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
 from classifiers import getIndex, confusionMatrixMulti, logProb
 
 def offlineAccuracy(gmm, jsonFileList, gtLogFile):
@@ -22,15 +22,7 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
     with open(gtLogFile) as f:
         reader = csv.reader(f, delimiter="\t")
         gtListOriginal = list(reader)
-
-    #TODO: ignore, rename or merge classes
     
-    # These classes will be completely removed from the ground truth lists:
-    #classesToIgnore = ["Home"]
-    #for ignoreClass in classesToIgnore:
-    #    # Remove every class that should be ignored:
-    #    gtListOriginal = [el for el in gtListOriginal if ignoreClass not in el]
-
     # List containing the indices of all RECORDING_STARTED entries
     recStartedList = []
     for i in range(len(gtListOriginal)):
@@ -68,8 +60,6 @@ def offlineAccuracy(gmm, jsonFileList, gtLogFile):
 
         y_pred.extend(y_pred_tmp)
         y_gt.extend(y_gt_tmp)
-
-        #pdb.set_trace()
 
     y_gt = np.array(y_gt)
     y_pred = np.array(y_pred)

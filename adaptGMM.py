@@ -8,8 +8,7 @@ import copy
 import math
 import matplotlib.pyplot as pl
 from sklearn.mixture import GMM
-from classifiers import trainGMMJava
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
 
 EPS = np.finfo(float).eps
 
@@ -54,8 +53,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
     novelGMM = GMM(n_components=n_components_new, covariance_type='full', n_iter=1000)
     novelGMM.fit(X)
     
-    #pdb.set_trace()
-
     """ Assign novel points to component it most likely belongs to: """
     likelihoods = np.zeros((n_components_new, n_novel))
     for k in range(n_components_new):
@@ -84,8 +81,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
                     mapping[j] = k
 
     new_model = [] # List containing parameters (weight, means, covars) for each component
-
-    # pdb.set_trace()
 
     """ Compute components: """
     j = 0    
@@ -119,8 +114,6 @@ def adaptGMM(trainedGMM, updatePoints, label):
         finalGMM["clfs"][label].means_[i] = new_model[i][1]
         finalGMM["clfs"][label].covars_[i] = new_model[i][2]
         finalGMM["n_train"][label] = n_old + n_novel
-
-    # print(finalGMM["n_train"][label])
 
     print("Model adapted: new model has " + str(finalGMM["clfs"][label].n_components) +
           " component(s). " + str(mergedComp) + " component(s) merged, " + str(addedComp) + " component(s) added.")
@@ -164,9 +157,6 @@ def covarTest(data, covars_old):
     alphaPercentile = 0.05
     threshold = chi2.ppf(alphaPercentile, (0.5 * (n_features * (n_features + 1))))
 
-    #if (n_samples < 30): # only compare if same component
-        #print(w1)
-
     if test_statistic <= threshold:
         print("Covariance test passed")
         return True
@@ -196,8 +186,6 @@ def meanTest(data, means_old):
     alphaPercentile = 0.05
     threshold = f.ppf(alphaPercentile, n_features, (n_samples - n_features))
     # f.ppf returns the k-percentile of the f-distribution
-
-    # print(str(test_statistic) + " - threshold: " + str(threshold))
 
     if test_statistic <= threshold:
         print("Mean test passed")
@@ -231,8 +219,6 @@ def mergeComponents(n_old, n_novel, n_comp, weight_old, weight_novel, means_old,
 
     weight = (n_old * weight_old + n_comp) / float(n_old + n_novel)
 
-    pdb.set_trace()
-
     return [weight, means, covars]
 
 def addHistoricalComponent(n_old, n_novel, weight_old, means_old, covars_old):
@@ -253,10 +239,6 @@ def addNovelComponent(n_old, n_novel, n_comp, means_novel, covars_novel):
 
     """
     weight = n_comp / float(n_old + n_novel)
-
-    # print(n_comp)
-    # print(means_novel.sum())
-    # print(covars_novel.sum())
 
     return [weight, means_novel, covars_novel]
 

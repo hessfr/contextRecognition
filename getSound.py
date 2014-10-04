@@ -25,8 +25,6 @@ def getSoundByTags(label, tags, maxNumber):
     @param tags: List of tags that will be used for the freesound search
     @param maxNumber: Number of clips that should be downloaded
     """
-    #TODO: do not download file if file already exists in wav format. E.g. do not download abc.mp3 if abc.wav already exists
-    #TODO: set a size (or length) limit to avoid downloading individual file >100MB
     tagSearchString = ""
     
     for t in tags:
@@ -111,7 +109,7 @@ def getSoundBySingleTag(tag, maxNumber=30):
 
     if searchResults["num_results"] < maxNumber:
         print("Only " + str(searchResults["num_results"]) + " instead of " + str(maxNumber) +" results were found. No files will be downloaded")
-        return False # TODO: change!!!
+        return False
 
     dir = os.getcwd() + "/sound/" + tag
     if not os.path.exists(dir):

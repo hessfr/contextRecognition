@@ -8,7 +8,7 @@ from featureExtraction import FX_File
 from pprint import pprint
 import subprocess
 from subprocess import Popen, PIPE
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
         
 def paramSweep(folderName, paramRange):
     """

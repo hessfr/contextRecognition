@@ -1,5 +1,4 @@
 import json
-import simplejson
 import cherrypy
 import subprocess
 import os
@@ -33,7 +32,6 @@ class AddContextClass():
         filenameClassifier = "Classifier_" + id + ".json"                
         
         subprocess.Popen(["python", "server_add_context_class.py", filenameTmp, filenameClassifier, new_classname])        
-        #subprocess.Popen(["nohup", "python", "simpleTask.py" ..... ]) #this should be able to run, even if this script is closed...  
         
         return filenameClassifier
         
@@ -47,8 +45,6 @@ class AddContextClass():
         # Convert unicode to string:
         filename = str(filename)
         filename = filename[1:-1]
-
-        #print(filename)
 
         if(os.path.isfile(filename)):
             print("Filename " + filename + " found on disk, will be sent to client")
@@ -125,10 +121,6 @@ class RawAudio():
 
         return "ok"
         
-        
-         
-        
-        
 class InitClassifier():
 
     exposed = True
@@ -140,18 +132,7 @@ class InitClassifier():
         
         print("--- InitClassifier POST request ---")
 
-#        json_data = cherrypy.request.json     
-#        
-#        # Remove unicode notation:
-#        string_data = dict([(str(k), str(v)) for k, v in json_data.items()])
-#        
-#        classes_list = string_data.values()
-        
-        #classes_list = json.loads(cherrypy.request.json)
         classes_list = json.loads(context_classes) 
-
-	#print("All requested classes:")
-        #print(classes_list)
 
         model_exists_result = check_model_exists(classes_list)
         
@@ -182,16 +163,12 @@ class InitClassifier():
                 else:
                     print("feasibilityCheck returned invalid result")
 
-	    #print("All valid classes:")
-	    #print(valid_classes)            
-
 	    if len(valid_classes) != 0:
                 # Start training the classifier in the background (list is passed as String and converted back with Regex later):
                 subprocess.Popen(["python", "server_create_initial_model.py", json.dumps(valid_classes), filename_new_classifier])
 		waitOrNoWait = "wait"
 	    else:
 		# If not a single class is valid, don't do anything:
-		#TODO: handle this properly	    
 		waitOrNoWait = "no_wait"
 	
             # Return new filename and the list of invalid classes:
@@ -213,7 +190,7 @@ class InitClassifier():
 
         notReadyCode = -1
 
-	# Check if the json file of the classifier already exisits:
+	    # Check if the json file of the classifier already exisits:
         if(os.path.isfile(filename)):
             print("Filename " + filename + " found on disk, will be sent to client")
         
@@ -254,8 +231,6 @@ class ManageClasses():
         print("--- ManageClasses POST request ---")
 
         context_classes_list = json.loads(context_classes)            
-        
-        #print(json.dumps(context_classes_list))        
         
         classifier_json = cherrypy.request.json     
         
@@ -308,8 +283,6 @@ class ManageClasses():
             print("Filename " + filename + " found on disk, will be sent to client")
         
             js = json.load(open(filename, 'rb'))
-            
-            #os.remove(filename)
             
             return js
         

@@ -1,7 +1,7 @@
 import os
 from os import listdir
 from freesound.__init__ import *
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
 
 Freesound.set_api_key('ff15111274e84bebaba741b0aec023b0')
 

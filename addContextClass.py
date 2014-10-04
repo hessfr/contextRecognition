@@ -4,7 +4,7 @@ import pickle
 from sklearn.mixture import GMM
 from getFeatures import getFeatures
 from sklearn import preprocessing
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb 
 
 def addNewClass(jsonGMM, newClassName, newClassData=None):
     """

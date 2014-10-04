@@ -11,7 +11,7 @@ import json
 from getSound import getSoundBySingleTag
 from fileConversion import convertFolder
 from outlierDetection import removeOutliers
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
 
 def getFeaturesMultipleClasses(classesList):
     """

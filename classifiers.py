@@ -12,9 +12,7 @@ import json
 from sklearn.mixture import GMM
 from sklearn import cross_validation
 from sklearn import preprocessing
-from sklearn import cluster
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
 from sklearn.cross_validation import KFold
 import math
 import operator
@@ -120,8 +118,6 @@ def trainGMM(featureData):
 
         n_tmp = tmpTrain.shape[0]
 
-        #pdb.set_trace()
-
         """ use expectation-maximization to fit the Gaussians: """
         tmpClf.fit(tmpTrain)
         clfs.append(tmpClf)
@@ -129,8 +125,6 @@ def trainGMM(featureData):
         n_train_list.append(n_tmp)
 
         print("Component trained with " + str(n_train_list[-1]) + " sample points")
-
-    # pdb.set_trace()
 
     trainedGMM = {'clfs': clfs, 'classesDict': featureData['classesDict'], 'n_train': n_train_list, 'scaler': scaler}
 
@@ -215,29 +209,12 @@ def testGMM(trainedGMM, featureData, useMajorityVote=True, scale=True, showPlots
             threshold = sorted[-topK]
             print("Entropy threshold for class " + str(key) + " is " + str(round(threshold,6)))
 
-            # tmp = entropyMean[y_pred == trainedGMM["classesDict"][key]]
-            # sorted = np.sort(tmp)
-            # threshold = sorted[-topK]
-            # print("Mean entropy threshold for class " + str(key) + " is " + str(round(threshold,6)))
-
-            # tmp = margin[y_pred == trainedGMM["classesDict"][key]]
-            # sorted = np.sort(tmp)
-            # threshold = sorted[topK]
-            # print("Margin threshold for class " + str(key) + " is " + str(round(threshold,6)))
-            #
-            # tmp = percentDiff[y_pred == trainedGMM["classesDict"][key]]
-            # sorted = np.sort(tmp)
-            # threshold = sorted[topK]
-            # print("percentDiff threshold for class " + str(key) + " is " + str(round(threshold,6)))
-
         """ Plot histogram(s): """
         variableToPlot = entropy
 
         for key in trainedGMM["classesDict"]:
             pl.hist(variableToPlot[y_pred == trainedGMM["classesDict"][key]], 500, histtype='bar') # range=[0.0, 1.0]
             pl.title("Entropy - " + str(key))
-            # pl.title("Margin (between two most likely classes) - " + str(key))
-            # pl.title("Percentage difference between two most likely classes  - " + str(key))
             pl.show()
 
 
@@ -250,9 +227,7 @@ def testGMM(trainedGMM, featureData, useMajorityVote=True, scale=True, showPlots
         ax[0].set_title("Predicted classes")
 
         ax[1].plot(timestamps, margin, 'bo')
-        # ax[1].set_title("Percentage difference between two most likely classes")
         ax[1].set_title("Entropy")
-        # ax[1].set_title("Margin (between two most likely classes)")
         pl.xlabel('time (s)')
 
         pl.show()
@@ -296,9 +271,6 @@ def predictGMM(trainedGMM, featureData, scale=True, returnEntropy=False):
 
     tmpProduct = np.zeros((n_classes, X_test.shape[0]))
     entropy = np.zeros((X_test.shape[0]))
-
-    # percentDiff = np.zeros((X_test.shape[0])) #Percentage-difference between two most likely classes
-    # margin = np.zeros((X_test.shape[0])) #Difference between two most likely classes
 
     likelihood = np.exp(logLikelihood)
 
@@ -362,14 +334,6 @@ def logProb(X, weights, means, covars, return_component_matrix=False):
 
         cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T # = solved in Java
 
-        # Instead of solving the equation for the complete (n_featuresxn_samples) matrix at once, we
-        # solve it for every sample point:
-#        cv_sol = np.zeros((n_features, n_samples))        
-#        for i in range(n_samples):
-#            tmpSol = linalg.solve_triangular(cv_chol, ((X - mu).T)[:,i], lower=True)
-#            cv_sol[:,i] = tmpSol.T
-#        cv_sol = cv_sol.T
-
         log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) + n_features * np.log(2 * np.pi) + cv_log_det) #=rowSum in Java
 
     tmp_log_prob = (log_prob + np.log(weights))
@@ -392,8 +356,6 @@ def logProb(X, weights, means, covars, return_component_matrix=False):
         # Matrix indicating for every point, if most likely component was from user-centric
         # model (True) or from Freesound model (False)
         user_component_matrix = (mostLikelyComp >= FS_COMPONENTS)
-
-        #pdb.set_trace()
 
     final_log_prob = np.log(np.sum(np.exp(tmpArray - vmax), axis=0))
 
@@ -635,8 +597,6 @@ def createGTMulti(classesDict, length, groundTruthLabels='labels.txt'):
                             y_GT[start:end+1,2].fill(classesDict[labelList[i][1]])
                         
                         else:
-                            pdb.set_trace()
-    
                             print("Problem occurred when filling ground truth array." +  
                             "Maybe you are using more than 3 simultaneous context classes?")
                     break

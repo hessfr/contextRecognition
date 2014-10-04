@@ -22,7 +22,6 @@ def check_model_exists(classes_list):
     filename = None
     for context_list in exisiting_classifiers["context_classes"]:
         if collections.Counter(classes_list) == collections.Counter(context_list):
-            #print("classifier found, filename: " + exisiting_classifiers["filenames"][i])
             filename = exisiting_classifiers["filenames"][i]
             found = True
         i += 1

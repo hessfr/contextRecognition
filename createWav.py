@@ -7,6 +7,7 @@ import ipdb as pdb
 
 def createWav(path, binary_file, output_file, sample_rate=16000, datatype=np.int16):
     """
+    Convert binaray audio file to *.wav file
 
     """
     fin = open(os.path.join(path, binary_file), "rb")
@@ -14,8 +15,6 @@ def createWav(path, binary_file, output_file, sample_rate=16000, datatype=np.int
     fin.seek(0, os.SEEK_END)
     file_length = fin.tell()
     len_seconds = fin.tell() / (sample_rate * 2)
-
-    #pdb.set_trace()
 
     stepsize_seconds = 600
     stepsize = int(sample_rate * stepsize_seconds)
@@ -44,17 +43,3 @@ def createWav(path, binary_file, output_file, sample_rate=16000, datatype=np.int
             print("Writing of data element failed, skipping this element")
 
     fout.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-

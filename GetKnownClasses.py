@@ -1,7 +1,6 @@
 import os
 from os import listdir
 import json
-import ipdb as pdb #pdb.set_trace()
 
 def GetKnownClassesJSON():
     """

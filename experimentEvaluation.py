@@ -2,7 +2,7 @@ import numpy as np
 import math
 import csv
 from scipy.stats import itemfreq
-import ipdb as pdb #pdb.set_trace()
+import ipdb as pdb
 from classifiers import confusionMatrixMulti
 
 def onlineAccuracy(gtLogFile, predLogFile):
@@ -73,13 +73,11 @@ def onlineAccuracy(gtLogFile, predLogFile):
         if len(gtListOriginal[i]) <= 1:
             numRecStartedGT += 1
             recStartedListGT.append(i)
-            #print("position in GT list: " + str(i))
 
     for i in range(len(predListOriginal)):
         if (predListOriginal[i][0] == "RECORDING_STARTED"):
             numRecStartedPred += 1
             recStartedListPred.append(i)
-            #print("position in Pred list: " + str(i))
    
     # If the predication and the ground truth file have a different number
     # of RECORDING_STARTED entry, it is useless for use and we stop here:
@@ -124,8 +122,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
 
         # Find start and stop time, i.e. min and max values:
         tmpArray = np.array(gtList)
-
-        #pdb.set_trace()
 
         # If there is not more entry after a RECORDING_STARTED line, do nothing:
         if tmpArray.shape[0] != 0:
@@ -213,8 +209,6 @@ def onlineAccuracy(gtLogFile, predLogFile):
         y_GT[y_GT == i] = i-1
         y_pred[y_pred == i] = i-1
 
-    #pdb.set_trace()
-
     confusionMatrixMulti(y_GT, y_pred, uniDirectionalClassesDict)
 
 def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classesDict):
@@ -250,16 +244,11 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
     # Round every entry to 0.5s:
     for i in range(len(predList)):
         if predList[i][1]:
-            #predList[i][1] = 0.5 * math.ceil(2.0 * float(predList[i][1]))
             predList[i][1] = round(2 * float(predList[i][1]))/2
         if predList[i][2]:
-            #predList[i][2] = 0.5 * math.ceil(2.0 * float(predList[i][2]))
             predList[i][2] = round(2 * float(predList[i][2]))/2
 
     length = int(length)
-    #print("Length in seconds: " + str((length)/2.0))
-    #print("Array length: " + str(length))
-
     y_pred = np.empty(length)
     y_pred.fill(-1)
 
@@ -270,20 +259,15 @@ def createPredictionArray(predList, start_time_gt, stop_time_gt, length, classes
         if line[2] != "":
             end = int(2 * (float(line[2]) - start_time_gt))
         else:
-            #print("Entry end time empty, changed to " + str(length/2.0))
             end = length - 1
 
         if end >= length:
-            #print("End time " + str((end+2.0*start_time_gt)/2.0) + " later than last GT label")
-            #print("Entry ended at " + str(end/2.0) + 
-            #"s, changed end time to " + str(length/2.0))
             end = length - 1
 
         if start < length:
             y_pred[start:end+1].fill(classesDict[line[0]])
         else:
             pass
-            #print("Entry ignore, because it started after the last entry of our GT array")
 
     return np.array(y_pred)
 
@@ -303,14 +287,9 @@ def createGTArray(gtList, classesDict):
 
     # Find start and stop time, i.e. min and max values:
     tmpArray = np.array(gtList)
-    #start_time = float(min(tmpArray[:,0]))
-    #end_time = float(max(tmpArray[:,0]))
 
     start_time = min(tmpArray[:,0].astype(np.float32, copy=False))
     end_time = max(tmpArray[:,0].astype(np.float32, copy=False))
-
-    #print("start_time: " + str(start_time))
-    #print("end_time: " + str(end_time))
 
     # We want ignore invalid (no class assigned) values, before the first class is
     # assigned, so we have to subtract the start_time offset later
@@ -326,12 +305,8 @@ def createGTArray(gtList, classesDict):
 
             start = int(2 * (gtList[i][0] - start_time))
 
-            #print("i: " + str(i) + " " + str(gtList[i][1]))
-
             # Find the end time of this context:
             for j in range(i,len(gtList)):
-
-                #print("j: " + str(j))
 
                 if ((gtList[j][1] == tmpContext) and (gtList[j][2] == "end")):
 
@@ -378,7 +353,6 @@ def createGTArray(gtList, classesDict):
                     else:
                         print("Problem occurred when filling ground truth array in line " + 
                         "Maybe you are using more than 3 simultaneous context classes?")
-                        pdb.set_trace()
 
                     break
     return y_GT
@@ -403,9 +377,7 @@ def createClassesDict(gtList, predList):
     classesDict = {}
     for i in range(len(class_name_set)):
         classesDict[class_name_set[i]] = i
-        #print(class_name_set[i] + " = " + str(i))
         
-    #print("-----")
     classesDict.update(dict((v, k) for k, v in classesDict.iteritems()))
 
     return classesDict

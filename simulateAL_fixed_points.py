@@ -9,33 +9,13 @@ import csv
 import copy
 import operator
 import random
-from scipy.stats import itemfreq
-from sklearn.mixture import GMM
 from sklearn import preprocessing
 from operator import itemgetter
-from classifiers import getIndex, predictGMM, majorityVote, logProb, confusionMatrixMulti
-from offlineEvaluation import createGTMulti, createGTUnique, majorityVoteSilence
-from featureExtraction import FX_multiFolders
+from classifiers import predictGMM, majorityVote, logProb, confusionMatrixMulti
+from offlineEvaluation import createGTMulti, majorityVoteSilence
 from adaptGMM import adaptGMM
 from plotAL import plotAL
-import ipdb as pdb #pdb.set_trace()
-
-# --- simulation commands: ---
-# res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/allDays/", ["user1_part1.json", "user1_part2.json", "user1_part3.json", "user1_part4.json", "user1_part5.json", "user1_part6.json", "user1_part7.json"], "GT_user1.txt")
-
-# res = simulateAL(gmm1, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user1_355593052044182/", ["user1_short.json"], "GT_user1_short.txt")
-
-# res = simulateAL(gmm2, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user2_358848046667739/allDays/", ["user2_part1.json", "user2_part2.json", "user2_part3.json", "user2_part4.json", "user2_part5.json", "user2_part6.json"], "GT_user2.txt")
-
-# res = simulateAL(gmm4, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user4_355577053607766/allDays/", ["user4_part1.json", "user4_part2.json", "user4_part3.json", "user4_part4.json", "user4_part5.json", "user4_part6.json", "user4_part7.json", "user4_part8.json"], "GT_user4.txt")
-
-# res = simulateAL(gmm5, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user5_3588480466675     56/allDays/", ["user5_part1.json", "user5_part2.json", "user5_part3.json", "user5_part4.json", "user5_part5     .json", "user5_part6.json", "user5_part7.json", "user5_part8.json"], "GT_user5.txt")
-
-# res = simulateAL(gmm79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user7_358848047145     412/allDays/", ["user7_part1.json", "user7_part2.json", "user7_part3.json", "user7_part4.json", "user7_part     5.json", "user7_part6.json"], "GT_user7.txt")
-
-# res = simulateAL(gmm_79, "/media/thesis-graphs/hessfr/contextRecognition/experimentData/user9_35884804666     7739/allDays/", ["user9_part1.json", "user9_part2.json", "user9_part3.json", "user9_part4.json", "user9_par     t5.json", "user9_part6.json", "user9_part7.json", "user9_part8.json", "user9_part9.json", "user9_part10.jso     n"], "GT_user9.txt")
-
-# ----------------------------
+import ipdb as pdb
 
 def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     """
@@ -140,9 +120,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
     featureData = np.array(featureData)
     amps = np.array(amps)
-
-    # Remove log energy as a feature:
-    #featureData = featureData[:, 0:-1]
 
     """ Create index arrays to define which elements are used to evaluate performance 
     and which for simulation of the AL behavior: """
@@ -257,12 +234,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
     15664.32, 17202.528, 22942.08, 24943.968, 32165.28, 41469.12, 45868.032, 50063.328,
     51690.24, 58576.896, 65681.28]
     
-    #for i in range(len(simLabelsUnique)):
-    #    if simLabelsUnique[i] != simLabelsUnique[i-1]:
-    #        print(str(i*0.032))
-
-    #pdb.set_trace()
-
     points_to_query = [int(el/2.016) for el in points_to_query_sec]
 
     for i in range(n_classes):
@@ -355,7 +326,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
         # --- Setting initial threshold: ---
         if (initThresSet[predictedLabel] == False):
-                if len(initThresBuffer[predictedLabel]) < 30: #TODO: 90
+                if len(initThresBuffer[predictedLabel]) < 30: 
                     # Fill init threshold buffer
                     initThresBuffer[predictedLabel].append(entropy)
 
@@ -393,7 +364,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
 
 
         # if the buffer is filled, check if we want to query:
-        #if (thresSet[predictedLabel] == True) and (len(queryBuffer) == 30):
 
         # --- calculate current query criteria: ---
         npCrit = np.array(queryBuffer)
@@ -423,12 +393,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
         plotThres[predictedLabel].append(threshold[predictedLabel])
         # --------------------------
    
-        # only query if more than 10min since the last query:
-        #if (currentTime - prevTime) > 600:
-        # check if we want to query these points and update 
-        # our threshold value if we adapt the model:
-        #if queryCrit > threshold[predictedLabel]:
-
         if i in points_to_query:        
 
             print("-----")
@@ -457,10 +421,7 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             #amp = amp[(mask_correct_gt == 1)]
 
             # --------------- filter out points ----------------
-            # Only incorporate points with a similar entropy to the last point:
-            #mask_similar_entropy, percentage_removed = filterPoints(
-            #np.array(updateEntropies), percentage=0.25)
-            #
+            
             ## Check if any points of the wrong class are incorporated into
             ## the model after we applied the filter:
             #mask_cnt_wrong = 0
@@ -508,12 +469,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             #amp[0:(int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
             #amp[int(len(amp)/3.0):(2 * int(len(amp)/3.0)-1)] = amp[(2*int(len(amp)/3.0)):-1]
             # ----------------
-
-            upd = upd[(2*int(len(upd)/3.0)):-1] # only include the last 20 seconds
-            amp = amp[(2*int(len(amp)/3.0)):-1]
-
-            print(upd.shape)
-            print(amp.shape)
 
             labelAccuracy.append([0.1, 0.1, 0.1])
 
@@ -575,7 +530,6 @@ def simulateAL(trainedGMM, path, jsonFileList, gtFile):
             fig.savefig("plotsTmp/Class_" + revClassesDict[i] + ".jpg")
 
     #pdb.set_trace()
-
 
     """ Evaluate performance of all GMMs: """
     print("Evaluating performance of classifiers:")
@@ -899,7 +853,6 @@ def filterPoints(entropies, percentage=0.25):
     mask[threshold:len(mask)] = 1
 
     percentage_removed = round(100 * threshold/float(len(entropies)), 1)
-    #print(str(percentage_removed) + "% of all points filtered out")
 
     # We want to return a array, that contains one entry for each feature point,
     # therfore we have to change to size of the mask from 30 to 1890:
@@ -910,13 +863,6 @@ def filterPoints(entropies, percentage=0.25):
         final_mask[start:end] = mask[i]
         
     return final_mask, percentage_removed
-
-
-
-
-
-
-
 
 def createOverallPlot(actual_labels, predictedLabels, entropy_values, 
     givenLabels, timestamps, classesDict):
@@ -987,13 +933,7 @@ def createOverallPlot(actual_labels, predictedLabels, entropy_values,
 
     pl.xticks(timestampsCopy, givenLabelsCopy, rotation=45)
 
-
-
     fig.savefig("plotsTmp/overall_plot.jpg")
-
-
-
-
 
 def reverseDict(oldDict):
     """
@@ -1006,38 +946,3 @@ def reverseDict(oldDict):
         newDict[j] = i
 
     return newDict
-
-from simulateAL import *
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
